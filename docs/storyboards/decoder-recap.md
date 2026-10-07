@@ -277,7 +277,7 @@ them. Sebastian Raschka's architecture gallery compares 100+ models part by part
 | GQA with 8 KV heads typical; MLA in DeepSeek, Kimi, GLM | `models.*.n_kv_heads`, `.mla_kv_rank` (proposed, `kv-compression` §12) | 01 §1 "Attention" row, §2 [C] |
 | Hybrid stacks: Qwen3.8 3 Gated DeltaNet : 1 full; Kimi K3 69 linear + 24 MLA | `models.qwen3.8.attention`, `models.kimi-k3.attention` (existing, confirmed) | 01 §2 [C] |
 | Residual redesigns in 2026: mHC (DeepSeek-V4), Attention Residuals (Kimi K3) | `models.deepseek-v4-pro.residual` = "mHC", `models.kimi-k3.residual` = "Attention Residuals" (proposed) | 01 §1 "Residual stream" row [C] |
-| Beyond the block: MTP heads (V3/V4 depth 1, K3 1 layer, GLM-5 shares 3); Muon (V4, Kimi, GLM-5); FP8 training and FP4 experts (V4), MXFP4 (gpt-oss, K3) | `models.deepseek-v4-pro.optimizer` = "Muon" (existing, confirmed); `.mtp_depth` (proposed, `sampling` §12); `.precision` = "FP8; FP4 experts (QAT)" (proposed) | 01 §1 "Decoding", "Optimizer", "Precision" rows [C] |
+| Beyond the block: MTP heads (V3/V4 depth 1, K3 1 layer, GLM-5 shares 3); Muon (V4, Kimi, GLM-5); FP8 training and FP4 experts (V4), MXFP4 (gpt-oss, K3) | `models.deepseek-v4-pro.optimizer` = "Muon" (existing, confirmed); `.mtp_depth` (in data); `.pretrain_precision` = "FP8; FP4 experts (QAT)" | 01 §1 "Decoding", "Optimizer", "Precision" rows [C] |
 
 ## 9. Takeaways
 1. The 2026 block has GPT-3's wiring: normalize, attend, add; normalize, MLP, add. Almost every box was
@@ -329,7 +329,7 @@ stage. At 400 px the two stacks sit one above the other.
 
 ## 12. Open questions for the reviewer
 **Data-pass keys** (*new* unless noted): `residual` (deepseek-v4-pro "mHC", kimi-k3 "Attention
-Residuals"), `precision` (deepseek-v4-pro), `qk_norm` and `attention_sink` (reuse `attention` ruling 2),
+Residuals"), `pretrain_precision` (deepseek-v4-pro), `qk_norm` and `attention_sink` (reuse `attention` ruling 2),
 `biases` (reuse `decoder-anatomy`). Gemma 3 / Qwen3 QK-norm are background rows without entries.
 
 **Graph changes:** none.
@@ -350,3 +350,4 @@ Should (6/6, no rebuttals): frame 7 visible line and `attention` named under ter
 `kv-compression`; "illustrative: not a real model" on frame 5 and the toy; §8 "almost none is in all of
 them"; the `dial` fallback ("↻") written in §4.
 Nice (2/2): frame 2 prints why normalizing helps; frame 4's "×" listed as a plain text mark.
+- Data pass 2026-10-07: DeepSeek-V4-Pro precision cites `pretrain_precision`; no numbers changed.

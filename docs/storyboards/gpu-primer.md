@@ -308,17 +308,17 @@ Rendered as the "2026 hardware table" (dense numbers only; HBM capacities are no
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| H100 SXM (2022): 80 GB HBM3, 3.35 TB/s, 989 TF BF16, 1,979 TF FP8 (reported, 2 × BF16), NVLink 900 GB/s both directions (450 each way, as `cluster-topology` counts it); ridge 295 | `hardware.json/h100.hbm_gb`, `.hbm_tbps`, `.bf16_dense_tflops`, `.fp8_dense_tflops`, `.nvlink_gb_s_each_way` = 450 *(settled key; note carries the published 900 both-directions figure)* | 03 §1.4, §1.2 |
+| H100 SXM (2022): 80 GB HBM3, 3.35 TB/s, 989 TF BF16, 1,979 TF FP8 (reported, 2 × BF16), NVLink 900 GB/s both directions (450 each way, as `cluster-topology` counts it); ridge 295 | `hardware.json/h100.hbm_gb`, `.hbm_tbps`, `.bf16_dense_tflops`, `.fp8_e4m3_dense_tflops`, `.nvlink_gb_s_each_way` = 450 *(settled key; note carries the published 900 both-directions figure)* | 03 §1.4, §1.2 |
 | H100 has 132 SMs | `hardware.json/h100.sm_count` = 132 *(proposed)* | 03 §1.1 (CONFIRMED via the DeepSeek-V3 paper's H800 figure) |
 | H200: 141 GB, 4.8 TB/s, same compute as H100; ridge 206: the extra bandwidth makes it *easier* to be compute-bound | `hardware.json/h200.*` | 03 §1.4 |
 | B200 (HGX): 192 GB nominal (about 180 usable), 8 TB/s, ~2.25 PF BF16, ~4.5 FP8, ~9 FP4 (reported) | `hardware.json/b200.*` | 03 §1.4 |
 | B300: 288 GB, 8 TB/s, ~2.5 PF BF16, ~5 FP8, 15 PF FP4 (reported) | `hardware.json/b300.*` | 03 §1.4 |
 | MI355X: 288 GB, 8 TB/s, 2.5 / 5 / 10 PF (reported) | `hardware.json/mi355x.*` | 03 §1.4 |
 | TPU v7 Ironwood: 206 GB, 7.38 TB/s, 2,307 TF BF16, 4,614 FP8 | `hardware.json/tpu-v7.*` (data pass: `hbm_gb` stores 206 GB with the note "Google documents 192 GiB") | 03 §1.4 |
-| Rubin (shipping since mid-2026): 288 GB HBM4, 35 PF NVFP4 for training (not confirmed as strictly dense), HBM bandwidth **19.2 or 22 TB/s: NVIDIA's own pages disagree**; shown as a range everywhere; no settled BF16 or FP8 figure, so neither is shown | `hardware.json/rubin.hbm_gb`, `.fp4_dense_tflops`, `.hbm_tbps` = [19.2, 22] | 03 §1.4 (flag), spec §7 |
-| Number formats: FP32 1/8/23, BF16 1/8/7, FP16 1/5/10, FP8 E4M3 1/4/3 or E5M2 1/5/2, MXFP4 (blocks of 32, 8-bit power-of-two scale), NVFP4 (blocks of 16, E4M3 scale, plus a per-tensor FP32 scale) | `hardware.json/formats.*` *(proposed entry `formats`, keys `bf16.layout`, `fp8_e4m3.layout`, `fp8_e5m2.layout`, `mxfp4.block_size` = 32, `nvfp4.block_size` = 16, `nvfp4.scale_format` = "E4M3"; same names as `FORMATS`)* | 03 §1.3 |
+| Rubin (shipping since mid-2026): 288 GB HBM4, 35 PF dense NVFP4 for training (confirmed dense), HBM bandwidth **19.2 or 22 TB/s: NVIDIA's own pages disagree**; shown as a range everywhere; no settled BF16 or FP8 figure, so neither is shown | `hardware.json/rubin.hbm_gb`, `.nvfp4_dense_tflops`, `.hbm_tbps` = [19.2, 22] | 03 §1.4 (flag), spec §7 |
+| Number formats: FP32 1/8/23, BF16 1/8/7, FP16 1/5/10, FP8 E4M3 1/4/3 or E5M2 1/5/2, MXFP4 (blocks of 32, 8-bit power-of-two scale), NVFP4 (blocks of 16, E4M3 scale, plus a per-tensor FP32 scale) | `hardware.json/formats.*` *(flat keys on the `formats` entry: `bf16_layout`, `fp8_e4m3_layout`, `fp8_e5m2_layout`, `mxfp4_block_size` = 32, `nvfp4_block_size` = 16, `nvfp4_scale_format` = "E4M3"; names follow `FORMATS`)* | 03 §1.3 |
 | gpt-oss-120b stores MoE weights in MXFP4, about 4.25 bits per parameter, so the 120B fits one 80 GB GPU (post-training quantization, not native FP4 training) | `models.json/gpt-oss-120b.weight_format` *(proposed)* | 02 §1.7 item 3 |
-| NVIDIA trained a 12B model on 10T tokens in NVFP4 and matched its FP8 loss (2025) | `models.json/nvidia-nvfp4-12b.pretrain_format` *(proposed; confirmed in 03, reported in 02)* | 03 §1.3 |
+| NVIDIA trained a 12B model on 10T tokens in NVFP4 and matched its FP8 loss (2025) | `models.json/nvidia-nvfp4-12b.pretrain_precision` (confirmed; both Nemotron 3 Super and Ultra were also pretrained in NVFP4, `nemotron-3-super.pretrain_precision`, `nemotron-3-ultra.pretrain_precision`) | 03 §1.3 |
 | FlashAttention tiles attention so the score matrix stays in SRAM instead of HBM (2022) | none (mechanism; paper link arXiv 2205.14135) | 03 §1.1 |
 
 Not shown: Rubin BF16/FP8 (brief flags a likely sparse/dense mismatch), MI455X, Trainium, TPU 8 (not in
@@ -368,14 +368,14 @@ GPU primer                       7 / 11   [<] [Play] [>]
 - `hardware.json/h100.nvlink_gb_s_each_way = 450` (settled key name; note: "NVIDIA quotes 900 GB/s, both
   directions"; 03 §2.1).
 - `hardware.json/tpu-v7.hbm_gb = 206` (unit GB; note "Google documents 192 GiB"; 03 §1.4).
-- `hardware.json/formats` entry (new): `fp32.layout "1/8/23"`, `bf16.layout "1/8/7"`, `fp16.layout
-  "1/5/10"`, `fp8_e4m3.layout "1/4/3"`, `fp8_e5m2.layout "1/5/2"`, `mxfp4.block_size 32`,
-  `mxfp4.scale_bits 8`, `nvfp4.block_size 16`, `nvfp4.scale_format "E4M3"` (03 §1.3; NVIDIA NVFP4 blog
+- `hardware.json/formats` entry (now in data, flat keys): `fp32_layout "1/8/23"`, `bf16_layout "1/8/7"`,
+  `fp16_layout "1/5/10"`, `fp8_e4m3_layout "1/4/3"`, `fp8_e5m2_layout "1/5/2"`, `mxfp4_block_size 32`,
+  `mxfp4_scale_bits 8`, `nvfp4_block_size 16`, `nvfp4_scale_format "E4M3"` (03 §1.3; NVIDIA NVFP4 blog
   CONFIRMED; OCP MX for MXFP4).
 - `models.json/gpt-oss-120b.weight_format = "MXFP4 (MoE weights, post-training), ~4.25 bits/param"`
   (02 §1.7, CONFIRMED model card).
-- `models.json/nvidia-nvfp4-12b` (new entry): `params 12e9`, `pretrain_tokens 10e12`,
-  `pretrain_format "NVFP4"`, note "matched FP8 loss" (03 §1.3 CONFIRMED NVIDIA blog).
+- `models.json/nvidia-nvfp4-12b` (now in data): `total_params 12e9`, `pretrain_tokens 10e12`,
+  `pretrain_precision "NVFP4"`, note "matched FP8 loss" (03 §1.3 CONFIRMED NVIDIA blog).
 - `hardware.json/memory-hierarchy.sram_per_sm = "hundreds of KB"` (reported, rough; 03 §1.1). If the
   data pass prefers not to store a rough range, frame 3 drops the number and says "tiny".
 **Graph changes:** none.
@@ -406,3 +406,4 @@ Settled and applied (README lesson 20):
 - **NVLink and memory units:** NVLink prints "900 both directions, 450 each way"; TPU v7 prints 206 GB;
   HBM capacities in §8 are labeled nominal.
 - **Nice-to-haves applied:** the residual-add note is visible; `laneTimeline`'s hatch meaning is stated.
+- Data pass 2026-10-07: FLOPS keys renamed to `fp8_e4m3_dense_tflops` and `nvfp4_dense_tflops`; format facts cite flat `formats` keys; Rubin 35 PF is confirmed dense (caveat dropped); `nvidia-nvfp4-12b` uses `total_params` and `pretrain_precision`. Nemotron 3 Super and Ultra were both pretrained in NVFP4 (no conflict).

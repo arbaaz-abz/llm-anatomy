@@ -251,7 +251,7 @@ the comm lane, `hl-link` = the link label under the dot, `hl-flops` = the comput
 | Vera Rubin NVL72: 72 Rubin GPUs, 260 TB/s NVLink 6; Rubin Ultra NVL576 planned for H2 2027 (reported) | `hardware.json/rubin.scale_up_domain`; `rubin-ultra.scale_up_gpus` = 576 *(proposed, reported)* | 03 §1.4 |
 | Meta's Llama 3 cluster (2024): 16 GPUs per rack, 192 racks per pod = 3,072 GPUs with full bisection bandwidth, 8 pods = 24K GPUs, 1:7 oversubscribed above pods, 400 Gb/s per GPU, topology-aware scheduling | `hardware.json/meta-llama3-cluster.*` *(proposed entry: `gpus_per_rack` 16, `gpus_per_pod` 3072, `pods` 8, `oversubscription` "1:7", `per_gpu_gbps` 400)* | 03 §2.2 |
 | Llama 3 order, innermost to outermost: TP, CP, PP, DP ("innermost parallelism requires the highest network bandwidth and lowest latency") | `models.json/llama-3.1-405b.parallelism_order` *(proposed by `parallelism`; the paper calls the model Llama 3, the checkpoint is Llama 3.1 405B)* | 03 §2.3 |
-| DeepSeek-V3 (2024): H800s with NVLink 160 GB/s vs InfiniBand 50 GB/s per GPU (3.2×), DeepSeek's stated effective rates (direction not given; 50 GB/s matches a 400 Gb/s port each way); the H800's NVLink is reduced vs the H100; all-to-all goes over IB to the same-index GPU, then NVLink; each token reaches at most 4 nodes | `models.json/deepseek-v3.nvlink_effective_gbps` = 160, `.ib_gbps` = 50 (notes: "stated effective rates; direction not stated"), `.max_nodes_per_token` = 4 *(proposed)* | 03 §2.1, §2.2, §4.5 |
+| DeepSeek-V3 (2024): H800s with NVLink 160 GB/s vs InfiniBand 50 GB/s per GPU (3.2×), DeepSeek's stated effective rates (direction not given; 50 GB/s matches a 400 Gb/s port each way); the H800's NVLink is reduced vs the H100 (200 vs 450 GB/s each way, `hardware.json/h800.nvlink_gb_s_each_way`); all-to-all goes over IB to the same-index GPU, then NVLink; each token reaches at most 4 nodes | `models.json/deepseek-v3.nvlink_effective_gb_s` = 160, `.ib_gb_s` = 50 (notes: "stated effective rates; direction not stated"), `.max_nodes_per_token` = 4 *(proposed)* | 03 §2.1, §2.2, §4.5 |
 | DeepSeek-V4 (2026): expert traffic hides behind compute when compute ÷ bandwidth ≤ 6,144 FLOPs per byte (each GB/s hides about 6.1 TFLOPS) | `models.json/deepseek-v4-pro.ep_hiding_flops_per_byte` = 6144 *(proposed)* | 03 §4.5 |
 | Kimi K2 (2025) servers: 8 GPUs, 2 TB RAM, 8 × 400 Gb/s RoCE | `models.json/kimi-k2.node` *(proposed; entry proposed by `training-memory`)* | 03 §2.2 |
 | NVIDIA's Nemotron 3 RL report: expert-parallel groups must sit on the same rack to stay inside NVLink | `ep_colocation` on the data pass's Nemotron 3 entry for arXiv 2606.15007 *(proposed key; the entry id is the data pass's call; the page never names which Nemotron 3 model)* | 03 §2.2 |
@@ -305,9 +305,9 @@ Caption check (2026-10-07, after the review, the `rlvr-grpo` counter adapted): f
 - `hardware.json/meta-llama3-cluster` (new entry): `gpus_per_rack 16`, `racks_per_pod 192`,
   `gpus_per_pod 3072`, `pods 8`, `oversubscription "1:7"`, `per_gpu_gbps 400` (03 §2.2, CONFIRMED arXiv
   2407.21783).
-- `models.json/deepseek-v3`: `nvlink_effective_gbps 160`, `ib_gbps 50` (notes: "stated effective rates;
-  direction not stated"), `max_nodes_per_token 4` (03 §2.1, §4.5, CONFIRMED); `hardware.json/h800` (new
-  entry, `nvlink` note "reduced vs H100"; no peak FLOPS in the briefs).
+- `models.json/deepseek-v3`: `nvlink_effective_gb_s 160`, `ib_gb_s 50` (notes: "stated effective rates;
+  direction not stated"), `max_nodes_per_token 4` (03 §2.1, §4.5, CONFIRMED); `hardware.json/h800` (now in
+  data: `nvlink_gb_s_each_way` 200; no peak FLOPS stored, so the page prints none).
 - `models.json/deepseek-v4-pro.ep_hiding_flops_per_byte = 6144` (03 §4.5, CONFIRMED).
 - `models.json/kimi-k2.node = "8 GPUs, 2 TB RAM, 8 × 400 Gb/s RoCE"` (03 §2.2, CONFIRMED).
 - `hardware.json/rubin-ultra.scale_up_gpus = 576` (reported, 03 §1.4).
@@ -343,3 +343,4 @@ Settled and applied (README lesson 20):
   checkpoint id `llama-3.1-405b`; lanes carry "both lanes in the same time units" (lesson 21).
 - **Nice-to-haves applied:** misconception 1 says "decides where each cut can live"; try-this 3's
   4-server point is credited to frame 8.
+- Data pass 2026-10-07: DeepSeek-V3 link keys renamed to `nvlink_effective_gb_s` and `ib_gb_s`; `h800` NVLink (200 GB/s each way) now cited; no H800 FLOPS printed.

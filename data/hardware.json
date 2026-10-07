@@ -8,49 +8,66 @@
         "hbm_gb": {
           "value": 80,
           "unit": "GB",
-          "note": "HBM3. The source explicitly covers BF16 and bandwidth; capacity taken from the same brief table row.",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
-          "confidence": "reported",
+          "note": "Nominal. HBM3. NVIDIA lists 80GB for H100 SXM; no usable figure is sourced.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h100/",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "hbm_tbps": {
           "value": 3.35,
           "unit": "TB/s",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "note": "NVIDIA H100 page; the Scaling Book gives the same figure.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h100/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "bf16_dense_tflops": {
           "value": 989,
           "unit": "TFLOPS",
+          "note": "Dense. NVIDIA's H100 page lists 1,979 TFLOPS BF16 with sparsity (dense is half). Derived: half of NVIDIA's 1,979 TFLOPS sparse figure.",
           "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_e4m3_dense_tflops": {
+          "value": 1979,
+          "unit": "TFLOPS",
+          "note": "Derived: NVIDIA lists 3,958 TFLOPS FP8 with sparsity; dense = 3,958 / 2. Equals 2 x BF16 dense. The Hopper in-depth blog rounds it to 2,000. NVIDIA does not split the FP8 rate by E4M3 vs E5M2.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h100/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 450,
+          "unit": "GB/s",
+          "note": "Derived: 18 NVLink4 links x 25 GB/s each direction (Hopper in-depth blog). NVIDIA quotes 900 GB/s, counting both directions.",
+          "source_url": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "sm_count": {
+          "value": 132,
+          "note": "\"132 SMs per GPU\" for H100 SXM5 (the full GH100 die has 144). DeepSeek-V3 also cites 132 SMs on the H800.",
+          "source_url": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
-          "value": 1979,
-          "unit": "TFLOPS",
-          "note": "Computed as 2x BF16.",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
-          "confidence": "reported",
-          "last_verified": "2026-10-07"
-        },
         "scale_up_domain": {
-          "value": "NVLink4, 900 GB/s per GPU",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
-          "confidence": "reported",
+          "value": "NVLink4, 900 GB/s per GPU (both directions), 8-GPU HGX node",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h100/",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
     },
     {
       "id": "h200",
-      "name": "NVIDIA H200",
+      "name": "NVIDIA H200 SXM",
       "facts": {
         "hbm_gb": {
           "value": 141,
           "unit": "GB",
-          "note": "HBM3e.",
+          "note": "Nominal. HBM3e. No usable figure is sourced.",
           "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -65,23 +82,51 @@
         "bf16_dense_tflops": {
           "value": 989,
           "unit": "TFLOPS",
-          "note": "Same compute as H100 per the brief.",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "note": "Derived: NVIDIA lists 1,979 TFLOPS BF16 with sparsity; dense = 1,979 / 2 (rounded down to H100's 989). Same compute as H100.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 1979,
           "unit": "TFLOPS",
-          "note": "Same compute as H100 per the brief.",
-          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "note": "Derived: NVIDIA lists 3,958 TFLOPS FP8 with sparsity; dense = 3,958 / 2 = 2 x BF16 dense.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 450,
+          "unit": "GB/s",
+          "note": "Derived: NVIDIA quotes NVLink 900 GB/s, counting both directions; 900 / 2.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "NVLink, 900 GB/s per GPU",
+          "value": "NVLink, 900 GB/s per GPU (both directions), 8-GPU HGX node",
           "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
-          "confidence": "reported",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "h800",
+      "name": "NVIDIA H800 SXM (export variant of H100)",
+      "facts": {
+        "nvlink_gb_s_each_way": {
+          "value": 200,
+          "unit": "GB/s",
+          "note": "DeepSeek (ISCA 2025 paper on DeepSeek-V3 hardware): \"the NVLink bandwidth in H800 SXM nodes is reduced from 900 GB/s to 400 GB/s\" (both directions); its section 4.3 gives 200 GB/s, of which about 160 GB/s is achievable. No primary source gives H800 peak FLOPS.",
+          "source_url": "https://arxiv.org/abs/2505.09343",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink reduced vs H100: 400 GB/s per GPU both directions (H100: 900); 8 GPUs per node with eight 400G InfiniBand CX7 NICs",
+          "source_url": "https://arxiv.org/abs/2505.09343",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
@@ -93,46 +138,63 @@
         "hbm_gb": {
           "value": 192,
           "unit": "GB",
-          "note": "Nominal capacity; about 180 GB usable.",
+          "note": "Nominal capacity (HBM3e). Usable is 180 GB: see hbm_usable_gb.",
           "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_usable_gb": {
+          "value": 180,
+          "unit": "GB",
+          "note": "Derived: DGX B200 lists 1,440 GB total GPU memory for 8 GPUs; 1,440 / 8 = 180.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/dgx-b200/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "hbm_tbps": {
           "value": 8,
           "unit": "TB/s",
-          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "note": "Derived: DGX B200 lists 64 TB/s HBM3e bandwidth for 8 GPUs; 64 / 8 = 8.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/dgx-b200/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "bf16_dense_tflops": {
           "value": 2250,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~2.25 PF\").",
-          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "note": "Derived: HGX B200 lists 36 PFLOPS FP16/BF16 with sparsity for 8 GPUs; dense = 36 / 2 / 8 = 2.25 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 4500,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~4.5 PF\").",
-          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "note": "Derived: HGX B200 lists 72 PFLOPS FP8 with sparsity for 8 GPUs; dense = 72 / 2 / 8 = 4.5 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp4_dense_tflops": {
+        "nvfp4_dense_tflops": {
           "value": 9000,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~9 PF\").",
-          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "note": "Derived: HGX B200 lists 72 PFLOPS dense FP4 for 8 GPUs; 72 / 8 = 9 PF. InferenceX and NVIDIA's NVFP4 blog also give about 9 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 900,
+          "unit": "GB/s",
+          "note": "Derived: HGX B200 lists NVLink GPU-to-GPU 1.8 TB/s, counting both directions; 1,800 / 2.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "NVLink5, 1.8 TB/s per GPU",
-          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
-          "confidence": "reported",
+          "value": "NVLink5, 1.8 TB/s per GPU (both directions), 8-GPU HGX node",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
@@ -144,15 +206,15 @@
         "hbm_gb": {
           "value": 288,
           "unit": "GB",
-          "note": "HBM3e, 12-high. The GB300 NVL72 page confirms rack-level 20 TB HBM; per-GPU capacity from the brief table row.",
-          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "note": "Nominal, HBM3e. LMSYS: \"288 GB of HBM3e per GPU\". NVIDIA's own system pages give smaller totals: GB300 NVL72 20 TB / 72 = about 278 GB; DGX/HGX B300 2.1 TB / 8 = about 262 GB. No usable figure is stored.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "hbm_tbps": {
           "value": 8,
           "unit": "TB/s",
-          "note": "Derived: 576 TB/s rack bandwidth / 72 GPUs.",
+          "note": "Derived: GB300 NVL72 lists up to 576 TB/s for 72 GPUs; 576 / 72 = 8.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
@@ -160,30 +222,39 @@
         "bf16_dense_tflops": {
           "value": 2500,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~2.5 PF\").",
+          "note": "Derived for the GB300 NVL72 part: 360 PFLOPS FP16/BF16 with sparsity / 2 / 72 = 2.5 PF. HGX B300 lists 36 PF sparse for 8 GPUs = 2.25 PF dense per GPU.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 5000,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~5 PF\").",
+          "note": "Derived for the GB300 NVL72 part: 720 PFLOPS FP8 with sparsity / 2 / 72 = 5 PF. HGX B300 lists 72 PF sparse for 8 GPUs = 4.5 PF dense per GPU.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp4_dense_tflops": {
+        "nvfp4_dense_tflops": {
           "value": 15000,
           "unit": "TFLOPS",
-          "source_url": "https://introl.com/blog/nvidia-blackwell-ultra-b300-infrastructure-requirements-2025",
+          "note": "Derived for the GB300 NVL72 part: 1,080 PFLOPS dense FP4 / 72 = 15 PF (Introl also reports 15 PF). HGX B300 lists 108 PF dense for 8 GPUs = 13.5 PF per GPU.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 900,
+          "unit": "GB/s",
+          "note": "Derived: HGX B300 lists NVLink GPU-to-GPU 1.8 TB/s, counting both directions; 1,800 / 2.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "NVLink5, 1.8 TB/s per GPU",
-          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
-          "confidence": "reported",
+          "value": "NVLink5, 1.8 TB/s per GPU (both directions)",
+          "source_url": "https://www.nvidia.com/en-us/data-center/hgx/",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
@@ -195,7 +266,7 @@
         "hbm_gb": {
           "value": 186,
           "unit": "GB",
-          "note": "Derived: 13.4 TB rack HBM / 72 GPUs (nominal 192 GB per GPU).",
+          "note": "Per GPU. Derived: the GB200 superchip lists 372 GB HBM3e for 2 GPUs (rack: 13.4 TB / 72 = 186). The B200 die's nominal 192 GB (LMSYS: \"GB200's 192 GB\") is not what NVIDIA lists for this part.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
@@ -203,7 +274,7 @@
         "hbm_tbps": {
           "value": 8,
           "unit": "TB/s",
-          "note": "Derived: 576 TB/s rack bandwidth / 72 GPUs.",
+          "note": "Per GPU. Derived: superchip 16 TB/s for 2 GPUs; rack 576 TB/s / 72 = 8.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
@@ -211,29 +282,37 @@
         "bf16_dense_tflops": {
           "value": 2500,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~2.5 PF\") per the brief table row.",
+          "note": "Per GPU. Derived: superchip 10 PFLOPS FP16/BF16 sparse; dense is half (NVIDIA footnote); 5 / 2 GPUs = 2.5 PF.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 5000,
           "unit": "TFLOPS",
-          "note": "Approximate (\"~5 PF\") per the brief table row.",
+          "note": "Per GPU. Derived: superchip 20 PFLOPS FP8 sparse; dense 10; / 2 GPUs = 5 PF.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp4_dense_tflops": {
+        "nvfp4_dense_tflops": {
           "value": 10000,
           "unit": "TFLOPS",
-          "note": "Derived: 720 PF dense FP4 per rack / 72 GPUs.",
+          "note": "Per GPU. Derived: superchip 20 PFLOPS dense NVFP4 / 2 GPUs (rack 720 PF / 72) = 10 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 900,
+          "unit": "GB/s",
+          "note": "Per GPU. Derived: superchip NVLink 3.6 TB/s for 2 GPUs = 1.8 TB/s per GPU, counting both directions; 1,800 / 2.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "72 GPUs + 36 Grace CPUs in one NVLink domain; about 130 TB/s aggregate NVLink; 1.8 TB/s per GPU",
+          "value": "72 GPUs + 36 Grace CPUs in one NVLink domain; about 130 TB/s aggregate NVLink; 1.8 TB/s per GPU (both directions)",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -241,6 +320,7 @@
         "rack_hbm_tb": {
           "value": 13.4,
           "unit": "TB",
+          "note": "HBM3e.",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -262,7 +342,30 @@
         "rack_fp4_dense_pflops": {
           "value": 720,
           "unit": "PFLOPS",
+          "note": "NVFP4, dense (1,440 PF sparse).",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "concurrent_128k_per_gpu": {
+          "value": 24,
+          "note": "DeepSeek-R1 (NVFP4 weights, FP8 KV cache), 128K input / 8K output, LMSYS 2026-02-19. 24 is the theoretical cap from free HBM / KV per request; the calculated target was 20 per GPU. Theoretical cap; LMSYS's practical target (~85%) is in concurrent_128k_per_gpu_target.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "megatron_dsv3_tflops_per_gpu": {
+          "value": 606,
+          "unit": "TFLOPS",
+          "note": "Megatron Core, DeepSeek-V3 671B pre-training; earlier GB200 NVL72 result quoted by NVIDIA. Precision not stated, so no MFU is derivable.",
+          "source_url": "https://developer.nvidia.com/blog/setting-a-world-record-for-moe-pre-training-on-nvidia-gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "concurrent_128k_per_gpu_target": {
+          "value": 20,
+          "note": "LMSYS 'calculated target' at ~85% of the theoretical cap (DeepSeek-R1 NVFP4, 128K in / 8K out); not separately measured.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
@@ -272,6 +375,62 @@
       "id": "gb300-nvl72",
       "name": "NVIDIA GB300 NVL72 (B300 GPUs in the rack)",
       "facts": {
+        "hbm_gb": {
+          "value": 288,
+          "unit": "GB",
+          "note": "Per GPU, nominal HBM3e (LMSYS: \"288 GB of HBM3e per GPU\"). NVIDIA's rack total 20 TB / 72 = about 278 GB.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 8,
+          "unit": "TB/s",
+          "note": "Per GPU. Derived: up to 576 TB/s / 72 = 8.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2500,
+          "unit": "TFLOPS",
+          "note": "Per GPU. Derived: 360 PFLOPS FP16/BF16 (sparse, per the page footnote) / 2 / 72 = 2.5 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_e4m3_dense_tflops": {
+          "value": 5000,
+          "unit": "TFLOPS",
+          "note": "Per GPU. Derived: 720 PFLOPS FP8 (sparse) / 2 / 72 = 5 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvfp4_dense_tflops": {
+          "value": 15000,
+          "unit": "TFLOPS",
+          "note": "Per GPU. Derived: 1,080 PFLOPS dense FP4 / 72 = 15 PF.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": 900,
+          "unit": "GB/s",
+          "note": "Per GPU. Derived: 130 TB/s aggregate / 72 = 1.8 TB/s, counting both directions; 1,800 / 2.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "network_gbps_per_gpu": {
+          "value": 800,
+          "unit": "Gb/s",
+          "note": "ConnectX-8: \"800 gigabits per second (Gb/s) of network connectivity for each GPU\"; 100 GB/s each way (see network-800g).",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
         "scale_up_domain": {
           "value": "72 GPUs + 36 Grace CPUs in one NVLink domain; about 130 TB/s aggregate NVLink",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
@@ -289,6 +448,7 @@
         "rack_hbm_tbps": {
           "value": 576,
           "unit": "TB/s",
+          "note": "\"Up to 576 TB/s\".",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -297,6 +457,36 @@
           "value": 130,
           "unit": "TB/s",
           "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_fp4_dense_pflops": {
+          "value": 1080,
+          "unit": "PFLOPS",
+          "note": "Dense FP4 (1,440 PF sparse).",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "concurrent_128k_per_gpu": {
+          "value": 40,
+          "note": "DeepSeek-R1 (NVFP4 weights, FP8 KV cache), 128K input / 8K output, LMSYS 2026-02-19. 40 is the theoretical cap from free HBM / KV per request; the calculated target was 36 per GPU. Theoretical cap; LMSYS's practical target (~85%) is in concurrent_128k_per_gpu_target.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "megatron_dsv3_tflops_per_gpu": {
+          "value": 1648,
+          "unit": "TFLOPS",
+          "note": "Megatron Core, DeepSeek-V3 671B pre-training on 256 GPUs; about 3x GB200 NVL72's 606. Precision not stated, so no MFU is derivable.",
+          "source_url": "https://developer.nvidia.com/blog/setting-a-world-record-for-moe-pre-training-on-nvidia-gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "concurrent_128k_per_gpu_target": {
+          "value": 36,
+          "note": "LMSYS 'calculated target' at ~85% of the theoretical cap (DeepSeek-R1 NVFP4, 128K in / 8K out); not separately measured.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
@@ -309,7 +499,7 @@
         "hbm_gb": {
           "value": 288,
           "unit": "GB",
-          "note": "HBM4.",
+          "note": "HBM4. The product page also lists 288 GB.",
           "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -320,24 +510,48 @@
             22
           ],
           "unit": "TB/s",
-          "note": "Sources conflict: the NVIDIA tech blog (primary, used here) says 22 TB/s; the NVIDIA Vera Rubin NVL72 product page (https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/) lists 19.2 TB/s. Unverified which is current.",
+          "note": "Sources conflict: the NVIDIA tech blog (primary, used here) says \"up to 22 TB/s\"; the NVIDIA Vera Rubin NVL72 product page (https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/) lists 19.2 TB/s per GPU. Unverified which is current (spec section 7 open conflict).",
           "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
-        "fp4_dense_tflops": {
+        "nvfp4_dense_tflops": {
           "value": 35000,
           "unit": "TFLOPS",
-          "note": "NVIDIA \"NVFP4 training\" figure (35 PF; inference figure is 50 PF). Unverified whether this is strictly dense.",
+          "note": "NVFP4 training figure, footnoted as dense compute on the tech blog and as \"Dense specification\" on the product page. The 50 PF NVFP4 inference figure is Transformer Engine / sparse. No settled BF16 or FP8 figure (the product page's 4 PF BF16 vs 17.5 PF FP8 is flagged in brief 03).",
           "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
-          "confidence": "reported",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_gb_s_each_way": {
+          "value": [
+            1500,
+            1800
+          ],
+          "unit": "GB/s",
+          "note": "Sources conflict: the NVIDIA tech blog says NVLink 6 delivers 3.6 TB/s bidirectional per GPU (1,800 each way); the Vera Rubin NVL72 product page (https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/) lists 3 TB/s per GPU and 216 TB/s per rack (1,500 each way). Each way = published both-directions total / 2.",
+          "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "NVLink6, 3.6 TB/s per GPU; Vera Rubin NVL72 = 72 GPUs + 36 Vera CPUs, 260 TB/s",
-          "note": "The NVIDIA product page lists 3 TB/s per GPU instead of 3.6.",
+          "value": "NVLink6, 3.6 TB/s per GPU (both directions); Vera Rubin NVL72 = 72 GPUs + 36 Vera CPUs, 260 TB/s",
+          "note": "The NVIDIA product page lists 3 TB/s per GPU and 216 TB/s per rack instead.",
           "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
           "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "rubin-ultra",
+      "name": "NVIDIA Rubin Ultra (NVL576 Kyber rack, planned)",
+      "facts": {
+        "scale_up_gpus": {
+          "value": 576,
+          "note": "Planned for H2 2027 per DCD (brief 03 section 1.4, REPORTED): 4 dies per package, about 1 TB HBM4e, NVL576 Kyber rack.",
+          "source_url": "https://datacenterdynamics.com/en/news/nvidias-rubin-ultra-nvl576-rack-expected-to-be-600kw-coming-second-half-of-2027",
+          "confidence": "reported",
           "last_verified": "2026-10-07"
         }
       }
@@ -349,7 +563,7 @@
         "hbm_gb": {
           "value": 288,
           "unit": "GB",
-          "note": "HBM3E.",
+          "note": "Nominal, HBM3E.",
           "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
           "confidence": "reported",
           "last_verified": "2026-10-07"
@@ -369,15 +583,15 @@
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 5000,
           "unit": "TFLOPS",
-          "note": "\"5 PF\".",
+          "note": "\"5 PF\" FP8; the source does not split E4M3 vs E5M2.",
           "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
-        "fp4_dense_tflops": {
+        "mxfp4_dense_tflops": {
           "value": 10000,
           "unit": "TFLOPS",
           "note": "\"10 PF\" (FP4/MXFP4).",
@@ -398,16 +612,17 @@
       "name": "Google TPU v7 \"Ironwood\" (TPU7x)",
       "facts": {
         "hbm_gb": {
-          "value": 192,
-          "unit": "GiB",
-          "note": "Google documents 192 GiB (about 206 GB); the unit is GiB, not GB.",
+          "value": 206,
+          "unit": "GB",
+          "note": "Derived: Google documents 192 GiB per chip; 192 x 1.073741824 = 206.2 GB (decimal).",
           "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
-          "confidence": "confirmed",
+          "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "hbm_tbps": {
           "value": 7.38,
           "unit": "TB/s",
+          "note": "Table: 7,380 GBps per chip.",
           "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -419,17 +634,199 @@
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
-        "fp8_dense_tflops": {
+        "fp8_e4m3_dense_tflops": {
           "value": 4614,
           "unit": "TFLOPS",
+          "note": "Google lists peak \"FP8\" without naming the variant; stored under the FP8 key the pages use.",
           "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "scale_up_domain": {
-          "value": "ICI 1.2 TB/s, 3D torus, 9,216-chip pod",
+          "value": "ICI 1.2 TB/s per chip (bidirectional), 3D torus, 9,216-chip pod",
           "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
           "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "network-400g",
+      "name": "Scale-out port, 400 Gb/s per GPU (H100 era)",
+      "facts": {
+        "gbps": {
+          "value": 400,
+          "unit": "Gb/s",
+          "note": "Meta's Llama 3 cluster: 400 Gbps per GPU (RoCE). DGX B200 also ships 400 Gb/s ConnectX-7 ports.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gb_s_each_way": {
+          "value": 50,
+          "unit": "GB/s",
+          "note": "Derived: 400 Gb/s / 8 bits per byte = 50 GB/s; the port runs at line rate in each direction (full duplex).",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "network-800g",
+      "name": "Scale-out port, 800 Gb/s per GPU (ConnectX-8, Blackwell)",
+      "facts": {
+        "gbps": {
+          "value": 800,
+          "unit": "Gb/s",
+          "note": "GB300 NVL72: 800 Gb/s per GPU (ConnectX-8), CONFIRMED; DGX B300 lists 8 single-port ConnectX-8 at up to 800 Gb/s. ConnectX-8 on Blackwell in general is REPORTED (brief 03 section 2.1).",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gb_s_each_way": {
+          "value": 100,
+          "unit": "GB/s",
+          "note": "Derived: 800 Gb/s / 8 bits per byte = 100 GB/s each way (full duplex).",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "meta-llama3-cluster",
+      "name": "Meta's 24K-GPU RoCE cluster for Llama 3 (2024)",
+      "facts": {
+        "gpus_per_rack": {
+          "value": 16,
+          "note": "2 servers + 1 top-of-rack switch per rack.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "racks_per_pod": {
+          "value": 192,
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gpus_per_pod": {
+          "value": 3072,
+          "note": "Full bisection bandwidth inside a pod.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pods": {
+          "value": 8,
+          "note": "8 pods = about 24K GPUs.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "oversubscription": {
+          "value": "1:7",
+          "note": "Aggregation layer above the pods.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "per_gpu_gbps": {
+          "value": 400,
+          "unit": "Gb/s",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "formats",
+      "name": "Number formats (bit layouts and block scaling)",
+      "facts": {
+        "fp32_layout": {
+          "value": "1/8/23",
+          "note": "sign/exponent/mantissa. Derived: Google states bfloat16 (1/8/7) has the same exponent size as FP32, and converting bfloat16 to FP32 pads 16 zeros in the mantissa (7 + 16 = 23). IEEE 754 single precision.",
+          "source_url": "https://cloud.google.com/blog/products/ai-machine-learning/bfloat16-the-secret-to-high-performance-on-cloud-tpus",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_layout": {
+          "value": "1/8/7",
+          "note": "\"one sign bit, eight exponent bits, and seven mantissa bits\".",
+          "source_url": "https://cloud.google.com/blog/products/ai-machine-learning/bfloat16-the-secret-to-high-performance-on-cloud-tpus",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp16_layout": {
+          "value": "1/5/10",
+          "note": "\"1 sign bit, 5 exponent bits, and 10 fractional bits\" (IEEE 754 half precision).",
+          "source_url": "https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/index.html",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_e4m3_layout": {
+          "value": "1/4/3",
+          "note": "\"E4M3 (4-bit exponent and 3-bit mantissa)\" plus a sign bit.",
+          "source_url": "https://arxiv.org/abs/2209.05433",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_e5m2_layout": {
+          "value": "1/5/2",
+          "note": "\"E5M2 (5-bit exponent and 2-bit mantissa)\" plus a sign bit.",
+          "source_url": "https://arxiv.org/abs/2209.05433",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mxfp4_block_size": {
+          "value": 32,
+          "note": "OCP Microscaling (MX), Table 1: MXFP4 elements are FP4 (E2M1), 32 per block.",
+          "source_url": "https://arxiv.org/abs/2310.10537",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mxfp4_scale_bits": {
+          "value": 8,
+          "note": "Shared scale is E8M0, \"an 8-bit exponent\" (power of two).",
+          "source_url": "https://arxiv.org/abs/2310.10537",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "nvfp4_block_size": {
+          "value": 16,
+          "note": "\"a fine-grained E4M3 scaling factor to each 16-value micro-block\"; elements are E2M1.",
+          "source_url": "https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "nvfp4_scale_format": {
+          "value": "E4M3",
+          "note": "Per-block E4M3 FP8 scale, plus a second per-tensor FP32 scale.",
+          "source_url": "https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "nvfp4_bits_per_value": {
+          "value": 4.5,
+          "unit": "bits",
+          "note": "One 4-bit value plus one FP8 scale per 16 values. Block size and scale format live in hardware.json/formats (nvfp4_block_size, nvfp4_scale_format).",
+          "source_url": "https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "memory-hierarchy",
+      "name": "GPU memory hierarchy (rough, per GPU)",
+      "facts": {
+        "sram_per_sm": {
+          "value": "hundreds of KB",
+          "note": "Rough (brief 03 section 1.1). H100: 256 KB of combined shared memory and L1 data cache per SM (NVIDIA Hopper in-depth blog); 50 MB L2.",
+          "source_url": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/",
+          "confidence": "reported",
           "last_verified": "2026-10-07"
         }
       }

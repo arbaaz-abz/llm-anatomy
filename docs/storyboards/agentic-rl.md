@@ -247,7 +247,7 @@ All keys are proposed for the data-extension pass unless marked existing; entry 
 | Nemotron 3 Super: asynchronous GRPO over 21 environments; a separate SWE-RL stage because SWE rollouts are slow and long | `models.nemotron-3-super.rl_algorithm`, `.rl_environments` (proposed by `rlvr-grpo`); `.swe_rl_stage` = true (confirmed) | 02 §4.4, §4.6 |
 | Olmo 3: no KL term (with clip-higher, token-level loss, zero-gradient filtering) | `models.olmo-3.rl_patches` (proposed by `rlvr-grpo`, reported) | 02 §4.4 |
 | Mistral Large 4: async RL, ~33B tokens per day (~16B trainable completion tokens) at ~3k GPUs | `models.mistral-large-4.rl_tokens_per_day` = 33e9, `.rl_trainable_tokens_per_day` = 16e9, `.rl_gpus` = 3000 (confirmed, Mistral blog) | 02 §4.7, §6 |
-| MiniMax-M2: dense process rewards (language mixing, tool-format errors) and a completion-time reward; "hundreds of thousands of real-world environments" is marketing for M2.5 | `models.minimax-m2.rl_rewards` = "process + completion-time + task" (confirmed); `.agentic_envs` = "hundreds of thousands (M2.5 marketing)" (reported) | 02 §4.5, §4.6 |
+| MiniMax-M2: dense process rewards (language mixing, tool-format errors) and a completion-time reward | `models.minimax-m2.rl_rewards` = "process + completion-time + task" (confirmed) | 02 §4.5, §4.6 |
 | Using FP16 instead of BF16 shrinks the rounding mismatch | `papers.fp16-mismatch-2025` (arXiv 2510.26788) (reported) — no model entry | 02 §4.7 |
 
 ## 9. Takeaways
@@ -344,8 +344,7 @@ masks exactly ρ < 1/2 or ρ > 2 (the band edges are kept); inputs are never mut
 `glm-5.agentic_envs_swe` · `deepseek-v3.2.rl_patches` · `deepseek-v4-pro.rl_infra`,
 `deepseek-v4-pro.reward_model` · `kimi-k3.rl_experts` = 9, `kimi-k3.rl_rollouts`, `kimi-k3.reward_model` ·
 `nemotron-3-super.swe_rl_stage` · `mistral-large-4.rl_tokens_per_day` = 33e9,
-`.rl_trainable_tokens_per_day` = 16e9, `.rl_gpus` = 3000 · `minimax-m2.rl_rewards`,
-`minimax-m2.agentic_envs` (reported) · a non-model fact `papers.fp16-mismatch-2025` (arXiv 2510.26788,
+`.rl_trainable_tokens_per_day` = 16e9, `.rl_gpus` = 3000 · `minimax-m2.rl_rewards` · a non-model fact `papers.fp16-mismatch-2025` (arXiv 2510.26788,
 reported), in `data/papers.json` (ruled).
 
 **Graph changes:** none.
@@ -364,3 +363,4 @@ Applied from `track-review-recipe.md` §7 (change log: `fix-recipe-review.md`):
 - Must 1: frame 8 collapsed per README lesson 18 (rows 4, 6, 7 in full plus `5 other rows: ρ within [½, 2], unmasked`), with a 580 × 366 layout check; §11 sketch redrawn to match.
 - Should: `same factor either way: ½ and 2` printed under the linear band (lesson 21); truncated IS "caps the weight (at 2 in this toy)"; "most 2026 open-model reports" in §1, §3, frame 9 and takeaway 3; frame 7 note "most tokens agree within a few percent (34 of 39 here)"; frame 6 numbers say only the part sampled before the cut is off-policy; the FP16 chip itself reads "toy model of rounding only"; §3 ¶4 dated "in 2026".
 - Nice (declined in part): frame 10 prints Kimi K3's actual domains (general, general agents, coding agents) × low / high / max, not the track's illustrative `math & code · agents · chat`, because brief 02 §4.6 names K3's three domains and relabeling them would misstate the report.
+- Data pass 2026-10-07: the MiniMax M2.5 "hundreds of thousands of environments" marketing claim is dropped (no data key, no source); no numbers changed.

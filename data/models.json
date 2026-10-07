@@ -22,7 +22,7 @@
         "context_length": {
           "value": 1000000,
           "unit": "tokens",
-          "note": "Brief lists \"1M\".",
+          "note": "Brief lists \"1M\"; the HF card says \"one million tokens\". The config's max_position_embeddings is 1,048,576; this entry keeps 1,000,000 per the data-pass ruling (spec: \"V4-Pro is 1,000,000\").",
           "source_url": "https://arxiv.org/pdf/2606.19348",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -93,6 +93,268 @@
         "release_date": {
           "value": "2026-04-24",
           "note": "Preview release date. A GA version, V4-Pro-0813, followed in Aug 2026.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 7168,
+          "note": "config hidden_size.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 128,
+          "note": "config num_attention_heads.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 1,
+          "note": "config num_key_value_heads.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 512,
+          "note": "config head_dim (qk_rope_head_dim 64 of it carries RoPE).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "qk_norm": {
+          "value": true,
+          "note": "RMSNorm on queries and KV entries; used instead of QK-Clip.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention_sink": {
+          "value": true,
+          "note": "Learned sink logit (paper eq. 27).",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "window": {
+          "value": 128,
+          "unit": "tokens",
+          "note": "Sliding-window branch on every CSA/HCA layer (config sliding_window).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "expert_hidden": {
+          "value": 3072,
+          "note": "config moe_intermediate_size.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_shared": {
+          "value": 1,
+          "note": "config n_shared_experts.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 129280,
+          "note": "config vocab_size. The report describes it as 128K (the V3 tokenizer plus a few special tokens).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta": {
+          "value": 10000,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta_compressed": {
+          "value": 160000,
+          "note": "config compress_rope_theta (RoPE base for the compressed CSA/HCA streams).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "yarn_factor": {
+          "value": 16,
+          "note": "config rope_scaling: type yarn, factor 16, original_max_position_embeddings 65,536.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "router": {
+          "value": "sqrt-softplus; hash routing in first 3 MoE layers",
+          "note": "config scoring_func sqrtsoftplus, num_hash_layers 3.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "balancing": {
+          "value": "aux-loss-free bias + small sequence-level term",
+          "note": "Bias speed 0.001, balance loss 1e-4 (brief 02 §1.6).",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "residual": {
+          "value": "mHC",
+          "note": "Manifold-constrained hyper-connections.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_depth": {
+          "value": 1,
+          "note": "config num_nextn_predict_layers.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_loss": {
+          "value": "depth 1, weight 0.3 → 0.1",
+          "note": "Weight drops to 0.1 when LR decay starts.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "FP8; FP4 experts (QAT)",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "weight_formats": {
+          "value": "FP4 experts + FP8 rest (FP8 block 128×128, UE8M0 scales)",
+          "note": "config expert_dtype fp4; quantization_config fp8 e4m3, weight_block_size [128, 128], scale_fmt ue8m0.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "post_training_qat": {
+          "value": "MXFP4 (experts, indexer QK)",
+          "note": "FP32 master weights → FP4 → lossless dequant to FP8; rollouts use true FP4.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "checkpoint_gb": {
+          "value": 865,
+          "unit": "GB",
+          "note": "Approximate size of the shipped checkpoint (\"~865 GB\"); brief 04 §5 marks the size REPORTED.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "context_stages": {
+          "value": "4K → 16K → 64K → 1M",
+          "note": "Nominal labels for the sequence-length schedule inside pretraining; sparse attention enters at 64K after 1T dense tokens.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "2000-step warmup, constant peak 2.0e-4, cosine decay to 10% of peak near the end; batch ramped to 94.4M tokens",
+          "note": "Flash: peak 2.7e-4, batch 75.5M tokens.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "data_pipeline": {
+          "value": "filters batched auto-generated and templated content; long-document emphasis; packing with sample-level attention masking",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "muon_ns_schedule": {
+          "value": "8 steps (3.4445, −4.7750, 2.0315) then 2 steps (2, −1.5, 0.5)",
+          "note": "Hybrid Newton–Schulz, 10 iterations; momentum 0.95, wd 0.1, update RMS 0.18.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "v32_flops_ratio_1m": {
+          "value": 0.27,
+          "note": "Single-token inference FLOPs at 1M context vs DeepSeek-V3.2.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "v32_kv_ratio_1m": {
+          "value": 0.1,
+          "note": "KV cache at 1M context vs DeepSeek-V3.2.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "ep_hiding_flops_per_byte": {
+          "value": 6144,
+          "unit": "FLOPs/byte",
+          "note": "Expert traffic hides behind compute when C/B ≤ 2d = 6,144 FLOPs per byte.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "ep_kernel": {
+          "value": "MegaMoE fused dispatch-GEMM-combine",
+          "note": "Open-sourced as MegaMoE in DeepGEMM.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "notes_power": {
+          "value": "fully fused kernels make power throttling a limiter",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "chat_template": {
+          "value": "<think> tags; |DSML| XML tool calls",
+          "note": "XML reduced escaping errors.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "thinking_modes": {
+          "value": "Non-think / Think High / Think Max",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_algorithm": {
+          "value": "GRPO",
+          "note": "Specialists trained with SFT + GRPO; only the mixed-RL stage was replaced by on-policy distillation.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_infra": {
+          "value": "preemptible rollouts, token-granular WAL",
+          "note": "Regenerating interrupted requests from scratch biases toward short responses.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "reward_model": {
+          "value": "GRM, actor as judge",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "opd": {
+          "value": "multi-teacher, >10 teachers, full-vocab reverse KL",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_stage": {
+          "value": "not listed",
+          "note": "Absent from the report read; not proof of non-use.",
           "source_url": "https://arxiv.org/pdf/2606.19348",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -186,6 +448,20 @@
           "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
           "confidence": "reported",
           "last_verified": "2026-10-07"
+        },
+        "vision_merge": {
+          "value": 3,
+          "note": "DeepSeek-ViT merges 3 × 3 neighbours before the projector (brief 01 §6, fetcher summary).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "vision_encoder_layers": {
+          "value": 32,
+          "note": "DeepSeek-ViT: 32 layers, width 1,024, 2-layer MLP projector (brief 01 §6).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -208,10 +484,10 @@
           "last_verified": "2026-10-07"
         },
         "context_length": {
-          "value": 1000000,
+          "value": 1048576,
           "unit": "tokens",
-          "note": "Brief lists \"1M\".",
-          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "note": "Listed as 1M; config max_position_embeddings 1,048,576 (read 2026-10-07).",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
@@ -259,6 +535,245 @@
           "source_url": "https://letsdatascience.com/news/kimi-k3-debuts-as-28-trillion-parameter-open-weight-model-cac7da05",
           "confidence": "reported",
           "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 7168,
+          "note": "config text_config.hidden_size.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 96,
+          "note": "config num_attention_heads.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 163840,
+          "note": "config text_config.vocab_size. The briefs give \"160K\".",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_shared": {
+          "value": 2,
+          "note": "config num_shared_experts.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "moe_latent_dim": {
+          "value": 3584,
+          "note": "config routed_expert_hidden_size; half of d_model 7,168.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_kv_rank": {
+          "value": 512,
+          "note": "config kv_lora_rank (24 MLA layers).",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_rope_dim": {
+          "value": 64,
+          "note": "config qk_rope_head_dim; the MLA layers use NoPE (config mla_use_nope true).",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_encoder_params": {
+          "value": 401000000,
+          "unit": "params",
+          "note": "MoonViT-V2.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_encoder_layers": {
+          "value": 27,
+          "note": "config vision_config.vt_num_hidden_layers.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "patch_size": {
+          "value": 14,
+          "unit": "pixels",
+          "note": "config vision_config.patch_size.",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_merge": {
+          "value": 2,
+          "note": "config vision_config.merge_kernel_size [2, 2].",
+          "source_url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "max_image_side": {
+          "value": 3584,
+          "unit": "pixels",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "video": {
+          "value": "factorized spatial-temporal attention + temporal pooling",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "residual": {
+          "value": "Attention Residuals",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "balancing": {
+          "value": "Quantile Balancing",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_depth": {
+          "value": 1,
+          "note": "One MTP layer, fine-tuned as an EAGLE-3-style draft. The released config lists num_nextn_predict_layers 0.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp": {
+          "value": true,
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer": {
+          "value": "Per-Head Muon",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "activation_tricks": {
+          "value": "recompute + FP8 activations + CPU / remote offload (unified activation manager)",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "parallelism": {
+          "value": "PP+VP / MoonEP / ZeRO-1 + Pipeline ZeRO-2 / KDA CP",
+          "note": "GPU count not disclosed.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "cosine, 1% warmup",
+          "note": "wd 0.1; its scaling study found cosine beat WSD when each was tuned separately.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_stages": {
+          "value": "8K → 64K (pretraining); 256K → 1M (cooldown)",
+          "note": "Nominal labels.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_extension_note": {
+          "value": "context extension is cheap because it is concentrated in a small fraction of the budget",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": "not disclosed",
+          "note": "Absent from the report (brief 02 §0, §8).",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "data_pipeline": {
+          "value": "four text domains (Web, Code, Math, Knowledge): heuristics, classifier quality scoring, dedup; per-domain rates from small-model ablations; knowledge and math rephrased with fidelity checks",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "scaling_efficiency_vs_k2": {
+          "value": 2.5,
+          "unit": "×",
+          "note": "Claimed, from architecture, data and recipe together.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "chat_template": {
+          "value": "XTML",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sft_data": {
+          "value": "cold-start policy for RL; trajectories from earlier Kimi specialists plus multi-stage verification and human annotation",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "thinking_modes": {
+          "value": "low / high / max",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_experts": {
+          "value": 9,
+          "note": "3 domains (general, general agents, coding agents) × 3 effort levels.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_rollouts": {
+          "value": "partial rollouts (λ), AgentEnv microVMs",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "reward_model": {
+          "value": "agentic GRM: rubric + scorepad, verbosity budget",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_length_control": {
+          "value": "verbosity budget (auto-lose)",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "opd": {
+          "value": "per-token reward from 1 of 9 experts (domain × effort), clipped",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "post_training_qat": {
+          "value": "MXFP4 weights + MXFP8 activations, from SFT",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_stage": {
+          "value": "not listed",
+          "note": "Absent from the report read; not proof of non-use.",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -282,10 +797,10 @@
           "last_verified": "2026-10-07"
         },
         "context_length": {
-          "value": 1000000,
+          "value": 1048576,
           "unit": "tokens",
-          "note": "Brief lists \"1M\" (GLM-5 was 200K).",
-          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "note": "Listed as 1M; config max_position_embeddings 1,048,576 (read 2026-10-07). GLM-5 was 200K.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
@@ -324,6 +839,62 @@
           "source_url": "https://huggingface.co/zai-org/GLM-5.3",
           "confidence": "reported",
           "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 6144,
+          "note": "config hidden_size.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 256,
+          "note": "256 routed + 1 shared (config n_routed_experts).",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 8,
+          "note": "config num_experts_per_tok.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_shared": {
+          "value": 1,
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_kv_rank": {
+          "value": 512,
+          "note": "config kv_lora_rank.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_q_rank": {
+          "value": 2048,
+          "note": "config q_lora_rank.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sparse_top_k": {
+          "value": 2048,
+          "unit": "tokens",
+          "note": "config index_topk (DSA indexer).",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta": {
+          "value": 8000000,
+          "note": "config rope_parameters.rope_theta.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -346,10 +917,10 @@
           "last_verified": "2026-10-07"
         },
         "context_length": {
-          "value": 262000,
+          "value": 262144,
           "unit": "tokens",
-          "note": "Native context, listed as \"262K\" in the brief. Extensible to about 1.01M (method unverified).",
-          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "note": "Native context, listed as 262K (config max_position_embeddings). Extensible to about 1.01M (method unverified).",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
@@ -398,6 +969,31 @@
           "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 64,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 4,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 256,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta": {
+          "value": 10000000,
+          "note": "config rope_parameters.rope_theta.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -422,10 +1018,10 @@
           "last_verified": "2026-10-07"
         },
         "context_length": {
-          "value": 1000000,
+          "value": 1048576,
           "unit": "tokens",
-          "note": "Brief lists \"1M\".",
-          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "note": "Listed as 1M; config max_position_embeddings 1,048,576 (read 2026-10-07).",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
@@ -458,6 +1054,120 @@
           "note": "Month only: brief gives \"Jun 1-11\".",
           "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
           "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 64,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 4,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 128,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 122880,
+          "unit": "bytes",
+          "note": "Derived: 2 × 60 layers × 4 KV heads × 128 × 2 bytes (BF16). MSA saves compute, not storage.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 128,
+          "note": "128 routed + 1 shared.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 4,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_shared": {
+          "value": 1,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dense_layers": {
+          "value": 3,
+          "note": "config moe_layer_freq starts with three zeros.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sparse_block": {
+          "value": 128,
+          "unit": "tokens",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sparse_top_blocks": {
+          "value": 16,
+          "note": "Per GQA group; sparse from layer 3.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "msa_compute_claim": {
+          "value": 28.4,
+          "unit": "×",
+          "note": "109B test model, 1M tokens, MiniMax's claim.",
+          "source_url": "https://arxiv.org/abs/2606.13392",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta": {
+          "value": 5000000,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "partial_rotary_factor": {
+          "value": 0.5,
+          "note": "Rotary dim 64 of 128.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "patch_size": {
+          "value": 14,
+          "unit": "pixels",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_encoder_layers": {
+          "value": 32,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_width": {
+          "value": 1280,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "max_image_side": {
+          "value": 2016,
+          "unit": "pixels",
+          "note": "config vision_config.image_size.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
@@ -514,21 +1224,23 @@
       "name": "gpt-oss-120b",
       "facts": {
         "total_params": {
-          "value": 116800000000,
+          "value": 116830000000,
           "unit": "params",
+          "note": "Model card Table 1: 116.83B (prose rounds to 116.8B; the HF card says 117B).",
           "source_url": "https://arxiv.org/abs/2508.10925",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "active_params": {
-          "value": 5100000000,
+          "value": 5130000000,
           "unit": "params",
+          "note": "Model card Table 1: 5.13B active per token per forward pass; unembedding counted as active, embedding not (prose rounds to 5.1B).",
           "source_url": "https://arxiv.org/abs/2508.10925",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
         "attention": {
-          "value": "alternating full / banded (sliding window 128) layers; learned attention sinks",
+          "value": "GQA 64Q/8KV, head_dim 64, alternating full + SWA-128, learned sinks, attention_bias",
           "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -551,6 +1263,171 @@
           "source_url": "https://arxiv.org/abs/2508.10925",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 131072,
+          "unit": "tokens",
+          "note": "config max_position_embeddings; YaRN from 4,096.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 2880,
+          "note": "config hidden_size.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 64,
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 8,
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 64,
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 201088,
+          "note": "o200k_harmony tokenizer.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "expert_hidden": {
+          "value": 2880,
+          "note": "config intermediate_size.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "biases": {
+          "value": true,
+          "note": "config attention_bias true.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "tied_embeddings": {
+          "value": false,
+          "note": "config tie_word_embeddings false.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention_sink": {
+          "value": true,
+          "note": "Learned bias in the softmax denominator per head.",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "window": {
+          "value": 128,
+          "unit": "tokens",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layer_pattern": {
+          "value": "1 full : 1 window",
+          "note": "config layer_types alternates sliding_attention and full_attention (18 each).",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 36864,
+          "unit": "bytes",
+          "note": "Derived: 18 full layers × 2 × 8 KV heads × 64 × 2 bytes. Window layers excluded (see kv_fixed_bytes).",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "kv_fixed_bytes": {
+          "value": 4718592,
+          "unit": "bytes",
+          "note": "Derived: 18 window layers × 128 tokens × 2,048 bytes per token per layer (2 × 8 × 64 × 2); fixed per conversation.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "rope_theta": {
+          "value": 150000,
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "yarn_factor": {
+          "value": 32,
+          "note": "config rope_scaling: yarn, factor 32.",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rope_original_context": {
+          "value": 4096,
+          "unit": "tokens",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "weight_format": {
+          "value": "MXFP4 (MoE weights, post-training), ~4.25 bits/param",
+          "note": "Post-training quantization, not native FP4 training.",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fits_gpu_gb": {
+          "value": 80,
+          "unit": "GB",
+          "note": "Fits a single 80 GB GPU.",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "text",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "chat_template": {
+          "value": "harmony (System > Developer > User > Assistant > Tool)",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "thinking_modes": {
+          "value": "low / medium / high",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_algorithm": {
+          "value": "undisclosed (similar to o3)",
+          "note": "\"similar CoT RL techniques as OpenAI o3\".",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2025-08",
+          "note": "Month only.",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -561,17 +1438,17 @@
         "total_params": {
           "value": 1050000000000,
           "unit": "params",
-          "note": "Mistral blog prose says \"1 trillion\"; the model card and secondary sources (The Decoder, kingy.ai) say 1.05T. A rounding discrepancy, not a real conflict.",
+          "note": "Mistral blog prose says \"1 trillion\"; the model card and secondary sources (The Decoder, kingy.ai) say 1.05T. A rounding discrepancy, not a real conflict. Sources differ: Mistral's blog states ~1T total / 52B active on fetch 2026-10-07; briefs quote 49B; value kept pending a manual re-read.",
           "source_url": "https://mistral.ai/news/mistral-large-4",
-          "confidence": "confirmed",
+          "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "active_params": {
           "value": 49000000000,
           "unit": "params",
-          "note": "Routed-active; 52B including embeddings.",
+          "note": "Routed-active; 52B including embeddings. Sources differ: Mistral's blog states ~1T total / 52B active on fetch 2026-10-07; briefs quote 49B; value kept pending a manual re-read.",
           "source_url": "https://mistral.ai/news/mistral-large-4",
-          "confidence": "confirmed",
+          "confidence": "reported",
           "last_verified": "2026-10-07"
         },
         "context_length": {
@@ -605,11 +1482,55 @@
           "source_url": "https://mistral.ai/news/mistral-large-4",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "rl_tokens_per_day": {
+          "value": 33000000000,
+          "unit": "tokens",
+          "note": "One RL run at ~3k GPUs.",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_trainable_tokens_per_day": {
+          "value": 16000000000,
+          "unit": "tokens",
+          "note": "Trainable completion tokens.",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_gpus": {
+          "value": 3000,
+          "unit": "GPUs",
+          "note": "\"At our current scale (3k GPUs)\".",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_verifiers": {
+          "value": "reward models, unit tests, LLM judges, and static checks",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "languages": {
+          "value": "160+",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vision_encoder_params": {
+          "value": 1600000000,
+          "unit": "params",
+          "note": "Brief 01 §6 [R].",
+          "source_url": "https://kingy.ai/blog/mistral-large-4-specs-benchmarks-pricing/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
         }
       }
     },
     {
-      "id": "llama-3-405b",
+      "id": "llama-3.1-405b",
       "name": "Llama 3.1 405B",
       "facts": {
         "total_params": {
@@ -634,13 +1555,1464 @@
           "source_url": "https://arxiv.org/abs/2407.21783",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "parallelism": {
+          "value": "TP8/CP1/PP16/DP64 on 8,192; TP8/CP1/PP16/DP128 on 16,384; TP8/CP16/PP16/DP8 on 16,384 (long context)",
+          "note": "Table 4.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "parallelism_order": {
+          "value": "TP, CP, PP, DP",
+          "note": "Innermost to outermost.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cp_long_context": {
+          "value": 16,
+          "note": "All-gather CP only in the final 128K stage.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_flops": {
+          "value": 38000000000000000436207616,
+          "unit": "FLOPs",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_gpu_hours": {
+          "value": 30840000,
+          "unit": "GPU-hours",
+          "note": "H100-80GB GPU-hours; covers more than the 15.6T-token pretraining.",
+          "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mfu_bf16": {
+          "value": [
+            0.38,
+            0.43
+          ],
+          "note": "BF16 MFU while training, three configs (Table 4): 43% TP8/PP16/DP64 on 8,192 (430 TFLOPS), 41% on 16,384 (400), 38% long-context stage (380). Not a source conflict.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "interruptions_54d": {
+          "value": 419,
+          "note": "Unexpected interruptions in a 54-day window (466 total).",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "interruptions_planned": {
+          "value": 47,
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "effective_time": {
+          "value": ">90%",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "reliability_notes": {
+          "value": "a single straggler can slow down thousands of GPUs; 1–2% diurnal throughput swing from temperature; 6 silent data corruptions; 3 interruptions needed manual intervention",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sharding": {
+          "value": "FSDP: optimizer states + gradients; weights not resharded after forward",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "name": "DeepSeek-V4-Flash",
+      "facts": {
+        "total_params": {
+          "value": 284000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 13000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 32000000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v3",
+      "name": "DeepSeek-V3",
+      "facts": {
+        "total_params": {
+          "value": 671000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 37000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2024-12",
+          "note": "Month only (report dated 2024-12-27).",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 61,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dense_layers": {
+          "value": 3,
+          "note": "config first_k_dense_replace.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 7168,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 128,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_q_rank": {
+          "value": 1536,
+          "note": "config q_lora_rank.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_kv_rank": {
+          "value": 512,
+          "note": "config kv_lora_rank.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_rope_dim": {
+          "value": 64,
+          "note": "config qk_rope_head_dim.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_nope_dim": {
+          "value": 128,
+          "note": "config qk_nope_head_dim.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mla_v_dim": {
+          "value": 128,
+          "note": "config v_head_dim.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 256,
+          "note": "256 routed + 1 shared.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 8,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_shared": {
+          "value": 1,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "expert_hidden": {
+          "value": 2048,
+          "note": "config moe_intermediate_size.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mlp_hidden": {
+          "value": 18432,
+          "note": "config intermediate_size (dense layers).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 129280,
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 131072,
+          "unit": "tokens",
+          "note": "Card lists 128K; config max_position_embeddings is 163,840 (YaRN factor 40 from 4,096).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 70272,
+          "unit": "bytes",
+          "note": "Derived: 61 layers × (512 latent + 64 RoPE) × 2 bytes.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_depth": {
+          "value": 1,
+          "note": "config num_nextn_predict_layers.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_params": {
+          "value": 14000000000,
+          "unit": "params",
+          "note": "HF checkpoint is 685B: 671B main model + 14B MTP module.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 14800000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_gpus": {
+          "value": 2048,
+          "unit": "GPUs",
+          "note": "H800.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "parallelism": {
+          "value": "PP16 / EP64 (8 nodes) / ZeRO-1 DP, no TP",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pipeline_schedule": {
+          "value": "DualPipe",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "comm_sms": {
+          "value": "20 of 132",
+          "note": "SMs reserved for communication; all-to-all and PP traffic \"can be fully hidden\".",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "nvlink_effective_gb_s": {
+          "value": 160,
+          "unit": "GB/s",
+          "note": "Stated effective rate per GPU; direction not stated by source. H800 NVLink is reduced vs H100.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "ib_gb_s": {
+          "value": 50,
+          "unit": "GB/s",
+          "note": "Stated effective rate per GPU; direction not stated by source (matches a 400 Gb/s port each way).",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "max_nodes_per_token": {
+          "value": 4,
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_gpu_hours": {
+          "value": 2788000,
+          "unit": "GPU-hours",
+          "note": "H800-hours, total.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_gpu_hours": {
+          "value": 2664000,
+          "unit": "GPU-hours",
+          "note": "180K H800-hours per trillion tokens.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_cost_usd_reported": {
+          "value": 5576000,
+          "unit": "USD",
+          "note": "At $2/GPU-h; excludes research and ablations.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_recipe": {
+          "value": "all three GEMMs in FP8 (E4M3); 1×128 activation tiles, 128×128 weight blocks; FP32 promotion of partial sums; BF16 optimizer states",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_loss_error": {
+          "value": "<0.25%",
+          "note": "Relative loss error vs BF16.",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer_state_format": {
+          "value": "BF16",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "zero_stage": {
+          "value": 1,
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "activation_tricks": {
+          "value": "recomputes RMSNorm and MLA up-projections; EMA weights on CPU",
+          "source_url": "https://arxiv.org/abs/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v3.2",
+      "name": "DeepSeek-V3.2",
+      "facts": {
+        "rl_advantage_norm": {
+          "value": "none",
+          "note": "A = R − mean(R), no std division.",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "post_training_compute_share": {
+          "value": ">10% of pretraining compute",
+          "note": "The report's own accounting.",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_environments": {
+          "value": 1827,
+          "note": "Synthetic environments; 4,417 tasks, plus 85K agentic prompts.",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_patches": {
+          "value": "weak/zero KL (math), off-policy sequence masking, Keep Routing, Keep Sampling Mask",
+          "note": "Unbiased KL estimator.",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sft_cold_start": {
+          "value": "cold start merging reasoning with tool use (\"thinking in tool-use\")",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-r1",
+      "name": "DeepSeek-R1",
+      "facts": {
+        "sft_samples": {
+          "value": 800000,
+          "note": "≈600K reasoning + ≈200K non-reasoning; 804,745 in Table 5.",
+          "source_url": "https://arxiv.org/abs/2501.12948",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "kimi-k2",
+      "name": "Kimi K2",
+      "facts": {
+        "total_params": {
+          "value": 1040000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 32000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 15500000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "resident_bytes_per_param": {
+          "value": 6,
+          "unit": "bytes",
+          "note": "BF16 params + FP32 grad buffer, about 6 TB over 256 GPUs; about 30 GB per GPU left for optimizer state.",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "model_parallel_gpus": {
+          "value": 256,
+          "unit": "GPUs",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "node": {
+          "value": "8 GPUs, 2 TB RAM, 8 × 400 Gb/s RoCE",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "parallelism": {
+          "value": "PP16 (virtual stages) / EP16 / ZeRO-1 DP; multiples of 32 nodes",
+          "note": "Minimum 256 GPUs; H800 cluster, count not disclosed.",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "loss_spikes": {
+          "value": 0,
+          "note": "Over 15.5T tokens with MuonClip (training stability, not hardware reliability).",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "kimi-k2.5",
+      "name": "Kimi K2.5",
+      "facts": {
+        "weight_format": {
+          "value": "INT4 (QAT)",
+          "note": "Native INT4 MoE weights; also K2 Thinking and K2.6 (brief 04 §5).",
+          "source_url": "https://docs.vultr.com/inference-cookbook/rocm/model-guides/kimi-k2-5-1t",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "kimi-linear",
+      "name": "Kimi Linear (48B / 3B test model)",
+      "facts": {
+        "total_params": {
+          "value": 48000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2510.26692",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 3000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2510.26692",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_reduction_pct": {
+          "value": 75,
+          "unit": "%",
+          "note": "\"Up to 75%\" KV-cache reduction vs full MLA, 48B / 3B test model.",
+          "source_url": "https://arxiv.org/abs/2510.26692",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_speedup_1m": {
+          "value": 6,
+          "unit": "×",
+          "note": "\"Up to 6×\" decoding throughput at 1M context, 48B / 3B test model.",
+          "source_url": "https://arxiv.org/abs/2510.26692",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "glm-5",
+      "name": "GLM-5",
+      "facts": {
+        "total_params": {
+          "value": 744000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 40000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 80,
+          "note": "Paper value; the GLM-5.3 config says 78 (see glm-5.3.layers).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-02",
+          "note": "Month only (report dated 2026-02-17).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 28500000000000,
+          "unit": "tokens",
+          "note": "Headline total. Its published stages (27T base + 1T + 500B + 50B) sum to 28.55T; see context_stages.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "base_tokens": {
+          "value": 27000000000000,
+          "unit": "tokens",
+          "note": "Base stage at 4K context.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "midtrain_tokens": {
+          "value": 1550000000000,
+          "unit": "tokens",
+          "note": "32K (1T) + 128K (500B) + 200K (50B).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_stages": {
+          "value": "4K: 27T → 32K: 1T → 128K: 500B → 200K: 50B",
+          "note": "Nominal context labels with each stage's token count; stages sum to 28.55T.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": [
+            151552,
+            154880
+          ],
+          "note": "The report's table gives two columns, 151,552 and 154,880 (the GLM-5.3 config lists 154,880).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer": {
+          "value": "Muon Split",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention_note": {
+          "value": "MLA-256: head dim 192 → 256, fewer heads; Muon Split needed to match GQA-8",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "swa_retrofit_note": {
+          "value": "adding sliding windows to a trained full-attention model hurt long-context tasks badly, even with half the layers kept full",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp": {
+          "value": true,
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_layers": {
+          "value": 3,
+          "note": "Shares 3 MTP layers.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_accept_length": {
+          "value": 2.76,
+          "unit": "tokens",
+          "note": "Mean accepted length per step in its report.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "cosine",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "swe_data_tokens": {
+          "value": 160000000000,
+          "unit": "tokens",
+          "note": "~10M issue–PR pairs.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "chat_template": {
+          "value": "interleaved / preserved / turn-level thinking",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sft_masking": {
+          "value": "erroneous segments masked; tool outputs excluded",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "sft_data": {
+          "value": "rejection sampling on hard problems",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_algorithm": {
+          "value": "IcePop-GRPO",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_clip_eps_low": {
+          "value": 0.2,
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_clip_eps_high": {
+          "value": 0.28,
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_kl_coeff": {
+          "value": 0,
+          "note": "KL term removed.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_group_size": {
+          "value": 32,
+          "note": "Batch 32, fully on-policy for reasoning RL.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_reward_type": {
+          "value": "binary outcome",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_mismatch_fix": {
+          "value": "IcePop mask, ρ ∈ [1/2, 2]",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_infra": {
+          "value": "async decoupled (slime), TITO, double-sided IS",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "agentic_envs_swe": {
+          "value": ">10,000 (9 languages)",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "general_rl_rewards": {
+          "value": "rule + ORM + GRM; human-written anchors",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "opd": {
+          "value": "cross-stage, earlier checkpoints as teachers",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_stage": {
+          "value": "not listed",
+          "note": "Absent from the report read; not proof of non-use.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "qwen3.5-397b",
+      "name": "Qwen3.5-397B-A17B",
+      "facts": {
+        "total_params": {
+          "value": 397000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 17000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 60,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "full_attention_layers": {
+          "value": 15,
+          "note": "config full_attention_interval 4 (3 Gated DeltaNet : 1 full).",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 32,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 2,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 256,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 30720,
+          "unit": "bytes",
+          "note": "Derived: 15 full layers × 2 × 2 KV heads × 256 × 2 bytes; plus a constant Gated DeltaNet state per linear layer.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "partial_rotary_factor": {
+          "value": 0.25,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "qwen3",
+      "name": "Qwen3 (series)",
+      "facts": {
+        "pretrain_tokens": {
+          "value": 36000000000000,
+          "unit": "tokens",
+          "note": "Series-level report; 119 languages. Brief 02 read it via a search snippet.",
+          "source_url": "https://arxiv.org/abs/2505.09388",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "post_training": {
+          "value": "long-CoT cold start → reasoning RL → thinking-mode fusion → general RL",
+          "note": "Series-level report.",
+          "source_url": "https://arxiv.org/abs/2505.09388",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "qwen3-2507",
+      "name": "Qwen3 2507 (series)",
+      "facts": {
+        "rl_algorithm": {
+          "value": "GSPO",
+          "note": "Series-level: the Qwen3 2507 models, per Qwen's GSPO paper (no per-checkpoint recipe).",
+          "source_url": "https://arxiv.org/abs/2507.18071",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "minimax-m2",
+      "name": "MiniMax-M2 (series)",
+      "facts": {
+        "total_params": {
+          "value": 229900000000,
+          "unit": "params",
+          "note": "Flagship M2.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 9800000000,
+          "unit": "params",
+          "note": "Flagship M2.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 29200000000000,
+          "unit": "tokens",
+          "note": "19.9T constant phase + 9.3T decay phase. Series-level report (M2 to M2.7).",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 200064,
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "data_pipeline": {
+          "value": "model-based quality scoring; code, mathematics and STEM significantly upsampled",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp": {
+          "value": true,
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "19.9T constant phase + 9.3T decay phase",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_stages": {
+          "value": "8K → 32K → 192K (during the decay phase)",
+          "note": "Nominal labels.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_algorithm": {
+          "value": "CISPO",
+          "note": "Importance weight clipped to [0, 1+ε_high] with stop-gradient.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_length_control": {
+          "value": "completion-time reward",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_rewards": {
+          "value": "process + completion-time + task",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_stage": {
+          "value": "not listed",
+          "note": "Absent from the report read; not proof of non-use.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "mimo-v2-flash",
+      "name": "MiMo-V2-Flash",
+      "facts": {
+        "total_params": {
+          "value": 309000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 15000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 27000000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "FP8",
+          "note": "FP8 mixed precision over 27T tokens.",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer": {
+          "value": "AdamW",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "AdamW, two-stage cosine: to 1e-4 over 10T, then to 3e-5 over 4T",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layer_pattern": {
+          "value": "5 window : 1 full",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "window": {
+          "value": 128,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention_sink": {
+          "value": true,
+          "note": "Learned sink bias.",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "opd": {
+          "value": "teacher log-ratio + α·ORM advantage; keeps each teacher's peak",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_stage": {
+          "value": "not listed",
+          "note": "Absent from the report read; not proof of non-use.",
+          "source_url": "https://arxiv.org/abs/2601.02780",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "llama-3.1-70b",
+      "name": "Llama 3.1 70B",
+      "facts": {
+        "total_params": {
+          "value": 70000000000,
+          "unit": "params",
+          "note": "Card lists \"70B\". The prefill-decode storyboard's 70.6B is not printed in the card or the paper read today.",
+          "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 80,
+          "note": "Table 3. The briefs say \"Llama-3-70B\"; 128K context is the 3.1 checkpoint (Llama 3 70B had 8,192), same KV shape.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 8192,
+          "note": "Table 3.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 64,
+          "note": "Table 3 attention heads; re-verified 2026-10-07.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 8,
+          "note": "Table 3.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 128,
+          "note": "Gated Meta config read via a public mirror; equals 8,192 ÷ 64 heads (Table 3).",
+          "source_url": "https://huggingface.co/unsloth/Llama-3.1-70B/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 131072,
+          "unit": "tokens",
+          "note": "Card lists 128k; config max_position_embeddings 131,072 (read via a public mirror of the gated config).",
+          "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 327680,
+          "unit": "bytes",
+          "note": "Derived: 2 × 80 layers × 8 KV heads × 128 × 2 bytes (BF16).",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
         }
       }
     },
     {
       "id": "gpt-3",
       "name": "GPT-3 175B",
-      "facts": {}
+      "facts": {
+        "total_params": {
+          "value": 175000000000,
+          "unit": "params",
+          "note": "Table 2.1: 175.0B.",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 96,
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "d_model": {
+          "value": 12288,
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_heads": {
+          "value": 96,
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "n_kv_heads": {
+          "value": 96,
+          "note": "Multi-head attention: one K/V per head.",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "head_dim": {
+          "value": 128,
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 2048,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "vocab_size": {
+          "value": 50257,
+          "note": "GPT-3 uses GPT-2's reversible tokenization; GPT-2 paper: vocabulary 50,257.",
+          "source_url": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "MHA, 96 heads × 128 dims, one K/V per head",
+          "note": "The paper alternates dense and locally banded sparse attention patterns across layers (like the Sparse Transformer).",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "positional": {
+          "value": "learned",
+          "note": "Brief 01 §1 background; the GPT-3 paper says it uses GPT-2's model and architecture.",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 4718592,
+          "unit": "bytes",
+          "note": "Derived: 2 × 96 layers × 96 heads × 128 × 2 bytes.",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2020-05-28",
+          "note": "arXiv v1.",
+          "source_url": "https://arxiv.org/abs/2005.14165",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "nemotron-3-super",
+      "name": "Nemotron 3 Super",
+      "facts": {
+        "total_params": {
+          "value": 120000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2604.12374",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 12000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2604.12374",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 25000000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2604.12374",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "NVFP4",
+          "note": "Spec §7 conflict resolved to \"both\" (coordinator ruling 2026-10-07): the Super abstract (https://arxiv.org/abs/2604.12374) says it is the first Nemotron 3 model pre-trained in NVFP4, and the Ultra abstract (https://arxiv.org/abs/2606.15007) lists NVFP4 pre-training.",
+          "source_url": "https://arxiv.org/abs/2604.12374",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer": {
+          "value": "AdamW",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "WSD: 200B-token warmup to 4.5e-4, long plateau, minus-sqrt decay over the final 5T of 25T to 4.5e-6",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp": {
+          "value": true,
+          "source_url": "https://arxiv.org/abs/2604.12374",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_algorithm": {
+          "value": "asynchronous GRPO",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rl_environments": {
+          "value": 21,
+          "note": "21 environments / 37 RL datasets.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "swe_rl_stage": {
+          "value": true,
+          "note": "Separate SWE-RL stage because SWE rollouts are slow and long.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rlhf_stage": {
+          "value": "GenRM (principle-following, from Qwen3-235B-A22B-Thinking-2507, HelpSteer 3)",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "nemotron-3-ultra",
+      "name": "Nemotron 3 Ultra",
+      "facts": {
+        "total_params": {
+          "value": 550000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2606.15007",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 55000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2606.15007",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 20000000000000,
+          "unit": "tokens",
+          "note": "Abstract read 2026-10-07 (brief 03 had it as reported).",
+          "source_url": "https://arxiv.org/abs/2606.15007",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "NVFP4",
+          "note": "Spec §7 conflict resolved to \"both\" (coordinator ruling 2026-10-07): the Ultra abstract (https://arxiv.org/abs/2606.15007) lists NVFP4 pre-training, and the Super abstract (https://arxiv.org/abs/2604.12374) says Super was the first Nemotron 3 model pre-trained in NVFP4.",
+          "source_url": "https://arxiv.org/abs/2606.15007",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "ep_colocation": {
+          "value": "expert-parallel groups must sit on the same rack to stay inside NVLink",
+          "source_url": "https://arxiv.org/abs/2606.15007",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "olmo-3",
+      "name": "Olmo 3 (series)",
+      "facts": {
+        "pretrain_tokens": {
+          "value": 5900000000000,
+          "unit": "tokens",
+          "note": "Series-level: 7B and 32B dense (Dolma 3 Mix).",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "midtrain_tokens": {
+          "value": 100000000000,
+          "unit": "tokens",
+          "note": "Dolmino mid-training, then 65K context extension.",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "sft_traces": {
+          "value": 2300000,
+          "note": "Reasoning traces distilled from QwQ-32B and DeepSeek-R1.",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "dpo_pairs": {
+          "value": 200000,
+          "note": "\"Delta Learning\" pairs: chosen from a stronger model, rejected from a weaker one.",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "rlvr_prompts": {
+          "value": 105000,
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "rl_patches": {
+          "value": "clip-higher, token-level loss, no KL, zero-gradient filtering",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "magistral",
+      "name": "Magistral (series)",
+      "facts": {
+        "rl_clip_eps_high": {
+          "value": "0.26–0.28",
+          "note": "Mistral's published RL recipe (KL-free, non-diverse group filtering); Mistral Large 4's own algorithm is not disclosed. Stored as a string, not a conflict range.",
+          "source_url": "https://arxiv.org/abs/2506.10910",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "smollm3",
+      "name": "SmolLM3",
+      "facts": {
+        "preference_method": {
+          "value": "APO",
+          "note": "Anchored Preference Optimization, off-policy alignment (HF blog read 2026-10-07).",
+          "source_url": "https://huggingface.co/blog/smollm3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "gemma-3",
+      "name": "Gemma 3 (series)",
+      "facts": {
+        "layer_pattern": {
+          "value": "5 window : 1 full",
+          "note": "Series-level (1B–27B): 5 local layers per global layer (report read 2026-10-07).",
+          "source_url": "https://arxiv.org/abs/2503.19786",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "window": {
+          "value": 1024,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2503.19786",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "llama-4-behemoth",
+      "name": "Llama 4 Behemoth",
+      "facts": {
+        "training_gpus": {
+          "value": "32K",
+          "note": "Source says \"32K\"; exact count (32,000 vs 32,768) unknown.",
+          "source_url": "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "FP8",
+          "source_url": "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "achieved_tflops_per_gpu": {
+          "value": 390,
+          "unit": "TFLOPS",
+          "note": "Meta gave no MFU.",
+          "source_url": "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "nvidia-nvfp4-12b",
+      "name": "NVIDIA NVFP4 12B research model",
+      "facts": {
+        "total_params": {
+          "value": 12000000000,
+          "unit": "params",
+          "source_url": "https://developer.nvidia.com/blog/nvfp4-trains-with-precision-of-16-bit-and-speed-and-efficiency-of-4-bit/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 10000000000000,
+          "unit": "tokens",
+          "source_url": "https://developer.nvidia.com/blog/nvfp4-trains-with-precision-of-16-bit-and-speed-and-efficiency-of-4-bit/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_precision": {
+          "value": "NVFP4",
+          "note": "Matched its FP8 loss (paper arXiv 2509.25149).",
+          "source_url": "https://developer.nvidia.com/blog/nvfp4-trains-with-precision-of-16-bit-and-speed-and-efficiency-of-4-bit/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "zero-paper-7.5b",
+      "name": "ZeRO paper example (7.5B)",
+      "facts": {
+        "total_params": {
+          "value": 7500000000,
+          "unit": "params",
+          "note": "Teaching preset: ZeRO paper (arXiv 1910.02054) example; per-GPU 120 / 31.4 / 16.6 / 1.9 GB at N = 64.",
+          "source_url": "https://arxiv.org/abs/1910.02054",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
     }
   ]
 }

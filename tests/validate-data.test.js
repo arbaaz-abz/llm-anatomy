@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { validateDataset } from '../scripts/validate-data.js';
+import { DATA_FILES, validateDataset } from '../scripts/validate-data.js';
 
 const fact = (over = {}) => ({
   value: 1.6e12, unit: 'params', source_url: 'https://example.org/report',
@@ -63,8 +63,40 @@ test('dates must be real calendar dates', () => {
   assert.deepEqual(validateDataset({ as_of: '2024-02-29', entries: [] }, 't'), []);
 });
 
+test('the validator covers models, hardware, serving and papers', () => {
+  assert.deepEqual(DATA_FILES, ['models', 'hardware', 'serving', 'papers']);
+});
+
+const readData = async (file) => JSON.parse(await readFile(new URL(`../data/${file}.json`, import.meta.url), 'utf8'));
+
+test('serving.json measured anchors state their counting convention', async () => {
+  const serving = await readData('serving');
+  const throughputOrCost = /tok_s|cost_per_m|usd_per_m/;
+  for (const entry of serving.entries) {
+    for (const [key, fact] of Object.entries(entry.facts)) {
+      if (!throughputOrCost.test(key)) continue;
+      const text = `${fact.unit ?? ''} ${fact.note ?? ''}`;
+      assert.match(text, /input|output|total|per user/i, `${entry.id}.${key} must say which tokens it counts`);
+    }
+  }
+});
+
+test('serving.json and papers.json hold the ids the storyboards and brief name', async () => {
+  const ids = async (file) => new Set((await readData(file)).entries.map((e) => e.id));
+  const serving = await ids('serving');
+  for (const id of ['inferencex-v4-pro-gb300', 'inferencex-v4-pro-gb200', 'deepseek-v3-production', 'vllm', 'pagedattention']) {
+    assert.ok(serving.has(id), id);
+  }
+  const papers = await readData('papers');
+  for (const id of ['chinchilla-refit-2024', 'fp16-mismatch-2025', 'on-policy-distillation-2025']) {
+    assert.ok(papers.entries.some((e) => e.id === id), id);
+  }
+  const refit = papers.entries.find((e) => e.id === 'chinchilla-refit-2024').facts;
+  assert.deepEqual(['E', 'A', 'B', 'alpha', 'beta'].map((k) => refit[k].value), [1.8172, 482.01, 2085.43, 0.3478, 0.3658]);
+});
+
 test('the shipped data files are valid', async () => {
-  for (const file of ['models', 'hardware']) {
+  for (const file of DATA_FILES) {
     const json = JSON.parse(await readFile(new URL(`../data/${file}.json`, import.meta.url), 'utf8'));
     assert.deepEqual(validateDataset(json, file), []);
   }

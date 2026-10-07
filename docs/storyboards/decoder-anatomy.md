@@ -43,7 +43,7 @@ Each one names the frame or try-this that corrects it (README lesson 4).
   backbones. Corrected by frame 2's side lane and the §8 modality rows. (source: 01 §6, both recipes;
   "both still have a separate vision encoder + MLP projector")
 - **Misconception:** "The model outputs a word." → **Reality:** it outputs one score for *every*
-  vocabulary entry (16 here, 160,000 in Kimi K3), and a separate sampling step picks one. Changing the
+  vocabulary entry (16 here, 163,840 in Kimi K3), and a separate sampling step picks one. Changing the
   sampler changes the text without touching a single parameter. Corrected by frames 8–9; the sampler's
   knobs are deferred to `sampling`. (source: first principles; `models.kimi-k3.vocab_size`)
 - **Misconception:** "More total parameters means more compute per token." → **Reality:** with a Mixture
@@ -319,7 +319,7 @@ active = total − embedding lookup                            = 1,448
    dense block's MLP is 8·d² against attention's 4·d² (1.5× in the toy, whose hidden is 2·d); turn the
    MLP into experts and attention shrinks to a rounding error.
 2. Toy preset, set **Blocks = 1** and d_model = 8: embedding + head = 256 of 920, 27.8%. Now **Blocks =
-   8, d_model = 64**: 0.6%. A text line under the toy adds the far end: "Kimi K3 (2026): 2.3B of
+   8, d_model = 64**: 0.6%. A text line under the toy adds the far end: "Kimi K3 (2026): 2.35B of
    2.78T, 0.08%" (from `models.kimi-k3.vocab_size` × `.d_model`). → **Insight: the embedding table is
    vocab × d_model, the blocks are about 10–12 · N · d_model² (10 in this toy, 12 in GPT-3); the table
    only matters in small models.** Read gpt-oss-120b's "% of active" column: its unembedding is 579M of
@@ -425,7 +425,7 @@ Preset configs (`PRESETS` in `math/params.js`; every number maps to a data key i
 - `deepseekV4Pro` (partial): experts from confirmed facts only (384 + 1 experts, hidden 3,072, d 7,168,
   61 layers), remainder a neutral "not published" segment with the printed assumption "if all 61 layers
   are MoE". Active: 7 experts × 61 × 66.06M = 28.2B of the published 49B (58%), the rest "not published".
-- Kimi K3 is not a preset (reviewer's ruling 2); its embedding + head (2.29B, 0.08%) is a text line in
+- Kimi K3 is not a preset (reviewer's ruling 2); its embedding + head (2.35B, 0.08%) is a text line in
   try-this 2 computed from `models.kimi-k3.vocab_size` × `.d_model` × 2.
 
 Tests to write first: every `parts` sum equals `total`; `active ≤ total`; `active = total − embedding`
@@ -466,6 +466,10 @@ const rms=v=>Math.sqrt(v.reduce((s,x)=>s+x*x,0)/v.length);const x=[0,1,.5,0,-.5,
 const x1=x.map((v,i)=>v+a[i]),x2=x1.map((v,i)=>v+m[i]);console.log(rms(x).toFixed(3),x1.join(","),rms(x1).toFixed(3),x2.join(","));
 const z=[-1,-1,-1,-1,2,1.5,.5,0,-1,-1,-1,-1,-1,-1,-1,-1],ez=z.map(Math.exp),S=ez.reduce((s,v)=>s+v,0);const p=ez.map(v=>v/S);console.log(S.toFixed(2),p.map(v=>v.toFixed(3)).join(","),"12 others",(12*p[0]).toFixed(3),"5-cell sum",(p[4]+p[5]+p[6]+p[7]+12*p[0]).toFixed(3));
 '
+```
+Data pass 2026-10-07 (Kimi K3 vocabulary 163,840, was 160,000; embedding + head 2.35B, was 2.29B):
+```sh
+node -e 'const e = 2 * 163840 * 7168; console.log(e, (e / 2.78e12 * 100).toFixed(3) + "%")'   # 2348810240 0.084%
 ```
 Output on 2026-10-07 (after the expert review): toy 1576 / 1448 / 1576, parts {128, 0, 512, 768, 0, 0,
 40, 128}, per block {256, 384}; toy1L 920; toy8x64 330816; moe8 4008 / 1576 / 1704, experts 3072,
@@ -541,14 +545,14 @@ pass" sits once above the table.
 | gpt-oss-120b (2025): 116.8B total / 5.1B active (4.4%), 36 blocks, 128 experts top-4; config d 2,880, 64 Q / 8 KV heads × 64, vocab 201,088, expert hidden 2,880; our count 116.83B / 5.13B | `models.gpt-oss-120b.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active` (existing, confirmed); `.d_model`, `.n_heads`, `.n_kv_heads`, `.head_dim`, `.vocab_size`, `.expert_hidden`, `.biases`, `.tied_embeddings` (proposed; source = the entry's config.json URL, re-verified 2026-10-07, see §6) | 01 §5 table [C]; §7 [C] |
 | DeepSeek-V3 (Dec 2024): 671B / 37B, 61 blocks (3 dense), 256 + 1 experts top-8, MLA; our count 671.03B / 36.6B; the HF checkpoint is 685B because it adds a 14B MTP module | `models.deepseek-v3.*` (entry proposed by `paged-attention`, accepted in its ruling; keys as for gpt-oss plus `.mla_q_rank`, `.mla_kv_rank`, `.mla_rope_dim`, `.mla_nope_dim`, `.mla_v_dim`, `.dense_layers`, `.experts_shared`, `.expert_hidden`, `.mlp_hidden`, `.mtp_params` = 14e9; sources arXiv 2412.19437, the HF config.json and model card, re-verified 2026-10-07, see §6) | 01 §5 table (background row); §2 MLA paragraph |
 | DeepSeek-V4-Pro: 1.6T / 49B (3.1%), 61 blocks, 384 + 1 experts top-6, expert hidden 3,072, d 7,168; text only | `models.deepseek-v4-pro.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.modalities` (existing, confirmed); `.d_model` = 7168, `.expert_hidden` = 3072, `.experts_shared` = 1 (proposed; source arXiv 2606.19348) | 01 §5 table [C]; §6 "V4 is text-only" [C] |
-| Kimi K3: 2.78T / 104.2B (3.7%), 93 blocks, 896 + 2 experts top-16, vocab 160K, d 7,168; native multimodal with a 401M-parameter vision encoder | `models.kimi-k3.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.modalities` (existing, confirmed); `.d_model` = 7168, `.vocab_size` = 160000, `.vision_encoder_params` = 401e6 (proposed; source arXiv 2607.24653) | 01 §5 table [C]; §6 vision-encoder sizes [C] |
+| Kimi K3: 2.78T / 104.2B (3.7%), 93 blocks, 896 + 2 experts top-16, vocab 163,840, d 7,168; native multimodal with a 401M-parameter vision encoder | `models.kimi-k3.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.modalities` (existing, confirmed); `.d_model` = 7168, `.vocab_size` = 163840, `.vision_encoder_params` = 401e6 (in data; source arXiv 2607.24653) | 01 §5 table [C]; §6 vision-encoder sizes [C] |
 | Qwen3.8-2.4T-A95B: 2.4T / 95B (4.0%), 92 blocks, 512 + 1 experts top-10; text only | `models.qwen3.8.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.modalities` (existing, confirmed) | 01 §5 table [C]; §7 [C] |
 | GLM-5.3: 753B / 40B (5.3%), 78–80 blocks (sources conflict, shown as a range) | `models.glm-5.3.total_params` (confirmed), `.active_params` (reported chip), `.layers` (range) | 01 §5 table; §7; Open uncertainties |
 | MiniMax-M3: ~428B / ~23B (5.4%), 60 blocks; native multimodal | `models.minimax-m3.total_params`, `.active_params`, `.layers`, `.modalities` (existing, confirmed) | 01 §5 table [C]; §6 [C] |
-| Mistral Large 4: 1.05T / 49B routed-active, 52B including embeddings: labs differ on whether the embedding counts as active | `models.mistral-large-4.total_params`, `.active_params` (+ its `note`) (existing, confirmed) | 01 §5 table; §7 verdicts |
-| Llama 3.1 405B (2024): dense, so every block parameter is used for every token; a dense baseline on the shares bar with GPT-3 | `models.llama-3.1-405b.total_params` (existing entry, confirmed; renamed from `llama-3-405b` in the data pass per lesson 8) | 01 §7 (background) |
+| Mistral Large 4: 1.05T / 49B routed-active, 52B including embeddings: labs differ on whether the embedding counts as active | `models.mistral-large-4.total_params`, `.active_params` (+ its `note`) (existing, `reported`: the blog says 52B active, the briefs 49B) | 01 §5 table; §7 verdicts |
+| Llama 3.1 405B (2024): dense, so every block parameter is used for every token; a dense baseline on the shares bar with GPT-3 | `models.llama-3.1-405b.total_params` (existing entry, confirmed; renamed from the old id in the data pass per lesson 8) | 01 §7 (background) |
 | 2026 norm: about 3–5% of parameters active per token (the table's entries run 3.1–5.4%), down from 9–28% in 2023–25 (Mixtral 8x7B, Dec 2023, was 28%; Qwen3-235B, 2025, 9%) | derived on the page from the `active_params / total_params` of the entries above (no new key) | 01 §5 "Active ratios" |
-| KV per position: GPT-3 (2020, at 2 bytes per number) 4,718,592 B ≈ 4.72 MB → DeepSeek-V3 (2024) 70,272 B ≈ 70.3 kB, derived from its confirmed config (61 × 576 × 2, `kvBytesPerTokenMla` in `math/memory.js`); "2026 designs go to a few kB: `kv-cache`" (frame 9's visible note; decimal SI units, exact bytes printed, per the course settlement) | `models.gpt-3.kv_bytes_per_token` (proposed, 4,718,592), `models.deepseek-v3.kv_bytes_per_token` (proposed, 70,272, derived; same entry as `paged-attention` uses) | 01 §4 table |
+| KV per position: GPT-3 (2020, at 2 bytes per number) 4,718,592 B ≈ 4.72 MB → DeepSeek-V3 (2024) 70,272 B ≈ 70.3 kB, derived from its confirmed config (61 × 576 × 2, `kvBytesPerTokenMla` in `math/memory.js`); "2026 designs go to a few kB: `kv-cache`" (frame 9's visible note; decimal SI units, exact bytes printed, per the course settlement) | `models.gpt-3.kv_bytes_per_token` (4,718,592), `models.deepseek-v3.kv_bytes_per_token` (70,272; both computed from confirmed configs and stored `reported` with formula notes; same entry as `paged-attention` uses) | 01 §4 table |
 | Patch size 14 × 14 pixels; Kimi K3's vision encoder is 27 layers / 401M parameters (frames 1–2 notes) | `models.kimi-k3.patch_size` = 14, `.vision_encoder_params` = 401e6, `.vision_encoder_layers` = 27; `models.minimax-m3.patch_size` = 14 (proposed; sources arXiv 2607.24653 and the M3 HF config) | 01 §6 mechanics and encoder sizes [C] |
 
 Rendered with `renderFact` so each row carries its source link and a "reported" chip where the data
@@ -624,7 +628,7 @@ table and note stay under it as page text.
    derivable, remainder "not published"). Kimi K3 is not a chip; its 0.08% embedding share is a text
    line in try-this 2.
 3. **Data keys and entries (data-pass item).** Keys to add: `d_model`, `vocab_size`, `mlp_hidden`,
-   `expert_hidden`, `experts_shared`, `dense_layers`, `tied_embeddings`, `biases`, `mla_q_rank`,
+   `expert_hidden`, `experts_shared`, `dense_layers` (not stored for V4-Pro), `tied_embeddings`, `biases`, `mla_q_rank`,
    `mla_kv_rank`, `mla_nope_dim`, `mla_rope_dim`, `mla_v_dim`, `vision_encoder_params`,
    `mtp_params`, `patch_size`, `vision_encoder_layers`, plus `attention`'s `n_heads`, `n_kv_heads`,
    `head_dim`. Entries: `gpt-3` (arXiv 2005.14165, plus `kv_bytes_per_token` 4,718,592 from 01 §4)
@@ -632,9 +636,11 @@ table and note stay under it as page text.
    The gpt-oss-120b and DeepSeek-V3 config values in §6 were re-verified against both config.json
    files on 2026-10-07; those URLs are the `source_url`, confidence `confirmed`. The Llama entry is
    `llama-3.1-405b` (exact checkpoint, lesson 8).
-4. **DeepSeek-V4-Pro dense layers (data-pass item).** The page prints the assumption "if all 61 layers
-   are MoE" (97%); the data pass reads `first_k_dense_replace` from the V4-Pro config and the printed
-   assumption is replaced by the config value (3 dense layers would give 1.475T, 92%).
+4. **DeepSeek-V4-Pro dense layers (a gap in the data).** The page prints the assumption "if all 61 layers
+   are MoE" (97%) and labels it an assumption. The data pass found no dense-layer count (the V4-Pro config
+   has no `first_k_dense_replace`; its `num_hash_layers` of 3 is not a dense count), so the page makes no
+   dense-layer claim and cites no such key. (If 3 layers were dense it would give 1.475T, 92%; that is
+   an illustration, not a fact.)
 5. **"Active" convention.** One definition, §6: every multiplied block parameter plus the unembedding;
    the lookup table is left out unless it is the unembedding (tied). No fifth control; `active` and
    `activeWithEmbedding` are both visible. Data-pass item: confirm gpt-oss's own accounting in its
@@ -650,8 +656,8 @@ table and note stay under it as page text.
 9. **Glyphs.** `patch`, `adder`, `blockStack` and `shareBar` are accepted with the conditions in §4;
    `shareBar` is its own glyph and `memBar` is a wrapper over it.
 10. **Frame 9's KV note** names GPT-3 (4,718,592 B ≈ 4.72 MB) and DeepSeek-V3 (70,272 B ≈ 70.3 kB,
-    derived from its confirmed config), then "2026 designs go to a few kB: `kv-cache`". No reported
-    figures on this page.
+    derived from its confirmed config), then "2026 designs go to a few kB: `kv-cache`". These bytes per token
+    are computed from confirmed configs; the data stores them as `reported` with formula notes.
 11. **Toy MLP widths.** Dense hidden 2·d (stated simplification); experts hidden d (two active = one
     dense MLP).
 12. **Captions.** Nine captions, each ≤ 30 words and ≤ 2 sentences, verified in §5.
@@ -718,7 +724,7 @@ and `memBar` becomes a wrapper over it; `--part-1 … 5` go through the colorbli
 
 Data-pass items collected from the rulings: add the §12 item 3 keys and the `deepseek-v3` entry
 (including `kv_bytes_per_token` = 70,272 and `mtp_params` = 14e9 with the card URL); rename
-`llama-3-405b` → `llama-3.1-405b`; read V4-Pro's `first_k_dense_replace`; confirm gpt-oss's active
+`llama-3-405b` → `llama-3.1-405b` (done); V4-Pro's dense-layer count is not in data; confirm gpt-oss's active
 accounting from its model card and store the card's own figures.
 
 Catch-up pass 2026-10-07 (README lessons 19–28 and the course-wide settlements; Status unchanged):
@@ -748,3 +754,4 @@ Catch-up pass 2026-10-07 (README lessons 19–28 and the course-wide settlements
   (carry `activation` and `kv` only).
 - Settlements (chip memory, FORMATS keys, draft tokens): no change; none appear on this page.
 - Settlement (data ids): `llama-3.1-405b` already used.
+- Data pass 2026-10-07: Kimi K3 vocabulary 163,840 (embedding + head 2.35B, was 2.29B; node check 2*163840*7168 = 2,348,810,240); no V4-Pro dense-layer claim (not in data); KV bytes per token are computed from confirmed configs and stored `reported`; Llama id `llama-3.1-405b`.

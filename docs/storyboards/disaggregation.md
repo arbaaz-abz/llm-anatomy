@@ -129,7 +129,7 @@ Shapes: one expert's weights are a few `[7168 × 3072]` matrices in V4-Pro; with
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
 | P/D disaggregation: prefill and decode on different pools, KV moved between them; gains are no prefill-induced stalls and per-pool parallelism; costs are KV transfer and two pools to size | `serving.json/disaggregation.note` *(proposed)* | 04 §6.1 |
-| DistServe (2024): goodput framing; 7.4× more requests or 12.6× tighter SLOs · Splitwise (2023): 1.4× throughput at 20% lower cost, or 2.35× at the same cost | `serving.json/distserve.goodput_gain = 7.4`, `.slo_gain = 12.6`; `serving.json/splitwise.throughput_gain = 1.4`, `.cost_cut_pct = 20` *(proposed, `reported`: via secondary summaries)* | 04 §1.2, §6.1 REPORTED |
+| DistServe (2024): goodput framing; 7.4× more requests or 12.6× tighter SLOs · Splitwise (2023): 1.4× throughput at 20% lower cost, or 2.35× at the same cost | `serving.json/distserve.goodput_gain = 7.4`, `.slo_gain = 12.6`; `serving.json/splitwise.throughput_gain = 1.4`, `.cost_cut_pct = 20`, `.throughput_gain_same_cost = 2.35` (all `confirmed` from the papers' abstracts) | 04 §1.2, §6.1 |
 | NIXL moves KV over NVLink and InfiniBand / RoCE RDMA, with TCP fallback; used by Dynamo, llm-d, vLLM, Ray Serve LLM | `serving.json/nixl.transports` *(proposed, confirmed)* | 04 §6.1 CONFIRMED |
 | vLLM on GB200 (DeepSeek-R1, NVFP4, Feb 2026): best layout 4 prefill instances × 2 GPUs + 1 decode instance × 8 GPUs; 26.2K prefill / 10.1K decode tok/s per GPU at 2K/2K | `serving.json/vllm-gb200-dsr1.prefill_instances = 4`, `.prefill_gpus_each = 2`, `.decode_gpus = 8`, `.prefill_tok_s_gpu = 26200`, `.decode_tok_s_gpu = 10100` *(proposed)* | 04 §6.1, §6.3 CONFIRMED |
 | Disaggregation helps most for MoE with EP: one compute-bound prefill in the EP group delays the whole group's forward pass (vLLM) | `serving.json/vllm-large-scale.disagg_moe_note` *(proposed)* | 04 §6.1 CONFIRMED |
@@ -171,7 +171,7 @@ Disaggregated serving           step 4 / 10   [<] [Play] [>]
 - **Prefill on one H200.** The transfer ratio uses the running example's single-GPU prefill time. A real prefill instance spans several GPUs; if each GPU ships its own shard over its own NIC, the ratio is unchanged, which is why the page states the ratio rather than a cluster-level time.
 - **No start-up latency.** `kvTransferTime` has no fixed per-transfer cost, so the toy cannot show why very short prompts gain little (brief 04 §6.1). The toy's visible line and frame 10's caption say so rather than inventing a constant.
 - **Expert intensity** uses `gpu-primer`'s `matmulCost` on one expert's 7,168 × 3,072 multiply at NVFP4's 4.5 bits per element (activations counted at the same width, as vLLM's NVFP4 dispatch quantizes them), and ignores attention and shared experts.
-- **Goodput is defined, not simulated.** A request-rate simulation with SLO percentiles would need arrival randomness; frame 2 states the definition and the DistServe numbers are shown as reported.
+- **Goodput is defined, not simulated.** A request-rate simulation with SLO percentiles would need arrival randomness; frame 2 states the definition and the DistServe numbers are shown as the paper's claims (confirmed from its abstract).
 
 ## 13. Reviewer rulings (expert review, Fable 5.1, 2026-10-07)
 - **Settled:** links are per GPU, each way (NVLink5 900 GB/s; network 50 / 100 GB/s), keyed `<chip>.nvlink_gb_s_each_way`; NVIDIA's 130 TB/s rack figure is printed with its both-directions arithmetic.
@@ -181,3 +181,4 @@ Disaggregated serving           step 4 / 10   [<] [Play] [>]
 - Fixed: A and C sit through two and four 36.2 ms steps (not eight); frame 1's numbers say D's prompt takes eight.
 - Applied: frame 7 draws four GPUs plus "+ 12 others (EP 16)" (lesson 18); `rack` cell sizes for frames 5 and 9; the 865 GB fit note moves to frame 7; frame 3's same-axis line; frame 2 uses two `clipLine`s; DistServe and Splitwise years on screen; the EP 72 weights sliver printed as text; takeaway 2 scoped to past the crossover.
 
+- Data pass 2026-10-07: DistServe and Splitwise facts are \`confirmed\` (primary abstracts), not \`reported\`; no numbers changed.

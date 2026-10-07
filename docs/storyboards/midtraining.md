@@ -182,9 +182,9 @@ All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-gr
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
 | Nemotron 3 Super: WSD, 200B-token warmup to 4.5e-4, long plateau, minus-sqrt decay over the final 5T of 25T to 4.5e-6 | `models.nemotron-3-super.lr_schedule` = { kind: "wsd", peak: 4.5e-4, warmup_tokens: 200e9, decay_tokens: 5e12, floor: 4.5e-6, shape: "minus-sqrt" } (confirmed) | 02 §1.4 |
-| DeepSeek-V4: 2000-step warmup, constant peak (Pro 2.0e-4, Flash 2.7e-4), cosine decay to 10% of peak near the end; sequence length 4K → 16K → 64K → 1M; batch ramped to 94.4M (Pro) / 75.5M (Flash) tokens | `models.deepseek-v4-pro.lr_schedule`, `.context_schedule` = ["4K", "16K", "64K", "1M"]* (confirmed) | 02 §1.4, §2 |
-| Kimi K3: cosine with 1% warmup; its scaling study found cosine beat WSD when each was tuned separately; context 8K → 64K in pretraining and 256K → 1M in the cooldown; NoPE | `models.kimi-k3.lr_schedule` = "cosine, 1% warmup", `.context_schedule` (confirmed) | 02 §1.4, §2 |
-| MiniMax-M2: 19.9T constant phase + 9.3T decay phase; context 8K → 32K → 192K during the decay | `models.minimax-m2.lr_schedule` = { constant: 19.9e12, decay: 9.3e12 }, `.context_schedule` (confirmed) | 02 §1.4, §2 |
+| DeepSeek-V4: 2000-step warmup, constant peak (Pro 2.0e-4, Flash 2.7e-4), cosine decay to 10% of peak near the end; sequence length 4K → 16K → 64K → 1M; batch ramped to 94.4M (Pro) / 75.5M (Flash) tokens | `models.deepseek-v4-pro.lr_schedule`, `.context_stages` = ["4K", "16K", "64K", "1M"]* (confirmed) | 02 §1.4, §2 |
+| Kimi K3: cosine with 1% warmup; its scaling study found cosine beat WSD when each was tuned separately; context 8K → 64K in pretraining and 256K → 1M in the cooldown; NoPE | `models.kimi-k3.lr_schedule` = "cosine, 1% warmup", `.context_stages` (confirmed) | 02 §1.4, §2 |
+| MiniMax-M2: 19.9T constant phase + 9.3T decay phase; context 8K → 32K → 192K during the decay | `models.minimax-m2.lr_schedule` = { constant: 19.9e12, decay: 9.3e12 }, `.context_stages` (confirmed) | 02 §1.4, §2 |
 | GLM-5: cosine decay; context 32K (1T tokens) → 128K (500B) → 200K (50B) after a 27T base at 4K; long documents and synthetic agent trajectories upsampled late; 160B tokens of SWE data | `models.glm-5.lr_schedule` = "cosine", `.context_stages` = [["4K", 27e12], ["32K", 1e12], ["128K", 0.5e12], ["200K", 0.05e12]] (confirmed) | 02 §1.4, §2 |
 | MiMo-V2-Flash: AdamW, two-stage cosine (to 1e-4 over 10T, then to 3e-5 over 4T) | `models.mimo-v2-flash.lr_schedule` (confirmed) | 02 §1.4 |
 | Olmo 3: 100B-token Dolmino mid-training, then 65K context extension | `models.olmo-3.midtrain_tokens` = 100e9 (reported) | 02 §2 |
@@ -277,8 +277,8 @@ not mutated.
 
 ## 12. Open questions for the reviewer
 **Data-pass keys** (new): `nemotron-3-super.lr_schedule` · `deepseek-v4-pro.lr_schedule`,
-`.context_schedule` · `kimi-k3.lr_schedule`, `.context_schedule`, `.context_extension_note` ·
-`minimax-m2.lr_schedule`, `.context_schedule` · `glm-5.lr_schedule`, `.context_stages` ·
+`.context_stages` · `kimi-k3.lr_schedule`, `.context_stages`, `.context_extension_note` ·
+`minimax-m2.lr_schedule`, `.context_stages` · `glm-5.lr_schedule`, `.context_stages` ·
 `mimo-v2-flash.lr_schedule` · `olmo-3.midtrain_tokens` (reported). The exact token counts behind "4K",
 "32K", "200K" should come from each report; the page prints the nominal labels.
 
@@ -306,3 +306,4 @@ Applied from `track-review-recipe.md` §4 (change log: `fix-recipe-review.md`):
 - Must 5: frame 7 carries a visible "attention only" line.
 - Should: hook separates "end of pretraining" (best data) from "last few percent" (longest documents); frame 1's term is warmup ("learning rate" defined in §3 and on the axis); Kimi K3 NoPE wording matches `rope`; GLM-5 printed as "28.5T (its published stages sum to 28.55T)"; the LR-schedule and `sft`-prereq alternatives are deleted and the rulings stated (lesson 20); frame 3 dims the main decay while the branch draws; try-this 1's Kimi caveat is part of the insight.
 - Nice: frame 4 has a legend naming the groups that dim and light.
+- Data pass 2026-10-07: `context_schedule` renamed `context_stages` for deepseek-v4-pro, kimi-k3 and minimax-m2; no numbers changed.

@@ -208,7 +208,7 @@ AdamW is kept for the embedding, the output head and norm weights. Color links: 
 | DeepSeek-V4-Pro: 49B active, 33T tokens (673 tokens per active parameter; 21 per total) | `models.deepseek-v4-pro.active_params`, `.total_params`, `.pretrain_tokens` (existing, confirmed) | 02 §1.3, §1.8 |
 | DeepSeek-V4-Flash: 13B active / 284B total, 32T tokens (2,462 per active) | `models.deepseek-v4-flash.active_params` = 13e9, `.total_params` = 284e9, `.pretrain_tokens` = 32e12 (proposed, confirmed) | 02 §1.3, §1.8 |
 | Nemotron 3 Super: 12B active / 120B total, 25T tokens (2,083 per active) | `models.nemotron-3-super.active_params` = 12e9, `.total_params` = 120e9, `.pretrain_tokens` (proposed by `pretraining`) (confirmed) | 02 §1.3, §1.8 |
-| Llama 3.1 405B (2024): dense, 15.6T tokens (39 per parameter) | `models.llama-3-405b.total_params`, `.pretrain_tokens` (existing, confirmed) | data entry only (source arXiv 2407.21783; not in brief 02) |
+| Llama 3.1 405B (2024): dense, 15.6T tokens (39 per parameter) | `models.llama-3.1-405b.total_params`, `.pretrain_tokens` (existing, confirmed) | data entry only (source arXiv 2407.21783; not in brief 02) |
 | Olmo 3: ~5.9T tokens for 7B and 32B dense (185–840 per parameter) | `models.olmo-3.pretrain_tokens` = 5.9e12 (reported) | 02 §1.3, §1.8 |
 | Kimi K3 ran its own scaling-law studies (batch size, LR, tokens per parameter, shape) and claims about 2.5× scaling efficiency over K2 from architecture, data and recipe together | `models.kimi-k3.scaling_efficiency_vs_k2` = 2.5 (confirmed) | 02 §1.3 |
 | Muon (or a variant) in DeepSeek-V4 (with AdamW for embedding, head and norms), GLM-5 ("Muon Split"), Kimi K3 ("Per-Head Muon"); AdamW in MiMo-V2-Flash and Nemotron 3 Super | `models.deepseek-v4-pro.optimizer` (existing, confirmed); `models.glm-5.optimizer` = "Muon Split", `models.kimi-k3.optimizer` = "Per-Head Muon", `models.mimo-v2-flash.optimizer` = "AdamW", `models.nemotron-3-super.optimizer` = "AdamW" (proposed, confirmed) | 02 §0 item 2, §1.5 |
@@ -354,3 +354,4 @@ Applied from `track-review-recipe.md` §3 (change log: `fix-recipe-review.md`):
 - Must 2: the LR-schedule alternative is deleted; the ruling is stated as applied (header and §12).
 - Should: frame 9's mark describes the momentum step and what AdamW does; "2 FLOPs per active parameter" in misconception 2, frame 6 and takeaway 2; frame 3 dated "(2022)"; frame 7 carries a 580 × 366 layout check; the stand-in line covers frame 2's block widths; the reviewer's re-verification is in the header.
 - Nice: frame 8's Llama row says "(dense: same number)".
+- Data pass 2026-10-07: Llama 3.1 405B cited as `llama-3.1-405b` (was the old `llama-3-405b` id); no numbers changed.

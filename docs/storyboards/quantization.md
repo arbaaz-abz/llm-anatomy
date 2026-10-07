@@ -83,7 +83,7 @@ NVFP4 and MXFP4 model chips are disabled on the H200 with a visible note ("no FP
 | Mean error, weights rounded to zero, clipped weights | `.meanAbsErr`, `.zeroed`, `.clipped` | 3 decimals; counts |
 | Bits per weight including scales, for the real formats | `bitsPerElement('bf16' | 'fp8_e4m3' | 'mxfp4' | 'nvfp4')` (exact `FORMATS` keys; a bare `fp8` throws) from `math/roofline.js` (gpu-primer) | 2 decimals |
 | Model bytes, free memory, users at 2,048 tokens | `weightBytes({ params: 70e9, bitsPerParam: bitsPerElement(format) })`, `freeHbmPerGpu`, `maxUsersPerGpu(free, kvCacheBytes({ bytesPerToken: kvBytes, tokens: 2048 }))` (`kv-cache`) with kvBytes 327,680 (BF16) or 163,840 (FP8) | GB; integer |
-| Decode step (1 user, 2,048 context) and prefill (4,096 tokens) | `stepTime({ …, dModel: 8192, actBytesPerElem, peakTflops })` with `peakTflops` from the math precision's column of `hardware.json` (`bf16`, `fp8` or `fp4`) and `actBytesPerElem` = `bytesPerElement` of that precision (keys `bf16`, `fp8_e4m3`, `nvfp4`, `mxfp4`) | ms |
+| Decode step (1 user, 2,048 context) and prefill (4,096 tokens) | `stepTime({ …, dModel: 8192, actBytesPerElem, peakTflops })` with `peakTflops` from the math precision's column of `hardware.json` (`bf16_dense_tflops`, `fp8_e4m3_dense_tflops`, `nvfp4_dense_tflops` or, on mi355x, `mxfp4_dense_tflops`) and `actBytesPerElem` = `bytesPerElement` of that precision (keys `bf16`, `fp8_e4m3`, `nvfp4`, `mxfp4`) | ms |
 
 **Try this** (each leads to a named insight)
 1. INT4, block 8: mean error 0.064, 3 weights zeroed. Switch the outlier off (last weight 0.30): error 0.024. Outlier back on, block 4: 0.032, 1 zeroed. → **Insight: one outlier ruins a shared scale, and smaller blocks contain the damage.** That is why 2026 formats scale every 16 or 32 weights (DeepSeek's FP8 weights use 128 × 128 tiles).
@@ -125,6 +125,8 @@ weightBytes({ params: 1.6e12, bitsPerParam }): 16 → 3,200 GB · 8 → 1,600 GB
 Reproducer (run once `math/quant.js` exists):
 ```
 node -e "import('./math/quant.js').then(m => { const w = [0.12, -0.31, 0.05, 0.47, -0.08, 0.22, -0.64, 2.10]; for (const f of ['int4', 'mxfp4', 'nvfp4']) for (const b of [8, 4]) { const r = m.quantizeBlocks(w, { format: f, blockSize: b }); console.log(f, b, r.blocks.map(x => [x.scale, x.codes]), r.restored, r.meanAbsErr, r.zeroed, r.clipped); } })"
+# data pass 2026-10-07: Kimi K2.5 cost gain, B200 NVFP4 vs H200 INT4, low end 2.71 (was 2.75); data holds [2.71, 2.95]
+node -e "console.log(require('./data/serving.json').entries.find(e => e.id === 'inferencex-kimi-k2.5-b200').facts.cost_gain_vs_h200.value)"
 ```
 Tests to write first: the table above; every NVFP4/MXFP4 code is in ±E2M1_GRID; INT4 codes are integers in [−7, 7]; INT4 and NVFP4 never report `clipped` (their scale comes from the block's largest value), MXFP4 can; `meanAbsErr` with blockSize 1 is 0 for INT4 (each value is its own max); inputs not mutated.
 
@@ -154,12 +156,12 @@ Shapes: a weight matrix `[d_in × d_out]` is cut into blocks of 16 or 32 consecu
 |---|---|---|
 | Weight-only INT4 (GPTQ, AWQ): about 4× fewer bytes read in decode, math still 16-bit, so less useful at large compute-bound batches | `serving.json/quant-weight-only.note` *(proposed; GPTQ/AWQ marked "prior" in the brief)* | 04 §5 |
 | FP8 W8A8 (E4M3, block scales) is native in DeepSeek V3/V4 checkpoints: 128 × 128 blocks with UE8M0 scales; roughly 2× BF16 in bytes and math | `models.json/deepseek-v4-pro.weight_formats = "FP4 experts + FP8 rest (FP8 block 128×128, UE8M0 scales)"` *(proposed)* | 04 §5 CONFIRMED (config.json) |
-| MXFP4: 4-bit E2M1, 32-value blocks, power-of-two (E8M0) scale; NVFP4: 16-value blocks, E4M3 scale + FP32 per-tensor scale, ~4.5 bits per value, native on Blackwell | `serving.json/mxfp4.block_size = 32`, `.scale = "E8M0"`; `serving.json/nvfp4.block_size = 16`, `.scale = "E4M3 + FP32 per tensor"`, `.bits_per_value = 4.5` *(proposed)* | 04 §5; 03 §1.3 CONFIRMED |
+| MXFP4: 4-bit E2M1, 32-value blocks, power-of-two (E8M0) scale; NVFP4: 16-value blocks, E4M3 scale + FP32 per-tensor scale, ~4.5 bits per value, native on Blackwell | `hardware.json/formats.mxfp4_block_size` = 32, `.mxfp4_scale_bits` = 8 (E8M0); `.nvfp4_block_size` = 16, `.nvfp4_scale_format` = "E4M3" (the per-tensor FP32 scale is in its note), `.nvfp4_bits_per_value` = 4.5 | 04 §5; 03 §1.3 CONFIRMED |
 | gpt-oss-120b shipped post-trained with MXFP4 MoE weights: 116.8B total / 5.1B active (the data value, as `decoder-anatomy` prints it), fits one 80 GB GPU | `models.json/gpt-oss-120b.total_params`, `.active_params`; `.weight_format = "MXFP4 (MoE weights)"`, `.fits_gpu_gb = 80` *(proposed)* | 04 §5 CONFIRMED |
 | DeepSeek-V4-Pro: experts FP4, other weights FP8, trained with QAT; checkpoint ≈ 865 GB (size reported) | `models.json/deepseek-v4-pro.checkpoint_gb = 865` *(proposed, `reported`)* | 04 §5, §8.1 |
 | Kimi K2 Thinking / K2.5 / K2.6 ship native INT4 MoE weights (QAT) | `models.json/kimi-k2.5.weight_format = "INT4 (QAT)"` *(proposed entry, `reported`)* | 04 §5 REPORTED |
-| Precision plus hardware: Kimi K2.5 on B200 NVFP4 vs H200 INT4 gave 2.75–2.95× lower $ per M tokens (InferenceX) | `serving.json/inferencex-kimi-k2.5-b200.cost_gain_vs_h200 = [2.75, 2.95]` *(proposed)* | 04 §5 CONFIRMED |
-| FP8 → NVFP4 on DeepSeek-R1-0528: 1% or less accuracy loss on most benchmarks (NVIDIA's own measurement) | `serving.json/nvfp4.r1_accuracy_loss_pct_max = 1` *(proposed, `reported`: vendor claim; source NVIDIA blog read 2026-10-07)* | beyond the brief (header) |
+| Precision plus hardware: Kimi K2.5 on B200 NVFP4 vs H200 INT4 gave 2.71–2.95× lower $ per M tokens (InferenceX) | `serving.json/inferencex-kimi-k2.5-b200.cost_gain_vs_h200 = [2.71, 2.95]` (the article's range; the brief said 2.75) | 04 §5 CONFIRMED |
+| FP8 → NVFP4 on DeepSeek-R1-0528: 1% or less accuracy loss on most benchmarks (NVIDIA's own measurement) | `serving.json/nvfp4.r1_accuracy_loss_pct_max = 1` (`reported`: vendor claim; source NVIDIA blog read 2026-10-07)* | beyond the brief (header) |
 | vLLM FP8 KV cache (2026-04-22): halves KV bytes; a naive kernel dropped 128K needle-in-a-haystack from 91% to 13%; an accumulation fix restored near-BF16 (Llama-3.3-70B ~97–98% of baseline AUC at 128K); +14.9% throughput on Llama; break-even ~7K tokens, avoid for short contexts | `serving.json/vllm-fp8-kv.bytes_factor = 0.5`, `.naive_niah_128k_pct = 13` *(proposed by `paged-attention`)*; `.baseline_niah_128k_pct = 91`, `.throughput_gain_llama_pct = 14.9`, `.breakeven_tokens = 7000` *(proposed)* | 04 §3.5 CONFIRMED |
 
 Not shown: MXFP4 vs NVFP4 model-quality head-to-heads (UNVERIFIED in the brief; the toy compares rounding error on eight numbers only, and says so).
@@ -211,3 +213,4 @@ mean error  MXFP4 0.062   NVFP4 0.029
 - **Settled:** the NVFP4 scale rule is a labeled stand-in; clipping means "past the grid's last rounding boundary".
 - Applied: Kimi K2.x's INT4 marked reported (§3, frame 11); frame 9's two rows on their own scales with the visible line (lessons 19, 21); frame 8 prints the BF16 KV sliver; the "INT4 can match FP4 on a small block" line (lesson 17); the label without the ÷ operator; misconception 3 names the H200; gpt-oss at 116.8B; `roundE4M3`'s below-range behavior; DeepSeek's 128 × 128 tiles in try-this 1.
 
+- Data pass 2026-10-07: format facts cite `hardware.json/formats` flat keys (not the removed serving-file mxfp4 and nvfp4 entries); Kimi K2.5 B200-vs-H200 cost gain is 2.71–2.95× (was 2.75); FLOPS columns use the renamed keys.

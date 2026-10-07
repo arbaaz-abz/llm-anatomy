@@ -186,7 +186,7 @@ No formula is given because the ratio depends on the run. Color links: none (no 
 | Olmo 3 (reported): ~5.9T pretrain, 100B mid-train, DPO ~200K pairs, RLVR ~105K prompts | proposed on `scaling-laws`, `midtraining`, `rlhf-dpo` | 02 §1.8, §2, §4.2 |
 
 Not on this page, by design: number formats and memory (`gpu-primer`, `training-memory`); which Nemotron 3
-model pretrained in NVFP4 (a known conflict, spec §7).
+models pretrained in NVFP4 (both Super and Ultra did; no conflict).
 
 ## 9. Takeaways
 1. The canonical 2026 pipeline is six stages, each starting from the last one's weights: pretraining,
@@ -277,3 +277,4 @@ Applied from `track-review-recipe.md` §1 (change log: `fix-recipe-review.md`):
 - Must 3: GLM-5 printed as "28.5T (its published stages sum to 28.55T)"; shares from the stage counts, mid-training 5.4%.
 - Should: frame 2 "(2026 open frontier MoEs)"; DeepSeek-R1 dated 2025; §3 says why one objective cannot do every stage; §4 notes "stage and checkpoint" are one idea; specialist names `math & code · agents · chat` used track-wide.
 - Nice: frame 1's random reply labeled "(random weights, illustrative)".
+- Data pass 2026-10-07: Nemotron 3 NVFP4 wording updated (both Super and Ultra; no conflict); no numbers changed.
