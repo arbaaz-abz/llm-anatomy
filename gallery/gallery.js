@@ -134,6 +134,27 @@ const FIGURES = [
     G.blockTable(s, { x: 10, y: 24, title: 'A', rows: [{ logical: 0, physical: 0 }, { logical: 1, physical: 1 }, { logical: 2, physical: 7 }] });
     G.blockTable(s, { x: 150, y: 24, title: 'D₁ (shared)', rows: [{ logical: 0, physical: 8, ref: 2 }, { logical: 1, physical: 9, ref: 2 }] });
   }],
+  ['selectionMark', 'the one selection outline: "the item we follow", in every frame; never an amount', 400, 70, (s) => {
+    G.vector(s, { x: 70, y: 14, values: TOY.Q[2], cell: G.NUMBER_CELL, orient: 'row', maxAbs: 3, label: 'q_sat' });
+    G.selectionMark(s, { x: 70, y: 14, w: 4 * G.NUMBER_CELL, h: G.NUMBER_CELL });
+  }],
+  ['patch', 'one image patch as an input piece (4 × 4 crop of a cat\'s ear) · idle · active · dim', 300, 50, (s) => {
+    const ear = [0.18, 0.22, 0.78, 0.9, 0.2, 0.55, 0.86, 0.95, 0.42, 0.76, 0.9, 0.84, 0.7, 0.86, 0.8, 0.62];
+    G.patch(s, { x: 8, y: 8, pixels: ear, index: 5 });
+    G.patch(s, { x: 60, y: 8, pixels: ear, index: 5, state: 'active' });
+    G.patch(s, { x: 112, y: 8, pixels: ear, state: 'dim' });
+  }],
+  ['adder', 'the residual add: a junction on the stream lane, no quantity', 300, 40, (s) => {
+    G.adder(s, { x: 20, y: 20 });
+  }],
+  ['blockStack', '"this block × N" with the residual lane; count is printed, never a height', 300, 200, (s) => {
+    G.blockStack(s, { x: 8, y: 8, w: 240, count: 61, active: { block: 1, half: 0 } });
+  }],
+  ['token draft', 'the draft state: a guess that may still count (dashed, muted), never hatched · idle · active · draft', 300, 50, (s) => {
+    G.token(s, { x: 8, y: 10, text: 'on', index: 5 });
+    G.token(s, { x: 70, y: 10, text: 'on', index: 5, state: 'active' });
+    G.token(s, { x: 132, y: 10, text: 'on', index: 5, state: 'draft' });
+  }],
   ['memBar', 'useful · reserved-empty (hatched) · free, with percentages', 300, 60, (s) => {
     G.memBar(s, { x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 });
   }],

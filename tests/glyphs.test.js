@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell } from '../shared/glyphs.js';
+import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell, pixelFill, blockStackLayout } from '../shared/glyphs.js';
 
 test('zero, NaN and non-numeric inputs map to the zero token, never a "NaN%" string', () => {
   assert.equal(valueColor(0, 3), 'var(--val-zero)');
@@ -73,4 +73,32 @@ test('formatCell prints compact numbers and the masked symbol', () => {
   assert.equal(formatCell(1.407), '1.41');
   assert.equal(formatCell(-12.3), '−12');
   assert.ok([0.7031, -0.5, -0.87, 1.407, -12.3, -Infinity].every((v) => formatCell(v).length <= 5));
+});
+
+test('pixelFill: grey levels and rgb triples, never the value scale', () => {
+  assert.equal(pixelFill(0), 'rgb(0 0 0)');
+  assert.equal(pixelFill(1), 'rgb(255 255 255)');
+  assert.equal(pixelFill(0.5), 'rgb(128 128 128)');
+  assert.equal(pixelFill([200, 120, 40]), 'rgb(200 120 40)');
+  assert.throws(() => pixelFill(1.2), /grey level 0–1/);
+  assert.throws(() => pixelFill([300, 0, 0]), /grey level 0–1/);
+  assert.throws(() => pixelFill('red'), /grey level 0–1/);
+});
+
+test('blockStackLayout: shows every block when nothing would be hidden', () => {
+  assert.deepEqual(blockStackLayout({ count: 2 }), [{ kind: 'block', index: 1 }, { kind: 'block', index: 2 }]);
+  assert.deepEqual(blockStackLayout({ count: 3 }).map((r) => r.kind), ['block', 'block', 'block']);
+});
+
+test('blockStackLayout: collapses the middle and keeps the last block', () => {
+  assert.deepEqual(blockStackLayout({ count: 61 }), [
+    { kind: 'block', index: 1 }, { kind: 'block', index: 2 }, { kind: 'collapse', hidden: 58 }, { kind: 'block', index: 61 },
+  ]);
+  assert.deepEqual(blockStackLayout({ count: 96, shown: 1 }).map((r) => r.index ?? r.hidden), [1, 94, 96]);
+});
+
+test('blockStackLayout: rejects counts that are not positive integers', () => {
+  assert.throws(() => blockStackLayout({ count: 0 }), /count must be an integer ≥ 1/);
+  assert.throws(() => blockStackLayout({ count: 2.5 }), /count must be an integer ≥ 1/);
+  assert.throws(() => blockStackLayout({ count: 4, shown: 0 }), /shown must be an integer ≥ 1/);
 });

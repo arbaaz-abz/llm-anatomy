@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(15);
+  await expect(page.locator('#figures figure')).toHaveCount(20);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(15);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(20);
   expect(errors).toEqual([]);
 });
 
@@ -256,4 +256,12 @@ test('KaTeX renders the math panel with hover-linked terms', async ({ page }) =>
   await expect(page.locator('.math-panel [tabindex]')).toHaveCount(0);
   await page.locator('.math-panel .hl-k').first().hover();
   await expect(stage(page)).toHaveAttribute('data-hl', 'k');
+});
+
+test('a draft token is dashed and muted, never hatched (README lesson 24)', async ({ page }) => {
+  await page.goto('/gallery/');
+  const draft = page.locator('#figures .g-token--draft').first();
+  expect(await draft.locator('.g-frame').evaluate((r) => getComputedStyle(r).strokeDasharray)).not.toBe('none');
+  await expect(draft.locator('.g-hatch')).toHaveCount(0);
+  expect(await page.locator('#figures .g-patch--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
 });
