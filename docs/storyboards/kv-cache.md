@@ -359,7 +359,7 @@ in some layers (`long-context-attention`)."
 |---|---|---|
 | GPT-3 (2020): 96 layers × 96 heads × 128, each head with its own K and V: 4,718,592 B (≈ 4.72 MB) per token at 2 bytes; 9.66 GB for its 2,048-token context | `models.gpt-3.kv_bytes_per_token` = 4,718,592, `.layers` = 96, `.n_heads` = 96, `.n_kv_heads` = 96, `.head_dim` = 128, `.context_length` = 2,048 (all proposed; entry and source arXiv 2005.14165 per `attention` ruling 3 and `decoder-anatomy` §12.3) | 01 §4 worked-numbers table |
 | Llama-3.1-70B (2024): 80 layers, 8 KV heads × 128: 327,680 B (≈ 328 kB) per token; 42.9 GB at its 131,072-token context, 54% of an 80 GB H100 | `models.llama-3.1-70b.kv_bytes_per_token`, `.layers`, `.n_kv_heads`, `.head_dim`, `.context_length` (entry proposed by `paged-attention` §13; its note names the Llama-3 → 3.1 correction); `hardware.h100.hbm_gb` (existing, reported) | 01 §4 table; 04 §3.1, §1.4 |
-| DeepSeek-V3 (Dec 2024): one 512-number latent plus a 64-number position key per layer, 61 layers: 70,272 B (≈ 70.3 kB) per token, derived from its config; 73.7 GB at 1M tokens | `models.deepseek-v3.kv_bytes_per_token` = 70,272 (derived), `.mla_kv_rank`, `.mla_rope_dim`, `.layers` (entry and keys proposed by `paged-attention` §13 / `decoder-anatomy` §12.3) | 01 §2 MLA paragraph, §4 table |
+| DeepSeek-V3 (Dec 2024): one 512-number latent plus a 64-number position key per layer, 61 layers: 70,272 B (≈ 70.3 kB) per token, derived from its config; 73.7 GB at 1M tokens | `models.deepseek-v3.kv_bytes_per_token` = 70,272 (derived; stored `reported`), `.mla_kv_rank`, `.mla_rope_dim`, `.layers` (entry and keys proposed by `paged-attention` §13 / `decoder-anatomy` §12.3) | 01 §2 MLA paragraph, §4 table |
 | DeepSeek-V4-Pro (2026): about 4–12 kB per token, a formula-derived estimate (the layer mix of its compressed attention is uncertain); about 4–12 GB for a 1M-token conversation | `models.deepseek-v4-pro.kv_bytes_per_token` = [4000, 12000] (existing, **reported**, note kept) | 01 §4 table; 04 §3.1, §8.2 (spec §7 conflict: shown as a range, both mixes in `long-context-attention`) |
 | gpt-oss-120b (2025): only its 18 full-attention layers grow a cache, 36,864 B (≈ 36.9 kB) per token; its 18 sliding-window layers hold a fixed ~4.7 MB per conversation | `models.gpt-oss-120b.kv_bytes_per_token` = 36,864 (proposed, derived), `.kv_fixed_bytes` = 4,718,592 (proposed, derived: 18 × 128 × 2,048 B) | 01 §4 table (derived) |
 | Reusing a cache across requests that share a prompt prefix is standard in serving (`prefix-caching`) | — (timeless prose, no number) | 01 §4 mechanism paragraph |
@@ -418,15 +418,15 @@ inside its container; the caption, controls and the stand-in line stack below at
 ## 12. Open questions for the reviewer
 **Data-pass keys** (reuse the pilots' proposals; new keys only where marked *new*):
 1. `models.gpt-3.*`: `kv_bytes_per_token` = 4,718,592, `n_kv_heads` = 96 (*new* on this entry; the
-   others are `decoder-anatomy` §12.3 / `attention` ruling 3), source arXiv 2005.14165, confirmed.
+   others are `decoder-anatomy` §12.3 / `attention` ruling 3), source arXiv 2005.14165; the KV value is stored `reported` (computed from confirmed config values, formula in its note).
 2. `models.llama-3.1-70b.*` and `models.deepseek-v3.*`: as accepted in `paged-attention` §13; this page
    needs `layers`, `n_kv_heads`, `head_dim`, `context_length` (Llama) and `layers`, `mla_kv_rank`,
    `mla_rope_dim`, `kv_bytes_per_token` (V3). Brief 01 §4 calls it "Llama-3-70B"; the entry is 3.1
    (lesson 8).
 3. *new*: `models.gpt-oss-120b.kv_bytes_per_token` = 36,864 and `.kv_fixed_bytes` = 4,718,592, both
    derived (01 §4 table: 18 full layers × 8 KV × 64; 18 window layers × 128 tokens), source the existing
-   config.json URL, confidence confirmed (config) with note "derived".
-4. `hardware.b300.hbm_gb` = 288 exists (reported); the toy's second GPU uses it. Confirm the reviewer is
+   config.json URL, stored `reported` (derived from the confirmed config) with the formula in its note.
+4. `hardware.b300.hbm_gb` = 288 exists (reported; nominal); the toy's second GPU uses it. Confirm the reviewer is
    happy to show a reported capacity next to H100's (also reported in the data file).
 
 **Graph changes:** none. The hand-offs to `prefill-decode`, `paged-attention` and `prefix-caching` are
@@ -465,3 +465,4 @@ qualifier; "before the weights" in misconception 3 and frame 8; "2,048 × 8 = 16
 try-this 2; frame 9 caption kept as the hook's answer; shape sliders snap to a real chip's preset; B300 chip
 kept. Nice (1/2): frame 5's Numbers now print the per-step sums (4 + 5 + 6 + 7 vs 4 + 1 + 1 + 1); the
 predict-then-reveal before frame 8 is left for the build.
+- Data pass 2026-10-07: derived KV bytes per token (GPT-3, Llama-3.1-70B, DeepSeek-V3, gpt-oss) are stored `reported` with formula notes; the page's numbers are unchanged.

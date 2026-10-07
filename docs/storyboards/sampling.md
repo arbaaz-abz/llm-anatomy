@@ -41,7 +41,7 @@ Each one names the frame or try-this that corrects it (README lesson 4).
   (04 §4.2 [C]; 01 §5 MTP) · corrected by frames 8–9
 
 ## 3. Hook and intuition (final wording)
-**Hook:** The model ends every step with 160,000 scores in Kimi K3, one per possible token. Who decides
+**Hook:** The model ends every step with 163,840 scores in Kimi K3, one per possible token. Who decides
 which one becomes the next word, and why does asking twice give two different answers?
 
 The last step of `decoder-anatomy` gave one score per vocabulary word, the logits, and softmax turned them
@@ -251,6 +251,8 @@ const draws=(p,n,seed)=>{const g=mulberry32(seed);return Array.from({length:n},(
 for(const [nm,p] of [["T1",p1],["T0.5",softmax(z,0.5)],["T2",softmax(z,2)],["topp0.7",topp(p1,0.7).q]]){const d=draws(p,20,1);
  const cats=[4,5,6,7].map(i=>d.filter(x=>x===i).length);console.log("draws",nm,[...cats,20-cats.reduce((a,b)=>a+b,0)].join(" "),d.slice(0,8).map(i=>V[i]).join(" "));}
 })'
+# data pass 2026-10-07: Kimi K3 vocabulary, 163,840 (was 160,000)
+node -e 'console.log(require("./data/models.json").entries.find((e) => e.id === "kimi-k3").facts.vocab_size.value)'   # 163840
 ```
 Output on 2026-10-07: `T 1 [0.39,0.237,0.087,0.053,0.019,0.233,12]` · `T 0.5
 [0.682,0.251,0.034,0.012,0.002,0.02,12]` · `T 2 [0.189,0.147,0.089,0.069,0.042,0.506,12]` · `top3
@@ -277,7 +279,7 @@ Output on 2026-10-07: `T 1 [0.39,0.237,0.087,0.053,0.019,0.233,12]` · `T 0.5
 ```tex
 \text{MTP (one draft): } \mathbb{E}[\text{tokens per step}] = 1 + \alpha,\qquad \alpha = 0.85\text{–}0.90 \Rightarrow 1.85\text{–}1.90
 ```
-Shapes: z, p [|V|] (16; 160,000 in Kimi K3); the MTP head reads the last block's output for position t and
+Shapes: z, p [|V|] (16; 163,840 in Kimi K3); the MTP head reads the last block's output for position t and
 predicts position t + 2. Greedy is the limit T → 0. Color links: `hl-z` → the logit row; `hl-t` → the
 temperature readout; `hl-p` → the probability row. KaTeX with `trust: true, strict: false`.
 
@@ -287,7 +289,7 @@ What is baked in, in several 2026 models, is a head that predicts more than one 
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| The softmax runs over the whole vocabulary: 160,000 entries in Kimi K3, 201,088 in gpt-oss-120b | `models.kimi-k3.vocab_size` = 160000, `models.gpt-oss-120b.vocab_size` = 201088 (proposed, `decoder-anatomy` §12.3) | 01 §5 table [C]; gpt-oss config (re-verified by `decoder-anatomy`) |
+| The softmax runs over the whole vocabulary: 163,840 entries in Kimi K3, 201,088 in gpt-oss-120b | `models.kimi-k3.vocab_size` = 163840, `models.gpt-oss-120b.vocab_size` = 201088 (in data; `decoder-anatomy` §12.3) | 01 §5 table [C]; gpt-oss config (re-verified by `decoder-anatomy`) |
 | DeepSeek-V3 (Dec 2024): one MTP module predicts one extra token; the second token is accepted 85–90% of the time, about 1.8× tokens per second (for one user, as the V3 report states it) | `models.deepseek-v3.mtp_depth` = 1 (proposed); `serving.json/deepseek-v3-mtp.acceptance_pct` = [85, 90], `.tps_gain` = 1.8 (proposed by `speculative-decoding` §8; one key for both pages; arXiv 2412.19437) | 04 §4.2 [C via excerpt] |
 | DeepSeek-V4 (2026): MTP depth 1, also used as an auxiliary training loss | `models.deepseek-v4-pro.mtp_depth` = 1 (proposed) | 01 §1, §5 [C] |
 | GLM-5 (2026): shares 3 MTP layers; mean accepted length 2.76 tokens per step in its report | `models.glm-5.mtp_layers` = 3, `.mtp_accept_length` = 2.76 (proposed; same *new* `glm-5` entry as `kv-compression`) | 01 §1, §5 [C] |
@@ -365,3 +367,4 @@ misconception 4 says why greedy repeats; the "nothing behind hover" paragraph ad
 eight tokens; `applyTemperature`'s 0 special case is commented; "(over many draws)" in §3. The order-of-filters
 item needed no change.
 Nice (1/2): "Check my work" prints all five T = 0.5 terms; no "common chat default" chip (no source).
+- Data pass 2026-10-07: Kimi K3 vocabulary is 163,840 (was printed as 160,000); no computed value on this page depended on it (reproducer: `kimi-k3.vocab_size` = 163840).

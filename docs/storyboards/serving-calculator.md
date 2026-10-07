@@ -65,7 +65,7 @@ Determinism: every frame is a pure function of (step, progress). Reduced motion 
 |---|---|---|---|---|---|
 | `model` | Model | Preset chips | DeepSeek-V4-Pro · Llama-3.1-70B | V4-Pro | `models.json/deepseek-v4-pro.*`, `llama-3.1-70b.*` |
 | `weights` | Weight format | Preset chips | as shipped (V4: FP4 experts + FP8, 865 GB; chip note "FP8 math rate (conservative; experts run FP4)") · BF16 · FP8 · NVFP4 | as shipped (V4) / FP8 (Llama) | bits from `bitsPerElement` (`math/roofline.js`) |
-| `hw` | GPU | Preset chips | H200 (141 GB) · B200 (180 GB usable of 192) · GB200 NVL72 (186 GB: the rack total over 72) · GB300 NVL72 (288 GB) | GB300 NVL72 | `hardware.json` `h200`, `b200` (usable), `gb200-nvl72`; GB300 per-GPU values read from `b300.*` until the data pass adds them to `gb300-nvl72` |
+| `hw` | GPU | Preset chips | H200 (141 GB nominal) · B200 (180 GB usable of 192 nominal) · GB200 NVL72 (186 GB: the rack total over 72) · GB300 NVL72 (288 GB nominal) | GB300 NVL72 | `hardware.json` `h200`, `b200` (usable), `gb200-nvl72`; `gb300-nvl72` per-GPU values (288 GB nominal; no usable figure is in data) |
 | `gpus` | GPUs per replica | Slider (snapped) | 1, 2, 4, 8, 16, 32, 72 | 16 (V4) / 1 (Llama) | — |
 | `context` | Tokens per user (in + out) | Preset chips | 8K + 1K (9,216) · 128K + 8K (139,264) · 1M = 1,000,000 (V4-Pro's configured context; V4 only) | 8K + 1K | — |
 | `kvEnd` | V4 KV estimate | Toggle | low 4,000 B/token / high 12,000 B/token | low | `models.json/deepseek-v4-pro.kv_bytes_per_token` |
@@ -160,15 +160,15 @@ Shapes: none (scalars per GPU). `G` = GPUs per replica, `u` = users per GPU, `b`
 ## 8. In today's models (Oct 2026)
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| DeepSeek-V4-Pro: 1.6T total, 49B active, 61 layers, 384 routed experts (6 per token), 1M context; d_model 7,168; expert width 3,072 | `models.json/deepseek-v4-pro.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.context_length`; `.d_model = 7168`, `.moe_intermediate = 3072` *(proposed)* | 04 §8 CONFIRMED (config.json) |
+| DeepSeek-V4-Pro: 1.6T total, 49B active, 61 layers, 384 routed experts (6 per token), 1M context; d_model 7,168; expert width 3,072 | `models.json/deepseek-v4-pro.total_params`, `.active_params`, `.layers`, `.experts_total`, `.experts_active`, `.context_length`; `.d_model = 7168`, `.expert_hidden = 3072` | 04 §8 CONFIRMED (config.json) |
 | Experts FP4, everything else FP8 (QAT); checkpoint ≈ 865 GB | `models.json/deepseek-v4-pro.weight_formats` *(proposed by `quantization`)*, `.checkpoint_gb = 865` *(proposed, `reported`)* | 04 §5, §8.1 |
 | KV per token 4,000–12,000 bytes: formula-derived, layer mix uncertain (config suggests alternating 128/4 compression; summaries say 3:1) | `models.json/deepseek-v4-pro.kv_bytes_per_token = [4000, 12000]` (`reported`, existing) | 04 §8.2, §10 item 3 |
-| GB300 NVL72 per GPU: 288 GB HBM3e, 8 TB/s, ~5 PF dense FP8, ~15 PF dense FP4 (reported); GB200 NVL72 per GPU: 186 GB (13.4 TB ÷ 72), 8 TB/s | `hardware.json/b300.hbm_gb`, `.hbm_tbps`, `.fp8_dense_tflops`, `.fp4_dense_tflops`; `gb200-nvl72.hbm_gb`, `.hbm_tbps`; proposed `gb300-nvl72.hbm_gb = 288` (see §12) | 03 §1.4; 04 §1.4 |
+| GB300 NVL72 per GPU: 288 GB HBM3e, 8 TB/s, ~5 PF dense FP8, ~15 PF dense FP4 (reported); GB200 NVL72 per GPU: 186 GB (13.4 TB ÷ 72), 8 TB/s | `hardware.json/gb300-nvl72.hbm_gb`, `.hbm_tbps`, `.fp8_e4m3_dense_tflops`, `.nvfp4_dense_tflops`; `gb200-nvl72.hbm_gb`, `.hbm_tbps` (GB300 memory is nominal; no usable figure in data) | 03 §1.4; 04 §1.4 |
 | InferenceX (V4-Pro, ISL 8K / OSL 1K, FP4, disaggregated Dynamo + vLLM, measured 2026-05-22): GB300 6,182 tok/s/GPU at 27 tok/s/user, $0.12/M at $2.65/GPU-hr; GB200 2,189 at 27, $0.28/M at $2.21; peak 11,056 (GB300) / 8,933 (GB200) at ~13–15 tok/s/user. Whether tok/s/GPU includes input tokens is not stated | `serving.json/inferencex-v4-pro-gb300.throughput_tok_s_gpu`, `.interactivity_tok_s_user`, `.cost_per_m = 0.12`, `.gpu_hour_usd = 2.65`, `.max_throughput_tok_s_gpu`; same on `inferencex-v4-pro-gb200` (`.cost_per_m = 0.28`, `.gpu_hour_usd = 2.21`) *(proposed in `prefill-decode`, extended here)* | 04 §1.2, §1.3, §8.4, §10 item 4 CONFIRMED |
 | DeepSeek production (V3/R1, Feb 2025): ~73.7K input vs ~14.8K output tok/s per H800 node; $87,072/day at $2/GPU-hr; 56.3% cache hits; average KV length 4,989 tokens | `serving.json/deepseek-v3-production.prefill_tok_s_node = 73700`, `.decode_tok_s_node = 14800`, `.cost_per_day_usd = 87072`, `.gpu_hour_usd = 2` *(proposed)*; `.kv_hit_rate_pct`, `.avg_kv_length_tokens` *(proposed by `paged-attention`)* | 04 §6.3, §7.4 CONFIRMED |
 | List prices (read 2026-10-07): DeepSeek V4-Pro off-peak $0.66 input (miss) / $1.98 output; Anthropic output = 5× input across tiers (Sonnet 5.5 $2 / $10); batch API 50% off | `serving.json/pricing-deepseek-v4-pro.input_miss_usd_per_m`, `.output_usd_per_m = 1.98`; `pricing-anthropic.output_input_ratio = 5`, `pricing-anthropic-sonnet-5.5.output_usd_per_m = 10`, `pricing-anthropic.batch_discount_pct = 50` *(proposed)* | 04 §3.6, §7.4 CONFIRMED |
 | Why output costs more: prefill at high intensity and often cached, decode one token per step holding KV, latency headroom provisioned for output (brief's analysis, labeled as such) | plain sentence, "analysis" tag | 04 §7.4 (ANALYSIS) |
-| MTP raised per-user throughput 87% for DeepSeek-R1 on GB300 NVL72 at 128K in / 8K out (LMSYS, 2026-02-19); ~40 concurrent 128K requests per GPU on GB300 vs 24 on GB200 | `serving.json/lmsys-gb300-longctx.mtp_per_user_gain_pct` *(proposed in `speculative-decoding`)*; `hardware.json/gb300-nvl72.concurrent_128k_per_gpu = 40`, `gb200-nvl72.concurrent_128k_per_gpu = 24` *(proposed by `paged-attention`)* | 04 §4.3, §7.5 CONFIRMED |
+| MTP raised per-user throughput 87% for DeepSeek-R1 on GB300 NVL72 at 128K in / 8K out (LMSYS, 2026-02-19); up to 40 concurrent 128K requests per GPU on GB300 vs 24 on GB200 (theoretical caps; LMSYS's practical target is 36 and 20, about 85% of the cap) | `serving.json/lmsys-gb300-longctx.mtp_per_user_gain_pct` *(proposed in `speculative-decoding`)*; `hardware.json/gb300-nvl72.concurrent_128k_per_gpu = 40`, `gb200-nvl72.concurrent_128k_per_gpu = 24`; practical targets: `.concurrent_128k_per_gpu_target` = 36 (GB300) and 20 (GB200) | 04 §4.3, §7.5 CONFIRMED |
 | Claude 4.6+ charges 1M-token context at a flat per-token price | `serving.json/pricing-anthropic.flat_1m_context = true` *(proposed)* | 04 §7.4 CONFIRMED |
 
 Not shown: the "~229 streams per GPU" implied by dividing InferenceX's two numbers (UNVERIFIED, depends on the unknown token-counting convention), DeepSeek's "545% cost profit margin" (theoretical), engine rankings.
@@ -207,8 +207,8 @@ floor counts output tokens only; compare as a range
 - **Brief 04 §8.1 says ⌈865 ÷ 288⌉ = 3 GB300s; it is 4** (3 × 288 = 864 GB < 865 GB). This page shows 4 and the arithmetic. The same section's "GB300, EP=16 leaves ~230 GB" matches 233.94 GB.
 
 **Data-pass keys**
-- `hardware.json/gb300-nvl72.hbm_gb = 288`, `.hbm_tbps = 8`, `.fp8_dense_tflops = 5000`, `.fp4_dense_tflops = 15000` (today these live on `b300`; the GB300 entry has only rack-level keys). Until then the toy reads `b300.*` for "GB300 NVL72" and says so in its source note (settled).
-- `models.json/deepseek-v4-pro.d_model = 7168`, `.moe_intermediate = 3072`, `.checkpoint_gb = 865` (`reported`), `.weight_formats`.
+- `hardware.json/gb300-nvl72.hbm_gb = 288`, `.hbm_tbps = 8`, `.fp8_e4m3_dense_tflops = 5000`, `.nvfp4_dense_tflops = 15000` (now in data on `gb300-nvl72`, all `reported`; the toy reads them directly, so the `b300.*` fallback is gone). No usable-memory figure exists for GB300, so 288 GB is labeled nominal.
+- `models.json/deepseek-v4-pro.d_model = 7168`, `.expert_hidden = 3072`, `.checkpoint_gb = 865` (`reported`), `.weight_formats`.
 - `serving.json` keys in §8 (pricing entries, InferenceX cost and price keys, DeepSeek production throughput keys).
 
 **Judgment calls**
@@ -223,7 +223,8 @@ floor counts output tokens only; compare as a range
 - **Settled:** frame 2 no longer hinges on the 1 GB margin of a reported checkpoint size; four GPUs, with the arithmetic and the "reported" tag.
 - **Settled:** the 1M chip reads "1M = 1,000,000 (V4-Pro's configured context)".
 - **Settled:** the input-side readout stays at every context, with the one-clause reason it reads 1.0 at 8K; "as shipped" uses the FP8 math rate, labeled on the chip; free memory has no activation reserve, labeled.
-- **Settled:** cache size comes from `kvCacheBytes` (`kv-cache`); chip memory is usable and labeled (B200 180 of 192; GB200 186 = rack total over 72).
+- **Settled:** cache size comes from `kvCacheBytes` (`kv-cache`); chip memory is labeled (B200 180 usable of 192 nominal; GB200 186 = rack total over 72; GB300 288 nominal).
 - Applied: the followed GPU plus a 16-cell `rack` (lesson 18); frame 4's running KV total; frame 10's per-node vs per-GPU line (lesson 21); frame 5's lower-bound note; "HBM size over bandwidth"; misconception 3 adds latency headroom.
 - Not done (Nice): a Kimi K2.5 point on the frame 8 plot. Its published numbers are $/M at a per-user speed, not tok/s per GPU, so it would add a third counting convention to one plot.
 
+- Data pass 2026-10-07: FLOPS keys renamed and read from `gb300-nvl72`; `expert_hidden`; the 40 and 24 concurrency are theoretical (practical targets 36 and 20); GB300 memory labeled nominal.

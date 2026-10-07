@@ -335,7 +335,7 @@ the balancing method."
 | GLM-5.3 (2026): 753B / 40B (5.3%, the active count carried over from GLM-5), 256 routed + 1 shared, top-8 | `models.glm-5.3.total_params` (confirmed), `.active_params` (**reported**), `.experts_total` = 256, `.experts_active` = 8 (proposed) | 01 §5 table [C]/[R] |
 | MiniMax-M3 (2026): about 428B / 23B (5.4%), 128 routed + 1 shared, top-4, first 3 layers dense | `models.minimax-m3.*` (existing, confirmed); `.experts_total` = 128, `.experts_active` = 4, `.experts_shared` = 1, `.dense_layers` = 3 (proposed) | 01 §5 table [C] |
 | gpt-oss-120b (2025): 116.8B / 5.1B (4.4%), 128 experts top-4, no shared expert | `models.gpt-oss-120b.*` (existing, confirmed) | 01 §5 table [C] |
-| Mistral Large 4 (preview Oct 2026): 1.05T / 49B routed-active (52B counting embeddings), "granular MoE", expert count unpublished | `models.mistral-large-4.total_params`, `.active_params` + its note (existing, confirmed) | 01 §5 table, §7 verdicts |
+| Mistral Large 4 (preview Oct 2026): 1.05T / 49B routed-active (52B counting embeddings), "granular MoE", expert count unpublished | `models.mistral-large-4.total_params`, `.active_params` + its note (existing, \`reported\`: the blog says 52B active, the briefs 49B) | 01 §5 table, §7 verdicts |
 | The trend: about 3–5% active in 2026, down from 9–28% in 2023–25 (Mixtral 8x7B, Dec 2023, about 28%; Qwen3-235B, 2025, 9%) | derived from the rows above (no new key); the two background ratios as text with year | 01 §5 "Active ratios" |
 | Routers: softmax top-k (Mixtral, Qwen3); sigmoid plus bias (DeepSeek-V3); "sqrt-softplus" scores and a fixed hash of the token id for the first 3 MoE layers (DeepSeek-V4) | `models.deepseek-v4-pro.router` = "sqrt-softplus; hash routing in first 3 MoE layers" (proposed) | 01 §5 core ideas [C for V4] |
 | Balancing: aux-loss-free bias (DeepSeek, 2024); V4 adds only a small sequence-level term; Kimi K3 uses "Quantile Balancing" instead | `models.deepseek-v4-pro.balancing` = "aux-loss-free bias + small sequence-level term", `models.kimi-k3.balancing` = "Quantile Balancing" (proposed) | 01 §5 core ideas [C] |
@@ -411,3 +411,4 @@ under frame 10's bars and in panel B; frame 8 points to `parallelism`; frame 4's
 topics" line; try-this 2 links to `parallelism` frame 10; frame 8's readout labeled "busiest ÷ fair share";
 the halo builder note for frames 1 and 3 (README lesson 32); the frame 4 stage-budget mock note.
 Nice (2/2): frame 3 names the softmax-over-chosen convention on stage; C(384, 6) exact on hover.
+- Data pass 2026-10-07: Mistral Large 4 total and active parameters are \`reported\` (blog says 52B active, briefs 49B); \`expert_hidden\` cited; no numbers changed.

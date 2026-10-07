@@ -3,15 +3,15 @@
 Track: architecture · Section: architecture · Prereqs: long-context-attention, moe, multimodal
 Next: none (the track's capstone; no slug lists `model-card` as a prerequisite in `shared/concepts.json`)
 Status: approved (expert review)
-Sources: 01 §1, §2, §3, §4, §5, §6, §7 (spec sheet and verdicts), "Open uncertainties" · 02 §1 (items 2 and 9, for the Nemotron conflict only, listed as an open question) · 03 §1 (NVFP4 row, same) · 04 §8 (V4-Pro config and KV estimate), §10 item 3 · 05 §1.2. Spec §1 (the goal: read "granular MoE, 1T total / 49B active, MLA, 1M context") and §7 (the conflicts kept open). Nothing beyond the briefs.
+Sources: 01 §1, §2, §3, §4, §5, §6, §7 (spec sheet and verdicts), "Open uncertainties" · 02 §1 (items 2 and 9, for the resolved Nemotron question only) · 03 §1 (NVFP4 row, same) · 04 §8 (V4-Pro config and KV estimate), §10 item 3 · 05 §1.2. Spec §1 (the goal: read "granular MoE, 1T total / 49B active, MLA, 1M context") and §7 (the conflicts kept open). Nothing beyond the briefs.
 
 The capstone. It reads real 2026 spec sheets field by field, straight from `data/models.json`, and sends
 each field back to the lesson that explains it. It computes nothing new about architecture: every derived
 number comes from a function an earlier page specified (`math/params.js`, `math/memory.js`), and every
-fact keeps its "reported" chip and its range where sources disagree. The spec's four §7 conflicts stay
-open on this page: GLM-5.3's 78 vs 80 layers, Mistral Large 4's 1M vs about 512K context, DeepSeek-V4-Pro's
-KV estimate (shown as ranges from the data file), and which Nemotron 3 model pretrained in NVFP4 (not in the
-data file yet; §12).
+fact keeps its "reported" chip and its range where sources disagree. Three of the spec's four §7 conflicts stay
+open on this page: GLM-5.3's 78 vs 80 layers, Mistral Large 4's 1M vs about 512K context and DeepSeek-V4-Pro's
+KV estimate (shown as ranges from the data file). The fourth, which Nemotron 3 model pretrained in NVFP4, is
+resolved: both Super and Ultra did (§12).
 
 ## 1. Learning objective
 After this page you can take a 2026 spec sheet such as "1.6T total / 49B active, 61 layers, 384 + 1
@@ -245,15 +245,15 @@ toy read:
 |---|---|---|
 | DeepSeek-V4-Pro: 1.6T / 49B, 61 layers, 384 routed (+1 shared) top-6, CSA (merge 4, top 1,024) + HCA (merge 128) + window 128 with 1 KV head of 512, 1M context, text-only, Muon, 33T tokens, MIT, preview 2026-04-24 | `models.deepseek-v4-pro.*` (existing: total_params, active_params, layers, experts_total, experts_active, attention, context_length, modalities, optimizer, pretrain_tokens, license, release_date; all confirmed) | 01 §5, §7 [C]; 02 §1 (tokens) |
 | DeepSeek-V4-Pro cache: about 4–12 kB per token, formula-derived, layer mix uncertain | `models.deepseek-v4-pro.kv_bytes_per_token` = [4000, 12000] (existing, **reported**) | 04 §8.2, §10 item 3 (spec §7 conflict) |
-| DeepSeek-V4-Pro extras for frames 4, 7, 9: expert hidden 3,072; RoPE base 10,000 (160,000 compressed), YaRN 16; staged 4K → 16K → 64K → 1M; MTP depth 1; FP4 experts, FP8 elsewhere | `.expert_hidden` (proposed, `decoder-anatomy`), `.rope_theta`, `.rope_theta_compressed`, `.yarn_factor` (proposed, `rope`), `.context_stages` = "4K→16K→64K→1M" (proposed *new*), `.mtp_depth` (proposed, `sampling`), `.precision` (proposed, `decoder-recap`) | 01 §3, §5, §1 [C]; 04 §8 |
+| DeepSeek-V4-Pro extras for frames 4, 7, 9: expert hidden 3,072; RoPE base 10,000 (160,000 compressed), YaRN 16; staged 4K → 16K → 64K → 1M; MTP depth 1; FP4 experts, FP8 elsewhere | `.expert_hidden` (proposed, `decoder-anatomy`), `.rope_theta`, `.rope_theta_compressed`, `.yarn_factor` (proposed, `rope`), `.context_stages` = "4K→16K→64K→1M" (proposed *new*), `.mtp_depth` (proposed, `sampling`), `.pretrain_precision` (in data, `decoder-recap`) | 01 §3, §5, §1 [C]; 04 §8 |
 | Kimi K3: 2.78T / 104.2B, 93 layers (69 linear + 24 MLA), 896 + 2 experts top-16, 1M, native multimodal | `models.kimi-k3.*` (existing, confirmed; release date reported) | 01 §5, §7 [C] |
 | Qwen3.8: 2.4T / 95B, 92 layers, 512 + 1 experts top-10, 262K native context, text-only | `models.qwen3.8.*` (existing, confirmed) | 01 §5, §7 [C] |
 | GLM-5.3: 753B / 40B (active carried over from GLM-5), **78–80 layers** (config 78, GLM-5 paper 80), MLA + DSA, 1M, text-only | `models.glm-5.3.total_params` (confirmed), `.active_params` (reported), `.layers` = [78, 80] (existing, with the two-source note) | 01 §5, §7, "Open uncertainties" (spec §7 conflict) |
 | MiniMax-M3: about 428B / 23B, 60 layers, GQA 64 Q / 4 KV + sparse attention, 1M, native multimodal; 122,880 B per token derived | `models.minimax-m3.*` (existing, confirmed); `.n_kv_heads`, `.head_dim` (proposed, `kv-compression`) | 01 §2, §4, §7 [C] |
-| Mistral Large 4 (preview Oct 6, 2026): 1.05T / 49B routed-active (52B with embeddings), **context 512K–1M** (claimed 1M, measured about 512K, both reported), multimodal input, weights not yet out | `models.mistral-large-4.*` (existing; `context_length` = [512000, 1000000] reported) | 01 §7 verdicts (spec §7 conflict) |
+| Mistral Large 4 (preview Oct 6, 2026): 1.05T / 49B routed-active (52B with embeddings), **context 512K–1M** (claimed 1M, measured about 512K, both reported), multimodal input, weights not yet out | `models.mistral-large-4.*` (existing; `total_params` and `active_params` are `reported`: the sources differ; `context_length` = [512000, 1000000] reported) | 01 §7 verdicts (spec §7 conflict) |
 | gpt-oss-120b: 116.8B / 5.1B, 36 layers, 128 experts top-4, alternating full / window-128 layers, 131,072 context | `models.gpt-oss-120b.*` (existing, confirmed); `.context_length` = 131072 (proposed, `rope`) | 01 §5, §7 [C] |
 
-Not shown: Nemotron 3 (no entry; its NVFP4 conflict is §12 item 1); MiMo-V2.6-Pro and DeepSeek-V4.1-Flash
+Not shown: Nemotron 3 (both Super and Ultra were pretrained in NVFP4; §12 item 1); MiMo-V2.6-Pro and DeepSeek-V4.1-Flash
 (reported only; available as chips if the reviewer wants reported-only cards); Llama "5" (01 §7 [U]).
 
 ## 9. Takeaways
@@ -301,13 +301,10 @@ Frame 10 (conflicts as ranges), desktop width; values from `data/models.json` an
 
 ## 12. Open questions for the reviewer
 **Data-pass keys:**
-1. **Nemotron 3 NVFP4 (spec §7 conflict, kept open).** Brief 02 says native NVFP4 pretraining is Nemotron 3
-   Super only (120B / 12B, 25T tokens) [CONFIRMED, its report]; brief 03 says Nemotron 3 Ultra (550B / 55B)
-   did NVFP4 pretraining at scale on GB200 (arXiv 2606.15007, the GB200 mention confirmed; tokens reported).
-   Proposed *new* entries `nemotron-3-super` and `nemotron-3-ultra`, each with `pretrain_precision` =
-   "NVFP4" and a `note` naming the other brief's claim, confidence as each brief tags it. The page does not
-   show either until the data pass adds them; then frame 10 gains a fifth conflict chip ("which Nemotron 3
-   pretrained in NVFP4: Super (02) or Ultra (03)?").
+1. **Nemotron 3 NVFP4 (spec §7 question, resolved in the data pass).** Both `nemotron-3-super` and
+   `nemotron-3-ultra` have `pretrain_precision` = "NVFP4" (confirmed by arXiv 2604.12374 and 2606.15007).
+   The briefs named one model each, so there is no conflict and no fifth conflict chip; the page still
+   shows neither card.
 2. *New:* `deepseek-v4-pro.context_stages`. Reused: every key proposed on the other eight Architecture pages
    (this page reads them; it adds none of its own beyond item 1 and this one).
 3. Ruled: reported-only cards (MiMo-V2.6-Pro, DeepSeek-V4.1-Flash) stay in "not shown".
@@ -327,7 +324,7 @@ computed with `node -e`.
 Rulings applied (lesson 20): "1M" is settled: 2²⁰ = 1,048,576 is a labelled slider stop on `kv-cache` and
 `long-context-attention`, and a card page prints the model's configured context from the data file (here
 1,000,000, as stored); fields beyond the card (frames 4, 7, 9) are kept and labeled "from the paper /
-config"; reported-only cards stay out; Nemotron stays a data-pass item.
+config"; reported-only cards stay out; Nemotron's NVFP4 question is resolved (both models).
 
 Must (3/3): decimal units ("kB" in frames 6 and 10, §6, §8 and the sketch); GPU share named as `sharePct`
 from `math/memory.js` in frame 6 and the live outputs; frame 2's 3.1% segment gets a ×10 zoom bar (104 px),
@@ -337,3 +334,5 @@ config" labels with the card's own fields first; "(at 1,000,000 tokens)" in misc
 "Its paper gives only a ratio"; Mistral's chip says "both reported"; `FIELD_GUIDE.lesson` may be a list
 (context → `long-context-attention`, `rope`); reported-only cards ruled out.
 Nice (1/2): try-this 1 says why routed share is below active share; the hover note on the sketch is left out.
+- Data pass 2026-10-07: the Nemotron 3 NVFP4 question is resolved (Super and Ultra both NVFP4; no conflict chip); DeepSeek-V4-Pro \`expert_hidden\` and \`context_stages\` are in data; no numbers changed.
+- Data pass 2026-10-07 (addendum): Mistral Large 4 total and active parameters are \`reported\` (sources differ: 52B vs 49B active); the page keeps both labeled.

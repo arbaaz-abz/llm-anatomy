@@ -299,9 +299,9 @@ card, `hl-peak` = the "at peak" segment, `hl-mfu` = the "below peak" segment, `h
 | DeepSeek-V3 (2024): 2.788M H800-hours total, 2.664M for pre-training (180K per trillion tokens, 3.7 days per trillion on 2,048 GPUs), "$5.576M at $2 per GPU-hour", excluding research and ablations | `models.json/deepseek-v3.training_gpu_hours` = 2.788e6, `.pretrain_gpu_hours` = 2.664e6, `.training_cost_usd_reported` = 5.576e6 *(proposed)* | 03 §5.5, §6 |
 | DeepSeek-V3 FP8 recipe: all three GEMMs in FP8 (E4M3), 1 × 128 activation tiles, 128 × 128 weight blocks, FP32 promotion of partial sums, BF16 optimizer states; loss error vs BF16 < 0.25% | `models.json/deepseek-v3.fp8_recipe`, `.fp8_loss_error` = "<0.25%" *(proposed)* | 03 §5.3, §1.3 |
 | DeepSeek-V3 reserves 20 of 132 SMs for communication; all-to-all and pipeline traffic "can be fully hidden" | `models.json/deepseek-v3.comm_sms` *(proposed by `parallelism`)* | 03 §4.5, §5.2 |
-| Llama 4 Behemoth (2025): 32K GPUs, FP8, 390 TFLOPS per GPU; Meta gave no MFU | `models.json/llama-4-behemoth.achieved_tflops_per_gpu` = 390, `.training_gpus` = "32K", `.precision` = "FP8" *(proposed; the source says "32K", exact count unknown)* | 03 §5.1, §6 |
+| Llama 4 Behemoth (2025): 32K GPUs, FP8, 390 TFLOPS per GPU; Meta gave no MFU | `models.json/llama-4-behemoth.achieved_tflops_per_gpu` = 390, `.training_gpus` = "32K", `.pretrain_precision` = "FP8" *(the source says "32K", exact count unknown)* | 03 §5.1, §6 |
 | NVIDIA Megatron Core on GB300 NVL72: 1,648 TFLOPS per GPU on DeepSeek-V3 pre-training with 256 GPUs, about 3× GB200 NVL72's 606 (precision not stated, so no MFU is derivable) | `hardware.json/gb300-nvl72.megatron_dsv3_tflops_per_gpu` = 1648 *(proposed)* | 03 §5.1 |
-| Low-precision pretraining in 2026: MiMo-V2-Flash trained in FP8 over 27T tokens; a Nemotron 3 model pretrained in NVFP4 (which model: open conflict, held for the data pass); DeepSeek-V4 and Kimi K3 use FP4 quantization-aware training only in post-training | `models.json/mimo-v2-flash.pretrain_format` = "FP8" *(proposed)*; the Nemotron fact renders only once the data pass resolves spec §7's conflict (names in §12) | 02 §1.7; 03 §1.3 |
+| Low-precision pretraining in 2026: MiMo-V2-Flash trained in FP8 over 27T tokens; Nemotron 3 Super and Ultra, both pretrained in NVFP4 (confirmed by both arXiv abstracts); DeepSeek-V4 and Kimi K3 use FP4 quantization-aware training only in post-training | `models.json/mimo-v2-flash.pretrain_precision` = "FP8"; `models.json/nemotron-3-super.pretrain_precision` and `nemotron-3-ultra.pretrain_precision` = "NVFP4" (confirmed) | 02 §1.7; 03 §1.3 |
 | DeepSeek-V4 warns that fully fused kernels make power throttling a limiter | `models.json/deepseek-v4-pro.notes_power` *(proposed, string)* | 03 §5.2 |
 | Kimi K2 (2025): zero loss spikes over 15.5T tokens with MuonClip: training stability, not hardware reliability | `models.json/kimi-k2.loss_spikes` = 0 *(proposed)* | 03 §5.4 |
 
@@ -355,17 +355,15 @@ Caption check (2026-10-07, after the review, the `rlvr-grpo` counter adapted): f
   `training_cost_usd_reported 5.576e6` (note "at $2/GPU-h, excludes research and ablations"),
   `fp8_recipe`, `fp8_loss_error "<0.25%"` (03 §5.3, §5.5; CONFIRMED).
 - `models.json/llama-4-behemoth` (new entry): `training_gpus "32K"` (string: 32,000 vs 32,768 unknown),
-  `precision "FP8"`, `achieved_tflops_per_gpu 390` (03 §5.1, CONFIRMED Meta blog).
+  `pretrain_precision "FP8"`, `achieved_tflops_per_gpu 390` (03 §5.1, CONFIRMED Meta blog).
 - `hardware.json/gb300-nvl72.megatron_dsv3_tflops_per_gpu 1648`, `gb200-nvl72.megatron_dsv3_tflops_per_gpu
   606` (03 §5.1, CONFIRMED figures, precision unstated).
-- `models.json/mimo-v2-flash.pretrain_format "FP8"` (02 §1.7, CONFIRMED); `models.json/kimi-k2.loss_spikes
+- `models.json/mimo-v2-flash.pretrain_precision "FP8"` (02 §1.7, CONFIRMED); `models.json/kimi-k2.loss_spikes
   0` (03 §5.4); `models.json/deepseek-v4-pro.notes_power` (03 §5.2).
-- `hardware.json/h800` (new entry, shared with `cluster-topology`): dense BF16/FP8 peaks are not in the
-  briefs; the entry can carry only the NVLink note until a source is read. The DeepSeek-V3 preset uses
-  H100 peaks with a visible note.
-- Nemotron NVFP4 pretraining (held): brief 02 names Nemotron 3 Super, brief 03 names Nemotron 3 Ultra;
-  the data pass keeps separate `nemotron-3-super` and `nemotron-3-ultra` entries and resolves which one;
-  the page never names it.
+- `hardware.json/h800` (now in data, shared with `cluster-topology`): it holds NVLink only; dense BF16/FP8
+  peaks are not in data. The DeepSeek-V3 preset uses H100 peaks with a visible note, and the page cites no H800 FLOPS.
+- Nemotron NVFP4 pretraining (resolved): both `nemotron-3-super` and `nemotron-3-ultra` were pretrained in
+  NVFP4 (`pretrain_precision`, confirmed by arXiv 2604.12374 and 2606.15007); there is no conflict.
 **Graph changes:** none (no slug lists this page as a prereq; `Next:` is empty by design).
 **Judgment calls:** none open; all settled in §13.
 
@@ -379,7 +377,7 @@ Settled and applied (README lesson 20):
 - **34.5% is a floor:** the card's 30.84M GPU-hours cover the long-context and post-training stages too.
 - **Model name:** Llama 3.1 405B everywhere the card's numbers appear; the paper title stays "The Llama 3
   Herd of Models"; id `llama-3.1-405b`.
-- **Nemotron:** the on-page column names no Nemotron model; the names live only in §12.
+- **Nemotron:** the on-page column may now say Super and Ultra (both NVFP4); the ids live in §8 and §12.
 - **Validity (lesson 22):** `runPlan` returns `valid`; the toy replaces its readouts outside interval +
   restart ≤ half the cluster MTBF; the 100K case stays inside.
 - **6ND exporter:** `math/scale.js` exports `FLOPS_PER_PARAM_TOKEN` and `trainingFlops`; `scaling-laws`
@@ -395,3 +393,4 @@ Settled and applied (README lesson 20):
 - **Applied Shoulds and nice-to-haves:** frame 9 shows a 90-minute window; frame 10 prints its shared
   scale; frame 1 says why 6; the GB300 Megatron row says no MFU is derivable; §3's closing claim is
   scoped to what try-this 3 shows.
+- Data pass 2026-10-07: `llama-4-behemoth` and `mimo-v2-flash` precision cite `pretrain_precision`; Nemotron 3 Super and Ultra are both NVFP4 (no conflict); H800 has NVLink only, so the stand-in H100 peaks stay labeled.

@@ -108,8 +108,8 @@ Indexing: GPUs are numbered from 1 on screen ("GPU 1 … GPU 64"); no memory add
 
 ## 5. Animation script
 Numbers from `math/training-memory.js` (reproducer in §6). Decimal units throughout (1 GB = 10⁹
-bytes); capacity math uses each chip's usable HBM, labeled "usable" (H100 80 GB; B200 180 GB usable of
-192 nominal).
+bytes); capacity math uses usable HBM where data has it and nominal otherwise, always labeled (H100 80 GB
+nominal; H200 141 GB nominal; B200 180 GB usable of 192 nominal; B300 288 GB nominal).
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
@@ -123,7 +123,7 @@ bytes); capacity math uses each chip's usable HBM, labeled "usable" (H100 80 GB;
 | 8 | Three `gpu` glyphs labeled GPU 1 (outlined), GPU 2, GPU 64, with "61 others" between them, each with the overflow label "needs 2,800 GB of 80"; under the row, GPU 1's full-width `shareBar` (weight · gradient · moments · master). Each GPU gets a different data chip "batch 1", "batch 2", "batch 64". | Data chips drop into each GPU; the bars appear identical. | Sixty-four GPUs, each training on different data, is data parallelism. Every GPU keeps a full copy, so each one still needs all 2.8 TB. | per GPU 2,800 GB · 64 copies = 179.2 TB in total |
 | 9 | Same GPUs, each printing its GB. On GPU 1's full-width bar the moments-and-master segment shrinks to an 18.8 px slice, labeled "slice 1 of 64" beside it with a leader line; GPU 2 and GPU 64 print "slice 2 of 64", "slice 64 of 64" under their glyphs. | GPU 1's optimizer segment splits; 63 pieces fly off toward the other GPUs; every GPU's GB recounts. | ZeRO shards the optimizer states: each GPU keeps one sixty-fourth and updates only that slice. Per-GPU memory falls from 2,800 GB to 733 GB. | 4 × 175e9 + 12 × 175e9 ÷ 64 = 700 + 32.8 = 732.8 GB · weights still 350 GB, gradients 350 GB |
 | 10 | Same GPUs; gradient and weight segments shard too. GPU 1's bar (rescaled to its new total, full width): 5.5 + 5.5 + 32.8 = 43.75 GB; the `gpu` memory bar drops to 55%. For layer 1, `flow` arrows (carry `weight`) from GPU 2 and GPU 64 into GPU 1 carry that layer's weight slices (label "all-gather before the layer, forward and again backward"). A small readout: "+ activations 4.8 GB (full recompute) = 48.6 GB: fits". | Segments split and scatter; GPU 1's GB counts down; the all-gather arrows run once. | Shard gradients and weights too, and each GPU holds 44 GB of state. Before each layer runs, forward and backward, the GPUs gather its weights: that is ZeRO-3, or FSDP. | ZeRO-2 on the way: 388.3 GB · ZeRO-3: 2,800 ÷ 64 = 43.75 GB · traffic 1.5× plain data parallel · + 4.83 GB activations = 48.58 GB of 80 |
-| 11 | A plain table: "1T parameters × 16 B = 16 TB" and rows: H100 (80 GB) 200 · H200 (141 GB) 114 · B200 (180 GB usable) 89 · B300 (288 GB) 56 GPUs. Second line: "DeepSeek-V4-Pro's size at the 16-byte recipe: 1.6T total, 49B active → 25.6 TB → 320 H100s (its own recipe, Muon, is 12 B: 240)". On-screen definition: "mixture of experts: each token uses a few of many expert blocks (see `moe`)". | Rows type in; the DeepSeek line's "49B active" dims while "1.6T total" stays bright. | A trillion parameters need 16 TB of training state: 200 H100s before any activations. A mixture of experts pays here for every expert, even the ones a token skips. | 1e12 × 16 = 16 TB · ÷ 80 GB = 200 · ÷ 141 GB = 114 · ÷ 180 GB = 89 · ÷ 288 GB = 56 · V4-Pro at 16 B: 25.6 TB → 320 / 182 / 143 / 89; at 12 B: 240 / 137 / 107 / 67 |
+| 11 | A plain table: "1T parameters × 16 B = 16 TB" and rows: H100 (80 GB nominal) 200 · H200 (141 GB nominal) 114 · B200 (180 GB usable) 89 · B300 (288 GB nominal) 56 GPUs. Second line: "DeepSeek-V4-Pro's size at the 16-byte recipe: 1.6T total, 49B active → 25.6 TB → 320 H100s (its own recipe, Muon, is 12 B: 240)". On-screen definition: "mixture of experts: each token uses a few of many expert blocks (see `moe`)". | Rows type in; the DeepSeek line's "49B active" dims while "1.6T total" stays bright. | A trillion parameters need 16 TB of training state: 200 H100s before any activations. A mixture of experts pays here for every expert, even the ones a token skips. | 1e12 × 16 = 16 TB · ÷ 80 GB = 200 · ÷ 141 GB = 114 · ÷ 180 GB = 89 · ÷ 288 GB = 56 · V4-Pro at 16 B: 25.6 TB → 320 / 182 / 143 / 89; at 12 B: 240 / 137 / 107 / 67 |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 1–4 draw `trainingBytesPerParam(TRAINING_RECIPES.adam)`; frames 5–7
@@ -145,7 +145,7 @@ fragmentation and communication workspaces (03 §3.3)."
 | `recipe` | Optimizer recipe | Segmented | Adam, FP32 states (16 B) · Adam, BF16 moments (12 B) · Muon, one FP32 momentum (12 B) | Adam 16 B | – |
 | `stage` | ZeRO stage | Segmented | 0 (plain data parallel) · 1 · 2 · 3 (FSDP) | 0 | – |
 | `dp` | Data-parallel GPUs | Slider (powers of 2) | 1 … 1,024 | 64 | – |
-| `gpu` | GPU | Preset chips | H100 80 GB usable · H200 141 GB usable · B200 180 GB usable (192 nominal) · B300 288 GB usable | H100 | `hardware.json/{h100,h200,b200,b300}` usable HBM (the B200 chip reads `b200`, not `gb200-nvl72`'s 186) |
+| `gpu` | GPU | Preset chips | H100 80 GB nominal · H200 141 GB nominal · B200 180 GB usable (192 nominal) · B300 288 GB nominal | H100 | `hardware.json/{h100,h200,b200,b300}`: `b200.hbm_usable_gb`, nominal `hbm_gb` for the rest (the B200 chip reads `b200`, not `gb200-nvl72`'s 186) |
 | `seq` | Sequence length (GPT-3 only) | Slider (powers of 2) | 1,024 … 8,192 tokens | 2,048 | – |
 | `recompute` | Saved activations (GPT-3 only) | Segmented | store everything · skip attention scores (selective) · block inputs only (full) | store everything | – |
 
@@ -204,15 +204,15 @@ activationBytesPerLayer({ seq, microBatch, hidden, heads, tp = 1, recompute = 'n
 activationBytes({ layers, ...perLayerArgs }) → number      // layers × activationBytesPerLayer
 //   GPT-3, 96 layers: none 275.41e9 · selective 82.14e9 · full 4.83e9
 gpusToHoldStates({ params, bytesPerParam, hbmBytes }) → number   // ceil(params · bytesPerParam / hbmBytes)
-//   hbmBytes is the chip's usable HBM (settled)
+//   hbmBytes is the chip's HBM (usable for B200, nominal otherwise; settled)
 //   (1e12, 16, 80e9) → 200 · (1e12, 16, 141e9) → 114 · (1e12, 16, 180e9) → 89 · (1e12, 16, 288e9) → 56
 //   (175e9, 16, 80e9) → 35 · (1.6e12, 16, 80e9) → 320 · (1.6e12, 16, 180e9) → 143 · (1.6e12, 16, 288e9) → 89
 //   (1.6e12, 12, 80e9) → 240 · (1.6e12, 12, 180e9) → 107 · (1.6e12, 12, 288e9) → 67
 ```
 One definition each (README lesson 16): "bytes per parameter" is always `trainingBytesPerParam(...).total`;
 "per-GPU memory" is always `zeroPerGpuBytes(...).total + activationBytes(...)` (activations only for
-GPT-3); "GPUs to hold the state" is always `gpusToHoldStates` with the chip's usable HBM, labeled
-"usable". No prose
+GPT-3); "GPUs to hold the state" is always `gpusToHoldStates` with the chip's HBM (usable for B200, nominal for the others), labeled
+"usable" or "nominal". No prose
 number on the page is computed any other way.
 
 Reproducer (run 2026-10-07 against the scratch implementation; re-run after the review with usable
@@ -333,7 +333,7 @@ Caption check (2026-10-07, after the review, the `rlvr-grpo` counter adapted): f
   after forward"` (03 §4.1, CONFIRMED).
 - `models.json/kimi-k3.optimizer = "Per-Head Muon"`, `.activation_tricks` (02 §1.5, 03 §3.2, CONFIRMED).
 - Usable HBM per chip (settled: nominal and usable both stored): `b200.hbm_usable_gb = 180` (03 §1.4,
-  §3.3); H100, H200, B300 use their listed capacity as usable until the data pass records otherwise.
+  §3.3); data holds no usable figure for H100, H200 or B300 (B300 and GB300 system pages imply 262–278 GB), so the page uses their nominal capacity and says "nominal".
 - `models.json/gpt-3.*`: the keys `decoder-anatomy` proposed (shared, not re-proposed).
 **Graph changes:** none.
 **Judgment calls:** none open; all settled in §13.
@@ -344,7 +344,7 @@ Settled and applied (README lesson 20):
   `math/memory.js` stays KV and inference only (`kv-cache`). `parallelism` imports `zeroPerGpuBytes`
   and `TRAINING_RECIPES` from here.
 - **Capacity uses usable HBM, labeled:** B200 180 GB usable → 1T needs 89 GPUs (brief 03 §3.3's figure),
-  V4-Pro's size at 16 B needs 143. Every chip label says "usable".
+  V4-Pro's size at 16 B needs 143. Every chip label says "usable" or "nominal".
 - **Kimi K2:** 6 B per parameter = weights + FP32 gradient buffer, about 6 TB over 256 GPUs (about 23 GB
   each), leaving about 30 GB per GPU for optimizer state.
 - **DeepSeek-V4-Pro's 25.6 TB** is the 16-byte what-if, labeled; its own Muon recipe gives 240 H100s.
@@ -361,3 +361,4 @@ Settled and applied (README lesson 20):
 - **Applied Shoulds:** H200 row in frame 11; hook names 0.35 TB of gradients and 2.1 TB of optimizer
   state; the `recipe` argument is a `TRAINING_RECIPES` entry; frame 10 names both passes (lesson 26);
   frame 1 prints what the bar and the GPUs each measure (lesson 21).
+- Data pass 2026-10-07: chip memory labels now say nominal for H100, H200 and B300 (no usable figure in data); B200 stays 180 GB usable; no numbers changed.

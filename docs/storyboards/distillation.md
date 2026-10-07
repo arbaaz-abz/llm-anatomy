@@ -195,7 +195,6 @@ All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-gr
 | On-policy distillation was popularized by Thinking Machines and Qwen3; claims of large compute savings versus RL (about an order of magnitude) | `papers.on-policy-distillation-2025` (Thinking Machines blog, reported) — no model entry | 02 §4.8 item 3 |
 | DeepSeek-R1 (2025): ~800K SFT samples (≈600K reasoning + ≈200K other; 804,745 in Table 5); reusing them to distill small Qwen and Llama models stays `[BG]` | `models.deepseek-r1.sft_samples` = 800000 (confirmed by the expert reviewer, arXiv 2501.12948; note "804,745 in Table 5") | 02 §3, §4.8 item 1 |
 | Olmo 3's SFT used ~2.3M reasoning traces distilled from QwQ-32B and DeepSeek-R1 | `models.olmo-3.sft_traces` = 2.3e6 (reported) | 02 §3 |
-| Mistral says Large 4 "leaned less on distillation" than peers | `models.mistral-large-4.distillation_note` (reported; not in Mistral's blog) | 02 §4.8, §6 |
 
 ## 9. Takeaways
 1. A student can learn from a teacher's text (one token per position), from its full probabilities on fixed
@@ -273,10 +272,10 @@ Test cases for the builder: the expected `opdTokenReward` under the student's ow
 the student equals every teacher with positive weight.
 
 ## 12. Open questions for the reviewer
-**Data-pass keys** (new): `deepseek-v4-pro.opd` · `kimi-k3.opd` · `mimo-v2-flash` (new entry) `.opd` ·
-`glm-5.opd` · `deepseek-r1` (new entry) `.sft_samples` = 800000 (confirmed, note "804,745 in Table 5") · `olmo-3.sft_traces` =
-2.3e6 (reported) · `mistral-large-4.distillation_note` (reported) · `papers.on-policy-distillation-2025`
-(reported; in `data/papers.json`, ruled).
+**Data-pass keys** (new): `deepseek-v4-pro.opd` · `kimi-k3.opd` · `mimo-v2-flash` (entry) `.opd` ·
+`glm-5.opd` · `models.deepseek-r1.sft_samples` = 800000 (confirmed, note "804,745 in Table 5") · `olmo-3.sft_traces` =
+2.3e6 (reported) · `papers.on-policy-distillation-2025` (reported; in `data/papers.json`, ruled). Gap, dropped:
+the claim that Mistral "leaned less on distillation" (no source in data), so the page does not make it.
 
 **Graph changes:**
 - `distillation` is a leaf. Spec §3.4 lists `rlvr-grpo → agentic-rl → distillation` and nothing after it, so
@@ -297,3 +296,4 @@ Applied from `track-review-recipe.md` §8 (change log: `fix-recipe-review.md`):
 - Should: frame 6 carries "different units: compare the shape, not the size" (lesson 21); specialist names `math & code · agents · chat` track-wide; frame 7's DeepSeek-V4 note is a visible stage mark; `deepseek-r1.sft_samples` stored as confirmed (804,745 in Table 5) with the distill-into-Qwen/Llama clause kept `[BG]`; frame 3 shows the sum and the followed cell's term, the four terms moved to §7 note (d).
 - Nice: try-this 3 no longer implies DeepSeek-V4's weights ("sums its teachers' KLs with weights").
 - `papers.on-policy-distillation-2025` id applied.
+- Data pass 2026-10-07: the unsourced Mistral Large 4 distillation claim is dropped (no data key); DeepSeek-R1 SFT samples cited as `deepseek-r1.sft_samples`; no numbers changed.
