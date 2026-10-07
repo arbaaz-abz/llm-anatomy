@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   mulberry32, randomMatrix, dot, transpose, matmul, softmax, causalMask,
-  formatBytes, formatCount,
+  formatBytes, formatCount, deepFreeze,
 } from '../math/core.js';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
@@ -87,4 +87,14 @@ test('formatCount rolls over to the next unit when rounding reaches 1000', () =>
   assert.equal(formatCount(999_600), '1M');
   assert.equal(formatCount(999.7e9), '1T');
   assert.equal(formatCount(999.6), '1K');
+});
+
+test('deepFreeze returns a frozen deep copy: arrays stay arrays, nested values frozen, the input untouched', () => {
+  const input = { a: [1, [2, 3]], b: { c: 4 }, d: null, e: 'x' };
+  const out = deepFreeze(input);
+  assert.deepEqual(out, input);
+  assert.ok(Array.isArray(out.a) && Array.isArray(out.a[1]));
+  assert.ok([out, out.a, out.a[1], out.b].every(Object.isFrozen));
+  assert.ok(!Object.isFrozen(input) && !Object.isFrozen(input.a));
+  assert.equal(deepFreeze(7), 7);
 });

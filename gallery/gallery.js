@@ -6,6 +6,7 @@ import { mountMathPanel } from '@shared/ui/math-panel.js';
 import { renderFact } from '@shared/facts.js';
 import { loadJSON } from '@shared/data.js';
 import { matmul, transpose, softmax, causalMask, randomMatrix, formatBytes, formatCount } from '@math/core.js';
+import { TOY as ATTENTION_TOY } from '@math/attention.js';
 
 const $ = (sel) => document.querySelector(sel);
 const svg = (parent, w, h, attrs = {}) => G.svgEl('svg', { width: w, height: h, viewBox: `0 0 ${w} ${h}`, ...attrs }, parent);
@@ -49,12 +50,8 @@ for (let i = -10; i <= 10; i += 1) {
 }
 
 // ---- glyph figures ----
-const TOKENS = ['The', 'cat', 'sat', 'down'];
-const TOY = {
-  Q: [[1, 0, -0.5, 0], [0.5, 0.5, 0, -1], [0, 2, 0.5, 0], [0.5, 2, 0, 0]],
-  K: [[1, -0.5, 0, 0.5], [0, 1.5, 0, -0.5], [-0.5, 0, 1, 0.5], [0.5, -0.5, 0.5, 1]],
-  V: [[1, 0, -1, 0], [0, 2, 0, 1], [-1, 0, 1, 0.5], [0.5, -1, 0, 1]],
-};
+const TOKENS = ATTENTION_TOY.tokens;
+const TOY = ATTENTION_TOY.heads.A; // the one copy of the hand-picked Q, K, V (attention §4)
 const S = matmul(TOY.Q, transpose(TOY.K));
 const SCALED = S.map((row) => row.map((v) => v / 2));
 const MASK = causalMask(4);

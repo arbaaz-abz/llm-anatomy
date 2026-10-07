@@ -90,3 +90,12 @@ export function formatCount(n) {
   }
   return `${threeSig(value)}${COUNT_SUFFIXES[unit]}`;
 }
+
+// A frozen deep copy for module-level constants (arrays stay arrays); the input is never touched.
+export function deepFreeze(value) {
+  if (value === null || typeof value !== 'object') return value;
+  const copy = Array.isArray(value)
+    ? value.map(deepFreeze)
+    : Object.fromEntries(Object.entries(value).map(([k, v]) => [k, deepFreeze(v)]));
+  return Object.freeze(copy);
+}
