@@ -38,7 +38,7 @@
     { "slug": "paged-attention", "track": "serving", "section": "serving", "title": "PagedAttention", "summary": "Managing KV-cache memory in blocks, like an OS manages RAM.", "prereqs": ["batching", "kv-compression"] },
     { "slug": "prefix-caching", "track": "serving", "section": "serving", "title": "Prefix caching", "summary": "Reusing shared prompts, and why cached tokens are cheaper.", "prereqs": ["paged-attention"] },
     { "slug": "speculative-decoding", "track": "serving", "section": "serving", "title": "Speculative decoding", "summary": "A fast drafter guesses, the big model checks.", "prereqs": ["prefill-decode", "sampling"] },
-    { "slug": "quantization", "track": "serving", "section": "serving", "title": "Quantization", "summary": "FP8 and FP4: fewer bits, less memory, nearly the same answers.", "prereqs": ["gpu-primer"] },
+    { "slug": "quantization", "track": "serving", "section": "serving", "title": "Quantization", "summary": "FP8 and FP4: fewer bits, less memory, nearly the same answers.", "prereqs": ["gpu-primer", "prefill-decode"] },
     { "slug": "disaggregation", "track": "serving", "section": "serving", "title": "Disaggregated serving", "summary": "Separate GPU pools for prefill and decode, and wide expert parallelism.", "prereqs": ["batching", "parallelism"] },
     { "slug": "serving-calculator", "track": "serving", "section": "serving", "title": "Serving a 1T model", "summary": "Size a real deployment: GPUs, latency and cost per million tokens.", "prereqs": ["disaggregation", "quantization", "prefix-caching", "speculative-decoding"] }
   ]
