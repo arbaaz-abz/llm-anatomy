@@ -1,0 +1,45 @@
+{
+  "tracks": [
+    { "id": "architecture", "title": "Architecture", "sections": [{ "id": "architecture", "title": "Architecture" }] },
+    { "id": "training", "title": "Training", "sections": [{ "id": "recipe", "title": "Recipe" }, { "id": "gpus", "title": "GPUs & scale" }] },
+    { "id": "serving", "title": "Serving", "sections": [{ "id": "serving", "title": "Serving" }] }
+  ],
+  "concepts": [
+    { "slug": "decoder-anatomy", "track": "architecture", "section": "architecture", "title": "The whole model, end to end", "summary": "How inputs, embeddings, stacked blocks and the output head fit together.", "prereqs": [] },
+    { "slug": "decoder-recap", "track": "architecture", "section": "architecture", "title": "From GPT-3 to 2026", "summary": "The decoder block then and now, and why each part changed.", "prereqs": ["decoder-anatomy"] },
+    { "slug": "attention", "track": "architecture", "section": "architecture", "title": "Attention, step by step", "summary": "Scores, causal mask, softmax, weighted sum, and many heads.", "prereqs": ["decoder-anatomy"] },
+    { "slug": "rope", "track": "architecture", "section": "architecture", "title": "RoPE", "summary": "Position as rotation, and how context gets stretched to 1M tokens.", "prereqs": ["attention"] },
+    { "slug": "kv-cache", "track": "architecture", "section": "architecture", "title": "The KV cache", "summary": "Why decoding re-reads the past, and how big that memory gets.", "prereqs": ["attention"] },
+    { "slug": "kv-compression", "track": "architecture", "section": "architecture", "title": "MQA, GQA, MLA", "summary": "Sharing and compressing keys and values to shrink the cache.", "prereqs": ["kv-cache"] },
+    { "slug": "long-context-attention", "track": "architecture", "section": "architecture", "title": "Reaching 1M tokens", "summary": "Sliding windows, sparse attention and linear-attention hybrids.", "prereqs": ["kv-compression", "rope"] },
+    { "slug": "moe", "track": "architecture", "section": "architecture", "title": "Mixture of Experts", "summary": "A router sends each token to a few experts out of hundreds.", "prereqs": ["decoder-recap"] },
+    { "slug": "multimodal", "track": "architecture", "section": "architecture", "title": "Seeing images", "summary": "Pixels become patches, patches become tokens.", "prereqs": ["attention"] },
+    { "slug": "sampling", "track": "architecture", "section": "architecture", "title": "Picking the next token", "summary": "Temperature, top-k, top-p, and predicting several tokens at once.", "prereqs": ["decoder-recap"] },
+    { "slug": "model-card", "track": "architecture", "section": "architecture", "title": "Reading a model card", "summary": "Decode a 2026 spec sheet field by field.", "prereqs": ["long-context-attention", "moe", "multimodal"] },
+
+    { "slug": "training-pipeline", "track": "training", "section": "recipe", "title": "The 2026 training pipeline", "summary": "Six stages from raw text to a reasoning model, and what each adds.", "prereqs": ["decoder-recap"] },
+    { "slug": "pretraining", "track": "training", "section": "recipe", "title": "Pretraining", "summary": "Next-token prediction over 25–33 trillion tokens of curated data.", "prereqs": ["training-pipeline"] },
+    { "slug": "scaling-laws", "track": "training", "section": "recipe", "title": "Scaling laws", "summary": "How to split compute between parameters and tokens, and why labs over-train.", "prereqs": ["pretraining"] },
+    { "slug": "midtraining", "track": "training", "section": "recipe", "title": "Mid-training", "summary": "Annealing on the best data and stretching the context window.", "prereqs": ["pretraining", "rope"] },
+    { "slug": "sft", "track": "training", "section": "recipe", "title": "Supervised fine-tuning", "summary": "Chat templates, loss masking and long reasoning traces.", "prereqs": ["pretraining"] },
+    { "slug": "rlhf-dpo", "track": "training", "section": "recipe", "title": "RLHF and DPO", "summary": "Learning from human preferences, with and without an RL loop.", "prereqs": ["sft"] },
+    { "slug": "rlvr-grpo", "track": "training", "section": "recipe", "title": "RLVR and GRPO", "summary": "Rewards you can check, and scoring answers against their own group.", "prereqs": ["rlhf-dpo"] },
+    { "slug": "agentic-rl", "track": "training", "section": "recipe", "title": "Agentic RL", "summary": "Training on multi-step tool use inside sandboxes.", "prereqs": ["rlvr-grpo"] },
+    { "slug": "distillation", "track": "training", "section": "recipe", "title": "Distillation", "summary": "Merging many specialist models into one, on-policy.", "prereqs": ["agentic-rl"] },
+    { "slug": "gpu-primer", "track": "training", "section": "gpus", "title": "A GPU for LLM people", "summary": "Tensor cores, HBM vs SRAM, the roofline, and number formats.", "prereqs": [] },
+    { "slug": "training-memory", "track": "training", "section": "gpus", "title": "Where training memory goes", "summary": "Weights, gradients, optimizer states, activations, and ZeRO.", "prereqs": ["gpu-primer"] },
+    { "slug": "parallelism", "track": "training", "section": "gpus", "title": "Splitting a model across GPUs", "summary": "Data, tensor, pipeline, context and expert parallelism.", "prereqs": ["training-memory", "moe"] },
+    { "slug": "cluster-topology", "track": "training", "section": "gpus", "title": "Racks and networks", "summary": "Why the wiring decides which parallelism goes where.", "prereqs": ["parallelism"] },
+    { "slug": "scale-reliability", "track": "training", "section": "gpus", "title": "Training at 10,000 GPUs", "summary": "MFU, FP8, failures, checkpoints and the cost of a run.", "prereqs": ["cluster-topology", "scaling-laws"] },
+
+    { "slug": "serving-overview", "track": "serving", "section": "serving", "title": "One request's journey", "summary": "What happens between pressing enter and the first token.", "prereqs": ["kv-cache"] },
+    { "slug": "prefill-decode", "track": "serving", "section": "serving", "title": "Prefill vs decode", "summary": "One phase is compute-bound, the other memory-bound.", "prereqs": ["serving-overview", "gpu-primer"] },
+    { "slug": "batching", "track": "serving", "section": "serving", "title": "Continuous batching", "summary": "Keeping the GPU full when requests come and go.", "prereqs": ["prefill-decode"] },
+    { "slug": "paged-attention", "track": "serving", "section": "serving", "title": "PagedAttention", "summary": "Managing KV-cache memory in blocks, like an OS manages RAM.", "prereqs": ["batching", "kv-compression"] },
+    { "slug": "prefix-caching", "track": "serving", "section": "serving", "title": "Prefix caching", "summary": "Reusing shared prompts, and why cached tokens are cheaper.", "prereqs": ["paged-attention"] },
+    { "slug": "speculative-decoding", "track": "serving", "section": "serving", "title": "Speculative decoding", "summary": "A fast drafter guesses, the big model checks.", "prereqs": ["prefill-decode", "sampling"] },
+    { "slug": "quantization", "track": "serving", "section": "serving", "title": "Quantization", "summary": "FP8 and FP4: fewer bits, less memory, nearly the same answers.", "prereqs": ["gpu-primer"] },
+    { "slug": "disaggregation", "track": "serving", "section": "serving", "title": "Disaggregated serving", "summary": "Separate GPU pools for prefill and decode, and wide expert parallelism.", "prereqs": ["batching", "parallelism"] },
+    { "slug": "serving-calculator", "track": "serving", "section": "serving", "title": "Serving a 1T model", "summary": "Size a real deployment: GPUs, latency and cost per million tokens.", "prereqs": ["disaggregation", "quantization", "prefix-caching", "speculative-decoding"] }
+  ]
+}

@@ -1,0 +1,646 @@
+{
+  "as_of": "2026-10-07",
+  "entries": [
+    {
+      "id": "deepseek-v4-pro",
+      "name": "DeepSeek-V4-Pro",
+      "facts": {
+        "total_params": {
+          "value": 1600000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 49000000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\".",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "CSA (m=4, top-k 1024) + HCA (m'=128) + sliding window 128; 1 KV head, d=512",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 61,
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 384,
+          "note": "384 routed + 1 shared expert.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 6,
+          "note": "Routed experts per token.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": [
+            4000,
+            12000
+          ],
+          "unit": "bytes",
+          "note": "Formula-derived estimate (not a published figure); the layer mix is uncertain. config.json (primary, used here) shows alternating 128/4 compression ratios, giving about 4 GB per 1M tokens at FP8 (about 4 KB/token). Secondary blog summaries say a 3:1 CSA:HCA mix, giving about 11.6 GB per 1M tokens at BF16 (about 12 KB/token). The paper states roughly 2% of a BF16 GQA-8/d128 baseline (about 5 KB/token).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "text",
+          "note": "The tech report lists multimodality as future work; some secondary sources wrongly call V4 natively multimodal.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "optimizer": {
+          "value": "Muon",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 33000000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "MIT",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-04-24",
+          "note": "Preview release date. A GA version, V4-Pro-0813, followed in Aug 2026.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v4.1-flash",
+      "name": "DeepSeek-V4.1-Flash",
+      "facts": {
+        "total_params": {
+          "value": 552000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "active_params_prefill": {
+          "value": 8000000000,
+          "unit": "params",
+          "note": "Active parameters during prefill (encoder half).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "active_params_decode": {
+          "value": 16000000000,
+          "unit": "params",
+          "note": "Active parameters during decode (decoder half).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\".",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "CSA2 (Full / Reindex / Reuse), causal encoder-decoder",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 40,
+          "note": "20 encoder + 20 decoder layers.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 384,
+          "note": "384 routed + 1 shared expert (from config, read via fetcher summary).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 6,
+          "note": "Routed experts per token (from config, read via fetcher summary).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "kv_bytes_per_token": {
+          "value": 890,
+          "unit": "bytes",
+          "note": "Global cache per token, as reported by a secondary blog.",
+          "source_url": "https://www.contextstudios.ai/blog/deepseek-v4-1-flash-890-bytes-kv-cache-per-token",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "multimodal (DeepSeek-ViT vision encoder)",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "MIT",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-09-10",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "kimi-k3",
+      "name": "Kimi K3",
+      "facts": {
+        "total_params": {
+          "value": 2780000000000,
+          "unit": "params",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 104200000000,
+          "unit": "params",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\".",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "69 KDA (linear attention) + 24 gated MLA layers (NoPE); AttnRes, LatentMoE",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 93,
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 896,
+          "note": "896 routed (latent) + 2 shared experts.",
+          "source_url": "https://arxiv.org/pdf/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 16,
+          "note": "Routed experts per token (16 of 896).",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "native multimodal (MoonViT-V2 401M vision encoder)",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "Kimi K3 License (custom)",
+          "source_url": "https://github.com/MoonshotAI/Kimi-K3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-07-27",
+          "note": "Weights released approximately Jul 27, 2026; exact date not confirmed.",
+          "source_url": "https://letsdatascience.com/news/kimi-k3-debuts-as-28-trillion-parameter-open-weight-model-cac7da05",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "glm-5.3",
+      "name": "GLM-5.3",
+      "facts": {
+        "total_params": {
+          "value": 753000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 40000000000,
+          "unit": "params",
+          "note": "Carried over from GLM-5; not independently printed on the GLM-5.3 card, which says \"no architectural changes\".",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\" (GLM-5 was 200K).",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "MLA + DSA (index top-k 2048)",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": [
+            78,
+            80
+          ],
+          "note": "Sources conflict: the GLM-5.3 HF config.json (primary, used here) says 78 layers; the GLM-5 paper (https://arxiv.org/pdf/2602.15763) says 80.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "text",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "custom (glm-5.3 license)",
+          "note": "GLM-5.3-Flash is reported as MIT.",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-08",
+          "note": "Month only: secondary sources conflict on the day (Aug 14 vs Aug 18 for the API; weights reported Aug 28).",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.3",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "qwen3.8",
+      "name": "Qwen3.8-2.4T-A95B",
+      "facts": {
+        "total_params": {
+          "value": 2400000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 95000000000,
+          "unit": "params",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 262000,
+          "unit": "tokens",
+          "note": "Native context, listed as \"262K\" in the brief. Extensible to about 1.01M (method unverified).",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "3 Gated DeltaNet : 1 gated full attention; 64 Q / 4 KV heads",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 92,
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 512,
+          "note": "512 routed + 1 shared expert.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 10,
+          "note": "Routed experts per token.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "text",
+          "note": "HF card calls it a \"text-only model\".",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "custom (Qwen3.8-Max terms)",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-08-12",
+          "note": "Hugging Face release date.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "minimax-m3",
+      "name": "MiniMax-M3",
+      "facts": {
+        "total_params": {
+          "value": 428000000000,
+          "unit": "params",
+          "note": "Approximate (\"~428B\").",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 23000000000,
+          "unit": "params",
+          "note": "Approximate (\"~23B\"); some secondary sites say 22B.",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\".",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "GQA 64 Q / 4 KV heads + MiniMax Sparse Attention (block 128, top-16)",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 60,
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "native multimodal (32-layer ViT)",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "license": {
+          "value": "minimax-community",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-06",
+          "note": "Month only: brief gives \"Jun 1-11\".",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "mimo-v2.6-pro",
+      "name": "MiMo-V2.6-Pro",
+      "facts": {
+        "total_params": {
+          "value": 1000000000000,
+          "unit": "params",
+          "note": "Approximate (\"~1T\").",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 42000000000,
+          "unit": "params",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": 1000000,
+          "unit": "tokens",
+          "note": "Brief lists \"1M\".",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "1:7 global : sliding-window attention",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "multimodal",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-09-22",
+          "source_url": "https://mimo.mi.com/docs/en-US/updates/model",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "gpt-oss-120b",
+      "name": "gpt-oss-120b",
+      "facts": {
+        "total_params": {
+          "value": 116800000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 5100000000,
+          "unit": "params",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "attention": {
+          "value": "alternating full / banded (sliding window 128) layers; learned attention sinks",
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "layers": {
+          "value": 36,
+          "source_url": "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_total": {
+          "value": 128,
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "experts_active": {
+          "value": 4,
+          "note": "Top-4 routing.",
+          "source_url": "https://arxiv.org/abs/2508.10925",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "mistral-large-4",
+      "name": "Mistral Large 4",
+      "facts": {
+        "total_params": {
+          "value": 1050000000000,
+          "unit": "params",
+          "note": "Mistral blog prose says \"1 trillion\"; the model card and secondary sources (The Decoder, kingy.ai) say 1.05T. A rounding discrepancy, not a real conflict.",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 49000000000,
+          "unit": "params",
+          "note": "Routed-active; 52B including embeddings.",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "context_length": {
+          "value": [
+            512000,
+            1000000
+          ],
+          "unit": "tokens",
+          "note": "Sources conflict: the Mistral model card reportedly claims 1M tokens; independent evaluators reportedly measure about 512K (both via kingy.ai; see also https://mistral.ai/news/mistral-large-4).",
+          "source_url": "https://kingy.ai/blog/mistral-large-4-specs-benchmarks-pricing/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "modalities": {
+          "value": "multimodal (text output only)",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_gpus": {
+          "value": 3800,
+          "unit": "GPUs",
+          "note": "NVIDIA Grace Blackwell GPUs (GB200 vs GB300 not specified).",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2026-10-06",
+          "note": "Preview announced Oct 6, 2026; open weights promised by end of October; licence pending.",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "llama-3-405b",
+      "name": "Llama 3.1 405B",
+      "facts": {
+        "total_params": {
+          "value": 405000000000,
+          "unit": "params",
+          "note": "Dense model.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "pretrain_tokens": {
+          "value": 15600000000000,
+          "unit": "tokens",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "training_gpus": {
+          "value": 16384,
+          "unit": "GPUs",
+          "note": "Up to 16,384 H100 GPUs.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "gpt-3",
+      "name": "GPT-3 175B",
+      "facts": {}
+    }
+  ]
+}

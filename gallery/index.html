@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LLM Anatomy Gallery</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="../shared/vendor/katex/katex.min.css">
+<script src="../shared/vendor/katex/katex.min.js" defer></script>
+<script type="importmap">
+{ "imports": { "@shared/": "../shared/", "@math/": "../math/" } }
+</script>
+<style>
+  .gallery { max-width: 1120px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-6); }
+  .gallery-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-6); }
+  .gallery-head p { margin: 0; }
+  .gallery section { margin-bottom: var(--space-6); }
+  .gallery section > h2 { padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); margin-bottom: var(--space-4); }
+  .rule { font-size: var(--fs-s); color: var(--ink-muted); max-width: var(--measure); }
+  .swatches { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+  .swatch { width: 132px; }
+  .swatch i { display: block; height: 40px; border-radius: var(--radius-s); border: 1px solid var(--line); }
+  .swatch b { display: block; font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; margin-top: var(--space-1); }
+  .swatch small { display: block; font-size: var(--fs-xs); }
+  .scale { display: grid; grid-template-columns: repeat(21, 1fr); gap: 2px; max-width: 560px; }
+  .scale i { display: block; aspect-ratio: 1; border-radius: 2px; }
+  .scale-labels { display: flex; justify-content: space-between; max-width: 560px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-muted); }
+  .type-sample > * { margin-bottom: var(--space-2); }
+  .type-scale { border-top: 1px solid var(--line); padding-top: var(--space-3); margin-block: var(--space-3); }
+  .type-scale > * { margin: 0 0 var(--space-2); }
+  .type-scale .small { font-size: var(--fs-s); }
+  .type-sample .display { font-family: var(--font-display); font-size: var(--fs-2xl); font-variation-settings: "opsz" 96; font-weight: 700; line-height: 1.1; }
+  .figures { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-5); }
+  figure[data-wide] { grid-column: span 2; }
+  @media (max-width: 760px) { figure[data-wide] { grid-column: auto; } }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: var(--space-4); min-width: 0; }
+  figure .scroll-x { padding: var(--space-2) 0 var(--space-3); }
+  figure svg { display: block; }
+  figcaption { font-size: var(--fs-s); }
+  figcaption b { font-family: var(--font-mono); font-weight: 500; }
+  figcaption span { display: block; color: var(--ink-muted); }
+  .demo-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+  @media (max-width: 800px) { .demo-grid { grid-template-columns: minmax(0, 1fr); } }
+  .notes { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: var(--space-4); font-size: var(--fs-s); }
+  .notes ul { padding-left: 1.2em; margin: 0; }
+  .notes li + li { margin-top: var(--space-2); }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: var(--space-4); }
+  .readout { font-family: var(--font-mono); font-size: var(--fs-s); margin-top: var(--space-3); }
+  .readout output { font-weight: 600; }
+  .track-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .track-row .chip { border-color: var(--accent); color: var(--accent); }
+  #theme-toggle { min-height: 36px; padding-block: var(--space-1); }
+</style>
+</head>
+<body>
+<div id="app" data-track="architecture">
+  <main class="gallery">
+    <header class="gallery-head">
+      <div>
+        <p class="eyebrow">LLM Anatomy · visual language</p>
+        <h1>Gallery</h1>
+        <p class="rule">Every color, type size, glyph and control the lessons use, in one place for review. Toggle the theme to check both.</p>
+      </div>
+      <button type="button" id="theme-toggle" aria-live="polite">Theme: system</button>
+    </header>
+
+    <section id="palette">
+      <h2>Palette</h2>
+      <p class="rule">One diverging value scale for every number drawn as a cell. Track accents are chrome only. Semantic colors have fixed meanings and never stand in for a series. Request hues are always paired with a printed letter.</p>
+      <h3>Ground and ink</h3>
+      <div class="swatches" id="sw-base"></div>
+      <h3>Value scale</h3>
+      <div class="scale" id="value-scale" role="img" aria-label="value scale from negative, through zero, to positive"></div>
+      <div class="scale-labels"><span>−maxAbs</span><span>0</span><span>+maxAbs</span></div>
+      <p class="rule">Blue ↔ grey ↔ orange, mixed in OKLab so the midtones stay even. Measured on the surface color: light −1 → 5.9:1, +1 → 4.7:1; dark −1 → 7.6:1, +1 → 7.6:1. Numbers printed on cells switch ink where each theme needs it (light: beyond 85 % of maxAbs, dark: beyond 55 %), so the worst case is 3.7:1 (light) and 4.0:1 (dark) at the crossover. Every cell also carries its exact value as a tooltip.</p>
+      <h3>Track accents</h3>
+      <div class="swatches" id="sw-accent"></div>
+      <div class="track-row">
+        <span class="chip" data-track="architecture">architecture</span>
+        <span class="chip" data-track="training">training</span>
+        <span class="chip" data-track="serving">serving</span>
+      </div>
+      <h3>Semantic</h3>
+      <div class="swatches" id="sw-sem"></div>
+      <h3>Request identity</h3>
+      <div class="swatches" id="sw-req"></div>
+      <p class="rule">Validated with the dataviz palette check, all pairs: worst colorblind-simulated ΔE 11.6 (light) and 10.8 (dark), both above the 8 target. Aqua sits at 3.1:1 on the light surface, so the letter is mandatory.</p>
+    </section>
+
+    <section id="type">
+      <h2>Type</h2>
+      <div class="type-sample panel">
+        <p class="display">Why does token 10,000 cost the same compute as token 10?</p>
+        <p>Body: Atkinson Hyperlegible Next, chosen for distinct letterforms at small sizes. Running text stays near 65 characters wide, like this paragraph, with one idea per sentence.</p>
+        <p class="mono">mono: d_model = 8 · d_head = 4 · [4 × 4] · 0.095 0.703 0.202 0.000 · 327,680 B/token</p>
+        <p class="eyebrow">eyebrow label · 0.75rem · tracked</p>
+        <div class="type-scale">
+          <h1>h1 · page title · --fs-2xl 2.25rem</h1>
+          <h2>h2 · section · --fs-xl 1.6rem</h2>
+          <h3>h3 · subsection · --fs-l 1.25rem</h3>
+          <h4>h4 · run-in heading · --fs-m 1rem (body face)</h4>
+          <p>body · --fs-m 1rem (17px) · line-height 1.55</p>
+          <p class="small">small · --fs-s 0.875rem · notes and captions</p>
+          <p class="eyebrow">eyebrow · --fs-xs 0.75rem</p>
+        </div>
+        <p class="rule">Display: Bricolage Grotesque, titles only. Mono: JetBrains Mono with tabular numerals for every number and shape. Inside diagrams, text has two sizes only: labels and cell numbers at 11px, subscripts (token index, block index, table headers) at 8px.</p>
+      </div>
+    </section>
+
+    <section id="glyphs">
+      <h2>Glyphs</h2>
+      <p class="rule">Each recurring object has exactly one drawing. Values are never encoded by color alone: a number is printed in the cell (36 px and wider; lessons use 40 px) and every cell carries its value as a tooltip. Text on a value fill switches ink by level exactly as cells do.</p>
+      <div class="figures" id="figures"></div>
+    </section>
+
+    <section id="stepper-demo">
+      <h2>Stepper</h2>
+      <div class="demo-grid">
+        <div id="stepper-root"></div>
+        <aside class="notes">
+          <ul>
+            <li><b>Only what changes moves.</b> Each step animates one idea; everything else holds still.</li>
+            <li><b>Pure frames.</b> Every frame is a function of (step, progress), so scrubbing back and forth is exact.</li>
+            <li><b>Same axis as the math.</b> Data flows left to right and top to bottom.</li>
+            <li><b>Reduced motion</b> shows each step's end state instantly.</li>
+            <li><b>Timing at 1×:</b> 750 ms transitions, 1.8 s rest between steps. Speed (0.5×–2×) divides both.</li>
+            <li>Keys: Space plays, ← → step, when the panel has focus.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="slider-demo">
+      <h2>Slider</h2>
+      <div class="demo-grid">
+        <div class="panel">
+          <div id="slider-root"></div>
+          <p class="readout">KV cache for one request at this length: <output id="kv-readout" for="ctx" aria-live="polite"></output></p>
+          <p class="rule">Example config: 36 layers, 8 KV heads of 64 dims, BF16 → 73,728 bytes per token.</p>
+        </div>
+        <aside class="notes">
+          <ul>
+            <li>Always shows value and unit; updates live on input.</li>
+            <li>Snapped to meaningful values (here powers of two).</li>
+            <li>Preset chips load real configurations from <code>data/*.json</code>.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="math-demo">
+      <h2>Math panel</h2>
+      <div class="demo-grid">
+        <div id="math-root"></div>
+        <aside class="notes">
+          <ul>
+            <li>Collapsed by default: math is optional.</li>
+            <li>Terms link to the animation above: hover <i>Q</i>, <i>K</i>, <i>V</i>, <i>A</i>, <i>O</i> to outline the matching glyph in the stepper. Identity by outline, not hue.</li>
+            <li>If KaTeX fails, the raw TeX stays visible in a styled fallback.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="fact-demo">
+      <h2>Facts</h2>
+      <div class="demo-grid">
+        <div class="panel">
+          <p class="eyebrow" id="fact-label">loading…</p>
+          <p id="fact-root"></p>
+        </div>
+        <aside class="notes">
+          <ul>
+            <li>Dated facts render from <code>data/*.json</code>: value, unit, source link.</li>
+            <li>The <span class="fact-reported">reported</span> chip marks anything not confirmed by a primary source.</li>
+            <li>Ranges show both ends; the note explains why on hover.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+<noscript>This gallery is interactive and needs JavaScript.</noscript>
+<script type="module" src="./gallery.js"></script>
+</body>
+</html>

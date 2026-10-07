@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LLM Architecture Anatomy</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<link rel="stylesheet" href="../shared/vendor/katex/katex.min.css">
+<script src="../shared/vendor/katex/katex.min.js" defer></script>
+<script type="importmap">
+{ "imports": { "@shared/": "../shared/", "@math/": "../math/" } }
+</script>
+</head>
+<body>
+<div id="app" data-track="architecture"><p class="boot">Loading lessons…</p></div>
+<noscript>These lessons are interactive and need JavaScript.</noscript>
+<script type="module">
+const root = document.getElementById('app');
+// Dynamic import, so a failing module graph (file:// or a broken shared file) reaches the .catch below.
+import('@shared/track-app.js').then(({ mountTrack }) => mountTrack({ root, track: 'architecture' })).catch((error) => {
+  console.error('Track failed to start', error);
+  root.innerHTML = '<div class="load-error" role="alert"><h2>The lessons could not load</h2><p>Check your connection and reload. If you opened the file directly, run <code>npm run serve</code> instead: browsers block modules on file:// URLs.</p></div>';
+});
+</script>
+</body>
+</html>

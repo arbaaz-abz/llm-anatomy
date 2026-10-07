@@ -1,0 +1,438 @@
+{
+  "as_of": "2026-10-07",
+  "entries": [
+    {
+      "id": "h100",
+      "name": "NVIDIA H100 SXM",
+      "facts": {
+        "hbm_gb": {
+          "value": 80,
+          "unit": "GB",
+          "note": "HBM3. The source explicitly covers BF16 and bandwidth; capacity taken from the same brief table row.",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 3.35,
+          "unit": "TB/s",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 989,
+          "unit": "TFLOPS",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 1979,
+          "unit": "TFLOPS",
+          "note": "Computed as 2x BF16.",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink4, 900 GB/s per GPU",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "h200",
+      "name": "NVIDIA H200",
+      "facts": {
+        "hbm_gb": {
+          "value": 141,
+          "unit": "GB",
+          "note": "HBM3e.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 4.8,
+          "unit": "TB/s",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 989,
+          "unit": "TFLOPS",
+          "note": "Same compute as H100 per the brief.",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 1979,
+          "unit": "TFLOPS",
+          "note": "Same compute as H100 per the brief.",
+          "source_url": "https://jax-ml.github.io/scaling-book/roofline/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink, 900 GB/s per GPU",
+          "source_url": "https://www.nvidia.com/en-us/data-center/h200/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "b200",
+      "name": "NVIDIA B200 (HGX, 1 kW)",
+      "facts": {
+        "hbm_gb": {
+          "value": 192,
+          "unit": "GB",
+          "note": "Nominal capacity; about 180 GB usable.",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 8,
+          "unit": "TB/s",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2250,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~2.25 PF\").",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 4500,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~4.5 PF\").",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp4_dense_tflops": {
+          "value": 9000,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~9 PF\").",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink5, 1.8 TB/s per GPU",
+          "source_url": "https://openzeka.com/wp-content/uploads/2024/10/dgx-scale-ai-infrastructure-dgx-b200-datasheet-nvidia-web-1.pdf",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "b300",
+      "name": "NVIDIA B300 (Blackwell Ultra)",
+      "facts": {
+        "hbm_gb": {
+          "value": 288,
+          "unit": "GB",
+          "note": "HBM3e, 12-high. The GB300 NVL72 page confirms rack-level 20 TB HBM; per-GPU capacity from the brief table row.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 8,
+          "unit": "TB/s",
+          "note": "Derived: 576 TB/s rack bandwidth / 72 GPUs.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2500,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~2.5 PF\").",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 5000,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~5 PF\").",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp4_dense_tflops": {
+          "value": 15000,
+          "unit": "TFLOPS",
+          "source_url": "https://introl.com/blog/nvidia-blackwell-ultra-b300-infrastructure-requirements-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink5, 1.8 TB/s per GPU",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "gb200-nvl72",
+      "name": "NVIDIA GB200 NVL72 (B200 GPUs in the rack)",
+      "facts": {
+        "hbm_gb": {
+          "value": 186,
+          "unit": "GB",
+          "note": "Derived: 13.4 TB rack HBM / 72 GPUs (nominal 192 GB per GPU).",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 8,
+          "unit": "TB/s",
+          "note": "Derived: 576 TB/s rack bandwidth / 72 GPUs.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2500,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~2.5 PF\") per the brief table row.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 5000,
+          "unit": "TFLOPS",
+          "note": "Approximate (\"~5 PF\") per the brief table row.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp4_dense_tflops": {
+          "value": 10000,
+          "unit": "TFLOPS",
+          "note": "Derived: 720 PF dense FP4 per rack / 72 GPUs.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "72 GPUs + 36 Grace CPUs in one NVLink domain; about 130 TB/s aggregate NVLink; 1.8 TB/s per GPU",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_hbm_tb": {
+          "value": 13.4,
+          "unit": "TB",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_hbm_tbps": {
+          "value": 576,
+          "unit": "TB/s",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_nvlink_tbps": {
+          "value": 130,
+          "unit": "TB/s",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_fp4_dense_pflops": {
+          "value": 720,
+          "unit": "PFLOPS",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb200-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "gb300-nvl72",
+      "name": "NVIDIA GB300 NVL72 (B300 GPUs in the rack)",
+      "facts": {
+        "scale_up_domain": {
+          "value": "72 GPUs + 36 Grace CPUs in one NVLink domain; about 130 TB/s aggregate NVLink",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_hbm_tb": {
+          "value": 20,
+          "unit": "TB",
+          "note": "HBM3e.",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_hbm_tbps": {
+          "value": 576,
+          "unit": "TB/s",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "rack_nvlink_tbps": {
+          "value": 130,
+          "unit": "TB/s",
+          "source_url": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "rubin",
+      "name": "NVIDIA Rubin (R200)",
+      "facts": {
+        "hbm_gb": {
+          "value": 288,
+          "unit": "GB",
+          "note": "HBM4.",
+          "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": [
+            19.2,
+            22
+          ],
+          "unit": "TB/s",
+          "note": "Sources conflict: the NVIDIA tech blog (primary, used here) says 22 TB/s; the NVIDIA Vera Rubin NVL72 product page (https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/) lists 19.2 TB/s. Unverified which is current.",
+          "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp4_dense_tflops": {
+          "value": 35000,
+          "unit": "TFLOPS",
+          "note": "NVIDIA \"NVFP4 training\" figure (35 PF; inference figure is 50 PF). Unverified whether this is strictly dense.",
+          "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "NVLink6, 3.6 TB/s per GPU; Vera Rubin NVL72 = 72 GPUs + 36 Vera CPUs, 260 TB/s",
+          "note": "The NVIDIA product page lists 3 TB/s per GPU instead of 3.6.",
+          "source_url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "mi355x",
+      "name": "AMD Instinct MI355X",
+      "facts": {
+        "hbm_gb": {
+          "value": 288,
+          "unit": "GB",
+          "note": "HBM3E.",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 8,
+          "unit": "TB/s",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2500,
+          "unit": "TFLOPS",
+          "note": "\"2.5 PF\".",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 5000,
+          "unit": "TFLOPS",
+          "note": "\"5 PF\".",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "fp4_dense_tflops": {
+          "value": 10000,
+          "unit": "TFLOPS",
+          "note": "\"10 PF\" (FP4/MXFP4).",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "Infinity Fabric (8-GPU)",
+          "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/amd-reveals-core-specs-for-instinct-mi355x-cdna4-ai-accelerator-slated-for-shipping-in-the-second-half-of-2025",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "tpu-v7",
+      "name": "Google TPU v7 \"Ironwood\" (TPU7x)",
+      "facts": {
+        "hbm_gb": {
+          "value": 192,
+          "unit": "GiB",
+          "note": "Google documents 192 GiB (about 206 GB); the unit is GiB, not GB.",
+          "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_tbps": {
+          "value": 7.38,
+          "unit": "TB/s",
+          "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "bf16_dense_tflops": {
+          "value": 2307,
+          "unit": "TFLOPS",
+          "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "fp8_dense_tflops": {
+          "value": 4614,
+          "unit": "TFLOPS",
+          "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "scale_up_domain": {
+          "value": "ICI 1.2 TB/s, 3D torus, 9,216-chip pod",
+          "source_url": "https://docs.cloud.google.com/tpu/docs/tpu7x",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    }
+  ]
+}
