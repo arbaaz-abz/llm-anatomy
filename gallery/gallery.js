@@ -158,6 +158,12 @@ const FIGURES = [
   ['memBar', 'useful · reserved-empty (hatched) · free, with percentages', 300, 60, (s) => {
     G.memBar(s, { x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 });
   }],
+  ['shareBar', 'categorical parts: five hues; parts under 18 px fold into "others" and a bracketed zoomed bar; "not published" is neutral, off the scale, never hatched', 360, 210, (s) => {
+    G.shareBar(s, { x: 4, y: 6, w: 300, label: 'toy model', parts: [
+      { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },
+      { name: 'other (norms)', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 }, { name: 'not published', value: 60, unknown: true },
+    ] });
+  }],
 ];
 $('#figures').replaceChildren(...FIGURES.map(([name, note, w, h, draw]) => {
   const fig = document.createElement('figure');

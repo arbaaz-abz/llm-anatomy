@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(20);
+  await expect(page.locator('#figures figure')).toHaveCount(21);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(20);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(21);
   expect(errors).toEqual([]);
 });
 
@@ -264,4 +264,16 @@ test('a draft token is dashed and muted, never hatched (README lesson 24)', asyn
   expect(await draft.locator('.g-frame').evaluate((r) => getComputedStyle(r).strokeDasharray)).not.toBe('none');
   await expect(draft.locator('.g-hatch')).toHaveCount(0);
   expect(await page.locator('#figures .g-patch--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+});
+
+test('memBar keeps its exact output (labels, percentages, geometry) through the shareBar refactor', async ({ page }) => {
+  await page.goto('/gallery/');
+  const bar = page.locator('#figures .g-membar');
+  await expect(bar).toHaveAttribute('aria-label', 'memory: useful 48%, reserved but empty 10%, free 42%');
+  await expect(bar.locator('.g-pct')).toHaveText(['48%', '10%', '42%']);
+  await expect(bar.locator('.g-label')).toHaveText('useful 23 · reserved 5 · free 20');
+  const rects = await bar.evaluate((g) => [...g.querySelectorAll(':scope > rect')].map((r) => [r.getAttribute('class'), Number(r.getAttribute('x') ?? 0), Number(r.getAttribute('width'))]));
+  const expected = [['g-useful', 0, 132.1667], ['g-reserved-bg', 134.1667, 27.1667], ['g-hatch', 134.1667, 27.1667], ['g-free', 163.3333, 116.6667]];
+  expect(rects.map(([c]) => c)).toEqual(expected.map(([c]) => c));
+  rects.forEach(([, x, w], i) => { expect(x).toBeCloseTo(expected[i][1], 3); expect(w).toBeCloseTo(expected[i][2], 3); });
 });

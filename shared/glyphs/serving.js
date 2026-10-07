@@ -95,29 +95,3 @@ export function blockTable(parent, { x, y, rows, title }) {
   });
   return g;
 }
-
-export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free }) {
-  if ([useful, reserved, free].some((n) => !(n >= 0))) throw new RangeError(`glyphs.memBar: parts must be numbers ≥ 0, got ${useful} / ${reserved} / ${free}`);
-  const total = useful + reserved + free;
-  if (!(total > 0)) throw new RangeError('glyphs.memBar: useful + reserved + free must be > 0');
-  const gap = 2;
-  const pct = (n) => `${Math.round((n / total) * 100)}%`;
-  const g = group(parent, 'g-membar', x, y, { role: 'img', 'aria-label': `memory: useful ${pct(useful)}, reserved but empty ${pct(reserved)}, free ${pct(free)}` });
-  const segments = [['useful', useful], ['reserved', reserved], ['free', free]];
-  let cursor = 0;
-  segments.forEach(([name, n], i) => {
-    const segW = Math.max(0, (n / total) * w - (i < 2 ? gap : 0));
-    if (n > 0) {
-      if (name === 'reserved') {
-        svgEl('rect', { class: 'g-reserved-bg', x: cursor, width: segW, height: h, rx: 2 }, g);
-        hatchRect(g, { x: cursor, width: segW, height: h, rx: 2 });
-      } else {
-        svgEl('rect', { class: `g-${name}`, x: cursor, width: segW, height: h, rx: 2 }, g);
-      }
-      if (segW > 26) text(g, cursor + segW / 2, h + 13, pct(n), 'g-pct', { 'text-anchor': 'middle' });
-    }
-    cursor += (n / total) * w;
-  });
-  text(g, 0, h + 28, `useful ${useful} · reserved ${reserved} · free ${free}`, 'g-label');
-  return g;
-}

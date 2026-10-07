@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell, pixelFill, blockStackLayout } from '../shared/glyphs.js';
+import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell, pixelFill, blockStackLayout, barSegments, formatShare, shareBarLayout } from '../shared/glyphs.js';
 
 test('zero, NaN and non-numeric inputs map to the zero token, never a "NaN%" string', () => {
   assert.equal(valueColor(0, 3), 'var(--val-zero)');
@@ -101,4 +101,57 @@ test('blockStackLayout: rejects counts that are not positive integers', () => {
   assert.throws(() => blockStackLayout({ count: 0 }), /count must be an integer ≥ 1/);
   assert.throws(() => blockStackLayout({ count: 2.5 }), /count must be an integer ≥ 1/);
   assert.throws(() => blockStackLayout({ count: 4, shown: 0 }), /shown must be an integer ≥ 1/);
+});
+
+test('barSegments: one geometry for every stacked bar; gaps between neighbors only', () => {
+  const segs = barSegments([23, 5, 20], 280);
+  const close = (a, b) => Math.abs(a - b) < 1e-9;
+  assert.ok(close(segs[0].x, 0) && close(segs[0].width, (23 / 48) * 280 - 2));
+  assert.ok(close(segs[1].x, (23 / 48) * 280) && close(segs[1].width, (5 / 48) * 280 - 2));
+  assert.ok(close(segs[2].x, (28 / 48) * 280) && close(segs[2].width, (20 / 48) * 280));
+  assert.ok(close(segs.reduce((s, x) => s + x.share, 0), 1));
+});
+
+test('barSegments rejects empty, negative, non-finite and all-zero inputs', () => {
+  assert.throws(() => barSegments([], 100), /non-empty/);
+  assert.throws(() => barSegments([1, -1], 100), /finite numbers ≥ 0/);
+  assert.throws(() => barSegments([1, Infinity], 100), /finite numbers ≥ 0/);
+  assert.throws(() => barSegments([0, 0], 100), /more than 0/);
+});
+
+test('formatShare: one decimal from 1 %, two below', () => {
+  assert.equal(formatShare(768 / 1576), '48.7%');
+  assert.equal(formatShare(0.00818), '0.82%');
+  assert.equal(formatShare(0.00354), '0.35%');
+  assert.equal(formatShare(1), '100.0%');
+});
+
+const TOY_PARTS = [
+  { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },
+  { name: 'other', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 },
+];
+
+test('shareBarLayout: parts under 18 px fold into "others" with a zoomed tail; shares are of the whole (lesson 19)', () => {
+  // decoder-anatomy §4 at the toy's 300 px bar: embedding 24.4 · attention 97.5 · MLP 146.2 · other 7.6 · head 24.4 px.
+  const { main, tail, unknown } = shareBarLayout(TOY_PARTS, { w: 300 });
+  assert.deepEqual(main.map((s) => s.name), ['embedding', 'attention', 'MLP', 'head', 'others']);
+  assert.equal(main.at(-1).others, true);
+  assert.deepEqual(tail.map((s) => [s.name, s.x, s.width]), [['other', 0, 300]]);
+  assert.equal(tail[0].share, 40 / 1576);
+  assert.deepEqual(unknown, []);
+  assert.deepEqual(shareBarLayout(TOY_PARTS, { w: 300, minSegment: 0 }).tail, []);
+});
+
+test('shareBarLayout: an unknown part sits off the scale at a fixed width; the known parts fill the bar', () => {
+  const { main, unknown } = shareBarLayout([{ name: 'experts', value: 97, hue: 3 }, { name: 'not published', value: 3, unknown: true }], { w: 300 });
+  assert.deepEqual(main.map(({ name, x, width, share }) => [name, x, width, share]), [['experts', 0, 300, 0.97]]);
+  assert.deepEqual(unknown.map(({ name, x, width, share }) => [name, x, width, share]), [['not published', 306, 24, 0.03]]);
+});
+
+test('shareBarLayout rejects nameless, duplicate, hue-less and negative parts', () => {
+  assert.throws(() => shareBarLayout([{ value: 1, hue: 1 }]), /needs a name/);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: 1, hue: 1 }, { name: 'a', value: 2, hue: 2 }]), /names must be unique/);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: 1 }]), /needs hue 1–5 or unknown: true/);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: -1, hue: 1 }]), /value must be a finite number ≥ 0/);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: 1, unknown: true }]), /at least one known part/);
 });
