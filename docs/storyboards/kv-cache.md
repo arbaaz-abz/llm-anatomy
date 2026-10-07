@@ -2,7 +2,7 @@
 
 Track: architecture · Section: architecture · Prereqs: attention
 Next: `kv-compression`, `serving-overview` (the two slugs whose `prereqs` list `kv-cache` in `shared/concepts.json`)
-Status: draft
+Status: approved (expert review)
 Sources: 01 §1, §2 (formula block), §4 · 04 §1.1, §1.4, §3.1, §7.5 · 05 §1.1, §2, §5 (item 15). Nothing beyond the briefs.
 
 This page owns `math/memory.js`. `paged-attention` imports `kvBytesPerToken` and `kvBytesPerTokenMla` from it,
@@ -33,7 +33,8 @@ Each one names the frame or try-this that corrects it (README lesson 4).
   corrected by frame 3's "read" counter, frame 5 and try-this 1's second output
 - **Misconception:** "GPU memory is mostly the model's weights." → **Reality:** each conversation has
   its own cache, and at long context it is the larger item: one 128K-token Llama-3.1-70B conversation
-  holds 42.9 GB, 54% of an 80 GB H100, so two do not fit on one GPU. The cache caps how many
+  holds 42.9 GB, 54% of an 80 GB H100, so two do not fit on one GPU even before the weights (which
+  `prefill-decode` adds). The cache caps how many
   conversations a GPU can serve at once. (04 §1.4 KV term, §7.5 item 1) · corrected by frame 8 and
   try-this 2
 - **Misconception:** "The formula counts attention heads." → **Reality:** it counts *KV* heads, the
@@ -59,11 +60,11 @@ the whole conversation for every word" into "run one token, then read the past",
 replies stream at all.
 
 The price is memory, and it grows with everything: one K and one V row per position, per key/value head,
-per layer, per conversation. In GPT-3 (2020) that came to 4.5 MiB for every single token. Each decode
+per layer, per conversation. In GPT-3 (2020) that came to 4,718,592 bytes (4.72 MB) for every single token. Each decode
 step also has to *read* the whole cache back from GPU memory, so a long conversation is slow as well as
 big. That is why most attention redesigns since 2023 attack this one number: by 2026 the largest open
-models store a few KB per token, roughly 400 to 1,200 times less than GPT-3 (`kv-compression`,
-`long-context-attention`).
+models store a few kB per token, roughly 400 to 1,200 times less than GPT-3 (an estimate: `model-card`;
+`kv-compression`, `long-context-attention`).
 
 ## 4. Visual metaphor
 Toy dimensions (shared with `attention` and `decoder-anatomy`): the prompt "The cat sat down" (4 tokens),
@@ -76,10 +77,16 @@ each with its own K and V; N = 2 blocks.
 are the `attention` page's numbers; the row for 'on' is hand-picked. Every count and byte size is
 exact." The counts and byte sizes come from `math/memory.js` (§6).
 
-**Units** (visible line under toy B, and in the frame 6 caption's "Numbers shown"): bytes per token are
-printed exactly and in powers of 1,024 (KiB, MiB), as `decoder-anatomy` and brief 01 do; totals are in
-powers of 1,000 (MB, GB), as GPU memory is sold. So 4,718,592 B = 4.5 MiB per token, and 9.66 GB per
-2,048-token conversation. (Open question 1: `paged-attention` uses decimal for both.)
+**Units** (main-session ruling, applied): decimal SI throughout, as GPU memory is sold, with exact bytes
+for per-token sizes: 4,718,592 B ≈ 4.72 MB, 327,680 B ≈ 328 kB, 70,272 B ≈ 70.3 kB (the figure
+`decoder-anatomy` now quotes). Visible line under toy B: "Sizes are decimal (kB, MB, GB), as GPU memory is
+sold; per-token sizes also print their exact byte count."
+
+**Context stops** (coordinator ruling, applied): 1,048,576 = 2²⁰ is a round-number slider stop; each
+model's own configured context is printed from `data/models.json` and marked on the track. Visible line on
+the stage in frame 9 and under the `context` slider: "1,048,576 (2²⁰) is a slider stop; each model's own
+context comes from its data entry." When `context` exceeds the chip's `context_length`, a visible label
+reads "beyond this model's N-token context: a what-if at its shape" (README lesson 22).
 
 **Terms introduced, one per frame** (README lesson 3): 1 decode step · 2 recompute · 3 cache read (the
 KV cache itself was named in `decoder-anatomy` frame 9; here it is opened) · 4 prefill · 5 none (a count
@@ -127,11 +134,11 @@ Hero: token 5, "on". Counters are per head and per layer unless the caption says
 | 2 | **Without a cache.** All five chips send an `activation` flow into the W block; rows 1–4 of K and V refill from scratch; beside each refilled row a plain "= same as before" mark. Counter "positions computed: 5". | Rows 1–4 blank and refill top to bottom; the check marks appear one by one; row 5 fills last. | Without a cache, every position is computed again for each new token. Rows 1 to 4 come out exactly as before, because a position never looks ahead. | positions computed this step: 5 · rows 1–4 identical to the stored ones · `k_on = [0.5, 0, 0.5, 0]` · `v_on = [0, 0.5, 0.5, 0]` |
 | 3 | **With a cache.** Rows 1–4 of K and V stay put, now drawn as stored (`kvStack` tint); only "on₅" sends a flow; `k_on`, `v_on` lift out at `NUMBER_CELL` and append as row 5; then a `kv` flow fans from row 5's query position to all five K rows. Counters "positions computed: 1" and "keys read: 5". | Row 5 is computed and slides into place; then five `kv` dots run from the stored rows to the new token. | With a cache, only the new token is computed; the past's stored keys and values are read back. Work shrinks, but the read still covers every position. | positions computed: 1 · keys read: 5 (and 5 values) · `k_on = [0.5, 0, 0.5, 0]` · `v_on = [0, 0.5, 0.5, 0]` |
 | 4 | Rewind label "before 'on'": the four prompt chips enter together; K and V rows 1–4 fill in one pass; a plain label "prefill: 4 positions in one pass"; then "on₅" arrives and a label "decode: 1 position per step". | Rows 1–4 fill simultaneously; then row 5 fills alone. | The prompt goes in all at once and fills the cache in one pass: that is prefill. After it, each decode step adds one row. | prefill: 4 positions, 10 key reads (1 + 2 + 3 + 4) · decode step for "on": 1 position, 5 key reads |
-| 5 | Plain text table under the matrices, two columns "no cache" and "cache", for a reply of 4 tokens ("on", "the", "mat", "."); K and V grow to 8 rows (20 px) as the four steps play. | The four steps tick by; both columns count up; the cache column's "positions" grows by 1 per step, the no-cache one by 5, 6, 7. | Over a four-token reply, the cache computes 7 positions instead of 22. The stored rows are still read every step, so reads grow with the length. | 4-token prompt, 4-token reply · positions computed 22 vs 7 · key reads 74 vs 28 · (a 1,000-token prompt and reply: 1,499,500 vs 1,999 positions) |
-| 6 | The toy model as `blockStack` (2 blocks); beside each attention half a `kvStack` of 5 tiles; one tile lifts and expands to 2 heads × (a K row of 4 + a V row of 4). A mono line "K and V × 2 heads × 4 numbers × 2 blocks". | One tile per block highlights; the expanded tile shows 16 small cells; the two blocks' tiles stack into a "32 numbers" readout, then "× 2 bytes = 64 bytes". | Each position stores one key row and one value row per head in every attention layer. In this toy that is 32 numbers, 64 bytes per token. | 2 × 2 heads × 4 × 2 blocks = 32 numbers · at 2 bytes per number: 64 B per token · 5 tokens: 320 B |
-| 7 | The same picture relabeled for GPT-3 (2020): "96 blocks · 96 heads · 128 numbers per head", the `blockStack` count printed as "× 96"; a plain readout. A `kvStack` stretches to "2,048 positions" (tiles collapse to "⋯ 2,048"). | The labels morph from toy to GPT-3 values; the byte readout counts up; the stack extends with a "× 2,048" label. | GPT-3 stored 4.5 MiB for every token, because all 96 heads in all 96 layers kept their own keys and values. Its whole 2,048-token context needed 9.66 GB. | 2 × 96 × 96 × 128 × 2 B = 4,718,592 B = 4.5 MiB per token · × 2,048 tokens = 9,663,676,416 B = 9.66 GB (GPT-3 paper, 2020, at 2 bytes per number) |
-| 8 | Two `gpu` glyphs labeled "H100, 80 GB". One conversation of 131,072 tokens for Llama-3.1-70B (2024) fills the first to 54%; a second conversation's 42.9 GB arrives and spills past the first GPU's top into a plain label "does not fit". | The first fill rises to 54%; the second conversation's bar rises, overflows, and the overflow label appears. | Every conversation has its own cache. One 128K-token Llama-3.1-70B conversation needs 42.9 GB, so a single 80 GB GPU cannot hold two. | 327,680 B per token (80 layers × 8 KV heads × 128 × 2 × 2 B) · × 131,072 tokens = 42,949,672,960 B = 42.9 GB = 53.7% of 80 GB · two: 85.9 GB |
-| 9 | **Key frame.** A plain text column of per-token sizes, each with its year: GPT-3 (2020) 4.5 MiB · Llama-3.1-70B (2024) 320 KiB · DeepSeek-V3 (2024) 68.6 KiB · DeepSeek-V4-Pro (2026) about 4–12 KB, "reported estimate". Beside each 2024–2026 row a `gpu` glyph (80 GB) filled by one 1M-token (2²⁰) conversation. | The rows type in top to bottom; each `gpu` fills; the V4-Pro row shows a range (two fills, light and full). | By 2026 the biggest open models keep a few KB per token, hundreds of times less than GPT-3. That is what makes a million-token context affordable. | per token: 4,718,592 B · 327,680 B · 70,272 B · 4,000–12,000 B (reported) · at 1,048,576 tokens: 344 GB (4.3 H100s) · 73.7 GB (92%) · 4.2–12.6 GB (5–16%) · GPT-3 ÷ V4-Pro: 393–1,180× |
+| 5 | Plain text table under the matrices, two columns "no cache" and "cache", for a reply of 4 tokens ("on", "the", "mat", "."); K and V grow to 8 rows (20 px) as the four steps play. | The four steps tick by; both columns count up; the cache column's "positions" grows by 1 per step, the no-cache one by 5, 6, 7. | Over a four-token reply, the cache computes 7 positions instead of 22. The stored rows are still read every step, so reads grow with the length. | 4-token prompt, 4-token reply · positions computed 22 (4 + 5 + 6 + 7) vs 7 (4 + 1 + 1 + 1) · key reads 74 vs 28 · (a 1,000-token prompt and reply: 1,499,500 vs 1,999 positions) |
+| 6 | The toy model as `blockStack` (2 blocks); beside each attention half a `kvStack` of 5 tiles; one tile lifts and expands to 2 heads × (a K row of 4 + a V row of 4). A mono line "K and V × 2 heads × 4 numbers × 2 blocks". | One tile per block highlights; the expanded tile shows 16 small cells; the two blocks' tiles stack into a "32 numbers" readout, then "× 2 bytes = 64 bytes". | Each position stores one key row and one value row per head in every attention layer. In this toy that is 32 numbers, 64 bytes per token. | 2 × 2 heads × 4 × 2 blocks = 32 numbers · at 2 bytes per number: 64 B per token · 5 tokens: 320 B · visible note: "layers with a window or a fixed-size state store less: `long-context-attention`" |
+| 7 | The same picture relabeled for GPT-3 (2020): "96 blocks · 96 heads · 128 numbers per head", the `blockStack` count printed as "× 96"; a plain readout. A `kvStack` stretches to "2,048 positions" (tiles collapse to "⋯ 2,048"). | The labels morph from toy to GPT-3 values; the byte readout counts up; the stack extends with a "× 2,048" label. | GPT-3 stored 4.72 MB for every token, because all 96 heads in all 96 layers kept their own keys and values. Its whole 2,048-token context needed 9.66 GB. | 2 × 96 × 96 × 128 × 2 B = 4,718,592 B ≈ 4.72 MB per token · × 2,048 tokens = 9,663,676,416 B = 9.66 GB (GPT-3 paper, 2020, at 2 bytes per number) |
+| 8 | Two `gpu` glyphs labeled "H100, 80 GB". One conversation of 131,072 tokens for Llama-3.1-70B (2024) fills the first to 54%; a second conversation's 42.9 GB arrives and spills past the first GPU's top into a plain label "does not fit (before the weights, which `prefill-decode` adds)". | The first fill rises to 54%; the second conversation's bar rises, overflows, and the overflow label appears. | Every conversation has its own cache. One 128K-token Llama-3.1-70B conversation needs 42.9 GB, so a single 80 GB GPU cannot hold two. | 327,680 B per token (80 layers × 8 KV heads × 128 × 2 × 2 B) · × 131,072 tokens = 42,949,672,960 B = 42.9 GB = 53.7% of 80 GB · two: 85.9 GB |
+| 9 | **Key frame.** A plain text column of per-token sizes, each with its year: GPT-3 (2020) 4.72 MB · Llama-3.1-70B (2024) 328 kB · DeepSeek-V3 (2024) 70.3 kB · DeepSeek-V4-Pro (2026) about 4–12 kB, "reported estimate". Beside each 2024–2026 row a `gpu` glyph (80 GB) filled by one conversation at the 1,048,576-token (2²⁰) slider stop, labeled "what-if at a slider stop; each model's own context is in its data entry". Visible note: "Some 2026 layers keep a fixed-size state or a window instead of one row per token: `long-context-attention`." | The rows type in top to bottom; each `gpu` fills; the V4-Pro `gpu` fills to the low end (5%) and prints "to 16% at the high end" beside it. | By 2026 the biggest open models keep a few kB per token, hundreds of times less than GPT-3. That is what makes a million-token context affordable. | per token: 4,718,592 B · 327,680 B · 70,272 B · 4,000–12,000 B (reported) · at the 1,048,576 stop: 344 GB (4.3 H100s) · 73.7 GB (92.1%) · 4.2–12.6 GB (5.2–15.7%, `sharePct`) · GPT-3 ÷ V4-Pro: 393–1,180× (an estimate) |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. K and V keep their position from frame 1 to frame 5; the lifted `k_on` / `v_on` strip sits in the
@@ -161,12 +168,13 @@ Title on page: "Count the work, then weigh the memory." Two panels share one sta
 | `prompt` | Prompt length | Slider (snapped) | [4, 16, 128, 1,000, 8,192, 100,000] tokens | 4 | — |
 | `reply` | Reply length | Slider (snapped) | [1, 2, 4, 16, 128, 1,000] tokens | 4 | — |
 | `model` | Model | preset chips | toy · GPT-3 · Llama-3.1-70B · DeepSeek-V3 · DeepSeek-V4-Pro (reported) | toy | real chips load layers, KV heads, head size from `data/models.json` (§8). DeepSeek-V3 switches the formula to the latent one and shows "how: `kv-compression`". DeepSeek-V4-Pro shows the reported 4,000–12,000 B range and disables the shape sliders, with the note "formula-derived estimate; the layer mix is uncertain". |
-| `context` | Tokens in the cache | Slider (snapped) | [2,048 · 8,192 · 32,768 · 131,072 · 262,144 · 1,048,576] | 2,048 | the model's own context length is marked on the track |
+| `context` | Tokens in the cache | Slider (snapped) | [2,048 · 8,192 · 32,768 · 131,072 · 262,144 · 1,048,576 (2²⁰, a slider stop)] | 2,048 | the model's own `context_length` from `data/models.json` is marked on the track; past it the label "beyond this model's N-token context: a what-if at its shape" shows |
 | `sequences` | Conversations at once | Slider (snapped) | [1, 2, 4, 8, 16, 32, 64] | 1 | — |
 
 Panel B also shows the selected model's shape as read-only readouts (layers, KV heads, head size, bytes
 per number). They become editable sliders only on the `toy` chip (layers 1–96, KV heads 1–96, head size
-[4, 64, 128], bytes per number [1, 2]), so a learner can build GPT-3 from the toy by hand.
+[4, 64, 128], bytes per number [1, 2]), so a learner can build GPT-3 from the toy by hand. Tapping a real chip
+snaps the shape sliders to that preset's values, so the learner is never left on a hybrid.
 
 **Live outputs**
 | Output | Formula / `math/` function | Units / format |
@@ -174,7 +182,7 @@ per number). They become editable sliders only on the `toy` chip (layers 1–96,
 | Panel A: positions computed, whole reply | `decodeWork({ prompt, generated: reply, cache }).positions` | count, `formatCount` past 10,000 |
 | Panel A: keys read per head per layer, whole reply | `.keyReads` | count |
 | Panel A: the same two numbers with the cache flipped, and their ratio | `decodeWork({ …, cache: !cache })` | "× fewer" with 3 significant figures |
-| Panel B: bytes per token | `kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem })`; MLA presets `kvBytesPerTokenMla(…)` | exact bytes and `formatBytes(…, { binary: true })` |
+| Panel B: bytes per token | `kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem })`; MLA presets `kvBytesPerTokenMla(…)` | exact bytes and `formatBytes` (decimal) |
 | Panel B: cache per conversation | `kvCacheBytes({ bytesPerToken, tokens: context })` | `formatBytes` (decimal) |
 | Panel B: cache for all conversations | `kvCacheBytes({ bytesPerToken, tokens: context, sequences })` | decimal GB |
 | Panel B: share of one GPU | `sharePct(total, hbm_gb × 1e9)` for H100 (80 GB) and B300 (288 GB); fill of two `gpu` glyphs | % (one decimal); "does not fit" above 100% |
@@ -186,7 +194,7 @@ no cache: 4 + 5 + 6 + 7                  = 22 positions
 cache:    4 (prefill) + 1 + 1 + 1        =  7 positions
 bytes per token = 2 (K and V) × 2 blocks × 2 KV heads × 4 numbers × 2 bytes
                 = 64 B
-× 2,048 tokens                           = 131,072 B = 131 KB
+× 2,048 tokens                           = 131,072 B = 131 kB
 ```
 
 **Try this** (each leads to a named insight)
@@ -195,12 +203,13 @@ bytes per token = 2 (K and V) × 2 blocks × 2 KV heads × 4 numbers × 2 bytes
    against 1,999,000, still almost two million. → **Insight: the cache removes recomputation, not
    reading.** Work per step stays flat; the read per step grows with every token in the conversation.
 2. Panel B, **Llama-3.1-70B**, tokens 131,072, conversations 1: 42.9 GB, 53.7% of an H100. Set
-   conversations to **2**: 85.9 GB, "does not fit". Now **GPT-3** at its own 2,048 tokens with 8
-   conversations: 77.3 GB, 96.6%. → **Insight: the cache, not the arithmetic, sets how many conversations
+   conversations to **2**: 85.9 GB (107.4%), "does not fit (before the weights)". Now **GPT-3** at its own
+   2,048 tokens with 8 conversations (2,048 × 8 = 16,384 token-positions): 77.3 GB, 96.6%. → **Insight: the cache, not the arithmetic, sets how many conversations
    one GPU can serve,** and it grows with context × conversations.
-3. Panel B, tokens 131,072: tap **GPT-3 → Llama-3.1-70B → DeepSeek-V3**: 4.5 MiB → 320 KiB → 68.6 KiB
-   per token (618 GB → 42.9 GB → 9.21 GB per conversation). Then tap the toy chip and set KV heads from 96
-   to 8 with GPT-3's other numbers: 4.5 MiB → 384 KiB. → **Insight: the formula multiplies KV heads,
+3. Panel B, tokens 131,072: tap **GPT-3 → Llama-3.1-70B → DeepSeek-V3**: 4.72 MB → 328 kB → 70.3 kB
+   per token (618 GB → 42.9 GB → 9.21 GB per conversation). GPT-3 could never hold 131,072 tokens; its
+   618 GB is its cache *per token* scaled to Llama's context, and the what-if label says so. Then tap the toy
+   chip and set KV heads from 96 to 8 with GPT-3's other numbers: 4.72 MB → 393 kB. → **Insight: the formula multiplies KV heads,
    not query heads, so storing fewer key/value sets is the biggest lever.** How models do that without
    losing quality is `kv-compression`.
 
@@ -213,15 +222,15 @@ positive integer; tests first). `paged-attention` imports the first two by these
 // MHA, GQA and MQA are the same formula with kvHeads = heads, groups, or 1.
 kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem }) → number      // 2 · L · n_kv · d_head · b
 //   ({ layers: 2,  kvHeads: 2,  headDim: 4,   bytesPerElem: 2 }) → 64              (toy; exact)
-//   ({ layers: 96, kvHeads: 96, headDim: 128, bytesPerElem: 2 }) → 4_718_592       (GPT-3, 4.5 MiB)
-//   ({ layers: 80, kvHeads: 8,  headDim: 128, bytesPerElem: 2 }) → 327_680         (Llama-3.1-70B, 320 KiB)
+//   ({ layers: 96, kvHeads: 96, headDim: 128, bytesPerElem: 2 }) → 4_718_592       (GPT-3, ≈ 4.72 MB)
+//   ({ layers: 80, kvHeads: 8,  headDim: 128, bytesPerElem: 2 }) → 327_680         (Llama-3.1-70B, ≈ 328 kB)
 //   ({ layers: 96, kvHeads: 8,  headDim: 128, bytesPerElem: 2 }) → 393_216         (GPT-3 with 8 KV heads; try-this 3)
 //   ({ layers: 0, … })                                           → throws RangeError('kvBytesPerToken: layers must be a positive integer')
 
 // Bytes per token for multi-head latent attention: one latent vector plus one small RoPE key per layer.
 // No factor of 2: K and V are both rebuilt from the same stored latent (kv-compression).
 kvBytesPerTokenMla({ layers, dLatent, dRope, bytesPerElem }) → number     // L · (d_c + d_rope) · b
-//   ({ layers: 61, dLatent: 512, dRope: 64, bytesPerElem: 2 }) → 70_272            (DeepSeek-V3, 68.6 KiB; matches decoder-anatomy §8 and paged-attention §6)
+//   ({ layers: 61, dLatent: 512, dRope: 64, bytesPerElem: 2 }) → 70_272            (DeepSeek-V3, ≈ 70.3 kB; matches decoder-anatomy §8 and paged-attention §6)
 
 // Total cache for `sequences` conversations of `tokens` each.
 kvCacheBytes({ bytesPerToken, tokens, sequences = 1 }) → number
@@ -247,17 +256,29 @@ decodeWork({ prompt, generated, cache }) → { positions, keyReads }
 //   ({ prompt: 1000, generated: 1000, cache: true })  → { positions: 1_999, keyReads: 1_999_000 }
 ```
 
-Share of a GPU uses `sharePct(part, whole)`, the one definition `paged-attention` already specified
-(Open question 2 proposes moving it into this module so both pages import it from here). The functions
-`long-context-attention` adds to this module (`stackKvBytes`, `linearStateBytes`) are specified on that
-page, under different names.
+```js
+// Share of a whole as a percentage, one decimal; the one definition of "share of a GPU" and
+// "share of a context" (README lesson 16). Throws RangeError if whole ≤ 0 or either is not finite.
+sharePct(part, whole) → number
+//   (42_949_672_960, 80e9)  → 53.7      (one 128K Llama-3.1-70B conversation on an H100)
+//   (85_899_345_920, 80e9)  → 107.4     ("does not fit")
+//   (77_309_411_328, 80e9)  → 96.6      (GPT-3, 8 conversations at 2,048)
+//   (1_296, 1_048_576)      → 0.1       (multimodal: one photo in a 1M context)
+//   (1_843_200, 1_048_576)  → 175.8     (multimodal: an hour of toy video)
+```
+`sharePct` is defined here (main-session ruling, applied). `paged-attention` imports it from this module
+(its `paging.js` copy becomes a re-export; Serving owner to apply); `multimodal` and `model-card` import it
+from here. This module is KV and inference only: `kvGroups` (`kv-compression`), `stackKvBytes` and
+`linearStateBytes` (`long-context-attention`) are specified on those pages; training functions live in
+`math/training-memory.js`.
 
 Tests to write first: the worked examples above to the byte; `kvBytesPerToken` with `kvHeads = heads`
 equals 2 · layers · heads · headDim · b for GPT-3 (MHA) and with `kvHeads = 1` equals the MQA value;
 `kvBytesPerTokenMla` has no factor of 2 (DeepSeek-V3 = 61 · 576 · 2); every function throws on 0,
 negative, NaN and non-integer counts; `decodeWork` with `generated = 1` is identical for cache on and
 off (the prefill); `decodeWork(cache: true).positions === prompt + generated − 1`;
-`kvCacheBytes` is linear in `tokens` and `sequences`; inputs are not mutated (frozen argument objects).
+`kvCacheBytes` is linear in `tokens` and `sequences`; `sharePct` examples above, `sharePct(x, x) === 100`,
+linear in `part`, throws on `whole ≤ 0`; inputs are not mutated (frozen argument objects).
 
 **Reproducer** (README lesson 6; run from the repo root on 2026-10-07 with the formulas above inlined,
 since `math/memory.js` does not exist yet; output matched every number in §2, §5, §6 and §11):
@@ -271,26 +292,30 @@ const work=({prompt,generated,cache})=>{let pos=0,reads=0;for(let i=0;i<generate
  if(!cache||i===0){pos+=t;reads+=t*(t+1)/2;}else{pos+=1;reads+=t;}}return{pos,reads};};
 const toy=kv({layers:2,kvHeads:2,headDim:4,bytesPerElem:2}),g3=kv({layers:96,kvHeads:96,headDim:128,bytesPerElem:2}),
  ll=kv({layers:80,kvHeads:8,headDim:128,bytesPerElem:2}),v3=mla({layers:61,dLatent:512,dRope:64,bytesPerElem:2});
-console.log("per token",toy,g3,formatBytes(g3,{binary:true}),ll,formatBytes(ll,{binary:true}),v3,formatBytes(v3,{binary:true}),
+const share=(p,w)=>Math.round(1000*p/w)/10;
+console.log("per token",toy,g3,formatBytes(g3),ll,formatBytes(ll),v3,formatBytes(v3),
  kv({layers:96,kvHeads:8,headDim:128,bytesPerElem:2}));
 console.log("gpt3 2048",cache({bytesPerToken:g3,tokens:2048}),"x8",cache({bytesPerToken:g3,tokens:2048,sequences:8})/80e9);
 for(const t of [131072,1048576])for(const [n,b] of [["gpt3",g3],["llama",ll],["v3",v3]])
  console.log(n,t,cache({bytesPerToken:b,tokens:t}),formatBytes(cache({bytesPerToken:b,tokens:t})),(cache({bytesPerToken:b,tokens:t})/80e9).toFixed(3));
 console.log("v4 range 1M",4000*1048576,12000*1048576,(4000*1048576/80e9).toFixed(3),(12000*1048576/80e9).toFixed(3),"ratios",g3/12000,g3/4000,g3/v3,g3/ll);
 console.log("read/step llama",cache({bytesPerToken:ll,tokens:10}),cache({bytesPerToken:ll,tokens:10000}),"toy 2048",cache({bytesPerToken:toy,tokens:2048}));
+console.log("sharePct",share(42949672960,80e9),share(85899345920,80e9),share(77309411328,80e9),share(1296,1048576),share(1843200,1048576),share(4194304000,80e9),share(12582912000,80e9),share(73685532672,80e9));
 for(const [p,g] of [[4,1],[4,2],[4,4],[1000,1000]])console.log(p,g,JSON.stringify(work({prompt:p,generated:g,cache:false})),JSON.stringify(work({prompt:p,generated:g,cache:true})));
 })'
 ```
-Output on 2026-10-07: `per token 64 4718592 4.5 MiB 327680 320 KiB 70272 68.6 KiB 393216` ·
+Output on 2026-10-07 (re-run after the expert review): `per token 64 4718592 4.72 MB 327680 328 KB 70272 70.3 KB 393216` ·
 `gpt3 2048 9663676416 x8 0.9663676416` · `gpt3 131072 618475290624 618 GB 7.731` ·
 `llama 131072 42949672960 42.9 GB 0.537` · `v3 131072 9210691584 9.21 GB 0.115` ·
 `gpt3 1048576 4947802324992 4.95 TB 61.848` · `llama 1048576 343597383680 344 GB 4.295` ·
 `v3 1048576 73685532672 73.7 GB 0.921` · `v4 range 1M 4194304000 12582912000 0.052 0.157 ratios 393.216
 1179.648 67.14754098360656 14.4` · `read/step llama 3276800 3276800000 toy 2048 131072` ·
+`sharePct 53.7 107.4 96.6 0.1 175.8 5.2 15.7 92.1` ·
 `4 1 {"pos":4,"reads":10} {"pos":4,"reads":10}` · `4 2 {"pos":9,"reads":25} {"pos":5,"reads":15}` ·
 `4 4 {"pos":22,"reads":74} {"pos":7,"reads":28}` ·
 `1000 1000 {"pos":1499500,"reads":1166666500} {"pos":1999,"reads":1999000}`.
-Two Llama-3.1-70B conversations: 2 × 42,949,672,960 = 85,899,345,920 B = 85.9 GB.
+(`core.formatBytes` prints "KB"; the page prints "kB" per the README, pending the one-line `DECIMAL` change in
+Plan 2.) Two Llama-3.1-70B conversations: 2 × 42,949,672,960 = 85,899,345,920 B = 85.9 GB.
 
 ## 7. Show me the math
 ```tex
@@ -332,11 +357,11 @@ in some layers (`long-context-attention`)."
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| GPT-3 (2020): 96 layers × 96 heads × 128, each head with its own K and V: 4,718,592 B (4.5 MiB) per token at 2 bytes; 9.66 GB for its 2,048-token context | `models.gpt-3.kv_bytes_per_token` = 4,718,592, `.layers` = 96, `.n_heads` = 96, `.n_kv_heads` = 96, `.head_dim` = 128, `.context_length` = 2,048 (all proposed; entry and source arXiv 2005.14165 per `attention` ruling 3 and `decoder-anatomy` §12.3) | 01 §4 worked-numbers table |
-| Llama-3.1-70B (2024): 80 layers, 8 KV heads × 128: 327,680 B (320 KiB) per token; 42.9 GB at its 131,072-token context, 54% of an 80 GB H100 | `models.llama-3.1-70b.kv_bytes_per_token`, `.layers`, `.n_kv_heads`, `.head_dim`, `.context_length` (entry proposed by `paged-attention` §13; its note names the Llama-3 → 3.1 correction); `hardware.h100.hbm_gb` (existing, reported) | 01 §4 table; 04 §3.1, §1.4 |
-| DeepSeek-V3 (Dec 2024): one 512-number latent plus a 64-number position key per layer, 61 layers: 70,272 B (68.6 KiB) per token, derived from its config; 73.7 GB at 1M tokens | `models.deepseek-v3.kv_bytes_per_token` = 70,272 (derived), `.mla_kv_rank`, `.mla_rope_dim`, `.layers` (entry and keys proposed by `paged-attention` §13 / `decoder-anatomy` §12.3) | 01 §2 MLA paragraph, §4 table |
-| DeepSeek-V4-Pro (2026): about 4–12 KB per token, a formula-derived estimate (the layer mix of its compressed attention is uncertain); about 4–12 GB for a 1M-token conversation | `models.deepseek-v4-pro.kv_bytes_per_token` = [4000, 12000] (existing, **reported**, note kept) | 01 §4 table; 04 §3.1, §8.2 (spec §7 conflict: shown as a range, both mixes in `long-context-attention`) |
-| gpt-oss-120b (2025): only its 18 full-attention layers grow a cache, 36,864 B per token; its 18 sliding-window layers hold a fixed ~4.7 MB per conversation | `models.gpt-oss-120b.kv_bytes_per_token` = 36,864 (proposed, derived), `.kv_fixed_bytes` = 4,718,592 (proposed, derived: 18 × 128 × 2,048 B) | 01 §4 table (derived) |
+| GPT-3 (2020): 96 layers × 96 heads × 128, each head with its own K and V: 4,718,592 B (≈ 4.72 MB) per token at 2 bytes; 9.66 GB for its 2,048-token context | `models.gpt-3.kv_bytes_per_token` = 4,718,592, `.layers` = 96, `.n_heads` = 96, `.n_kv_heads` = 96, `.head_dim` = 128, `.context_length` = 2,048 (all proposed; entry and source arXiv 2005.14165 per `attention` ruling 3 and `decoder-anatomy` §12.3) | 01 §4 worked-numbers table |
+| Llama-3.1-70B (2024): 80 layers, 8 KV heads × 128: 327,680 B (≈ 328 kB) per token; 42.9 GB at its 131,072-token context, 54% of an 80 GB H100 | `models.llama-3.1-70b.kv_bytes_per_token`, `.layers`, `.n_kv_heads`, `.head_dim`, `.context_length` (entry proposed by `paged-attention` §13; its note names the Llama-3 → 3.1 correction); `hardware.h100.hbm_gb` (existing, reported) | 01 §4 table; 04 §3.1, §1.4 |
+| DeepSeek-V3 (Dec 2024): one 512-number latent plus a 64-number position key per layer, 61 layers: 70,272 B (≈ 70.3 kB) per token, derived from its config; 73.7 GB at 1M tokens | `models.deepseek-v3.kv_bytes_per_token` = 70,272 (derived), `.mla_kv_rank`, `.mla_rope_dim`, `.layers` (entry and keys proposed by `paged-attention` §13 / `decoder-anatomy` §12.3) | 01 §2 MLA paragraph, §4 table |
+| DeepSeek-V4-Pro (2026): about 4–12 kB per token, a formula-derived estimate (the layer mix of its compressed attention is uncertain); about 4–12 GB for a 1M-token conversation | `models.deepseek-v4-pro.kv_bytes_per_token` = [4000, 12000] (existing, **reported**, note kept) | 01 §4 table; 04 §3.1, §8.2 (spec §7 conflict: shown as a range, both mixes in `long-context-attention`) |
+| gpt-oss-120b (2025): only its 18 full-attention layers grow a cache, 36,864 B (≈ 36.9 kB) per token; its 18 sliding-window layers hold a fixed ~4.7 MB per conversation | `models.gpt-oss-120b.kv_bytes_per_token` = 36,864 (proposed, derived), `.kv_fixed_bytes` = 4,718,592 (proposed, derived: 18 × 128 × 2,048 B) | 01 §4 table (derived) |
 | Reusing a cache across requests that share a prompt prefix is standard in serving (`prefix-caching`) | — (timeless prose, no number) | 01 §4 mechanism paragraph |
 
 Rendered with `renderFact` (source link, "reported" chip where the data file says so). Not shown: Kimi K3's
@@ -349,8 +374,8 @@ per-token cache (its latent dims were not read, 01 §4 [U]), GLM-5.3's (RoPE dim
 2. The cache removes recomputation, not reading: every step still reads every stored key and value, so a
    longer conversation means a bigger read per token (frame 5, try-this 1).
 3. Bytes per token = 2 × layers × KV heads × head size × bytes, times tokens, times conversations. At long
-   context the cache, not the weights, decides how many conversations fit on a GPU; it fell from 4.5 MiB
-   per token in GPT-3 to a few KB in 2026 models (frames 6–9).
+   context the cache, not the weights, decides how many conversations fit on a GPU; it fell from 4.72 MB
+   per token in GPT-3 to a few kB in 2026 models (frames 6–9).
 
 ## 10. Next and go deeper
 Next: `kv-compression` (how MQA, GQA and MLA store fewer bytes per token) and `serving-overview` (one
@@ -369,14 +394,14 @@ Frame 3 (with a cache), desktop width; the frame 9 table is the toy's closing re
 §6 reproducer (`4 2` cache line: + 1 position, 5 reads).
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│ [The]₁ [cat]₂ [sat]₃ [down]₄ ►[on]₅                       │
+│ [The]₁ [cat]₂ [sat]₃ [down]₄ ►[on]₅                      │
 │                                                          │
-│  K [5×4]        V [5×4]       new row (computed)         │
-│  The ▪▪▪▪ ◄┐    The ▪▪▪▪      k_on │ 0.5 │  0  │ 0.5 │ 0 │ │
-│  cat ▪▪▪▪ ◄┤    cat ▪▪▪▪      v_on │  0  │ 0.5 │ 0.5 │ 0 │ │
-│  sat ▪▪▪▪ ◄┤    sat ▪▪▪▪                                 │
-│  down▪▪▪▪ ◄┤    down▪▪▪▪      positions computed: 1      │
-│ ►on  ▪▪▪▪ ◄┘   ►on  ▪▪▪▪      keys read: 5               │
+│  K [5×4]       V [5×4]       new row (computed)          │
+│  The ▪▪▪▪ ◄┐   The ▪▪▪▪     k_on │ 0.5 │  0  │ 0.5 │ 0 │ │
+│  cat ▪▪▪▪ ◄┤   cat ▪▪▪▪     v_on │  0  │ 0.5 │ 0.5 │ 0 │ │
+│  sat ▪▪▪▪ ◄┤   sat ▪▪▪▪                                  │
+│  down▪▪▪▪ ◄┤   down▪▪▪▪    positions computed: 1         │
+│ ►on  ▪▪▪▪ ◄┘  ►on  ▪▪▪▪    keys read: 5                  │
 │   (rows 1–4 stored = read)                               │
 ├──────────────────────────────────────────────────────────┤
 │ With a cache, only the new token is computed; the past's │
@@ -384,8 +409,8 @@ Frame 3 (with a cache), desktop width; the frame 9 table is the toy's closing re
 │ the read still covers every position.                    │
 │ [◄] [Pause] [►]  ━━━━●━━━━━━━  3 / 9   speed [1×]        │
 └──────────────────────────────────────────────────────────┘
- K and V rows 1–4 are the attention page's numbers; the row
- for "on" is hand-picked. Every count and byte size is exact.
+ K and V rows 1–4 are the attention page's numbers; the
+ row for "on" is hand-picked. Counts and bytes are exact.
 ```
 "►" is the selection outline on the followed token "on" (chip, K row, V row). At 400 px the stage scrolls
 inside its container; the caption, controls and the stand-in line stack below at full width.
@@ -408,22 +433,35 @@ inside its container; the caption, controls and the stand-in line stack below at
 in-page links (transitive through `serving-overview`).
 
 **Judgment calls:**
-1. **Units.** `decoder-anatomy` prints per-token sizes in binary units (4.5 MiB, 69 KiB), as brief 01
-   does; `paged-attention` ruled "decimal units throughout" (5.2 MB per block, 42.9 GB). This page owns
-   the formula and proposes: per-token sizes in binary (KiB/MiB) with the exact byte count beside them,
-   totals in decimal (GB, as GPUs are sold), stated in one visible line. Accept, or force one system
-   course-wide? (If decimal everywhere: 4.72 MB, 328 kB, 70.3 kB per token.)
-2. **`sharePct` home.** `paged-attention` §6 defines `sharePct(part, whole)` in `math/paging.js`; this
-   page needs the same metric earlier in the course. Proposal: define it once in `math/memory.js` and
-   have `paging.js` import it (lesson 16: one definition). Needs the Serving owner's agreement.
-3. **The spec hook.** Spec §4's example hook ("token 10,000 cost the same compute as token 10, but more
+1. **The spec hook.** Spec §4's example hook ("token 10,000 cost the same compute as token 10, but more
    memory") is only half true: the weight multiplications are flat, but the attention read grows with
    the context. This page uses a different hook and turns the claim into misconception 2. Confirm.
-4. **Prefill vs decode overlap.** Spec §3.1 puts "prefill vs decode" on this page; `prefill-decode`
+2. **Prefill vs decode overlap.** Spec §3.1 puts "prefill vs decode" on this page; `prefill-decode`
    (Serving) owns the compute-bound vs memory-bound story. This page names both phases (frame 4) and
    counts their work, and defers "bound by what" to `prefill-decode`. Confirm the Serving agent's page
    does not re-teach the cache mechanism.
-5. **DeepSeek-V4-Pro chip.** It shows the reported 4,000–12,000 B range and disables the shape sliders,
+3. **DeepSeek-V4-Pro chip.** It shows the reported 4,000–12,000 B range and disables the shape sliders,
    because no single config gives one number (spec §7 conflict, kept open). The derivation of both ends
    lives in `long-context-attention`. Keep the chip, or leave V4-Pro out of this toy until the conflict
    is resolved?
+
+## 13. Expert review (2026-10-07) and what changed
+Verdict: APPROVE WITH CHANGES (3 Must). Status is now "approved (expert review)". Every number touched was
+regenerated with the §6 reproducer (re-run after the edits; output recorded there).
+
+Rulings applied (lesson 20: stated as settled, alternatives deleted): units are decimal SI with exact bytes
+for per-token sizes (former judgment call 1); `sharePct` is defined in this module (former judgment call 2);
+`math/memory.js` is KV and inference only, training functions live in `math/training-memory.js`; 2²⁰ is a
+labelled slider stop and each model's own context comes from its data entry. Open-question rulings: the
+spec hook is retired in favour of this page's (agreed); the prefill/decode split is confirmed; the
+DeepSeek-V4-Pro chip stays as a reported range; `hardware.b300.hbm_gb` (reported) is fine with its chip.
+
+Must (3/3): decimal units throughout (frames 7, 9, §3, try-this 3, takeaway 3, §8, `memory.js` comments,
+reproducer); `sharePct` defined with signature, worked examples and tests; the context slider's what-if label
+and the 2²⁰ ruling stated on stage, in §4 and §6, and in try-this 3.
+
+Should (7/7, no rebuttals): "an estimate" on the 400–1,200× range; frame 6 carries the window/state
+qualifier; "before the weights" in misconception 3 and frame 8; "2,048 × 8 = 16,384 token-positions" in
+try-this 2; frame 9 caption kept as the hook's answer; shape sliders snap to a real chip's preset; B300 chip
+kept. Nice (1/2): frame 5's Numbers now print the per-step sums (4 + 5 + 6 + 7 vs 4 + 1 + 1 + 1); the
+predict-then-reveal before frame 8 is left for the build.

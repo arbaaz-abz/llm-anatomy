@@ -2,7 +2,7 @@
 
 Track: architecture · Section: architecture · Prereqs: kv-cache
 Next: `long-context-attention`, `paged-attention` (the two slugs whose `prereqs` list `kv-compression` in `shared/concepts.json`)
-Status: draft
+Status: approved (expert review)
 Sources: 01 §1 ("Attention" row), §2 (formula block, MHA/MQA/GQA, MLA), §3 (decoupled RoPE), §4, §7 · 04 §3.1 · 05 §1.1, §2. Nothing beyond the briefs.
 
 The page that answers `kv-cache`'s try-this 3 ("store fewer key/value sets"). It reuses `attention`'s heads A
@@ -33,11 +33,11 @@ Each one names the frame or try-this that corrects it (README lesson 4).
 - **Misconception:** "MLA is where attention ended up." → **Reality:** it is the incumbent, not the
   endpoint. Its decode compute is high (GLM-5 reworked it), and DeepSeek-V4 replaced it with one wide KV
   head plus compression and sparsity. (01 §2: "'MLA is final' is not true; it is the incumbent, not the
-  endpoint") · corrected by frame 7's cost line and §8
+  endpoint") · corrected by frame 7's cost line, frame 9's page text and try-this 3
 
 ## 3. Hook and intuition (final wording)
 **Hook:** In GPT-3, every one of the 96 heads in every layer stored its own keys and values. Do the heads
-really need separate copies, and how did DeepSeek-V3 get the cache 57 times smaller per layer without
+really need separate copies, and how did DeepSeek-V3 store 57 times less per layer than it would with a key and value per head, without
 taking those separate keys and values away?
 
 In `kv-cache` the size of the cache came down to one product: 2 × layers × KV heads × head size × bytes.
@@ -112,8 +112,8 @@ keeps its outline in frame 4's heatmaps, as on `attention`.
 | 5 | Back to 8 query blocks. Under them one `kvStack` per token whose tile is an 8-cell `vector` "latent"; between the stack and each query block a dim `block` "rebuild K, V". Label "MLA". | The 8 latent cells fill; dots run from the latent through each head's rebuild block to its query. | Multi-head latent attention stores one short latent vector per token. Learned matrices rebuild each head's own key and value from it. | latent = 8 numbers per token per layer · rebuilds 8 heads × (4 + 4) = 64 numbers on the fly |
 | 6 | Same; a 2-cell `vector` "position key" appears beside the latent in the stack, labeled "carries position (`rope`)". | The two cells slide in next to the latent; the readout ticks 8 → 10. | A small extra key carries each token's position, because the latent itself cannot be rotated by position. It is stored beside the latent. | 8 + 2 = 10 numbers per token per layer · DeepSeek-V3: 512 + 64 = 576 |
 | 7 | The "rebuild K" blocks slide up and merge into the query blocks, now labeled "query with K-rebuild folded in"; the "rebuild V" blocks merge into a `block` "W_O". A plain cost line: "more compute per decode step". | Rebuild blocks travel up into Q1–Q8 and down into W_O; the latent stack stays untouched. | At decode time the rebuild folds into the query and output matrices, so attention reads the latent directly. Memory is saved; compute per step grows. | 0 rebuilt K or V rows stored · q · (c W_UK) = (q W_UKᵀ) · c (worked check in §7) |
-| 8 | A plain text ladder, per token per layer, toy beside DeepSeek-V3 shape: MHA · GQA-8 · GQA-2 · MQA · MLA. The toy column shows four rows (no GQA-8 at 8 heads). | Rows type in top to bottom; the MLA row lands between GQA-2 and MQA in the toy, and next to GQA-2 at DeepSeek-V3's shape. | MLA stores close to what two shared KV heads would, yet every head keeps its own keys and values. That is the trade it was designed for. | toy: 64 · 16 · 8 · 10 · V3 shape (128 heads × 128): 32,768 · 2,048 · 512 · 256 · 576 · MHA ÷ MLA = 56.9× |
-| 9 | **Key frame.** Real models per token (all layers, 2 bytes per number), as page text under the stage: GPT-3 (2020, MHA) · Llama-3.1-70B (2024, GQA-8) · MiniMax-M3 (2026, GQA-4) · DeepSeek-V3 (2024, MLA). On stage, four `kvStack`s whose tile count encodes nothing; each labeled with its bytes. | The four stacks appear with their byte labels; then each shows its size at 131,072 tokens. | Real models stack these choices across every layer. From GPT-3 to DeepSeek-V3, sharing and latents cut the cache per token by 67 times. | 4,718,592 B (4.5 MiB) · 327,680 B (320 KiB) · 122,880 B (120 KiB) · 70,272 B (68.6 KiB) · at 131,072 tokens: 618 GB · 42.9 GB · 16.1 GB · 9.21 GB · 4,718,592 ÷ 70,272 = 67.1× |
+| 8 | A plain text ladder, per token per layer, toy beside DeepSeek-V3 shape: MHA · GQA-8 · GQA-2 · MQA · MLA. The toy column shows a dash in the GQA-8 row ("—, needs more than 8 query heads"). | Rows type in top to bottom; the MLA row lands between GQA-2 and MQA in the toy, and next to GQA-2 at DeepSeek-V3's shape. | MLA stores close to what two shared KV heads would, yet every head keeps its own keys and values. That is the trade it was designed for. | toy: 64 · — · 16 · 8 · 10 · V3 shape (128 heads × 128): 32,768 · 2,048 · 512 · 256 · 576 · MHA ÷ MLA = 56.9× · visible line: "at 128 heads of 128 numbers; V3's real query/key head is 192 wide, which would make the baseline 71×" (K 192 + V 128 per head: 40,960 ÷ 576 = 71.1) |
+| 9 | **Key frame.** Real models per token (all layers, 2 bytes per number), as page text under the stage: GPT-3 (2020, MHA) · Llama-3.1-70B (2024, GQA-8) · MiniMax-M3 (2026, GQA-4) · DeepSeek-V3 (2024, MLA). On stage, four `kvStack`s whose tile count encodes nothing; each labeled with its bytes. Visible lines: "GPT-3 at 131,072 tokens is a what-if at its shape; its own context was 2,048" and "2026 moved on: DeepSeek-V4 keeps one wide KV head and compresses it (`long-context-attention`)". | The four stacks appear with their byte labels; then each shows its size at 131,072 tokens. | Real models stack these choices across every layer. From GPT-3 to DeepSeek-V3, sharing and latents cut the cache per token by 67 times. | 4,718,592 B (4.72 MB) · 327,680 B (328 kB) · 122,880 B (123 kB) · 70,272 B (70.3 kB) · at 131,072 tokens: 618 GB · 42.9 GB · 16.1 GB · 9.21 GB · 4,718,592 ÷ 70,272 = 67.1× |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. The query row keeps its position in frames 1–3 and 5–7; Q1 keeps its selection outline throughout.
@@ -141,7 +141,7 @@ controls repeats the stand-in note.
 | `model` | Shape | preset chips | toy · GPT-3 · Llama-3.1-70B · MiniMax-M3 · DeepSeek-V3 | toy | from `data/models.json` (§8); a chip sets layers, query heads, head size and its real scheme |
 | `latent` | Latent size (MLA) | Slider (snapped) | toy [4, 8, 16]; real [256, 512, 1,024] | 8 / 512 | DeepSeek-V3 → 512 |
 | `context` | Tokens in the cache | Slider (snapped) | [2,048 · 32,768 · 131,072 · 1,048,576] | 131,072 | — |
-| `pattern` | Frame 4 check: head B reads | toggle | its own keys · head A's keys | head A's keys | — |
+| `pattern` | Same keys, different questions: head B reads | toggle | its own keys · head A's keys | head A's keys | — |
 
 The position key stays at its preset value (toy 2, DeepSeek-V3 64) and is printed, not a slider.
 
@@ -150,15 +150,16 @@ The position key stays at its preset value (toy 2, DeepSeek-V3 64) and is printe
 |---|---|---|
 | Wiring diagram (which query head reads which KV head) | `kvGroups({ queryHeads, kvHeads })` | the frame 1–3 drawing |
 | Stored per token per layer | `kvBytesPerToken({ layers: 1, kvHeads, headDim, bytesPerElem: 1 })` (numbers, not bytes); MLA: `kvBytesPerTokenMla({ layers: 1, dLatent, dRope, bytesPerElem: 1 })` | count |
-| Bytes per token, all layers | `kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem: 2 })` or `kvBytesPerTokenMla(…)` | exact bytes + `formatBytes(…, { binary: true })` |
+| Bytes per token, all layers | `kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem: 2 })` or `kvBytesPerTokenMla(…)` | exact bytes + `formatBytes` (decimal) |
 | Times smaller than MHA (the one definition, README lesson 16) | `kvBytesPerToken({ layers, kvHeads: queryHeads, headDim, bytesPerElem })` ÷ the scheme's bytes per token | "56.9×", one decimal; "—" when query heads are not in the data (Llama-3.1-70B until the data pass) |
-| Cache at this context | `kvCacheBytes({ bytesPerToken, tokens: context })` | decimal GB |
+| Cache at this context | `kvCacheBytes({ bytesPerToken, tokens: context })`; past the chip's `context_length` the label "a what-if at this shape; its own context was N" shows (README lesson 22) | decimal GB |
 | Frame 4 heatmaps | `attentionHead(TOY.heads.B.Q, K, V)` from `math/attention.js` with K, V = head A's or head B's own | `heatmap` at `NUMBER_CELL`, 3 d.p. |
 
 **Try this** (each leads to a named insight)
 1. Shape **GPT-3**, scheme MHA: 4,718,592 B per token. Switch to **GQA** with 8 KV heads: 393,216 B (12×
    smaller); **MQA**: 49,152 B (96×). → **Insight: the cache shrinks exactly in proportion to KV heads;
-   the 96 query heads, and the 96 patterns, stay.**
+   the 96 query heads, and the 96 patterns, stay** (`attention`'s head B on head A's keys is the toy proof:
+   try-this 2).
 2. Toggle **pattern** between "its own keys" and "head A's keys": head B's row for "cat" goes from [0.798,
    0.202] to [0.731, 0.269], and its row for "down" from most weight on "sat" (0.578) to 0.366 on "sat",
    0.285 on itself; head A's own row stays [0.321, 0.679] and [0.114, 0.656, 0.129, 0.101]. → **Insight:
@@ -228,6 +229,7 @@ const g3=kv({layers:96,kvHeads:96,headDim:128,bytesPerElem:2}),ll=kv({layers:80,
 console.log("real",g3,ll,m3,v3,v3mha,(v3mha/v3).toFixed(1),(g3/v3).toFixed(1),"gpt3 shape",kv({layers:96,kvHeads:8,headDim:128,bytesPerElem:2}),kv({layers:96,kvHeads:1,headDim:128,bytesPerElem:2}));
 console.log("at 131072",[g3,ll,m3,v3].map(x=>formatBytes(x*131072)).join(" "),"m3",m3*131072);
 const c=randomMatrix(1,8,21,1),W=randomMatrix(8,4,22,0.5),q=randomMatrix(1,4,23,1);
+console.log("v3 192-wide baseline",(192+128)*128/576,(40960/576).toFixed(1),"by hand",5*(1*3+2*4),15*1+20*2);
 console.log("absorb",matmul(q,transpose(matmul(c,W)))[0][0].toFixed(6),matmul(matmul(q,transpose(W)),transpose(c))[0][0].toFixed(6));
 })'
 ```
@@ -236,7 +238,7 @@ Output on 2026-10-07: `A [[1,0,0,0],[0.321,0.679,0,0],[0.095,0.703,0.202,0],[0.1
 `Bown [[1,0,0,0],[0.798,0.202,0,0],[0.168,0.664,0.168,0],[0.129,0.146,0.578,0.146]]` ·
 `toy [64,32,16,8] 10` · `v3 layer [32768,2048,1024,512,256] 576 56.9` ·
 `real 4718592 327680 122880 70272 3997696 56.9 67.1 gpt3 shape 393216 49152` ·
-`at 131072 618 GB 42.9 GB 16.1 GB 9.21 GB m3 16106127360` · `absorb 0.412632 0.412632`.
+`at 131072 618 GB 42.9 GB 16.1 GB 9.21 GB m3 16106127360` · `v3 192-wide baseline 71.11111111111111 71.1 by hand 55 55` · `absorb 0.412632 0.412632`.
 
 ## 7. Show me the math
 ```tex
@@ -258,6 +260,10 @@ K_h = \htmlClass{hl-lat}{c}\, W_{UK}^{h},\quad V_h = \htmlClass{hl-lat}{c}\, W_{
 ```tex
 \text{absorbed score: } q_h \cdot \big(c\, W_{UK}^{h}\big) = \big(q_h\, W_{UK}^{h\top}\big) \cdot c
 \qquad \text{(checked numerically: } 0.412632 = 0.412632)
+```
+```tex
+\text{by hand: } c = [1, 2],\ W_{UK}^{h} = [3, 4]^{\top},\ q = 5:\quad
+q\,(c\,W) = 5 \cdot 11 = 55,\qquad (q\,W^{\top}) \cdot c = [15, 20] \cdot [1, 2] = 55
 ```
 ```tex
 \text{MLA bytes per token} = L\,(\htmlClass{hl-lat}{d_c} + \htmlClass{hl-rope}{d_{\text{rope}}})\,b,
@@ -331,8 +337,8 @@ Frame 3 (GQA with two groups), desktop width; the readout and frame 9's numbers 
 │ a common choice in real models.                          │
 │ [◄] [Pause] [►]  ━━━━●━━━━━━━  3 / 9   speed [1×]        │
 └──────────────────────────────────────────────────────────┘
- Per token (frame 9): GPT-3 4.5 MiB · Llama-3.1-70B 320 KiB ·
- MiniMax-M3 120 KiB · DeepSeek-V3 68.6 KiB
+ Per token (frame 9): GPT-3 4.72 MB · Llama-3.1-70B
+ 328 kB · MiniMax-M3 123 kB · DeepSeek-V3 70.3 kB
 ```
 "►" is the selection outline on Q1, the followed query head. Each stack is one KV head with the four
 tokens' tiles. At 400 px the stage scrolls inside its container.
@@ -352,17 +358,20 @@ tokens' tiles. At 400 px the stage scrolls inside its container.
 **Graph changes:** none. `rope` is an in-page link, not a prerequisite (frame 6 names the position key and
 defers the why).
 
-**Judgment calls:**
-1. **8 query heads in the toy.** `attention`'s toy has 2 heads, which cannot show a group. This page
-   draws 8 query heads (head size still 4) and says so on screen, and returns to the two real heads for
-   frame 4. Accept, or keep 2 heads and show only MHA vs MQA?
-2. **Toy MLA size.** Latent 8 + position key 2 = 10 numbers lands between MQA (8) and GQA-2 (16); at
-   DeepSeek-V3's shape MLA (576) lands between GQA-2 (512) and GQA-4 (1,024). Both support frame 8's
-   "close to two shared KV heads" (tested). A latent of 4 would make MLA smaller than MQA in the toy,
-   which reverses the real ordering (lesson 17), so it was rejected.
-3. **MHA baseline for MLA.** "56.9× smaller" uses 01 §2's baseline, 2 × 128 heads × 128. DeepSeek-V3's
-   query/key head is actually 192 wide (128 + 64 position), which would make the baseline larger; the
-   page follows the brief and says "at its 128 heads". Confirm.
-4. **Absorption frame.** Frame 7 shows the folding as blocks sliding into the query and W_O blocks, with
-   the identity checked numerically in §7 (seeded random matrices, not hand-checkable). Is one frame
-   enough, or should it be a "What if?" branch?
+**Judgment calls:** all ruled by the expert review (§13) and applied; none remain open.
+
+## 13. Expert review (2026-10-07) and what changed
+Verdict: APPROVE WITH CHANGES (1 Must). Status is now "approved (expert review)". Every number touched was
+regenerated with the §6 reproducer (the 71.1× baseline and the by-hand absorption line were added to it).
+
+Rulings applied (lesson 20): 8 query heads in the toy, accepted; toy MLA 8 + 2, accepted (ordering tested at
+both shapes); MHA baseline follows the brief (2 · 128 · 128) with the 192-wide qualification printed on frame
+8; one absorption frame, no branch label. Data pass: add `llama-3.1-70b.n_heads` (64) from its config with a
+re-verification line, so the Llama chip prints its ratio.
+
+Must (1/1): decimal units in frame 9, §6 and §11.
+Should (7/7, no rebuttals): hook names its baseline ("than it would with a key and value per head");
+misconception 4 now cites frame 9's page text ("2026 moved on: DeepSeek-V4 …") and try-this 3; a by-hand
+absorption line in §7; frame 8 prints the 192-wide qualification (71×); try-this 1 points to try-this 2;
+"Almost no 2026 model uses plain MHA" kept; lesson 22 what-if line on frame 9 and in the toy.
+Nice (2/2): the toggle is labeled "Same keys, different questions"; the toy ladder carries a GQA-8 dash.

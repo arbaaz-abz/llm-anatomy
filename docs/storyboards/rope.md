@@ -2,7 +2,7 @@
 
 Track: architecture · Section: architecture · Prereqs: attention
 Next: `long-context-attention`, `midtraining` (the two slugs whose `prereqs` list `rope` in `shared/concepts.json`)
-Status: draft
+Status: approved (expert review)
 Sources: 01 §1 ("Position" row), §3 (all), §2 (hybrid bullet: K3 NoPE), §7 · 05 §1.1 (RoPE: "Build"; gap: rotation per dimension pair, q·k depends only on relative distance), §2. Nothing beyond the briefs.
 
 Reuses `attention`'s query "sat", its key "cat", head A's vectors and its five-step vocabulary: RoPE changes
@@ -37,8 +37,10 @@ Each one names the frame or try-this that corrects it (README lesson 4).
   gpt-oss stretched 4,096 to 131,072 tokens with YaRN (factor 32). (01 §3 context-extension bullet [C]) ·
   corrected by frames 8–9, try-this 3
 - **Misconception:** "Every attention layer needs a position encoding." → **Reality:** a causal mask
-  already leaks order, and some layers use none (NoPE): Kimi K3's 24 MLA layers have no RoPE and the model
-  still reaches 1M tokens. (01 §3 NoPE bullet [C]) · corrected by frame 10
+  already leaks some order (Kazemnejad et al., 2023), and some layers use no position encoding at all
+  (NoPE). Kimi K3's 24 MLA layers have none; its 69 linear-attention layers carry order through their decay,
+  and the model reaches 1M tokens without any position-encoding change. (01 §2–§3 [C]) · corrected by
+  frame 10
 
 ## 3. Hook and intuition (final wording)
 **Hook:** In `attention`, "sat" scored "cat" 3.0 no matter where "cat" stood. How does a model learn that
@@ -97,7 +99,7 @@ like (`long-context-attention`).
 Glyphs used (from spec §5.1): token, vector, flow (the turning motion has no flow; `flow` only carries q and
 k into the score readout, carry `activation`).
 New glyph proposed:
-- `dial(parent, { x, y, r = 34, vector: [a, b], angle = 0, seen = null, label })`: a circle with one hand
+- `dial(parent, { x, y, r = 34, vector = null, angle = 0, seen = null, reached = null, label })`: a circle with one hand
   from the center. The hand is the pair (a, b) rotated by `angle`; its **length is the pair's magnitude**
   (printed under the dial as "|·| = 2.00") and its **direction is the rotation**, so each is encoded once.
   `seen` = [0, maxAngle] draws a pale filled sector "angles seen in training" (fill, never an outline; the
@@ -105,6 +107,16 @@ New glyph proposed:
   Why: no glyph draws an angle. `vector` cells would print (−0.282, −1.980) but hide the one thing the lesson
   is about, the turn. Reused by: `midtraining` (stretching the context in stages), `multimodal` (one line on
   2D/3D position for image patches), `decoder-recap` (the RoPE swap frame shows one dial).
+  **Accepted by the expert review with conditions (a)–(j):** (a) hand length = pair magnitude, printed under
+  the dial; (b) the "seen" sector is a pale `--line` fill, never an outline, a full circle when the pair
+  turned fully in training; (c) the hand uses `--fg`, nothing on a dial uses the value scale or the track
+  accent; (d) the selection outline on a dial means "the followed query's pair" only; (e) ticks at 0, ¼, ½,
+  ¾ turn, radians on hover only, degrees never load-bearing; (f) reduced motion draws the end angle; (g)
+  `vector` is optional: without it the hand has unit length and no magnitude prints (`midtraining` frame 8);
+  (h) `reached = [0, maxAngle]` draws a second, ghosted hand at the largest angle reached, with the plain
+  label "never seen" when it leaves the sector (frame 8 here, `midtraining` frame 8); (i) angles past one
+  turn print as "2.4 turns" beside the hand; (j) `angle` and `reached` interpolate linearly in `progress`.
+  Added to the gallery.
 
 Color: vector cells on the value scale (maxAbs 2). The dial hand uses `--fg`; the "seen" sector uses a
 neutral `--line` tint; nothing on a dial uses the value scale. The followed query "sat" keeps the selection
@@ -123,12 +135,12 @@ products.
 | 2 | q_sat's vector gets a divider into two pairs; each pair becomes a `dial` hand: pair 1 (0, 2) points straight up, length 2; pair 2 (0.5, 0) points right, length 0.5. Same for k_cat beside it. | The vector splits; each pair flies down into its dial and becomes a hand. | RoPE cuts each query and key into pairs of numbers and treats each pair as a clock hand. Four numbers make two hands. | q pairs (0, 2) and (0.5, 0) · k pairs (0, 1.5) and (0, −0.5) · lengths 2, 0.5, 1.5, 0.5 |
 | 3 | The query's dials turn: pair 1 by 3 radians (172°), pair 2 by 0.3 (17°). A plain label "speed: 1 per token" and "0.1 per token". | Both hands sweep to their new angles; the vector cells above retype. | Each hand turns by the token's position times its own speed. "sat" is token 3, so the fast hand turns 3 radians and the slow one 0.3. | q at 3: [−0.282, −1.980, 0.478, 0.148] · pair 1: 3 × 1 = 3 rad · pair 2: 3 × 0.1 = 0.3 rad |
 | 4 | The key's dials turn by 2 and 0.2 (cat is token 2). Then a `flow` carries both into the readout: pair 1 dot, pair 2 dot, sum; the old 3.0 shown in gray beside it. | The key's hands sweep; the two pair dots type in, then the sum. | The score is still a dot product, now of the turned vectors. Each pair adds its own part, so the score drops from 3.0 to 1.596. | k at 2: [−1.364, −0.624, 0.099, −0.490] · pair dots 1.621 + (−0.025) = 1.596 · was 3.0 |
-| 5 | A "+10 tokens" label: "sat" to position 13, "cat" to 12. All four hands turn further; the angle between each q hand and its k hand stays the same (arc drawn between them). | Every hand sweeps by 10 more speeds' worth; the readout retypes 1.596. | Move both words ten tokens later: every hand turns further, but the angle between each pair stays the same. The score depends only on the offset. | q at 13: [−0.840, 1.815, 0.134, 0.482] · k at 12: [0.805, 1.266, 0.466, −0.181] · score 1.596 at (3, 2), (13, 12), (103, 102) · whole row at +10: [−1.353, 1.596, 0.5] |
-| 6 | The 8-cell row "score of q_sat with k_cat at offset 0…7". Under it the two key dials, stepping back one offset at a time. | The cells fill left to right as the offset grows; the fast hand completes a turn by offset 6, the slow hand barely moves. | The fast hand finishes a turn every 6.3 tokens, so it tracks nearby order; the slow one takes 63. Tokens per full turn is the wavelength. | offsets 0–7: [3, 1.596, −1.298, −3.044, −2.058, 0.731, 2.739, 2.101] · wavelengths 6.3 and 62.8 tokens |
-| 7 | The slow dial alone, with a base readout; a page-text strip under the stage: "slowest turn, 128-wide head: base 10,000 → 54,410 tokens · 10,000,000 → 48.8 million". | The base readout steps 100 → 10,000; the slow hand's speed drops to 0.01 per token; the score row barely changes. | A constant called the base sets how slow the slowest hand turns. A bigger base means a longer reach, so 2026 models raise it into the millions. | toy: base 100 → speed 0.1; base 10,000 → 0.01 · offsets 0–7 at base 10,000: [3, 1.618, −1.253, −2.977, −1.971, 0.838, 2.866, 2.244] · real 128-wide head: 54,410 tokens (base 10,000) to 48,843,285 (base 10,000,000) |
+| 5 | A plain text prompt first, for one second: "Will the score change when both words move ten tokens later?" Then a "+10 tokens" label: "sat" to position 13, "cat" to 12. All four hands turn further; the angle between each q hand and its k hand stays the same (arc drawn between them). | Every hand sweeps by 10 more speeds' worth; the readout retypes 1.596. | Move both words ten tokens later: every hand turns further, but the angle between each pair stays the same. The score depends only on the offset. | q at 13: [−0.840, 1.815, 0.134, 0.482] · k at 12: [0.805, 1.266, 0.466, −0.181] · score 1.596 at (3, 2), (13, 12), (103, 102) · whole row at +10: [−1.353, 1.596, 0.5] |
+| 6 | The 8-cell row "score of q_sat with k_cat at offset 0…7". Under it the two key dials, stepping back one offset at a time. | The cells fill left to right as the offset grows; the fast hand completes a turn just after offset 6, the slow hand barely moves. | The fast hand finishes a turn every 6.3 tokens, so it tracks nearby order; the slow one takes 63. Tokens per full turn is the wavelength. | offsets 0–7: [3, 1.596, −1.298, −3.044, −2.058, 0.731, 2.739, 2.101] · wavelengths 6.3 and 62.8 tokens |
+| 7 | The slow dial alone, with a base readout; a page-text strip under the stage: "slowest turn, a head of 128 numbers (64 pairs): base 10,000 → 54,410 tokens · 150,000 (gpt-oss) → 782,338 · 10,000,000 → 48.8 million". | The base readout steps 100 → 10,000; the slow hand's speed drops to 0.01 per token; the score row barely changes. | A constant called the base sets how slow the slowest hand turns. A bigger base means a longer reach, so 2026 models raise it into the millions. | toy: base 100 → speed 0.1; base 10,000 → 0.01 · offsets 0–7 at base 10,000: [3, 1.618, −1.253, −2.977, −1.971, 0.838, 2.866, 2.244] · real 128-wide head: 54,410 tokens (base 10,000) to 48,843,285 (base 10,000,000) |
 | 8 | Back to base 100. Label "trained on 16 tokens". Each dial shows its pale "seen" sector: full circle for pair 1, 0 to 1.5 rad for pair 2. Text "at 64 tokens": pair 2's hand swings to 6.3 rad, outside the sector, labeled "never seen". Then "position interpolation, ÷ 4": both speeds drop to a quarter; pair 2 stays inside its sector. | The slow hand overshoots, flashes "never seen", then the squeeze pulls it back; the score row redraws. | Past its training length, a slow hand reaches angles the model never saw. Position interpolation slows every hand by the stretch factor, so all angles look familiar again. | trained offsets 0–15: pair 2 up to 1.5 rad · at 64 tokens: up to 6.3 rad · after ÷ 4: up to 1.575 · new row: [3, 2.9, 2.62, 2.176, 1.596, 0.915, 0.175, −0.578] |
 | 9 | Same frame; a branch label "YaRN-style": pair 1 returns to full speed (its sector is a full circle), pair 2 stays at a quarter. The score row redraws close to the original. Text: "cost of squeezing all: 'cat' must now be 4 tokens back to score what 1 back did". | Pair 1's hand speeds back up; the row's first cells snap back. | YaRN squeezes only the slow hands, which never finished a turn in training, and leaves the fast ones alone. Nearby words stay as distinct as before. | YaRN-style row: [3, 1.615, −1.261, −2.989, −1.986, 0.82, 2.843, 2.218] · PI row put 1.596 at offset 4 · gpt-oss (2025): 4,096 → 131,072 tokens, factor 32 |
-| 10 | Two strips: "partial RoPE" with only pair 1 rotating (pair 2's dial grayed, label "position-free"), and "NoPE" with both dials grayed. Page text: "Qwen3.5: 25% of dimensions rotate · MiniMax-M3: 50% · Kimi K3's MLA layers: none". | Pair 2's hand stops and grays; then pair 1's. | Some models turn only part of each vector and leave the rest for pure content matching. Some layers turn none at all; the causal mask still leaks order. | partial: pair 1 only · NoPE: score = 3.0 again · Qwen3.5 0.25 · MiniMax-M3 0.5 (64 of 128) · Kimi K3: 24 MLA layers without RoPE |
+| 10 | Two strips: "partial RoPE" with only pair 1 rotating (pair 2's dial grayed, label "position-free"), and "NoPE" with both dials grayed. Page text: "Qwen3.5: 25% of dimensions rotate · MiniMax-M3: 50% · Kimi K3's MLA layers: none". | Pair 2's hand stops and grays; then pair 1's. | Some models turn only part of each vector (partial RoPE), leaving the rest for content matching. Some layers turn none at all (NoPE); the causal mask still leaks order. | partial: pair 1 only · NoPE: score = 3.0 again · Qwen3.5 0.25 · MiniMax-M3 0.5 (64 of 128) · Kimi K3: 24 MLA layers without RoPE |
 
 Determinism: every frame is a pure function of (step, progress); dial angles interpolate linearly in
 `progress` from their start to end angle. Reduced motion shows each frame's end state. The token chips and
@@ -136,7 +148,7 @@ the q/k columns keep their positions from frame 1 to frame 5; the offset row kee
 to frame 9; "sat" keeps its selection outline throughout.
 
 Caption word counts (README lesson 2; ≤ 30 words, ≤ 2 sentences, no operators): 26 · 23 · 27 · 26 · 26 ·
-26 · 27 · 28 · 26 · 28.
+26 · 27 · 28 · 26 · 29.
 
 Absolutes checked (README lesson 7): frame 1's "cannot see order" is about the five steps as built on
 `attention` (no positions anywhere), and the second sentence names the mask. Frame 5's "depends only on the
@@ -178,7 +190,7 @@ is printed above the controls.
 2. Watch the offset row at base **100**: [3, 1.596, −1.298, −3.044, …]. Switch to **10,000**: [3, 1.618,
    −1.253, −2.977, …]; the slow hand nearly freezes (0.01 per token, a turn every 628 tokens), the fast one
    is unchanged. → **Insight: the base only changes the slow pairs, and the slow pairs are what reach far.**
-   The page-text line shows the real version: a 128-wide head turns its slowest pair once every 54,410 tokens
+   The page-text line shows the real version: a head of 128 numbers (64 pairs) turns its slowest pair once every 54,410 tokens
    at base 10,000 and once every 48.8 million at base 10,000,000.
 3. Set **Read up to 64** with stretch **none**: pair 2 "reaches 6.3 rad, never seen". Pick **squeeze all**:
    pair 2 is back in range, but the offset row becomes [3, 2.9, 2.62, 2.176, 1.596, …]: offset 4 now scores
@@ -261,6 +273,7 @@ for(const base of [100,10000]){const f=freqs(4,base);
   "score",r(score(q,kc,3,2,f)),r(score(q,kc,13,12,f)),r(score(q,kc,103,102,f)),
   "row+10",r([score(q,kt,13,11,f),score(q,kc,13,12,f),score(q,ks,13,13,f)]),
   "offsets",JSON.stringify(r(Array.from({length:8},(_,o)=>score(q,kc,o+1,1,f)))));}
+console.log("identity pair2",(0.25*Math.sin(-0.1)).toFixed(3),"pair1",(3*Math.cos(-1)).toFixed(3));
 for(const b of [10000,150000,5e6,8e6,1e7])console.log("d128",b,Math.round(2*Math.PI/freqs(128,b)[63]));
 const f=freqs(4,100),pi=f.map(x=>x/4),ya=f.map(x=>2*Math.PI/x<=16?x:x/4);
 console.log("seen",r(f.map(x=>x*15)),"reached",r(f.map(x=>x*63)),"pi reached",r(pi.map(x=>x*63)),
@@ -274,7 +287,7 @@ row+10 [-1.353,1.596,0.5] offsets [3,1.596,-1.298,-3.044,-2.058,0.731,2.739,2.10
 [3,1.618,-1.253,-2.977,-1.971,0.838,2.866,2.244]` · `d128 10000 54410` · `d128 150000 782338` ·
 `d128 5000000 24687577` · `d128 8000000 39211104` · `d128 10000000 48843285` · `seen [15,1.5] reached
 [63,6.3] pi reached [15.75,1.575] pi [3,2.9,2.62,2.176,1.596,0.915,0.175,-0.578] yarn
-[3,1.615,-1.261,-2.989,-1.986,0.82,2.843,2.218]`. Angles in degrees for frame 3: 3 rad = 171.9°,
+[3,1.615,-1.261,-2.989,-1.986,0.82,2.843,2.218]`. `identity pair2 -0.025 pair1 1.621` (the §7 worked line). Angles in degrees for frame 3: 3 rad = 171.9°,
 0.3 rad = 17.2°.
 
 ## 7. Show me the math
@@ -293,7 +306,7 @@ R(a) = \begin{pmatrix}\cos a & -\sin a\\ \sin a & \cos a\end{pmatrix}
 \quad\text{depends only on } \htmlClass{hl-off}{n - m}
 ```
 ```tex
-\text{worked: } \underbrace{3\cos(1)}_{\text{pair 1}} + \underbrace{(-0.25)\sin(0.1)}_{\text{pair 2}}
+\text{worked } (n - m = -1): \underbrace{3\cos(-1)}_{\text{pair 1}} + \underbrace{0.25\,\sin(-0.1)}_{\text{pair 2}}
 = 1.621 - 0.025 = 1.596
 ```
 ```tex
@@ -302,16 +315,16 @@ R(a) = \begin{pmatrix}\cos a & -\sin a\\ \sin a & \cos a\end{pmatrix}
 \text{YaRN-style: } \theta_i \to \begin{cases}\theta_i & 2\pi/\theta_i \le L_{\text{train}}\\ \theta_i / s & \text{otherwise}\end{cases}
 ```
 Shapes: q, k [d_head] (4), d_head / 2 pairs (2), one θ per pair. The pair-2 term in the worked line uses
-the 2D identity (a, b)ᵀR(φ)(c, d) = (ac + bd) cos φ + (ad − bc) sin φ with q pair (0.5, 0), k pair (0, −0.5):
-ac + bd = 0 and ad − bc = −0.25, so −0.25 · sin(0.1) = −0.025, with φ = (m − n)θ = 0.1 (the query is one
-token after the key). Notes printed on the panel: real YaRN ramps smoothly between "keep" and "squeeze" by each
+the 2D identity (a, b)ᵀR(φ)(c, d) = (ac + bd) cos φ + (bc − ad) sin φ with q pair (0.5, 0), k pair (0, −0.5)
+and φ = (n − m) θ₂ = −0.1 (the key is one token before the query): ac + bd = 0 and bc − ad = 0.25, so
+0.25 · sin(−0.1) = −0.025. Pair 1 is unchanged: 3 cos(−1) = 3 cos(1) = 1.621. Notes printed on the panel: real YaRN ramps smoothly between "keep" and "squeeze" by each
 pair's turns per trained length, and also rescales attention by a temperature (01 §3); NTK-aware scaling
 raises the base instead of slowing positions (01 §3); pairing dimension i with i + d/2 is the same rotation
 on reordered dimensions. Color links: `hl-base` → the base readout (frame 7); `hl-score` → the score
 readout (frames 4–5); `hl-off` → the offset arc (frame 5). KaTeX with `trust: true, strict: false`.
 
 ## 8. In today's models (Oct 2026)
-Framing paragraph on the page: "Almost every 2026 model rotates its queries and keys. The differences are
+Framing paragraph on the page: "Almost every 2026 model rotates its queries and keys (in its softmax-attention layers). The differences are
 the base, how much of each head rotates, which layers rotate at all, and how the model was stretched to its
 final length. The mainstream recipe for 1M tokens is a very large base, staged length training
 (`midtraining`), attention that is cheap at length (`long-context-attention`), and sometimes YaRN."
@@ -356,9 +369,9 @@ Frame 5 (shift both by ten), desktop width. Numbers from the §6 reproducer (`q@
 │ [The]₁ [cat]₂ ►[sat]₃ [down]₄         +10 tokens →       │
 │                                    sat at 13, cat at 12  │
 │  query "sat" @13               key "cat" @12             │
-│  │−0.840│ 1.815│ 0.134│ 0.482│   │0.805│1.266│0.466│−0.181│
+│ │−0.840│ 1.815│ 0.134│ 0.482│   │0.805│1.266│0.466│−0.181│
 │   pair 1      pair 2             pair 1     pair 2       │
-│    ( ↖ )       ( ↗ )              ( ↗ )      ( ↘ )        │
+│    ( ↖ )       ( ↗ )              ( ↗ )      ( ↘ )       │
 │   |q|=2.00    |q|=0.50           |k|=1.50   |k|=0.50     │
 │                                                          │
 │  angle between q and k hands: unchanged                  │
@@ -369,8 +382,8 @@ Frame 5 (shift both by ten), desktop width. Numbers from the §6 reproducer (`q@
 │ The score depends only on the offset.                    │
 │ [◄] [Pause] [►]  ━━━━━●━━━━━━  5 / 10  speed [1×]        │
 └──────────────────────────────────────────────────────────┘
- Two pairs and base 100 are toy choices so both hands visibly
- move; real heads have 32 to 256 pairs and a base of 10,000+.
+ Two pairs and base 100 are toy choices so both hands
+ visibly move; real heads: 32 to 256 pairs, base 10,000+.
 ```
 "►" is the selection outline on the followed query "sat". The rotated vectors print at `NUMBER_CELL`
 (4 × 43 = 172 px each, two side by side = 360 px). At 400 px the q and k columns stack.
@@ -385,17 +398,21 @@ its HF config.json, confirmed per 01 §3); `yarn_factor` for gpt-oss-120b (32, w
 
 **Graph changes:** none.
 
-**Judgment calls:**
-1. **Toy base 100.** At base 10,000 the toy's slow hand turns 0.01 per token and frames 3–6 would show it
-   frozen. The page uses 100 and says so on screen, and try-this 2 switches to 10,000. Accept?
-2. **"YaRN-style" simplification.** The toy keeps a pair's speed if its wavelength is within the trained
-   length and squeezes it otherwise; real YaRN ramps between the two and adds an attention-temperature fix.
-   The page labels the toy method "YaRN-style" and states the difference in §7. The brief does not give
-   YaRN's ramp constants, so the page does not quote them. Enough, or should a reviewer read the YaRN paper
-   and add the ramp?
-3. **`dial` glyph.** New; hand length = pair magnitude, angle = rotation, pale sector = angles seen in
-   training (a fill, not an outline). Reused by `midtraining` and briefly by `decoder-recap` and
-   `multimodal`. Accept, and should the gallery add it?
-4. **1-based positions in the angle.** The page rotates by the on-screen position (sat = 3); code counts from
-   0 (sat = 2), which changes every printed rotated vector but not one score. The page says so in §4 and
-   frame 5 proves it. Confirm that the course's 1-based rule should drive the arithmetic here too.
+**Judgment calls:** all ruled by the expert review (§13) and applied; none remain open.
+
+## 13. Expert review (2026-10-07) and what changed
+Verdict: APPROVE WITH CHANGES (1 Must). Status is now "approved (expert review)". The §6 reproducer was
+re-run and now also prints the §7 identity's two terms (−0.025, 1.621).
+
+Rulings applied (lesson 20): toy base 100 and the "YaRN-style" simplification (no ramp constants) accepted
+with the §7 note; `dial` accepted with conditions (a)–(j), written into §4 and widened for `midtraining`;
+1-based positions drive the arithmetic (frame 5 proves the origin does not matter; tests check 20 random
+shifts); RoFormer, YaRN and PI links accepted (primary papers cited in brief 01 §3).
+
+Must (1/1): §7's worked note uses the printed equation's conventions: identity (ac + bd) cos φ + (bc − ad)
+sin φ with φ = (n − m) θ₂ = −0.1; the worked TeX line is 3 cos(−1) + 0.25 sin(−0.1) (README lesson 30).
+Should (5/5 applicable, no rebuttals): misconception 5 separates the causal-mask reason from K3's decay;
+frame 6 "just after offset 6"; frame 10 caption names partial RoPE and NoPE (29 words); "a head of 128
+numbers (64 pairs)" in frame 7 and try-this 2; §8 framing "(in its softmax-attention layers)". The go-deeper
+item needed no change.
+Nice (2/2): a predict-then-reveal prompt opens frame 5; frame 7's strip prints base 150,000 (782,338 tokens).
