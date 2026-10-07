@@ -70,7 +70,7 @@ test('causalMask lets query i see keys j ≤ i', () => {
 
 test('formatBytes uses decimal by default and binary on request', () => {
   assert.equal(formatBytes(0), '0 B');
-  assert.equal(formatBytes(1536), '1.54 KB');
+  assert.equal(formatBytes(1536), '1.54 kB');
   assert.equal(formatBytes(80e9), '80 GB');
   assert.equal(formatBytes(999_600), '1 MB');
   assert.equal(formatBytes(4.5 * 1024 ** 2, { binary: true }), '4.5 MiB');
@@ -97,4 +97,22 @@ test('deepFreeze returns a frozen deep copy: arrays stay arrays, nested values f
   assert.ok([out, out.a, out.a[1], out.b].every(Object.isFrozen));
   assert.ok(!Object.isFrozen(input) && !Object.isFrozen(input.a));
   assert.equal(deepFreeze(7), 7);
+});
+
+test('formatCount takes significant digits; 3 stays the default', () => {
+  assert.equal(formatCount(116_829_149_760, { digits: 5 }), '116.83B');
+  assert.equal(formatCount(116.8e9, { digits: 5 }), '116.8B');
+  assert.equal(formatCount(174_604_259_328, { digits: 5 }), '174.6B');
+  assert.equal(formatCount(671_026_404_352, { digits: 5 }), '671.03B');
+  assert.equal(formatCount(1.6e12), '1.6T');
+  assert.equal(formatCount(116_829_149_760), '117B');
+  assert.throws(() => formatCount(1, { digits: 0 }), /digits must be an integer 1–21/);
+});
+
+test('formatBytes prints decimal kB (lowercase k) with three significant figures (README byte rule)', () => {
+  assert.equal(formatBytes(327_680), '328 kB');
+  assert.equal(formatBytes(70_272), '70.3 kB');
+  assert.equal(formatBytes(4_718_592), '4.72 MB');
+  assert.equal(formatBytes(42_949_672_960), '42.9 GB');
+  assert.equal(formatBytes(999_600), '1 MB');
 });

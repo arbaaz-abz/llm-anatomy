@@ -58,19 +58,18 @@ export function causalMask(n) {
   return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => j <= i));
 }
 
-const DECIMAL = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+const DECIMAL = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
 const BINARY = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
 
-function threeSig(x) {
-  return String(Number(x.toPrecision(3)));
-}
+const significant = (x, digits) => String(Number(x.toPrecision(digits)));
+const threeSig = (x) => significant(x, 3);
 
 export function formatBytes(bytes, { binary = false } = {}) {
   const base = binary ? 1024 : 1000;
   const units = binary ? BINARY : DECIMAL;
   let value = bytes;
   let unit = 0;
-  // Round first so 999.6 KB becomes "1 MB" rather than "1000 KB".
+  // Round first so 999.6 kB becomes "1 MB" rather than "1000 kB".
   while (Number(value.toPrecision(3)) >= base && unit < units.length - 1) {
     value /= base;
     unit += 1;
@@ -80,15 +79,17 @@ export function formatBytes(bytes, { binary = false } = {}) {
 
 const COUNT_SUFFIXES = ['', 'K', 'M', 'B', 'T'];
 
-export function formatCount(n) {
+// digits = significant digits (3 by default; the params toy prints 5: "116.83B").
+export function formatCount(n, { digits = 3 } = {}) {
+  if (!Number.isInteger(digits) || digits < 1 || digits > 21) throw new RangeError(`formatCount: digits must be an integer 1–21, got ${digits}`);
   let value = n;
   let unit = 0;
   // Round first so 999.6K becomes "1M" rather than "1000K".
-  while (Math.abs(Number(value.toPrecision(3))) >= 1000 && unit < COUNT_SUFFIXES.length - 1) {
+  while (Math.abs(Number(value.toPrecision(digits))) >= 1000 && unit < COUNT_SUFFIXES.length - 1) {
     value /= 1000;
     unit += 1;
   }
-  return `${threeSig(value)}${COUNT_SUFFIXES[unit]}`;
+  return `${significant(value, digits)}${COUNT_SUFFIXES[unit]}`;
 }
 
 // A frozen deep copy for module-level constants (arrays stay arrays); the input is never touched.
