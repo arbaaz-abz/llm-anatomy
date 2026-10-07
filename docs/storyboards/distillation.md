@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: agentic-rl
 Next: none (no slug lists `distillation` as a prereq; it closes the Recipe section)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §0 item 5, §3 (R1 distilled models, Olmo 3 traces), §4.8, §5 steps 5–6, §7 (Distillation / OPD
 row) · 05 §1.1, §1.2
 
@@ -59,12 +59,12 @@ negative one. That is an RL loop, with two differences that make it efficient: t
 per token, not one per answer, so the blame lands on `54` rather than on all of `7 × 8 = 54`), and it
 needs no checker, so it works for any task a teacher can do.
 
-That is why it became the 2026 way to merge specialists. Labs train separate experts with RL (math, code,
+That is why it became the 2026 way to merge specialists. Labs train separate experts with RL (math & code,
 agents, chat, sometimes at several effort levels), then distill all of them into one student: each prompt
 is graded by the teacher for its domain, or by a weighted mix. DeepSeek-V4 uses more than ten teachers,
 Kimi K3 nine, and MiMo-V2-Flash reports that the merged model keeps each teacher's peak. The cost: every
-teacher must be run (or cached) during training, and a student can at best match its teachers, not beat
-them.
+teacher must be run (or cached) during training, and the distillation reward stops pushing once the student
+matches its teacher; to go past the teacher, MiMo-V2-Flash adds an outcome advantage (§7).
 
 ## 4. Visual metaphor
 Glyphs used (spec §5.1 and the built library): `vector` (`NUMBER_CELL` rows of 4 printed probabilities,
@@ -97,19 +97,19 @@ distillation; 7–8 merging specialists; 9 small models.
 |---|---|---|---|---|
 | 1 | Prompt chips `7 × 8 =`. Two `block`s: `teacher: math specialist` and `student`. Under each, a 4-cell `vector` headed `56 · 54 · 48 · 63`. | The teacher row fills, then the student row. The `56` cells take the selection outline. | A teacher, here the math specialist RL produced, and a student both give probabilities for the next token. The student is less sure. | teacher `[0.90, 0.05, 0.03, 0.02]` · student `[0.40, 0.30, 0.20, 0.10]` |
 | 2 | The teacher writes `56` (a `token` chip with the plain label `teacher wrote 56`). The student's `56` cell is the only one lit; readout `loss 0.916`. | The chip flows to the student; three of the student's four cells dim. | The oldest way: fine-tune the student on text the teacher wrote, exactly like SFT. Only the one token the teacher picked counts. | `−ln 0.40 = 0.916` |
-| 3 | The whole teacher row slides under the student row; readout `KL(teacher ‖ student) = 0.551`. | All four student cells light; the four pairwise terms type in under them, then sum. | Logit distillation uses the teacher's whole row as the target, so the student also learns how unlikely 54 and 48 are. | terms `0.90 ln 2.25 = 0.730` · `0.05 ln (1/6) = −0.090` · `0.03 ln 0.15 = −0.057` · `0.02 ln 0.2 = −0.032` · sum `0.551` |
+| 3 | The whole teacher row slides under the student row; readout `KL(teacher ‖ student) = 0.551`. | All four student cells light; the followed `56` cell shows its term, then the sum readout types in (the four terms are listed in the math panel). | Logit distillation uses the teacher's whole row as the target, so the student also learns how unlikely 54 and 48 are. | on the `56` cell: `0.90 ln 2.25 = 0.730` · sum `0.551` (all four terms in §7: 0.730, −0.090, −0.057, −0.032) |
 | 4 | Branch label `what if the student writes its own answer?` The student samples `54` (chip outlined, plain label `student's own sample`). A plain mark: `never in its training text`. | A `flow` (carry `token`) runs from the student to the `54` chip. | Branch: both methods only trained on text the teacher wrote. When the student samples its own mistake, it is somewhere it never practised. | student's `p(54) = 0.30` |
 | 5 | Back on the main line. The teacher `block` lights and grades the student's sample: a `cell` under `54` reads `−1.79`; beside it, plain reference marks for the other choices: `56 +0.81 · 48 −1.90 · 63 −1.61`. | A `flow` (carry `gradient`) runs from the teacher into the `54` chip, which cools to the value color for −1.79. | On-policy distillation lets the student write and the teacher grade every token it wrote. 54 earns minus 1.79: the teacher finds it six times less likely. | `ln 0.05 − ln 0.30 = −1.792` · `ln 0.90 − ln 0.40 = +0.811` · student's expected reward `−0.754` (= minus the reverse KL) |
-| 6 | **Key frame.** Two rows of the answer `7 × 8 = 54`. Upper, labeled `GRPO (rlvr-grpo)`: every chip at −0.58. Lower, labeled `on-policy distillation`: per-chip rewards `0.00 · +0.05 · +0.03 · 0.00 · −1.79`. | The lower row's chips take their colors one by one; the `54` chip goes deep cool while the prefix stays near neutral. | GRPO gave every token of this wrong answer the same minus 0.58. The teacher's grades are dense: the blame lands on 54, not on the correct steps before it. | GRPO `−0.58 × 5` · OPD `7: 0.000 · ×: +0.054 · 8: +0.031 · =: 0.000 · 54: −1.792` |
-| 7 | Three specialist `block`s from `agentic-rl` (`math`, `coding agent`, `chat`) above one `student`. Prompts of three kinds flow in; each is graded by its domain's teacher (a `flow` from the matching specialist). | Prompts drop in one by one; for each, the matching specialist lights and its `flow` reaches the student. | To merge RL specialists, each prompt the student answers is graded by the teacher for its domain. One student learns every specialist's skill. | DeepSeek-V4: > 10 teachers · Kimi K3: 9 (3 domains × 3 effort levels) · visible note: "DeepSeek-V4's specialists are still trained with SFT and GRPO; only the final mixed-RL stage was replaced" |
+| 6 | **Key frame.** Two rows of the answer `7 × 8 = 54`. Upper, labeled `GRPO (rlvr-grpo)`: every chip at −0.58. Lower, labeled `on-policy distillation`: per-chip rewards `0.00 · +0.05 · +0.03 · 0.00 · −1.79`. A visible line under the two rows: `different units: compare the shape, not the size`. | The lower row's chips take their colors one by one; the `54` chip goes deep cool while the prefix stays near neutral. | GRPO gave every token of this wrong answer the same minus 0.58. The teacher's grades are dense: the blame lands on 54, not on the correct steps before it. | GRPO `−0.58 × 5` · OPD `7: 0.000 · ×: +0.054 · 8: +0.031 · =: 0.000 · 54: −1.792` |
+| 7 | Three specialist `block`s from `agentic-rl` (`math & code`, `agents`, `chat`) above one `student`. Prompts of three kinds flow in; each is graded by its domain's teacher (a `flow` from the matching specialist). | Prompts drop in one by one; for each, the matching specialist lights and its `flow` reaches the student. | To merge RL specialists, each prompt the student answers is graded by the teacher for its domain. One student learns every specialist's skill. | DeepSeek-V4: > 10 teachers · Kimi K3: 9 (3 domains × 3 effort levels) · visible plain mark on the stage (not a hover): "DeepSeek-V4's specialists are still trained with SFT and GRPO; only the final mixed-RL stage was replaced" |
 | 8 | A plain two-row comparison: `RL one domain after another` with a plain mark `earlier skills fade` vs `distill from all specialists at once` with `each teacher's peak kept (MiMo-V2-Flash)`. A plain line: `GLM-5 distills from its own earlier checkpoints to undo this.` | The first row's earlier skill labels dim one by one; the second row's stay lit. | Training one skill after another tends to erase earlier ones: catastrophic forgetting. Distilling from all specialists at once keeps them, which is why 2026 pipelines end this way. | facts per §8 |
-| 9 | A four-step strip: `pretrain small` → `SFT on teacher traces` → `on-policy distillation` → `short RLVR (optional)`. A plain fact line: `DeepSeek-R1 (2025): ~800K samples distilled into small Qwen and Llama models`. | The four steps light in order. | Small models are made the same way: pretrain, fine-tune on a big teacher's traces, then distill on-policy. The cost: a student rarely surpasses its teachers. | facts per §8 |
+| 9 | A four-step strip: `pretrain small` → `SFT on teacher traces` → `on-policy distillation` → `short RLVR (optional)`. A plain fact line: `DeepSeek-R1 (2025): ~800K SFT samples, also used to distill small Qwen and Llama models (background)`. | The four steps light in order. | Small models are made the same way: pretrain, fine-tune on a big teacher's traces, then distill on-policy. The cost: the signal runs out once the student matches the teacher. | facts per §8 |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 2–3 draw `tokenLoss` and `klDivergence` (`math/lm.js`); frames 5–6 draw `opdTokenReward`
 (`math/distill.js`); frame 6's upper row is `rlvr-grpo`'s `groupAdvantages` (k = 2) value for row 2.
 Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 23/2, 22/2, 21/1, 23/2, 26/2,
-29/2, 23/2, 28/2, 25/2.
+29/2, 23/2, 28/2, 29/2 (re-run after review).
 
 ## 6. Toy
 "Grade the student." The `7 × 8 =` position with a teacher row and a student row; switch how the student
@@ -140,12 +140,12 @@ learns, which token it sampled, and which teacher grades it.
 2. Switch `student` to `close to the math teacher`: every reward shrinks toward 0 (`56` +0.057, `54`
    −0.337) and the expected reward is −0.013. Then switch to `confident and wrong`: `54` falls to −2.639 and
    the expected reward to −1.909. → **Insight: the signal is largest where the student is most wrong and
-   vanishes as it matches the teacher.** On-policy distillation can bring a student up to its teacher but
-   gives it no reason to go beyond.
+   vanishes as it matches the teacher.** The distillation reward stops pushing once the student matches its
+   teacher; going past it needs another signal, such as MiMo-V2-Flash's outcome advantage (§7).
 3. Keep `close to the math teacher` and switch `teacher`: math 0.013, chat 0.152, 50/50 mix 0.082. →
    **Insight: averaging teachers pulls the student toward a blend.** A student that already matches the math
    specialist is still pushed away from it by the mix, which is why Kimi K3 picks one teacher per prompt by
-   domain and effort level, and DeepSeek-V4 weights its teachers.
+   domain and effort level; DeepSeek-V4 sums its teachers' KLs with weights.
 
 Lesson-17 check: the three insights are read straight off `opdTokenReward`, `klDivergence` and
 `multiTeacherLoss` at the stated presets (reproducer below); none depends on more than the four-candidate
@@ -176,7 +176,9 @@ are over those four entries only. sg = stop-gradient: the reward is a number, no
 differentiate through. Panel notes: (a) reverse KL (student ‖ teacher) is "mode-seeking": it punishes the
 student for putting probability where the teacher puts little; forward KL is "mean-covering". (b) DeepSeek
 chose full-vocabulary KL because sampled-token estimates had high variance, and caches each teacher's
-last-layer hidden states to rebuild logits on the fly. (c) Kimi K3 found top-k logit variants gave no gain.
+last-layer hidden states to rebuild logits on the fly. (c) Kimi K3 found top-k logit variants gave no gain. (d) Frame 3's four terms of KL(teacher ‖
+student): `0.90 ln 2.25 = 0.730` · `0.05 ln (1/6) = −0.090` · `0.03 ln 0.15 = −0.057` · `0.02 ln 0.2 = −0.032`;
+sum `0.551`.
 Color links: `hl-t` = the teacher row; `hl-s` = the student row and the sampled chip; `hl-r` = the reward
 cells (frames 5–6).
 
@@ -190,8 +192,8 @@ All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-gr
 | Kimi K3: MOPD; per-token reward from one of 9 experts chosen by (domain, effort), clipped | `models.kimi-k3.opd` = "per-token reward from 1 of 9 experts (domain × effort), clipped", `.rl_experts` = 9 (proposed by `agentic-rl`) (confirmed) | 02 §4.8, §4.6 |
 | MiMo-V2-Flash: MOPD adds a GRPO outcome advantage; reports that each teacher's peak is preserved without the usual trade-off | `models.mimo-v2-flash.opd` = "teacher log-ratio + α·ORM advantage; keeps each teacher's peak" (confirmed) | 02 §4.8 |
 | GLM-5: on-policy cross-stage distillation as the final stage, with its own earlier checkpoints (SFT, reasoning RL, general RL) as teachers, to undo catastrophic forgetting | `models.glm-5.opd` = "cross-stage, earlier checkpoints as teachers" (confirmed) | 02 §4.8 |
-| On-policy distillation was popularized by Thinking Machines and Qwen3; claims of large compute savings versus RL (about an order of magnitude) | `papers.thinking-machines-opd` (reported) — no model entry | 02 §4.8 item 3 |
-| DeepSeek-R1 (2025): ~800K SFT samples, reused to distill small Qwen and Llama models | `models.deepseek-r1.sft_samples` = 800000 (`[BG]`, arXiv 2501.12948) | 02 §3, §4.8 item 1 |
+| On-policy distillation was popularized by Thinking Machines and Qwen3; claims of large compute savings versus RL (about an order of magnitude) | `papers.on-policy-distillation-2025` (Thinking Machines blog, reported) — no model entry | 02 §4.8 item 3 |
+| DeepSeek-R1 (2025): ~800K SFT samples (≈600K reasoning + ≈200K other; 804,745 in Table 5); reusing them to distill small Qwen and Llama models stays `[BG]` | `models.deepseek-r1.sft_samples` = 800000 (confirmed by the expert reviewer, arXiv 2501.12948; note "804,745 in Table 5") | 02 §3, §4.8 item 1 |
 | Olmo 3's SFT used ~2.3M reasoning traces distilled from QwQ-32B and DeepSeek-R1 | `models.olmo-3.sft_traces` = 2.3e6 (reported) | 02 §3 |
 | Mistral says Large 4 "leaned less on distillation" than peers | `models.mistral-large-4.distillation_note` (reported; not in Mistral's blog) | 02 §4.8, §6 |
 
@@ -201,8 +203,8 @@ All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-gr
 2. On-policy distillation is RL with a dense reward (the log of the teacher's probability over the student's):
    it trains the student on its own mistakes and puts the blame on the token that caused them.
 3. 2026 labs train RL specialists, then merge them with multi-teacher on-policy distillation (DeepSeek-V4,
-   Kimi K3, MiMo-V2-Flash, GLM-5 across its own stages); the cost is running every teacher, and a student can
-   at best match them.
+   Kimi K3, MiMo-V2-Flash, GLM-5 across its own stages); the cost is running every teacher, and the reward
+   stops pushing once the student matches its teacher.
 
 ## 10. Next and go deeper
 Next: none in the graph; this closes the Recipe section. Back: `agentic-rl` (where the specialists come
@@ -272,10 +274,9 @@ the student equals every teacher with positive weight.
 
 ## 12. Open questions for the reviewer
 **Data-pass keys** (new): `deepseek-v4-pro.opd` · `kimi-k3.opd` · `mimo-v2-flash` (new entry) `.opd` ·
-`glm-5.opd` · `deepseek-r1` (new entry) `.sft_samples` = 800000 (`[BG]`; the reviewer should decide whether
-a BG count may become a data entry, or stay as "about 800K" with the arXiv link) · `olmo-3.sft_traces` =
-2.3e6 (reported) · `mistral-large-4.distillation_note` (reported) · `papers.thinking-machines-opd`
-(reported; same "paper-level fact" question as `agentic-rl`'s FP16 row).
+`glm-5.opd` · `deepseek-r1` (new entry) `.sft_samples` = 800000 (confirmed, note "804,745 in Table 5") · `olmo-3.sft_traces` =
+2.3e6 (reported) · `mistral-large-4.distillation_note` (reported) · `papers.on-policy-distillation-2025`
+(reported; in `data/papers.json`, ruled).
 
 **Graph changes:**
 - `distillation` is a leaf. Spec §3.4 lists `rlvr-grpo → agentic-rl → distillation` and nothing after it, so
@@ -286,7 +287,13 @@ a BG count may become a data entry, or stay as "about 800K" with the arXiv link)
   and math shapes say so.
 - **Frame 6's prefix rewards** (+0.05, +0.03) are stand-ins chosen so teacher and student nearly agree on
   the correct steps; the point (blame concentrates on `54`) holds for any prefix where they agree.
-- **"Student can at best match its teachers"** (frame 9, takeaway 3) is a first-principles reading of the
-  reward (it is maximized when the student equals the teacher, try-this 2), not a brief quote. If the
-  reviewer wants a source line, the alternative wording is "the reward stops pushing once the student
-  matches the teacher".
+- **"At best match its teachers"** was overturned (expert review): the page now says the distillation
+  reward stops pushing once the student matches its teacher, and names MiMo-V2-Flash's outcome advantage as
+  the way past it.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §8 (change log: `fix-recipe-review.md`):
+- Must 1: "a student can at best match its teachers" removed everywhere (§3, frame 9 caption, try-this 2, takeaway 3); the page says the distillation reward stops pushing once the student matches its teacher, and names MiMo-V2-Flash's outcome advantage (§7) as the way past it.
+- Should: frame 6 carries "different units: compare the shape, not the size" (lesson 21); specialist names `math & code · agents · chat` track-wide; frame 7's DeepSeek-V4 note is a visible stage mark; `deepseek-r1.sft_samples` stored as confirmed (804,745 in Table 5) with the distill-into-Qwen/Llama clause kept `[BG]`; frame 3 shows the sum and the followed cell's term, the four terms moved to §7 note (d).
+- Nice: try-this 3 no longer implies DeepSeek-V4's weights ("sums its teachers' KLs with weights").
+- `papers.on-policy-distillation-2025` id applied.

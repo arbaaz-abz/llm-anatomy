@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: rlvr-grpo
 Next: `distillation` (the one slug whose `prereqs` list `agentic-rl`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §0 items 6–8, §3 (loss masking), §4.3, §4.4 (IcePop, DeepSeek-V3.2 patches, consensus list),
 §4.5, §4.6, §4.7, §5 step 4, §6 · 05 §1.1, §1.2
 
@@ -27,7 +27,7 @@ comes from tests or, when nothing can be tested, from a judge model with a rubri
 asynchronous training (waiting for the longest episode leaves most generators idle), and why that creates
 off-policy data plus a gap between the engine that sampled each token and the trainer that updates it; how
 importance-sampling corrections handle that gap (full reweighting, truncation, or IcePop's masking); and why
-most 2026 recipes run with little or no KL term.
+most 2026 open-model reports run with little or no KL term.
 
 ## 2. Misconceptions to correct
 - **Misconception:** "The model is trained on everything in the episode, tool outputs included." →
@@ -42,7 +42,7 @@ most 2026 recipes run with little or no KL term.
   tokens")
 - **Misconception:** "Importance sampling fixes the mismatch exactly, so you should always reweight by
   the full ratio." → **Reality:** full reweighting is unbiased but lets one token carry 3.2× its push.
-  Truncated IS caps the weight at 2; IcePop drops tokens whose two probabilities differ more than
+  Truncated IS caps the weight (at 2 in this toy); IcePop drops tokens whose two probabilities differ more than
   twofold. Each trades a little bias for much less variance. Corrected by try-this 1. (source: 02 §4.4
   IcePop; §4.7 TIS/MIS)
 - **Misconception:** "Dropping the KL term means nothing limits how far the policy moves." → **Reality:**
@@ -81,10 +81,10 @@ disagree about a token's probability. Training as if they agreed adds bias, and 
 disagree badly can dominate an update. The fix is an **importance-sampling correction**: weight each
 token by how much likelier the trainer finds it than the engine did, cap that weight (truncated IS), or
 drop the token when the two differ by more than a factor of two (IcePop, GLM-5). With the clip and these
-masks already bounding every step, and a checker that is hard to game, most 2026 recipes set the KL term
+masks already bounding every step, and a checker that is hard to game, most 2026 open-model reports set the KL term
 to zero or near it, which also frees the reference model's memory.
 
-This is where most RL compute now goes: GLM-5 trains on more than 10,000 verifiable software-engineering
+This is where most RL compute goes in 2026: GLM-5 trains on more than 10,000 verifiable software-engineering
 environments, DeepSeek-V3.2 synthesized 1,827 environments, and Kimi K3 trains nine separate experts. The
 next page, `distillation`, shows how those experts are merged back into one model.
 
@@ -101,8 +101,7 @@ lines, `β = 0`).
 
 New glyphs proposed: none. Note: `request` is reused as an episode timeline. Its two segments mean
 "prompt" and "generated tokens"; on this page the prefill segment is drawn at width 0 and each tick is one
-minute of the episode. If the reviewer prefers a dedicated `rollout` glyph, it would reuse `request`'s
-drawing exactly.
+minute of the episode. Ruled (expert review): reuse `request`; no `rollout` alias.
 
 Stand-ins (visible line under the stage, frames 4–8): "Episode durations, rubric scores and the engine
 and trainer probabilities are hand-picked stand-ins; the arithmetic on them is exact."
@@ -134,19 +133,19 @@ Episode durations for frames 5–6 and the toy (rows 1–8, minutes): `[3, 2, 4,
 |---|---|---|---|---|
 | 1 | Prompt chips `7 × 8 = ?`. Policy `block` at the left, a `block` "sandbox (runs tools)" at the right. Turn 1 chips type in left to right. | A `flow` (carry `token`) carries the `<call> print(7*8) </call>` chips to the sandbox; the sandbox lights; a `flow` returns with `<obs> 56 </obs>`; turn 2 `56` types in (selection outline). | In agentic RL the model acts inside an environment. It writes a tool call, a sandbox runs it, and the result comes back into its context. | 2 policy turns · 1 tool call |
 | 2 | The same 11 chips in one row. The three observation chips take the hatch with the plain label `observation: masked`. Readout `trained 8 of 11`. | The hatch sweeps across the three observation chips; the readout counts. | The sandbox's reply is an observation: the model did not write it, so it is masked out of the loss. Only the model's own 8 tokens will be trained. | 8 policy tokens · 3 observation tokens · trained 8 / 11 |
-| 3 | The group table from `rlvr-grpo`, unchanged (8 rows, 39 tokens, `verdict`s, R and A columns). The episode strip from frame 2 sits above it with the plain label `an agent version of row 1: same final 56`. | The checker stamps ✓/✗ down the rows; R fills; A fills +1.73 / −0.58; a `flow` (carry `gradient`) runs from row 1's A cell up into the episode's 8 policy chips, skipping the hatched observation chips. | Eight episodes for one prompt are scored and compared exactly as on the previous page. The update is still GRPO; what changes is everything around it. | `R = [1, 0, 0, 0, 1, 0, 0, 0]` · `A = +1.73` (rows 1, 5) / `−0.58` · Σ A = 0 |
+| 3 | The group table from `rlvr-grpo`, unchanged (8 rows, 39 tokens, `verdict`s, R and A columns). The episode strip from frame 2 sits above it with the plain label `an agent version of row 1: same final 56`. | The checker stamps ✓/✗ down the rows; R fills; A fills +1.73 / −0.58; a `flow` (carry `gradient`) runs from row 1's A cell up into the episode's 8 policy chips, skipping the hatched observation chips. | Episode or plain answer, each of the eight is scored and compared exactly as on the previous page. The update is still GRPO; everything around it changes. | `R = [1, 0, 0, 0, 1, 0, 0, 0]` · `A = +1.73` (rows 1, 5) / `−0.58` · Σ A = 0 |
 | 4 | Branch label `when nothing can be tested`. A `block` "judge model" writes three plain rubric lines: `cites a source`, `answers the question asked`, `under the length budget`. Two attempt rows with scores `3 / 3` and `1 / 3`. | Rubric lines type in; each attempt row gets a tick per line met; the scores print. | When nothing can be tested, a generative reward model writes a rubric for the task and scores each attempt against it. DeepSeek-V4 uses the policy itself as judge. | rubric 3 items · attempt A `3 / 3` · attempt B `1 / 3` (stand-ins) · visible note: "Kimi K3's judge makes an answer over its length budget lose automatically" |
 | 5 | Back on the main line. A time axis 0–16 min. Eight `request` bars (rows 1–8), lengths 3, 2, 4, 16, 5, 3, 9, 6. A `block` "trainer" at the right, `dim`. Plain label `idle` on the empty space after each bar. | Bars grow left to right together; each one stops at its length and its remaining space greys out as `idle`; the trainer lights only at minute 16. | Synchronous training waits for the slowest episode before it updates. Here one 16-minute episode leaves the other generators idle most of the time. | iteration 16 min · busy 48 of 128 slot-minutes · utilization `48 / (8 × 16) = 37.5%` · idle 80 |
-| 6 | Same axis. A vertical plain mark `cut here: 6 of 8 done` at minute 6. Bars 4 and 7 continue past the cut, each with the plain label `finishes under newer weights`. | The cut line drops at minute 6; the trainer lights there; bars 4 and 7 keep growing past the line into the next iteration. | Asynchronous training updates once most episodes are done; the rest finish under newer weights. Their tokens are off-policy: sampled by a slightly older model than the one being trained. | cut at 6 of 8 (λ = 0.75) · iteration 6 min · busy 35 of 48 · utilization `72.9%` · carried: rows 4 and 7 |
-| 7 | Zoom on row 4's second `48` (selection outline). Two `block`s: `engine (samples)` and `trainer (updates)`, each with a printed `cell`: `0.050` and `0.160`. Readout `ρ = trainer / engine = 3.2`. A plain note: `ρ is not the r of the last page: same weights, different programs.` | The engine cell fills first, then the trainer cell; ρ types in. | Even with identical weights, the sampling engine and the trainer compute different probabilities for the same token. Here the trainer finds this 48 more than three times likelier. | engine `0.050` · trainer `0.160` · `ρ = 3.20` |
-| 8 | **Key frame.** A `clipLine` from 0 to 3.5, band [0.5, 2.0] shaded, label `ρ = trainer / engine`, marker at 3.20. The group table below, with three chips hatched: row 4's second `48` (3.20), row 6's `63` (0.40), row 7's `58` (2.40). Readout `masked 3 of 39`. | The marker lands at 3.20 outside the band; the chip's hatch appears; then the two other out-of-band chips hatch in turn; the readout counts to 3. | An importance-sampling correction reweights each token by that ratio, caps it, or drops it. IcePop, used by GLM-5, masks any token whose two probabilities differ more than twofold. | band `[1/2, 2]` (β = 2) · row 4's `48`: full IS weight `3.20`, truncated at 2 `2.00`, IcePop `masked` · push `−0.58 → −1.85 / −1.15 / 0` · masked 3 of 39 |
-| 9 | The two shelves from `rlvr-grpo` frame 7, left one only: `policy` + `checker` (a program) + `reference` drawn `dim` with the plain label `KL term β = 0: not loaded`. A readout `models in memory 2 → 1`. | The reference block fades from `active` to `dim`; the readout counts down. | Most open 2026 recipes drop the KL term or make it tiny. Clip and IS masks already bound each step, checkers are hard to game, and the reference leaves memory. | `β = 0` (GLM-5, Olmo 3) · "weak or zero for math" (DeepSeek-V3.2) · models in memory 2 → 1 |
-| 10 | Plain text table: `GLM-5: > 10,000 SWE environments, 9 languages` · `DeepSeek-V3.2: 1,827 environments, 4,417 tasks` · `Kimi K3: 9 experts (3 domains × 3 effort levels)` · `Nemotron 3 Super: 21 environments` · `Mistral: ~33B rollout tokens per day on ~3k GPUs`. | The rows type in top to bottom. | Agentic RL is now where most RL compute goes: thousands of sandboxes, long episodes, and separate specialist models. Distillation, next, merges those specialists into one. | as listed (§8) |
+| 6 | Same axis. A vertical plain mark `cut here: 6 of 8 done` at minute 6. Bars 4 and 7 continue past the cut, each with the plain label `finishes under newer weights`. | The cut line drops at minute 6; the trainer lights there; bars 4 and 7 keep growing past the line into the next iteration. | Asynchronous training updates once most episodes are done; the rest finish under newer weights. Their tokens are off-policy: sampled by a slightly older model than the one being trained. | cut at 6 of 8 (λ = 0.75) · iteration 6 min · busy 35 of 48 · utilization `72.9%` · carried: rows 4 and 7 (off-policy: the part of each sampled before the cut) |
+| 7 | Zoom on row 4's second `48` (selection outline). Two `block`s: `engine (samples)` and `trainer (updates)`, each with a printed `cell`: `0.050` and `0.160`. Readout `ρ = trainer / engine = 3.2`. A plain note: `ρ is not the r of the last page: same weights, different programs.` | The engine cell fills first, then the trainer cell; ρ types in. | Even with identical weights, the sampling engine and the trainer compute different probabilities for the same token. Here the trainer finds this 48 more than three times likelier. | engine `0.050` · trainer `0.160` · `ρ = 3.20` · visible note: `most tokens agree within a few percent (34 of 39 here); a few outliers like this one are what the corrections are for` |
+| 8 | **Key frame.** A `clipLine` from 0 to 3.5, band [0.5, 2.0] shaded, label `ρ = trainer / engine`, marker at 3.20, and under the band the plain line `same factor either way: ½ and 2`. Below it, collapsed per README lesson 18: rows 4, 6 and 7 in full with their R and A, three chips hatched (row 4's second `48` 3.20, row 6's `63` 0.40, row 7's `58` 2.40), then one plain line `5 other rows: ρ within [½, 2], unmasked`. Readout `masked 3 of 39`. Layout at 580 × 366: clipLine block 56 px + 3 rows × 34 px + collapsed line 20 px + readout 20 px ≈ 200 px tall; the longest row (row 4, 8 chips + R + A) ≈ 430 px wide. | The marker lands at 3.20 outside the band; the chip's hatch appears; then the two other out-of-band chips hatch in turn; the readout counts to 3. | An importance-sampling correction reweights each token by that ratio, caps it, or drops it. IcePop, used by GLM-5, masks any token whose two probabilities differ more than twofold. | band `[1/2, 2]` (β = 2) · row 4's `48`: full IS weight `3.20`, truncated at 2 `2.00`, IcePop `masked` · push `−0.58 → −1.85 / −1.15 / 0` · masked 3 of 39 |
+| 9 | The two shelves from `rlvr-grpo` frame 7, left one only: `policy` + `checker` (a program) + `reference` drawn `dim` with the plain label `KL term β = 0: not loaded`. A readout `models in memory 2 → 1`. | The reference block fades from `active` to `dim`; the readout counts down. | Most 2026 open-model reports drop the KL term or make it tiny. Clip and IS masks already bound each step, checkers are hard to game, and the reference leaves memory. | `β = 0` (GLM-5, Olmo 3) · "weak or zero for math" (DeepSeek-V3.2) · models in memory 2 → 1 |
+| 10 | Plain text table: `GLM-5: > 10,000 SWE environments, 9 languages` · `DeepSeek-V3.2: 1,827 environments, 4,417 tasks` · `Kimi K3: 9 experts (3 domains: general, general agents, coding agents × low / high / max effort)` · `Nemotron 3 Super: 21 environments` · `Mistral: ~33B tokens produced per day by one run on ~3k GPUs, ~16B of them trainable completion tokens`. | The rows type in top to bottom. | Agentic RL is now where most RL compute goes: thousands of sandboxes, long episodes, and separate specialist models. Distillation, next, merges those specialists into one. | as listed (§8) |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 3 and 8 draw `buildGroup(2)` + `groupAdvantages()` from `math/grpo.js`; frames 5–6 draw
 `rolloutSchedule(durations, { mode })`; frame 8 draws `isCorrection(ρ, { mode })`. Caption counts
-(words/sentences, `rlvr-grpo`'s counter widened to two-digit frames, run 2026-10-07): 26/2, 29/2, 26/2, 28/2, 23/2, 29/2, 28/2, 28/2, 30/2, 25/2.
+(words/sentences, `rlvr-grpo`'s counter widened to two-digit frames, run 2026-10-07): 26/2, 29/2, 27/2, 28/2, 23/2, 29/2, 28/2, 28/2, 30/2, 25/2 (re-run after review: unchanged).
 
 ## 6. Toy
 "Fix the mismatch." The `rlvr-grpo` default group (k = 2), with the sampling engine's and the trainer's
@@ -167,7 +166,7 @@ with precision (DeepSeek's fix for that is Keep Routing)."
 | id | Label | Type | Range / values | Default | Presets |
 |---|---|---|---|---|---|
 | `correction` | How the trainer treats the mismatch | Preset chips | `ignore` (weight 1) / `full IS` (weight ρ) / `truncated IS` (weight min(ρ, 2)) / `IcePop` (mask outside [½, 2]) | `ignore` | the chips are the control |
-| `precision` | Rollout and trainer number format | Toggle | `BF16` / `FP16` (labeled "reported fix") | `BF16` | – |
+| `precision` | Rollout and trainer number format | Toggle | `BF16` / `FP16` (the chip itself reads `FP16: toy model of rounding only (reported fix)`) | `BF16` | – |
 | `lambda` | Update when this share of episodes is done | Preset chips | `all 8 (sync)` / `6 of 8` / `4 of 8` | `all 8` | – |
 
 Selection, not hover: a token is selected by click, tap or arrow keys; default row 4's second `48`. A
@@ -189,7 +188,7 @@ and its push A × weight.
    `correction`: `ignore` → weight 1, push −0.577; `full IS` → weight 3.200, push −1.848; `truncated IS`
    → 2.000, −1.155; `IcePop` → masked, 0, and the readout says 3 of 39 masked. → **Insight: corrections
    trade bias for variance.** Ignoring the gap is biased; full reweighting is unbiased but lets one
-   token push 3.2× as hard; truncation caps it, and IcePop simply drops tokens where engine and trainer
+   token push 3.2× as hard; truncation caps it (at 2 in this toy), and IcePop simply drops tokens where engine and trainer
    disagree more than twofold.
 2. Keep `IcePop` and switch `precision` to FP16. Row 4's ρ falls 3.20 → 1.157, row 7's 2.40 → 1.116, row
    6's 0.40 → 0.892, and the readout drops to 0 of 39 masked. → **Insight: part of the mismatch is
@@ -249,7 +248,7 @@ All keys are proposed for the data-extension pass unless marked existing; entry 
 | Olmo 3: no KL term (with clip-higher, token-level loss, zero-gradient filtering) | `models.olmo-3.rl_patches` (proposed by `rlvr-grpo`, reported) | 02 §4.4 |
 | Mistral Large 4: async RL, ~33B tokens per day (~16B trainable completion tokens) at ~3k GPUs | `models.mistral-large-4.rl_tokens_per_day` = 33e9, `.rl_trainable_tokens_per_day` = 16e9, `.rl_gpus` = 3000 (confirmed, Mistral blog) | 02 §4.7, §6 |
 | MiniMax-M2: dense process rewards (language mixing, tool-format errors) and a completion-time reward; "hundreds of thousands of real-world environments" is marketing for M2.5 | `models.minimax-m2.rl_rewards` = "process + completion-time + task" (confirmed); `.agentic_envs` = "hundreds of thousands (M2.5 marketing)" (reported) | 02 §4.5, §4.6 |
-| Using FP16 instead of BF16 shrinks the rounding mismatch | `papers.fp16-mismatch` (arXiv 2510.26788) (reported) — no model entry | 02 §4.7 |
+| Using FP16 instead of BF16 shrinks the rounding mismatch | `papers.fp16-mismatch-2025` (arXiv 2510.26788) (reported) — no model entry | 02 §4.7 |
 
 ## 9. Takeaways
 1. An agentic episode alternates the model's tokens with sandbox observations; only the model's tokens
@@ -258,7 +257,7 @@ All keys are proposed for the data-extension pass unless marked existing; entry 
 2. Long, uneven episodes force asynchronous training, which makes some data off-policy; and the sampling
    engine and the trainer disagree about token probabilities even with the same weights. Importance-sampling
    corrections (full, truncated, or IcePop's mask) trade a little bias for much less variance.
-3. Most 2026 recipes set the KL term to zero or near it: the clip and IS masks bound each step, checkers are
+3. Most 2026 open-model reports set the KL term to zero or near it: the clip and IS masks bound each step, checkers are
    hard to game, and the reference copy leaves memory. The cost: nothing pulls the policy back if a checker
    has a hole.
 
@@ -276,16 +275,12 @@ reproducer below (ρ 3.20 / 0.40 / 2.40 masked; weights 3.20 / 2.00 / 0; 3 of 39
 ```text
  ρ = trainer / engine
  0.00 ──────[░░░░░░ 0.50 ─ 2.00 ░░]──────────▼3.20── 3.50
-                                              row 4's 48
+             same factor either way: ½ and 2   row 4's 48
                                      R    A
- 1 [7][×][8][=][56]              ✓   1  +1.73
- 2 [7][×][8][=][54]              ✗   0  −0.58
- 3 [7][+][8][=][15]              ✗   0  −0.58
  4 [7][×][8][=][48][,][so][x48]  ✗   0  −0.58
- 5 [7][+][8][=][56]              ✓   1  +1.73
  6 [x63]                         ✗   0  −0.58
  7 [7][×][8][=][x58]             ✗   0  −0.58
- 8 [8][×][8][=][64]              ✗   0  −0.58
+ 5 other rows: ρ within [½, 2], unmasked
  masked 3 of 39   full IS 3.20 · truncated 2.00 · IcePop 0
  [Back] [Pause] [Next]  ━━━━━━━●━━  8 / 10   1×
 ```
@@ -350,20 +345,22 @@ masks exactly ρ < 1/2 or ρ > 2 (the band edges are kept); inputs are never mut
 `deepseek-v4-pro.reward_model` · `kimi-k3.rl_experts` = 9, `kimi-k3.rl_rollouts`, `kimi-k3.reward_model` ·
 `nemotron-3-super.swe_rl_stage` · `mistral-large-4.rl_tokens_per_day` = 33e9,
 `.rl_trainable_tokens_per_day` = 16e9, `.rl_gpus` = 3000 · `minimax-m2.rl_rewards`,
-`minimax-m2.agentic_envs` (reported) · a non-model fact `papers.fp16-mismatch` (arXiv 2510.26788,
-reported): the data files have no place for a paper-level fact yet; propose either a `data/papers.json` or
-keeping the FP16 line as a sourced note on the page.
+`minimax-m2.agentic_envs` (reported) · a non-model fact `papers.fp16-mismatch-2025` (arXiv 2510.26788,
+reported), in `data/papers.json` (ruled).
 
 **Graph changes:** none.
 
 **Judgment calls:**
-- **`request` reused as an episode timeline** (§4). Accept, or propose a `rollout` glyph with the same
-  drawing.
+- **`request` reused as an episode timeline** (§4): accepted (expert review), no alias.
 - **The FP16 ×8 model.** It is a first-principles toy (unit roundoff 2⁻¹¹ vs 2⁻⁸, owned by `gpu-primer`), not a measurement; the
-  page says so visibly. The brief's FP16 fix is REPORTED. If the reviewer prefers, the `precision` toggle
-  can be dropped and try-this 2 removed; the two patches remain demonstrated by frames 8–9 and try-this 1.
+  page says so visibly, on the chip itself. The brief's FP16 fix is REPORTED. Accepted (expert review).
 - **Episode durations attached to `rlvr-grpo`'s answer rows.** A one-token answer `63` "taking 3 minutes"
-  is a stand-in; the stage line says so. The alternative is a separate set of eight agent episodes, which
-  would break the handoff the dispatch asked for.
+  is a stand-in; the stage line says so. Accepted (expert review).
 - **Frame 4 is a branch** (judges for untestable tasks) inside the "how episodes are scored" thread; it is
   labeled as a branch on screen and frame 5 returns to the main line.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §7 (change log: `fix-recipe-review.md`):
+- Must 1: frame 8 collapsed per README lesson 18 (rows 4, 6, 7 in full plus `5 other rows: ρ within [½, 2], unmasked`), with a 580 × 366 layout check; §11 sketch redrawn to match.
+- Should: `same factor either way: ½ and 2` printed under the linear band (lesson 21); truncated IS "caps the weight (at 2 in this toy)"; "most 2026 open-model reports" in §1, §3, frame 9 and takeaway 3; frame 7 note "most tokens agree within a few percent (34 of 39 here)"; frame 6 numbers say only the part sampled before the cut is off-policy; the FP16 chip itself reads "toy model of rounding only"; §3 ¶4 dated "in 2026".
+- Nice (declined in part): frame 10 prints Kimi K3's actual domains (general, general agents, coding agents) × low / high / max, not the track's illustrative `math & code · agents · chat`, because brief 02 §4.6 names K3's three domains and relabeling them would misstate the report.

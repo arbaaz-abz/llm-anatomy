@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: pretraining
 Next: `rlhf-dpo` (the one slug whose `prereqs` list `sft`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §3 (all bullets), §4.3 (R1 cold start), §4.6 (observations excluded from the loss), §5 step 3,
 §7 (SFT loss masking and chat-template rows) · 05 §1.1, §1.2
 
@@ -25,7 +25,7 @@ needs.
 - **Misconception:** "The model learns from the whole conversation." → **Reality:** the loss counts
   only the assistant's tokens. The user's words and the template tags are context, not targets: here 15 of
   26 tokens are trained. Train on all 26 and the model also learns to write the user's side. Corrected by
-  frames 4–5 and try-this 1. (source: 02 §3 "standard SFT computes loss only on assistant tokens")
+  frames 4 and 6 and try-this 1. (source: 02 §3 "standard SFT computes loss only on assistant tokens")
 - **Misconception:** "Showing a mistake in training data teaches the model to make it." → **Reality:**
   only if the mistake is trained. GLM-5 keeps erroneous segments in its agent traces but masks them out of
   the loss, so the model reads the error and the recovery but is only trained to produce the recovery: 15 →
@@ -49,7 +49,8 @@ text. Supervised fine-tuning (SFT) shows it what the next part of a *conversatio
 example is wrapped in a **chat template**: special tokens that mark who is speaking (system, user,
 assistant, tool), so the model can tell a question it was asked from an answer it should write. Reasoning
 models add a `<think>` … `</think>` block before the answer. These are ordinary tokens; the model learns to
-use them because every example does.
+use them because every example does. The knowledge is already in the weights; SFT only has to teach the
+shape of a conversation, which takes far fewer examples than learning the world did.
 
 The loss is the same next-token cross-entropy as in pretraining, with one change: a **loss mask**. Only the
 assistant's tokens count. The prompt, the template tags and anything a tool returned are there as context
@@ -60,7 +61,7 @@ trained to make the error.
 
 The data is the hard part. In 2026 it comes from earlier specialist models, from rejection sampling (keep
 only the samples that pass a check), and from runs in real tool environments, often with long reasoning
-traces. DeepSeek-R1 used about 800K examples; Olmo 3 about 2.3 million reasoning traces. The result is a
+traces. DeepSeek-R1 (2025) used about 800K examples; Olmo 3 about 2.3 million reasoning traces (reported). The result is a
 model that answers in the right format and sometimes reasons its way to the right answer. That "sometimes"
 is the point: it is the **cold start** that RL needs, because RL can only reinforce what the model already
 occasionally does. The cost is that SFT only imitates: it is bounded by its data, and wrong traces that are
@@ -82,7 +83,8 @@ Encoding: "trained vs masked" is encoded once, by the hatch (masked) vs plain (t
 used for it. The followed token is the final `56` (selection outline in frames 3–9).
 
 Terms introduced (one per frame): base model (assumed, recalled in 1) · chat template (2) · `<think>` tags
-(3) · loss mask (4) · none new (5) · tool call and observation (6) · masked error segment (7) · rejection
+(3) · loss mask (4) · tool call (5; the reply is named "observation" in its label only, defined on
+`agentic-rl`) · none new (6) · masked error segment (7) · rejection
 sampling (8) · cold start (9).
 Terms assumed from prereqs: next-token cross-entropy, token, vocabulary (`pretraining`); the six pipeline
 stages (`training-pipeline`).
@@ -102,17 +104,17 @@ Thread order: frames 1–3 the format; 4–7 the loss mask; 8–9 where the data
 | 1 | A `block` "base model". Prompt chips `What is 7 × 8 ?`. The model's continuation types in: `What is 9 × 6 ? What is 4 × 7 ?` (plain label `illustrative`). | The continuation chips appear left to right. | A pretrained base model only continues text. Asked a question, it may write more questions, because worksheets full of questions are common text. | – |
 | 2 | The prompt again, now wrapped: `<user>` before it and `<assistant>` after it, both `dim` chips. Role labels `user` and `assistant` at the line starts. | The two tag chips slide in from the sides. | A chat template wraps each turn in special tokens that mark who is speaking. The model can now tell a question it was asked from an answer it should write. | 2 template tokens |
 | 3 | The assistant line fills: `<think> 7 × 8 = 54 wait , check </think> … 56 <end>` (tool chips shown dim for now). | Chips type in; the `<think>` and `</think>` chips briefly lift. | Reasoning models put their working between think tags before the answer. The tags are ordinary tokens; the model uses them because every example does. | – |
-| 4 | The whole transcript (5 lines). The 8 template and user chips take the hatch, with the plain label `context only`. | The hatch sweeps over `<user> What is 7 × 8 ? <assistant>`. | A loss mask decides which tokens are targets. The prompt and the template tags are context only, never targets. | masked 8 (template 2, user 6) |
-| 5 | Same transcript; the trained chips are plain. A readout `trained 15 of 26` and a plain line `same loss as pretraining, on these tokens only`. | The readout counts up chip by chip over the unhatched tokens. | The loss is the same next-token cross-entropy as pretraining, counted only on the assistant's tokens. | trained 15 · masked 11 · 15 / 26 = 57.7% |
-| 6 | The tool lane: `<call> calc(7*8) </call>` flows to a `block` "tool"; `<obs> 56 </obs>` flows back and takes the hatch, with the plain label `tool output: masked`. | `flow` (carry `token`) out and back; the observation chips hatch. | The model's tool call is trained. The tool's reply is masked, so the model learns to call tools without learning to invent their results. | call 3 tokens trained · observation 3 masked (already counted in the 11) |
+| 4 | The whole transcript (5 lines). The 8 template and user chips take the hatch, with the plain label `context only`, and a visible line: `opening role tags are masked; the assistant's own <end> is trained`. | The hatch sweeps over `<user> What is 7 × 8 ? <assistant>`. | A loss mask decides which tokens are targets. The prompt and the template tags are context only, never targets. | masked 8 (template 2, user 6) |
+| 5 | The tool lane: `<call> calc(7*8) </call>` flows to a `block` "tool"; `<obs> 56 </obs>` flows back and takes the hatch, with the plain label `the tool's reply (an observation, agentic-rl): masked`. | `flow` (carry `token`) out and back; the observation chips hatch. | The model's tool call is trained. The tool's reply is masked, so the model learns to call tools without learning to invent their results. | call 3 tokens trained · reply 3 masked · masked so far 8 + 3 = 11 |
+| 6 | Same transcript; the trained chips are plain, 11 chips hatched. A readout `trained 15 of 26` and a plain line `same loss as pretraining, on these tokens only`. | The readout counts up chip by chip over the unhatched tokens. | The loss is the same next-token cross-entropy as pretraining, counted only on the assistant's tokens. | trained 15 · masked 11 · 15 / 26 = 57.7% |
 | 7 | The error segment `7 × 8 = 54` (5 chips) highlighted with the plain label `mistake kept in the text`. Readout changes `trained 15 → 10`. | The five chips take the hatch; the readout counts down. | GLM-5 keeps mistakes in its agent traces but masks them. The model reads the error and the recovery, and is trained only on the recovery. | trained 10 of 26 = 38.5% · masked 16 |
-| 8 | A `block` "earlier specialist" producing 4 candidate traces; a checker stamps ✓ (`verdict`) on two and ✗ on two; only the ✓ traces flow into a pile labeled `SFT data`. | Traces appear; verdicts stamp; the ✗ traces fade. | Most 2026 SFT data comes from other models. Rejection sampling keeps only the traces that pass a check, often on problems the previous model found hard. | 2 of 4 kept (illustrative) · DeepSeek-R1 ~800K examples · Olmo 3 ~2.3M traces (reported) |
+| 8 | A `block` "earlier specialist" producing 4 candidate traces; a checker stamps ✓ (`verdict`) on two and ✗ on two; only the ✓ traces flow into a pile labeled `SFT data`. | Traces appear; verdicts stamp; the ✗ traces fade. | Most 2026 SFT data in the open reports comes from other models. Rejection sampling keeps only the traces that pass a check, often on problems the previous model found hard. | 2 of 4 kept (illustrative) · DeepSeek-R1 ~800K examples · Olmo 3 ~2.3M traces (reported) |
 | 9 | **Key frame.** The SFT model `block` with the transcript beside it, followed `56` outlined; an arrow (`flow`, carry `token`) to a dim pipeline strip where the `RL` stage lights. A plain line: `sometimes right → RL has something to reinforce`. | The arrow draws; the RL stage lights. | SFT gives RL its cold start: a model that answers in format and sometimes reasons its way to the right answer. RL can only reinforce what it already does sometimes. | – (the k = 0 case of `rlvr-grpo` frame 6: no right answers, no signal) |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 4–7 draw `lossMask` / `maskSummary` (`math/sft.js`) on the transcript above.
-Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 23/2, 30/2, 24/2, 19/2, 15/1,
-24/2, 25/2, 26/2, 30/2.
+Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 23/2, 30/2, 24/2, 19/2, 24/2,
+15/1, 25/2, 30/2, 30/2 (re-run after review, frames 5 and 6 swapped).
 
 ## 6. Toy
 "Which tokens teach?" The 26-token transcript with three mask switches and live counts. A visible line
@@ -124,7 +126,7 @@ under the toy: "Tags are generic stand-ins; each lab's template differs."
 | `maskPrompt` | Mask the prompt and template tags | Toggle | on / off | on | – |
 | `maskObservation` | Mask the tool's reply | Toggle | on / off | on | – |
 | `maskError` | Mask the mistake in the trace (GLM-5) | Toggle | on / off | off | – |
-| `template` | Show the template as | Preset chips | `generic` / `DeepSeek-V4 <think>` / `gpt-oss harmony roles` | `generic` | label-only: changes the tag text, never the counts |
+| `template` | Show the template as | Preset chips | `generic` / `DeepSeek-V4 <think>` / `gpt-oss harmony roles` | `generic` | label-only: changes the tag text, never the counts; the chips print `(counts unchanged)` |
 
 Selection: tapping or arrow-keying to a chip shows, in a visible panel under the transcript, its segment
 kind and whether it is trained; nothing is hover-only.
@@ -175,7 +177,7 @@ All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-gr
 | GLM-5 retains erroneous segments in agent trajectories but masks them out of the loss; environment/tool outputs are excluded from the loss | `models.glm-5.sft_masking` = "erroneous segments masked; tool outputs excluded" (confirmed) | 02 §3 |
 | Kimi K3: "SFT stage establishes a high-quality cold-start policy for the subsequent RL stage"; trajectories from earlier Kimi specialists plus multi-stage verification and human annotation | `models.kimi-k3.sft_data` (confirmed) | 02 §3 |
 | GLM-5 builds SFT data by rejection sampling, filtering to problems its previous model finds hard | `models.glm-5.sft_data` = "rejection sampling on hard problems" (confirmed) | 02 §3 |
-| DeepSeek-R1 (2025): ~800K SFT samples (600K reasoning + 200K non-reasoning) | `models.deepseek-r1.sft_samples` = 800000 (`[BG]`, arXiv 2501.12948; proposed by `distillation`) | 02 §3 |
+| DeepSeek-R1 (2025): ~800K SFT samples (≈600K reasoning + ≈200K non-reasoning; 804,745 in Table 5) | `models.deepseek-r1.sft_samples` = 800000 (confirmed by the expert reviewer, arXiv 2501.12948; proposed by `distillation`) | 02 §3 |
 | Olmo 3: ~2.3M reasoning traces distilled from QwQ-32B and DeepSeek-R1 | `models.olmo-3.sft_traces` = 2.3e6 (reported; proposed by `distillation`) | 02 §3 |
 | Thinking modes: DeepSeek-V4 Non-think / Think High / Think Max; Kimi K3 low / high / max; gpt-oss low / medium / high | `models.deepseek-v4-pro.thinking_modes`, `models.kimi-k3.thinking_modes`, `models.gpt-oss-120b.thinking_modes` (confirmed) | 02 §3 |
 | DeepSeek-V3.2 uses a cold start to merge reasoning with tool use ("thinking in tool-use"); Qwen3: long-CoT cold start → reasoning RL → thinking-mode fusion → general RL | `models.deepseek-v3.2.sft_cold_start` (confirmed); `models.qwen3.post_training` (reported) | 02 §3 |
@@ -261,8 +263,8 @@ decreases `trained`; inputs are not mutated.
 `distillation`.
 
 **Graph changes:**
-- Curriculum order puts `midtraining` before `sft`, but `sft` lists only `pretraining`. That is fine: SFT
-  does not depend on context extension. No change proposed (see `midtraining` §12 for the leaf question).
+- Ruling (main session, 2026-10-07): `sft` does not list `midtraining`; SFT uses nothing that page
+  introduces.
 
 **Judgment calls:**
 - **Frame 1's base-model continuation** is illustrative, labeled as such, and not from a brief; the claim it
@@ -271,3 +273,10 @@ decreases `trained`; inputs are not mutated.
   chips switch only the tag text to the documented DeepSeek-V4 and gpt-oss forms, never the counts.
 - **Template tags counted as masked.** Some recipes train the closing end-of-turn token; this page trains
   `<end>` (it is the assistant's) and masks the opening role tags.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §5 (change log: `fix-recipe-review.md`). No Must items.
+- Should: frames 5 and 6 swapped (prompt mask → tool reply mask → the count), so frame 6's "masked 11" matches the 11 hatched chips; frame 5's term is "tool call" and the reply is named "observation" in its label only; §3 says why few examples suffice (the knowledge is already in the weights); DeepSeek-R1 dated (2025) and Olmo 3 tagged (reported); frame 8 scoped to "the open reports".
+- Accepted rulings applied: frame 4 carries a visible line on which tags are masked (`<end>` trained).
+- Nice: the template chips print "(counts unchanged)".
+- Ruling recorded: `sft` does not list `midtraining` (main session, 2026-10-07).

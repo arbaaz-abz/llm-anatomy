@@ -87,7 +87,7 @@ again for the next one. With a causal mask, earlier positions' keys and values d
 models keep them in a **KV cache** and read them rather than recompute them.
 
 The price of this picture, which the rest of the course is about: each generated token multiplies by
-roughly all the *active* parameters (so active parameters set compute), carries the whole residual
+roughly all the *active* parameters in one forward pass (so active parameters set compute), carries the whole residual
 stream through N blocks one after another (depth means N steps in sequence, which sets a floor on
 latency), and reads the KV cache of every earlier position (so context length sets memory traffic).
 That is why 2026 models shrink active parameters with experts and shrink the cache with new attention
@@ -156,7 +156,8 @@ own container):
 - Frame 8: a `vector` row of **five** cells at `NUMBER_CELL` (README lesson 18: 16 cells would need
   about 690 px): on · "." · and · the · one collapsed cell labeled "12 others". Scores first (maxAbs 2),
   then the same five cells as probabilities (maxAbs 0.4); the collapsed cell prints "−1.0 each" then
-  "0.019 each".
+  "0.019 each". A visible line between the two states (README lesson 21): "same five words; scores can
+  be any size, probabilities add to 1", because the two rows use different color scales.
 - Frame 9: `kvStack` per block (count 4 → 5, `highlight: [4]`) beside the stack; the new `token`
   chip "on₅" joins the top row.
 - Stage budget check (reviewer's Should): frame 2 holds E as a 16-row `matrix` at 18 px cells (288 px
@@ -187,14 +188,27 @@ other page):
   text, never encoded by stack height. Depicts "this block repeated N times with a residual lane through
   all of them". Reused by `kv-cache` (one cache per block), `parallelism` (pipeline stages),
   `model-card` (layers field). Accepted.
-- `shareBar(parent, { x, y, w, h = 14, parts: [{ name, value, hue, unknown = false }], format })`: a
-  categorical stacked bar with a legend and the percentage printed in or under each segment (segment
-  length plus the printed percentage is a required label, not double encoding). Accepted with three
-  conditions: (a) the parts table has eight parts and the bar five hues plus one neutral; the mapping is
+- `shareBar(parent, { x, y, w, h = 14, parts: [{ name, value, hue, unknown = false }], format,
+  minSegment = 18, tail = 'zoom' })`: a categorical stacked bar with a legend and the percentage printed
+  in or under each segment (segment length plus the printed percentage is a required label, not double
+  encoding). Printable segments (README lesson 19): any part narrower than `minSegment` px on the main
+  bar is folded into one "others" segment, and with `tail = 'zoom'` a second bar underneath, joined to
+  "others" by a bracket, redraws the folded parts at a zoomed scale with its own printed percentages
+  (so the learner can still follow attention's 0.82% in gpt-oss-120b). `unknown` parts are not on the
+  scale at all: they are drawn as a neutral segment of fixed width (24 px) to the right of the bar with
+  the printed label "not published". Widths at the toy's 300 px bar (`node -e`, 2026-10-07; parts
+  grouped as mapped below): toy, embedding 24.4 · attention 97.5 · MLP 146.2 · other 7.6 · head 24.4
+  px, so only "other" (2.54%) folds; GPT-3, embedding 1.1 · attention 99.6 · MLP 199.3 px, so
+  embedding + other (0.37%) fold; gpt-oss-120b, MLP 294.5 px and everything else 0.0–2.5 px, so
+  embedding + attention + other + head (1.82%) fold into "others" and the zoomed bar shows attention
+  0.82 · head 0.50 · embedding 0.50 · other 0.01%; DeepSeek-V3 likewise (tail 1.99%: attention 1.70 ·
+  embedding 0.14 · head 0.14 · other 0.02%). Accepted with three conditions: (a) the parts table has
+  eight parts and the bar five hues plus one neutral; the mapping is
   `--part-1` embedding + positional · `--part-2` attention · `--part-3` MLP + experts (DeepSeek-V3 has
   both; they split only if a sixth hue passes the contrast check) · `--part-4` router + norms, labeled
-  "other" · `--part-5` head · `unknown` segments use a neutral `--line`-tone fill with the printed label
-  "not published" (never hatch: hatch means "excluded / doesn't count" everywhere else in the library);
+  "other" · `--part-5` head · `unknown` segments use a neutral `--line`-tone fill at the fixed width
+  above with the printed label "not published" (never hatch: hatch means "excluded / doesn't count"
+  everywhere in the course, lesson 24);
   (b) `--part-1 … 5` are defined in both themes and run through the colorblind and contrast check, and
   are distinct from `--req-1 … 4` (request identity); (c) `memBar` is rebuilt as a thin wrapper over
   `shareBar`'s internals (one stacked-bar implementation) with its API unchanged. Reused by
@@ -230,7 +244,7 @@ footnote) · 4 → `attention`, `rope` · 5 → `decoder-recap` · 6 → `moe` �
 | 6 | **Branch, labeled on screen "in most 2026 models".** The MLP block swaps for a `block` "router" and eight small `block`s "E1 … E8" (each hidden 8); E3 and E6 `active`, the rest idle. A two-line text readout: "total: 8 × 192 = 1,536 · active: 2 × 192 = 384, the same as the dense MLP". | The MLP block splits into eight; a `flow` dot from the router lands on E3 then E6; the readout counts up. | In most 2026 models the MLP is a Mixture of Experts: a router sends each row to 2 of 8 small MLPs. All 8 count as total, 2 as active. | 8 experts × 192 = 1,536 · top-2 → 384 active (= one dense MLP of 384) · router 8 × 8 = 64 · visible note: "DeepSeek-V4-Pro (2026): 384 routed experts, 6 used per token" |
 | 7 | **Key frame.** The branch closes: the dense MLP block is visibly back, labeled "dense MLP restored". The row docks back; the whole stream passes block 1, then an identical block 2 appears below it; the `blockStack` collapses the middle to "⋮ × N". Above: the four chips and E; below: a dim "final norm" and "unembedding" waiting. Under the stage, page text: "N on a model card: toy 2 · GPT-3 (2020) 96 · gpt-oss-120b (2025) 36 · DeepSeek-V4-Pro (2026) 61 · Kimi K3 (2026) 93" and the visible note "Real stacks mix a few block types: dense and MoE, full and sliding-window or linear attention (`decoder-recap`, `long-context-attention`)." | The MLP block fades back in; block 2 slides in under block 1; the stack folds to "× N"; the table's numbers type in. | A model is this block repeated N times, each with its own weights: talk, think, talk, think. "Layers: 61" on a model card counts these blocks. | N = 2 here · 96 · 36 · 61 · 93 · parameters per block (toy, dense): 256 + 384 + 16 = 656 |
 | 8 | The last row ("down", selection outline) after block 2 lifts out → `norm` → `block` "unembedding W_U [8 × 16]" → a row `vector` of five cells labeled on · "." · and · the · "12 others", scores first, then the same five cells as probabilities. | The row passes norm and W_U; the five score cells fill (the collapsed cell prints "−1.0 each"); then the colors and numbers interpolate from scores to probabilities (collapsed cell "0.019 each") and a "Σ = 1.000" text readout appears. | After the last block, the last row is normalized and multiplied by the unembedding matrix: one score per vocabulary word. Softmax turns the 16 scores into probabilities: "on" 39%. | scores: on 2.0 · "." 1.5 · and 0.5 · the 0.0 · 12 others −1.0 each · probabilities: on 0.390 · "." 0.237 · and 0.087 · the 0.053 · 12 others 0.019 each (together 0.233) · Σ = 1.000 · W_U = 16 × 8 = 128 params |
-| 9 | The "on" probability cell gets the selection outline; a `token` chip "on₅" slides up to join the four chips; the stream gains a fifth row; beside each block a `kvStack` with 4 tiles grows to 5 (`highlight: [4]`). A `flow` from the chips back to the top of the stream closes the loop. A visible note under the stacks. | The chip travels up; row 5 appends; one K and one V tile per block appear; the loop arrow draws. | Pick a token, append it, run again. Only the new row is computed; the earlier rows' keys and values were stored in the KV cache and are read, not recomputed. | 4 → 5 positions · KV tiles per block: 5 K + 5 V · visible note: "per position, GPT-3 (2020, at 2 bytes per number) stored 4.5 MiB; DeepSeek-V3 (2024) about 69 KiB, derived from its config; 2026 designs go to a few KB: `kv-cache`. Sliding-window and linear-attention layers store less: `long-context-attention`" |
+| 9 | The "on" probability cell gets the selection outline; a `token` chip "on₅" slides up to join the four chips; the stream gains a fifth row; beside each block a `kvStack` with 4 tiles grows to 5 (`highlight: [4]`). A `flow` from the chips back to the top of the stream closes the loop. A visible note under the stacks. | The chip travels up; row 5 appends; one K and one V tile per block appear; the loop arrow draws. | Pick a token, append it, run again. Only the new row is computed; the earlier rows' keys and values were stored in the KV cache and are read, not recomputed. | 4 → 5 positions · KV tiles per block: 5 K + 5 V · visible note: "per position, GPT-3 (2020, at 2 bytes per number) stored 4,718,592 B ≈ 4.72 MB; DeepSeek-V3 (2024) 70,272 B ≈ 70.3 kB, derived from its config; 2026 designs go to a few kB: `kv-cache`. Sliding-window and linear-attention layers store less: `long-context-attention`" |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. The stream matrix keeps its position from frame 3 to frame 9; the block lane keeps its position
@@ -265,19 +279,22 @@ counts match the animation's 656-per-block readout, and one chip jumps to a real
 | `experts` | Routed experts (top-2, each half the dense hidden) | Slider (snapped, `values`) | [0 (dense MLP), 2, 4, 8, 16] | 0 | chips "dense" (0) and "8, like the animation" |
 
 Fixed toy constants shown beside the controls: vocabulary 16, 2 heads, SwiGLU, RMSNorm, no biases,
-untied embedding and unembedding. For real presets a one-line spec sheet replaces this (vocab, d_model,
+untied embedding and unembedding. Slider validity (README lesson 22): every stop is a legal dense or
+MoE decoder; the one edge is `experts = 2` with top-2, where every expert is active, and the readout
+says so ("2 of 2 experts used: this is a dense MLP with a router"). Percentages are computed with
+`sharePct(part, whole)` from `math/memory.js` (course settlement), never re-implemented here. For real presets a one-line spec sheet replaces this (vocab, d_model,
 heads, experts, top-k, dense layers).
 
 **Live outputs** (one state object, one `render()`; every number tabular mono)
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
 | Parts table: embedding · positional · attention · MLP (dense) · experts · router · norms · head, with two columns: % of total and % of active | `paramBreakdown(config).parts`, `.share`, `.activeShare` | count (toy: exact integers; real: 3 significant figures, `formatCount`) and two percentages |
-| `shareBar` of the same parts (hue mapping in §4) | `.share` | percentages printed in segments; the partial preset shows a neutral "not published" segment from `partialBreakdown` |
+| `shareBar` of the same parts (hue mapping and the ≥ 18 px rule in §4) | `.share` via `sharePct` | percentages printed in segments; parts under 18 px fold into "others" with a bracketed zoomed tail bar (real presets: everything but the MLP/experts); the partial preset shows a fixed-width neutral "not published" segment off the scale, from `partialBreakdown` |
 | Total | `.total` | count |
 | Active, with the one convention printed under it (README lesson 16): "Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.) Counting the lookup too gives N; labs differ: Mistral quotes 49B and 52B." | `.active`, `.activeWithEmbedding` (both always visible) | count and `active / total` as % |
 | Printed beside the toy readout the first time (README lesson 12): "Active 1,448 of 1,576: active leaves out the 128-parameter embedding table." | `.parts.embedding` | text |
 | Per-block line | `.perLayer` | "attention 256 · MLP 384 (or expert 192 × 8) · norms 16" |
-| Published total / active (real presets) and the gap | `models.json` entry + `publishedGap(computed, published)` | "computed 116.83B vs published 116.8B (+0.02%)" |
+| Published total / active (real presets) and the gap | `models.json` entry + `publishedGap(computed, published)` | "computed 116.83B vs published 116.8B (+0.02%)"; the partial V4-Pro preset prints its published 1.6T / 49B back exactly, since its remainder is by subtraction (README lesson 27) |
 | "Check my work" box (toy) | templated from `.parts` and `.perLayer` | mono, `aria-live="polite"` |
 
 The "Check my work" box for the default state (this exact text appears on the page):
@@ -443,7 +460,7 @@ show("gpt3",{V:50257,d:12288,L:96,gqa:[96,96,128],k:"gelu",h:49152,ln:1,pos:2048
 show("gptoss",{V:201088,d:2880,L:36,gqa:[64,8,64],k:"swiglu",h:2880,b:1,moe:{n:128,s:0,k:4,h:2880,dense:0}});
 show("dsv3",{V:129280,d:7168,L:61,mla:[128,1536,512,128,64,128],k:"swiglu",h:18432,moe:{n:256,s:1,k:8,h:2048,dense:3}});
 const e=3*7168*3072;console.log("v4 experts",385*61*e,385*61*e/1.6e12,"active",7*61*e,7*61*e/49e9);
-console.log("k3 emb+head",2*160000*7168,2*160000*7168/2.78e12,"dsv3 kv B/pos",61*576*2,(61*576*2/1024).toFixed(1));
+console.log("k3 emb+head",2*160000*7168,2*160000*7168/2.78e12,"dsv3 kv B/pos",61*576*2,(61*576*2/1e3).toFixed(1)+" kB","gpt3 kv B/pos",2*96*96*128*2,(2*96*96*128*2/1e6).toFixed(2)+" MB");
 console.log("ratios",1.6e12/49e9,2.78e12/104.2e9,2.4e12/95e9,753e9/40e9,428e9/23e9,116.8e9/5.1e9,1.05e12/49e9);
 const rms=v=>Math.sqrt(v.reduce((s,x)=>s+x*x,0)/v.length);const x=[0,1,.5,0,-.5,1,0,.5],a=[.25,.5,-.25,.5,0,-.5,.25,0],m=[0,.25,0,-.5,.5,0,-.25,.25];
 const x1=x.map((v,i)=>v+a[i]),x2=x1.map((v,i)=>v+m[i]);console.log(rms(x).toFixed(3),x1.join(","),rms(x1).toFixed(3),x2.join(","));
@@ -455,7 +472,7 @@ Output on 2026-10-07 (after the expert review): toy 1576 / 1448 / 1576, parts {1
 router 128, expert 192; moe16 7208 / 1704 / 1832; gpt3 174604259328 / 174604259328 (tied); gptoss
 116829149760 / 5132842560 / 5711976000; dsv3 671026404352 / 36625603584 / 37552282624; v4 experts
 1551425863680 (0.9696), active 28207742976 (0.5757); k3 2293760000 (0.000825); dsv3 KV 70272 B =
-68.6 KiB per position; active/total ratios 32.65 (V4-Pro), 26.68 (K3), 25.26 (Qwen3.8), 18.83
+70.3 kB per position, gpt3 KV 4718592 B = 4.72 MB (catch-up pass: decimal units); active/total ratios 32.65 (V4-Pro), 26.68 (K3), 25.26 (Qwen3.8), 18.83
 (GLM-5.3), 18.61 (M3), 22.90 (gpt-oss), 21.43 (Mistral L4); rms 0.586, x′ = 0.25,1.5,0.25,0.5,−0.5,
 0.5,0.25,0.5, rms(x′) 0.656, x″ = 0.25,1.75,0.25,0,0,0.5,0,0.75; Σe^z = 18.93, p(on) 0.390, p(.)
 0.237, p(and) 0.087, p(the) 0.053, others 0.019 each, 12 others together 0.233, five-cell sum 1.000.
@@ -514,6 +531,9 @@ MLP is a Mixture of Experts (so total and active parameters differ by 19–33×)
 per position than GPT-3 did, some take images into the same stream, and the stack is 36–93 blocks deep.
 The dense models in the table, GPT-3 (2020) and Llama 3.1 405B (2024), are the baseline." (The ratios
 are computed from the table's entries: 18.6× MiniMax-M3 to 32.7× DeepSeek-V4-Pro; see the reproducer.)
+One basis for every ratio on the page (README lesson 25): active = parameters multiplied in one
+forward pass of one token, total = parameters stored; the line "total ÷ active, counted per forward
+pass" sits once above the table.
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
@@ -528,7 +548,7 @@ are computed from the table's entries: 18.6× MiniMax-M3 to 32.7× DeepSeek-V4-P
 | Mistral Large 4: 1.05T / 49B routed-active, 52B including embeddings: labs differ on whether the embedding counts as active | `models.mistral-large-4.total_params`, `.active_params` (+ its `note`) (existing, confirmed) | 01 §5 table; §7 verdicts |
 | Llama 3.1 405B (2024): dense, so every block parameter is used for every token; a dense baseline on the shares bar with GPT-3 | `models.llama-3.1-405b.total_params` (existing entry, confirmed; renamed from `llama-3-405b` in the data pass per lesson 8) | 01 §7 (background) |
 | 2026 norm: about 3–5% of parameters active per token (the table's entries run 3.1–5.4%), down from 9–28% in 2023–25 (Mixtral 8x7B, Dec 2023, was 28%; Qwen3-235B, 2025, 9%) | derived on the page from the `active_params / total_params` of the entries above (no new key) | 01 §5 "Active ratios" |
-| KV per position: GPT-3 (2020, at 2 bytes per number) 4.5 MiB → DeepSeek-V3 (2024) 70,272 B, about 69 KiB, derived from its confirmed config (61 × 576 × 2); "2026 designs go to a few KB: `kv-cache`" (frame 9's visible note) | `models.gpt-3.kv_bytes_per_token` (proposed, 4,718,592), `models.deepseek-v3.kv_bytes_per_token` (proposed, 70,272, derived; same entry as `paged-attention` uses) | 01 §4 table |
+| KV per position: GPT-3 (2020, at 2 bytes per number) 4,718,592 B ≈ 4.72 MB → DeepSeek-V3 (2024) 70,272 B ≈ 70.3 kB, derived from its confirmed config (61 × 576 × 2, `kvBytesPerTokenMla` in `math/memory.js`); "2026 designs go to a few kB: `kv-cache`" (frame 9's visible note; decimal SI units, exact bytes printed, per the course settlement) | `models.gpt-3.kv_bytes_per_token` (proposed, 4,718,592), `models.deepseek-v3.kv_bytes_per_token` (proposed, 70,272, derived; same entry as `paged-attention` uses) | 01 §4 table |
 | Patch size 14 × 14 pixels; Kimi K3's vision encoder is 27 layers / 401M parameters (frames 1–2 notes) | `models.kimi-k3.patch_size` = 14, `.vision_encoder_params` = 401e6, `.vision_encoder_layers` = 27; `models.minimax-m3.patch_size` = 14 (proposed; sources arXiv 2607.24653 and the M3 HF config) | 01 §6 mechanics and encoder sizes [C] |
 
 Rendered with `renderFact` so each row carries its source link and a "reported" chip where the data
@@ -597,72 +617,44 @@ the builder may instead shrink the stream to 18 px cells in frames 7 and 9 (its 
 frames 3–5 and are not load-bearing here). At 400px the stack scrolls inside its own container; the
 table and note stay under it as page text.
 
-## 12. Open questions for the reviewer (with the expert review's rulings, 2026-10-07)
-1. **Graph edges.** `shared/concepts.json` now has the entry with `decoder-recap` and `attention` as
-   dependents, which the header matches. Frames 2, 6, 8 and 9 hand off to `multimodal`, `moe`,
-   `sampling` and `kv-cache`, which do not list this page as a prerequisite (they list `attention` or
-   `decoder-recap`, both of which do). Fine as transitive edges, or should `multimodal` and `moe` add
-   it directly? Not edited here. → **Ruling:** transitive edges are fine; no edits.
-2. **Spec presets vs computable presets.** The spec names GPT-3 / DeepSeek-V4 / Kimi K3. Only GPT-3 is
-   fully computable from published numbers; V4-Pro's attention/embedding/dense-layer split and K3's
-   expert width are not in the brief, so both render as "published total + derivable segments +
-   remainder". I added gpt-oss-120b (the verified check, +0.02%) and DeepSeek-V3 (0.00%, MLA +
-   shared expert + dense layers, the richest config) as full presets. Keep all six chips, or drop the
-   partial two to the §8 table? → **Ruling:** keep toy, GPT-3, gpt-oss-120b, DeepSeek-V3 and V4-Pro
-   (partial, 97% derivable is informative); drop the Kimi K3 chip (99.9% "not published"); keep K3's
-   0.08% as text in try-this 2. Applied.
-3. **Data keys the toy needs** (none exist yet): `d_model`, `vocab_size`, `mlp_hidden`,
+## 12. Settled questions (expert review 2026-10-07; stated as applied, per README lesson 20)
+1. **Graph edges.** The header matches `shared/concepts.json` (`decoder-recap` and `attention` list
+   this page). `multimodal`, `moe`, `sampling` and `kv-cache` reach it transitively; no edits.
+2. **Presets.** Five chips: toy, GPT-3, gpt-oss-120b, DeepSeek-V3, DeepSeek-V4-Pro (partial: 97%
+   derivable, remainder "not published"). Kimi K3 is not a chip; its 0.08% embedding share is a text
+   line in try-this 2.
+3. **Data keys and entries (data-pass item).** Keys to add: `d_model`, `vocab_size`, `mlp_hidden`,
    `expert_hidden`, `experts_shared`, `dense_layers`, `tied_embeddings`, `biases`, `mla_q_rank`,
    `mla_kv_rank`, `mla_nope_dim`, `mla_rope_dim`, `mla_v_dim`, `vision_encoder_params`,
-   `mtp_params`, `patch_size`, `vision_encoder_layers`, plus `attention`'s accepted `n_heads`,
-   `n_kv_heads`, `head_dim`. Entries: `gpt-3` (facts are empty today; arXiv 2005.14165 per `attention`
-   ruling 3, plus `kv_bytes_per_token` 4,718,592 from 01 §4) and `deepseek-v3` (accepted in
-   `paged-attention`'s ruling). The gpt-oss-120b and DeepSeek-V3 config values in §6 were re-verified
-   against both config.json files on 2026-10-07 (every value matched); the data pass can copy them
-   with those URLs as `source_url`, confidence `confirmed`. → **Ruling (data-pass item):** accepted;
-   rename `llama-3-405b` to `llama-3.1-405b` (lesson 8); config.json URLs as `source_url`, confirmed.
-4. **DeepSeek-V4-Pro dense layers.** The 97% experts share assumes all 61 layers are MoE; DeepSeek-V3
-   kept the first 3 dense. If V4-Pro does too, experts are 1.475T (92%). Confirm `first_k_dense_replace`
-   from the V4-Pro config.json before build; the storyboard shows 97% with the assumption printed.
-   → **Ruling (data-pass item):** read `first_k_dense_replace` from the V4-Pro config; until then print
-   the assumption, as drafted.
-5. **"Active" convention.** The page counts the unembedding and not the embedding lookup, which
-   reproduces gpt-oss's 5.1B (+0.6%) and DeepSeek-V3's 37B (−1.0%); counting both gives 5.71B and
-   37.55B. Mistral's note (49B routed-active, 52B incl. embeddings) shows labs differ. Confirm gpt-oss's
-   exact accounting from its model card table before build, and whether to expose a toggle (fifth
-   control) or keep it as the hover readout proposed here. → **Ruling:** keep the convention with the
-   Must-2 fixes (tied GPT-3 keeps its shared matrix; Llama row reworded; the toy prints why active <
-   total); no fifth control; both numbers visible. Data-pass item: confirm gpt-oss's own accounting in
-   its model card. Applied.
-6. **DeepSeek-V3 checkpoint vs paper: resolved.** The HF card states "685B, which includes 671B of the
-   Main Model weights and 14B of the Multi-Token Prediction (MTP) Module weights" (read 2026-10-07). It
-   is the "explain the gap" line under the V3 chip, keyed as `deepseek-v3.mtp_params` = 14e9. Left here
-   so the data pass sees where the number came from. → **Ruling:** resolved as drafted; data pass
-   records the card URL on `mtp_params`.
-7. **Hand-authored stream numbers.** `x_*`, `a_sat`, `m_sat` and the logits are constants (§4), like
-   `attention`'s Q/K/V. The alternative, deriving them from seeded W matrices, gives 4-decimal numbers
-   nobody checks by hand. Confirm, and confirm that `a_sat` need not reconcile with `attention`'s
-   concat row (that page stops before W_O). → **Ruling:** accepted; `a_sat` need not reconcile, given
-   the visible stand-in line and the frame 4 heatmap label. Applied.
-8. **The patch's position.** The image patch stays in a side lane and never joins the four-row stream,
-   so every number matches `attention` (adding a row 5 after "down" would leave rows 1–4 unchanged
-   under the causal mask, but "what token follows an image?" muddles frames 8–9). Side lane, or a
-   ghosted fifth row? → **Ruling:** side lane, labeled as a branch, as drafted.
-9. **Four new glyphs** (`patch`, `adder`, `blockStack`, `shareBar`) and categorical `--part-*`
-   tokens. `shareBar` could instead generalize `memBar` (three fixed segments → named parts); which does
-   the gallery prefer? → **Ruling:** all four accepted with the conditions now written into §4;
-   `shareBar` stays a separate glyph and `memBar` becomes a wrapper over it. Applied.
-10. **Frame 9's KV note** quotes GPT-3's 4.5 MiB and DeepSeek-V4-Pro's reported 4–12 KB, with the
-    "reported" chip. DeepSeek-V3's 70 KB (derived, 01 §4) would be a confirmed-config alternative; which
-    model should the note name? → **Ruling:** name DeepSeek-V3 (about 69 KiB, derived from a confirmed
-    config, and it matches the V3 preset); add "2026 designs go to a few KB: `kv-cache`"; drop V4-Pro's
-    reported range from this page. Applied.
-11. **MLP hidden = 2·d in the toy** (for integer hand arithmetic: 3 × 8 × 16 = 384). Real SwiGLU models
-    use about 8/3·d. Accept the stated simplification, or set hidden = 21 (8/3 · 8 rounded) and lose the
-    round numbers? → **Ruling:** accepted with the stated simplification; experts change to hidden 8
-    (Must 1). Applied.
-12. **Caption length.** Every caption is one idea in at most two sentences (storyboard-wide rule from
-    `attention`'s ruling 6); frames 2, 4, 5 and 9 are two sentences. → **Ruling:** verified, accepted.
+   `mtp_params`, `patch_size`, `vision_encoder_layers`, plus `attention`'s `n_heads`, `n_kv_heads`,
+   `head_dim`. Entries: `gpt-3` (arXiv 2005.14165, plus `kv_bytes_per_token` 4,718,592 from 01 §4)
+   and `deepseek-v3` (including `kv_bytes_per_token` 70,272 and `mtp_params` 14e9 with the card URL).
+   The gpt-oss-120b and DeepSeek-V3 config values in §6 were re-verified against both config.json
+   files on 2026-10-07; those URLs are the `source_url`, confidence `confirmed`. The Llama entry is
+   `llama-3.1-405b` (exact checkpoint, lesson 8).
+4. **DeepSeek-V4-Pro dense layers (data-pass item).** The page prints the assumption "if all 61 layers
+   are MoE" (97%); the data pass reads `first_k_dense_replace` from the V4-Pro config and the printed
+   assumption is replaced by the config value (3 dense layers would give 1.475T, 92%).
+5. **"Active" convention.** One definition, §6: every multiplied block parameter plus the unembedding;
+   the lookup table is left out unless it is the unembedding (tied). No fifth control; `active` and
+   `activeWithEmbedding` are both visible. Data-pass item: confirm gpt-oss's own accounting in its
+   model card and store the card's figures.
+6. **DeepSeek-V3 685B vs 671B.** The HF card's "685B, which includes 671B of the Main Model weights
+   and 14B of the Multi-Token Prediction (MTP) Module weights" (read 2026-10-07) is the "explain the
+   gap" line under the V3 chip, keyed as `deepseek-v3.mtp_params` = 14e9.
+7. **Hand-authored stream numbers.** `x_*`, `a_sat`, `m_sat` and the scores are constants (§4), with
+   the visible stand-in line; `a_sat` does not reconcile with `attention`'s concat row (that page stops
+   before W_O), and the frame 4 heatmap label says where the row comes from.
+8. **Patch position.** The image patch stays in a labeled side-lane branch and never joins the
+   four-row stream, so every number matches `attention`.
+9. **Glyphs.** `patch`, `adder`, `blockStack` and `shareBar` are accepted with the conditions in §4;
+   `shareBar` is its own glyph and `memBar` is a wrapper over it.
+10. **Frame 9's KV note** names GPT-3 (4,718,592 B ≈ 4.72 MB) and DeepSeek-V3 (70,272 B ≈ 70.3 kB,
+    derived from its confirmed config), then "2026 designs go to a few kB: `kv-cache`". No reported
+    figures on this page.
+11. **Toy MLP widths.** Dense hidden 2·d (stated simplification); experts hidden d (two active = one
+    dense MLP).
+12. **Captions.** Nine captions, each ≤ 30 words and ≤ 2 sentences, verified in §5.
 
 ## 13. Reviewer rulings (expert review, 2026-10-07) and what changed
 Verdict: APPROVE WITH CHANGES; the reviewer recomputed the full reproducer and independently recounted
@@ -713,7 +705,8 @@ Should (all 13 applied, no rebuttals):
 - §11 sketch no longer draws the patch lane, matching §5.
 - Go deeper has three links; Raschka's gallery moves to `decoder-recap`.
 - Frame 9's note says "GPT-3 (2020, at 2 bytes per number)".
-- (Ruling 10, same note) names DeepSeek-V3's 69 KiB instead of V4-Pro's reported range.
+- (Ruling 10, same note) names DeepSeek-V3's 70,272 B ≈ 70.3 kB instead of V4-Pro's reported range
+  (unit made decimal in the catch-up pass).
 
 Nice to have (both taken): the norm's purpose ("keeps the numbers in a stable range as the stack gets
 deep") is in §3 ¶2; the `patch` builder note asks for a real 4 × 4 crop (a cat's ear).
@@ -727,3 +720,31 @@ Data-pass items collected from the rulings: add the §12 item 3 keys and the `de
 (including `kv_bytes_per_token` = 70,272 and `mtp_params` = 14e9 with the card URL); rename
 `llama-3-405b` → `llama-3.1-405b`; read V4-Pro's `first_k_dense_replace`; confirm gpt-oss's active
 accounting from its model card and store the card's own figures.
+
+Catch-up pass 2026-10-07 (README lessons 19–28 and the course-wide settlements; Status unchanged):
+- Lesson 19 / settlement (hatch): `shareBar` gains `minSegment = 18` and `tail = 'zoom'`; parts under
+  18 px fold into "others" with a bracketed zoomed tail bar; "not published" is a fixed-width neutral
+  segment off the scale. Segment widths at 300 px recorded in §4 from `node -e`.
+- Lesson 20: §12 rewritten as settled statements; alternatives deleted.
+- Lesson 21: frame 8 gets a visible "same five words; scores can be any size, probabilities add to 1"
+  line between the score and probability states.
+- Lesson 22: slider stops checked; the `experts = 2` stop is labeled "2 of 2 experts used: a dense MLP
+  with a router".
+- Lesson 23: no change (the page shows no measured anchors; published parameter counts carry the
+  "active" convention in §6).
+- Lesson 24: no change beyond the `shareBar` wording (the only hatch on the page is the masked cell in
+  frame 4's heatmap row, which is "excluded").
+- Lesson 25: one basis for every total/active ratio, printed once above the §8 table.
+- Lesson 26: the cost paragraph says "in one forward pass".
+- Lesson 27: the partial V4-Pro preset prints its published 1.6T / 49B back (remainder by
+  subtraction), stated in §6.
+- Lesson 28: no change (no bandwidth ladder on this page).
+- Settlement (decimal units): frame 9's note, the §8 KV row, §12 item 10 and the reproducer now print
+  "4,718,592 B ≈ 4.72 MB" and "70,272 B ≈ 70.3 kB" (`node -e`: `61*576*2` → 70272, `/1e3` → 70.3;
+  `2*96*96*128*2` → 4718592, `/1e6` → 4.72); no KiB/MiB remain.
+- Settlement (`math/memory.js`): the KV figures cite `kvBytesPerTokenMla`; percentages use
+  `sharePct(part, whole)` from `math/memory.js`.
+- Settlement (`--carry-activation` = `var(--accent-arch)`): no change to this page's `flow` usage
+  (carry `activation` and `kv` only).
+- Settlements (chip memory, FORMATS keys, draft tokens): no change; none appear on this page.
+- Settlement (data ids): `llama-3.1-405b` already used.

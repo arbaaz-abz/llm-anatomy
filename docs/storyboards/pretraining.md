@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: training-pipeline
 Next: `scaling-laws`, `midtraining`, `sft` (the three slugs whose `prereqs` list `pretraining`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §0 item 1, §1.1, §1.2, §1.3, §1.8, §5 step 1, §7 (cross-entropy and tokenization rows) · 05
 §1.1, §1.2 · spec §12 (tokenizer: one section of this page, no deep dive)
 
@@ -37,8 +37,8 @@ tokens.
   Corrected by frames 6–9. (source: 02 §1.2)
 - **Misconception:** "A token is a word." → **Reality:** a tokenizer splits text into pieces from a fixed
   vocabulary of 128K–200K entries; common words are one piece, rare words several. A bigger vocabulary
-  means fewer tokens per document but a larger embedding table: 160,000 × 7,168 = 1.15B parameters in
-  Kimi K3. Corrected by frame 1. (source: 02 §1.1 vocab table; `decoder-anatomy` proposed keys)
+  means fewer tokens per document but a larger embedding table: about 160,000 × 7,168 ≈ 1.15B parameters
+  in Kimi K3. Corrected by frame 1. (source: 02 §1.1 vocab table; `decoder-anatomy` proposed keys)
 
 ## 3. Hook and intuition (final wording)
 **Hook:** A pretrained model is only ever asked to guess the next token. Why does that, repeated over 30
@@ -60,8 +60,8 @@ ahead (multi-token prediction) as an extra loss.
 Two things make this affordable. Every position in a sequence is graded in the same forward pass, so one
 8-token sentence is 7 training examples. And the text is chosen with great care: raw crawl is filtered by
 rules and by quality classifiers, near-duplicates are removed, domains like code and math are upsampled,
-and some knowledge and math text is rephrased by other models. The 2026 open frontier models read 25–33
-trillion tokens this way. The cost is that this stage is by far the largest in tokens and usually in
+and some knowledge and math text is rephrased by other models. The open frontier MoEs reported in 2026 read 25–33
+trillion tokens this way (Kimi K3 did not say; smaller open models such as Olmo 3 read 5–12T). The cost is that this stage is by far the largest in tokens and usually in
 compute; how to split that compute between model size and tokens is the next page, `scaling-laws`.
 
 ## 4. Visual metaphor
@@ -101,10 +101,10 @@ Per-position targets and probabilities (frames 4–5, toy default), positions 1�
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | A plain text line `The cat sat down on the mat.` above; below it, 8 `token` chips with subscripts 1–8. A plain mark `vocabulary: 160,000 pieces (Kimi K3)`. | The text line splits at the piece boundaries and each piece drops into a chip; the period becomes its own chip. | A tokenizer cuts text into pieces from a fixed vocabulary: whole common words, fragments of rare ones. Kimi K3's vocabulary has 160,000 pieces. | 8 tokens · vocabularies 128K–200K (2026) · embedding table Kimi K3 `160,000 × 7,168 = 1.15B` params · visible note: "Bigger vocabularies mean fewer tokens per document but a bigger table." |
+| 1 | A plain text line `The cat sat down on the mat.` above; below it, 8 `token` chips with subscripts 1–8. A plain mark `vocabulary: about 160,000 pieces (Kimi K3)`. A plain line under the stage: `Tiktokenizer (go deeper) shows real BPE boundaries on your own text.` | The text line splits at the piece boundaries and each piece drops into a chip; the period becomes its own chip. | A tokenizer cuts text into pieces from a fixed vocabulary: whole common words, fragments of rare ones. Kimi K3's vocabulary has about 160,000 pieces. | 8 tokens · vocabularies 128K–200K (2026) · embedding table Kimi K3 `≈ 160,000 × 7,168 ≈ 1.15B` params · visible note: "Bigger vocabularies mean fewer tokens per document but a bigger table." |
 | 2 | Chips 1–4 lit, 5–8 dim. A `block` "model" over them. Out of position 4 comes a `vector` of 5 printed cells: `on 0.390 · . 0.237 · and 0.087 · the 0.053 · 12 others 0.019 each`. Chip 5 `on` gets a plain label `true next token`. | A `flow` (carry `activation`) runs from chip 4 into the model and out to the probability row; the `on` cell and chip 5 take the selection outline. | At each position the model gives a probability to every possible next token. Here, after "down", the true next token "on" got 0.390. | probabilities from `decoder-anatomy` frame 8 · Σ = 1.000 |
 | 3 | The `on` cell alone, enlarged, with a readout `loss = −ln 0.390 = 0.941`. Beside it two plain reference marks: `if 0.99: 0.010` and `if 0.01: 4.605`. | The readout types in; then the two reference marks fade in. | The grade is the cross-entropy loss: minus the log of the probability given to the true token. Unsure costs a little; confident and wrong costs a lot. | `−ln 0.390 = 0.941` · `−ln 0.99 = 0.010` · `−ln 0.01 = 4.605` |
-| 4 | All 8 chips lit. The 8 × 8 causal mask `heatmap` (future hatched) at the left. Under the chips, a 7-cell loss `vector` (positions 1–7, value-colored, printed). | The mask's rows light one after another; each lit row drops one loss cell into the strip under its position. | One pass grades every position at once: the causal mask lets each position see only the past. Eight tokens give seven graded predictions. | losses `2.303 · 1.386 · 1.204 · 0.941 · 0.511 · 0.799 · 0.223` |
+| 4 | All 8 chips lit. The 8 × 8 causal mask `heatmap` (future hatched; 16 px cells, nothing printed in it) at the left. Layout check at 580 × 366: chip row on top; heatmap 8 × 17 = 136 px wide beside the 7-cell loss row, 7 × 43 = 301 px; 136 + 16 + 301 = 453 px wide, 24 + 12 + 136 px tall. Under the chips, a 7-cell loss `vector` (positions 1–7, value-colored, printed). | The mask's rows light one after another; each lit row drops one loss cell into the strip under its position. | One pass grades every position at once: the causal mask lets each position see only the past. Eight tokens give seven graded predictions. | losses `2.303 · 1.386 · 1.204 · 0.941 · 0.511 · 0.799 · 0.223` |
 | 5 | The loss strip with a plain readout `mean 1.052` and `perplexity 2.86`; a plain mark `uniform guess over 16 words: perplexity 16`. | The seven cells slide together into the mean readout; the perplexity readout types in. | Training lowers the mean loss over all positions. Its exponential, perplexity, is how many equally likely tokens the model is effectively choosing between: about 2.9 here. | `mean = 7.366 / 7 = 1.052` · `perplexity = e^1.052 = 2.86` · `ln 16 = 2.773 → 16` |
 | 6 | A pipeline row of `block`s: `crawl` → `rules` → `quality classifier` → `dedup` → `mixture` → `rephrase` → `packed sequences`, with only `crawl`, `rules` and `quality classifier` active. Plain fact line: `Kimi K3: rule-based heuristics, classifier quality scoring, dedup, per domain`. | A stream of document `token` chips flows in from `crawl`; chips that fail `rules` or score low at the classifier drop out, dimmed. | Raw crawl is mostly not worth training on. Rules remove the obvious junk, and a quality classifier, itself a small model, scores the rest. | facts per §8 (no published keep ratios: "the reports give recipes, not ratios", brief 02 §1.2) |
 | 7 | Same row, `dedup` active. Two identical document chips meet at the block. | One copy passes; the duplicate fades out. | Deduplication removes exact and near-copies, so the model does not spend its budget reading the same page many times. | no published counts |
@@ -115,7 +115,7 @@ Per-position targets and probabilities (frames 4–5, toy default), positions 1�
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 2 and 4–5 draw `softmax` (`math/core.js`) and `tokenLoss`, `meanLoss`, `perplexity`
 (`math/lm.js`). Caption counts (words/sentences, `rlvr-grpo`'s counter widened to two-digit frames, run
-2026-10-07): 23/2, 23/2, 27/2, 23/2, 26/2, 24/2, 19/1, 21/2, 24/2, 29/2.
+2026-10-07, re-run after review): 24/2, 23/2, 27/2, 23/2, 26/2, 24/2, 19/1, 21/2, 24/2, 29/2.
 
 ## 6. Toy
 "Grade a sentence." The 8-token sentence, its 7 per-position probabilities, the per-token losses, mean loss
@@ -141,13 +141,13 @@ and perplexity, live.
 1. Predict first: select `mat` (0.45, loss 0.799). Which moves the mean more: making it certain, or making
    it a confident miss? Slide to 1.00: mean 1.052 → 0.938 (down 0.114). Slide to 0.01: its loss is 4.605
    and the mean jumps to 1.596; perplexity 2.86 → 4.93. → **Insight: the log punishes confident mistakes
-   far more than it rewards certainty.** One badly wrong token moves the average more than five times as
-   much as one perfect one.
-2. Select `on`, the model's top guess at 0.390. Its loss is 0.941, not 0. → **Insight: there is no
+   far more than it rewards certainty.** One badly wrong token moves the average almost five times as
+   much (+0.544) as one perfect one does (−0.114).
+2. Select `on`, the model's top guess at 0.390 (against 0.237 for the runner-up `.`). Its loss is 0.941, not 0. → **Insight: there is no
    credit for being top-1, only for probability.** The model keeps learning even on tokens it already
    ranks first, by making them more likely.
 3. Press `uniform guess over 16`: every loss becomes 2.773, the mean is 2.773 and perplexity is exactly
-   16. Now read the reference mark: a model that knows nothing about Kimi K3's 160,000-piece vocabulary
+   16. Now read the reference mark: a model that knows nothing about Kimi K3's vocabulary of about 160,000 pieces
    would start near 11.98. → **Insight: perplexity is the effective number of choices.** Training a real
    model is the long walk from about ln(vocabulary size) down toward the loss of the text itself.
 
@@ -183,9 +183,9 @@ Color links: `hl-p` → the probability row (frames 2–3) and the loss strip (f
 | DeepSeek-V4-Pro: 33T pretraining tokens | `models.deepseek-v4-pro.pretrain_tokens` (existing, confirmed) | 02 §0, §1.8 |
 | DeepSeek-V4-Flash 32T · MiniMax-M2 29.2T · GLM-5 28.5T (27T base + mid-training) · MiMo-V2-Flash 27T · Nemotron 3 Super 25T | `models.deepseek-v4-flash.pretrain_tokens` = 32e12, `models.minimax-m2.pretrain_tokens` = 29.2e12, `models.glm-5.pretrain_tokens` = 28.5e12, `models.mimo-v2-flash.pretrain_tokens` = 27e12, `models.nemotron-3-super.pretrain_tokens` = 25e12 (proposed, confirmed) | 02 §0, §1.8 |
 | Kimi K3 did not disclose its token count | `models.kimi-k3.pretrain_tokens` = null with note "not disclosed" (proposed, confirmed absent) | 02 §0, §1.8, §8 |
-| Llama 3.1 405B (2024): 15.6T tokens | `models.llama-3-405b.pretrain_tokens` (existing, confirmed; entry name "Llama 3.1 405B") | data file |
+| Llama 3.1 405B (2024): 15.6T tokens | `models.llama-3-405b.pretrain_tokens` (existing, confirmed; entry name "Llama 3.1 405B") | data entry only (source arXiv 2407.21783; not in brief 02) |
 | Vocabularies: DeepSeek-V4 128K · GLM-5 151,552–154,880 (two columns in its report; shown as a range) · Kimi K3 160K · MiniMax-M2 200,064 · gpt-oss ~201K (`o200k_harmony`) | `models.deepseek-v4-pro.vocab_size` = "128K", `models.glm-5.vocab_size` = [151552, 154880], `models.kimi-k3.vocab_size` = 160000 (proposed by `decoder-anatomy`), `models.minimax-m2.vocab_size` = 200064, `models.gpt-oss-120b.vocab_size` = 201088 (proposed by `decoder-anatomy`, config-verified) | 02 §1.1 table |
-| Kimi K3 embedding table 160,000 × 7,168 = 1.15B parameters | derived from `kimi-k3.vocab_size` × `kimi-k3.d_model` (both proposed by `decoder-anatomy`) | 02 §1.1; 01 §5 |
+| Kimi K3 embedding table ≈ 160,000 × 7,168 ≈ 1.15B parameters (vocabulary given as "160K" in the briefs) | derived from `kimi-k3.vocab_size` × `kimi-k3.d_model` (both proposed by `decoder-anatomy`) | 02 §1.1; 01 §5 |
 | Multi-token prediction as an auxiliary loss: DeepSeek-V4 (depth 1, weight 0.3, then 0.1 when LR decay starts), GLM-5, MiniMax-M2, Nemotron 3 Super, Kimi K3 | `models.deepseek-v4-pro.mtp_loss` = "depth 1, weight 0.3 → 0.1" (confirmed); `.mtp` = true on `glm-5`, `minimax-m2`, `nemotron-3-super`, `kimi-k3` (confirmed) | 02 §1.1 |
 | Kimi K3: four text domains (Web, Code, Math, Knowledge), each filtered by heuristics, classifier quality scoring and dedup; per-domain rates from small-model ablations; knowledge and math rephrased with fidelity checks | `models.kimi-k3.data_pipeline` (confirmed) | 02 §1.2 |
 | MiniMax-M2: model-based quality scoring; code, mathematics and STEM significantly upsampled | `models.minimax-m2.data_pipeline` (confirmed) | 02 §1.2 |
@@ -202,7 +202,7 @@ precision detail (`gpu-primer`, `training-memory`).
    (its exponential) is the effective number of choices.
 2. Every position is graded in the same pass, and the text is curated hard: filters, a quality
    classifier, deduplication, an upsampled code-and-math mixture, and rephrased knowledge.
-3. 2026 open frontier models read 25–33 trillion tokens; it is the largest stage, and the next page asks
+3. The open frontier MoEs reported in 2026 read 25–33 trillion tokens; it is the largest stage, and the next page asks
    how to split that compute between model size and tokens.
 
 ## 10. Next and go deeper
@@ -291,6 +291,8 @@ entry; not `glm-5.3`) `.pretrain_tokens` = 28.5e12, `.vocab_size` = [151552, 154
 `.pretrain_tokens` = 25e12, `.mtp` · `kimi-k3.pretrain_tokens` = null ("not disclosed"), `.data_pipeline`,
 `.mtp` · `deepseek-v4-pro.vocab_size` = "128K", `.mtp_loss`, `.data_pipeline` · `qwen3.pretrain_tokens` =
 36e12 (reported; new entry `qwen3`) · `mistral-large-4.languages` = "160+". All from 02 §1.1, §1.2, §1.8.
+- `kimi-k3.vocab_size` (proposed on `decoder-anatomy` as 160000): verify against Kimi K3's tokenizer
+  config in the data pass; the briefs give only "160K", so this page prints "about 160,000" and "≈ 1.15B".
 - `llama-3-405b`: the entry's name is "Llama 3.1 405B" but its id says 3; per README lesson 8 propose
   renaming the id to `llama-3.1-405b` in the data pass (same issue `paged-attention` raised for 70B).
 
@@ -303,3 +305,10 @@ entry; not `glm-5.3`) `.pretrain_tokens` = 28.5e12, `.vocab_size` = [151552, 154
   section. A live BPE toy is linked out (Tiktokenizer).
 - **No keep ratios in frames 6–9.** The briefs say the reports give recipes, not ratios, so these frames
   show stages and confirmed facts only, with no stand-in percentages.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §2 (change log: `fix-recipe-review.md`):
+- Must 1: try-this 1 now says "almost five times as much (+0.544) as one perfect one does (−0.114)"; ratio 4.77 from the reproducer's means (1.0523 → 1.5961 and → 0.9383).
+- Must 2: Kimi K3's vocabulary printed as "about 160,000" and the table as "≈ 1.15B" (frame 1 caption and numbers, misconception 4, toy reference, §8); `kimi-k3.vocab_size` flagged for verification in §12.
+- Should: §3 ¶3 scopes 25–33T to the open frontier MoEs reported in 2026, notes Kimi K3 did not say and smaller open models read 5–12T (takeaway 3 matches); frame 4 carries a 580 × 366 layout check with a 16 px heatmap; try-this 2 prints the runner-up (0.237).
+- Nice: frame 1 carries the Tiktokenizer line.

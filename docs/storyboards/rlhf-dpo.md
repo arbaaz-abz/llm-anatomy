@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: sft
 Next: `rlvr-grpo` (the one slug whose `prereqs` list `rlhf-dpo`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §4.1, §4.2, §4.5, §5, §6, §7 (RLHF/PPO clip, KL penalty and DPO toy rows) · 05 §1.1, §1.2
 
 Running example: one prompt, `Why is the sky blue? (asked by a 7-year-old)`, and two answers.
@@ -20,7 +20,7 @@ on `rlvr-grpo`.
 ## 1. Learning objective
 After this page you can explain how a model is trained toward answers people prefer when no program can
 check them: a reward model learns to score the picked answer of a pair higher, PPO samples answers from
-the policy and pushes them by how much they beat a critic's prediction, the clip range caps each step,
+the policy and pushes them by how much they beat a critic's prediction, the clip range switches a token's update off once it has moved far enough,
 and a KL term against a frozen reference model stops the policy from gaming the reward model; and how DPO
 gets the same preference signal from the pairs directly, with no reward model and no sampling, by widening
 the gap between the chosen and rejected answers relative to the reference. You can also say where each
@@ -62,7 +62,8 @@ The model being trained is called the **policy**. In PPO, the classic algorithm,
 answers, the reward model scores them, and a fourth network, the **critic**, predicts what score this
 prompt usually earns. Each answer's tokens are pushed up or down by how much the answer beat that
 prediction. Two brakes keep the steps safe. The **clip range** ε stops pushing a token once its
-probability has moved more than 20% from where it was when the answer was sampled. The **KL term**
+probability has already moved more than 20%, in the direction the update was pushing it, from where it was
+when the answer was sampled. The **KL term**
 subtracts a penalty for drifting away from a frozen **reference model**, the SFT model the run started
 from. The KL term matters because the reward model is only an approximation: left alone, the policy
 finds answers it overrates, such as flattery, and the score rises while real quality falls.
@@ -71,7 +72,8 @@ That is four models in memory (policy, reference, reward model, critic) and a sa
 step. **DPO** (direct preference optimization) skips both the reward model and the sampling. It works
 straight from the pairs: for each pair it measures how much more likely the policy made each answer than
 the reference does, and widens the gap between the chosen and rejected answers. The price is that it
-only ever learns from the fixed pairs it was given, and it optimizes a gap, not the chosen answer itself.
+only ever learns from the fixed pairs it was given, and, since it optimizes a gap, the chosen answer itself
+can get *less* likely (try-this 2).
 
 In 2026 both still exist, but in narrower roles. Reasoning comes from RL with checkable rewards. RLHF,
 now usually with a judge model as the reward, polishes helpfulness, style and safety at the end of the
@@ -114,16 +116,16 @@ Thread order: frames 1–2 build the reward model; 3–5 the PPO update; 6–8 t
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Prompt line `Why is the sky blue? (asked by a 7-year-old)`. Two chip rows: A `Air scatters blue light the most`, B `Rayleigh scattering , λ⁻⁴`. A small `block` "person" at the right. | The rows type in; a `verdict` ✓ stamps beside A and ✗ beside B. A gets the selection outline. | A person reads two answers to the same prompt and picks the better one. That choice, a preference pair, is the only signal here: no program could check this. | `pair: A ≻ B` |
-| 2 | A `block` "reward model (SFT copy + score head)". Two `cell`s at its right: `r(A)`, `r(B)`. Readout `P(A preferred)`. | Each row flows into the block; the two cells fill; the readout types in. | The reward model is a copy of the model that outputs one score. It is trained until the picked answer scores higher: 1.2 against −0.3 here. | `r(A) = 1.2` · `r(B) = −0.3` · `P(A preferred) = σ(1.5) = 0.818` · loss `−ln 0.818 = 0.201` (if it had the order wrong: 1.701) |
-| 3 | Left: `block` "policy: the model being trained" (active). A new chip row appears from it: `Air bends blue light most` (stand-in). The reward model block scores it. | A `flow` (carry `token`) runs policy → row; the row flows into the reward model; a `cell` `r = 1.0` fills. | The policy, the model being trained, writes a fresh answer. The reward model scores it, and that score is what reinforcement learning tries to raise. | `r = 1.0` |
+| 1 | Prompt line `Why is the sky blue? (asked by a 7-year-old)`. Two chip rows: A `Air scatters blue light the most`, B `Rayleigh scattering , λ⁻⁴`. A small `block` "person" at the right. | The rows type in; a `verdict` ✓ stamps beside A and ✗ beside B, with the words `chosen` and `rejected` printed beside the badges. A gets the selection outline. | A person reads two answers to the same prompt and picks the better one. That choice, a preference pair, is the only signal here: no program could check this. | `pair: A ≻ B` |
+| 2 | A `block` "reward model (SFT copy + score head)". Two `cell`s at its right: `r(A)`, `r(B)`. Readout `P(A preferred) 0.818 · loss 0.201`. | Each row flows into the block; the two cells fill; the readout types in. | The reward model is a copy of the model that outputs one score. It is trained until the picked answer scores higher: 1.2 against −0.3 here. | `r(A) = 1.2` · `r(B) = −0.3` · `P(A preferred) = σ(1.5) = 0.818` · loss `−ln 0.818 = 0.201` (if it had the order wrong: 1.701) |
+| 3 | Left: `block` "policy: the model being trained" (active). A new chip row appears from it: `Air scatters blue light more than red` (stand-in). The reward model block scores it. | A `flow` (carry `token`) runs policy → row; the row flows into the reward model; a `cell` `r = 1.0` fills. | The policy, the model being trained, writes a fresh answer. The reward model scores it, and that score is what reinforcement learning tries to raise. | `r = 1.0` |
 | 4 | A third `block` "critic (value model)" under the policy, with a `cell` `0.8` labeled "usual score for this prompt". Readout `beat it by +0.2`. | The critic's cell fills; the readout subtracts and types `+0.2`; a `flow` (carry `gradient`) runs back into the answer's chips, which warm slightly. | A critic, a second trained network, predicts the score this prompt usually earns. Each token is pushed by how much the answer beat that prediction. | `value = 0.8` · `1.0 − 0.8 = +0.2` |
 | 5 | Zoom on the answer's last chip. `clipLine` 0.6 → 1.6, band [0.8, 1.2] shaded, label `ratio r = now / when sampled`, marker at 1.0. | The marker slides 1.0 → 1.25 and crosses the band's right edge; the chip gets the hatch (gradient off). | PPO updates on each batch several times, so probabilities drift. Once a token is 20% more likely than when sampled, the clip range switches its update off. | `ε = 0.2` · band `[0.8, 1.2]` · `r = 1.25`, `beat it by +0.2` · objective `min(1.25 · 0.2, 1.2 · 0.2) = 0.24`, clipped · at `r = 1.10`: `0.22`, not clipped |
 | 6 | A dim `block` "reference (frozen SFT copy)" beside the policy. Two `vector` rows of 4 printed cells, headers `Air · The · Rayleigh · Great`: `reference` and `policy`. | The reference row fills first; then the policy row's cells count from the reference values to the drifted values. | The reference model is a frozen copy of where the policy started. Comparing their probabilities shows how far training has moved the policy. | reference `[0.40, 0.30, 0.20, 0.10]` · policy `[0.70, 0.15, 0.10, 0.05]` |
 | 7 | Branch label at the top: `what if nothing anchors the policy?` A third row `hacked policy` `[0.01, 0.01, 0.01, 0.97]` and its answer `Great question ! Air scatters blue …`. Reward cells: honest 1.0, hacked 1.3. | The hacked row's `Great` cell fills to 0.97; the reward cell counts to 1.3 and the label `reward model overrates flattery` appears. | Branch: with no anchor, the policy finds answers the reward model overrates, like opening with flattery. This is reward hacking: the score rises while real quality falls. | `r(honest) = 1.0` · `r(hacked) = 1.3` |
-| 8 | **Key frame.** Back on the main line. A plain three-row readout table under the rows: `reward · KL from reference · total` for honest and hacked; a `β = 0.5` label. | The KL column fills (0.184, 2.103); the total column counts down from the reward to reward minus penalty; the honest row's total ends larger. | The KL term subtracts a penalty for drifting from the reference. Flattery drifted far, so with the penalty the honest answer scores higher. | KL(honest ‖ ref) `= 0.184` · KL(hacked ‖ ref) `= 2.103` · β = 0: `1.000` vs `1.300` · β = 0.5: `1.0 − 0.5 · 0.184 = 0.908` vs `1.3 − 0.5 · 2.103 = 0.248` |
+| 8 | **Key frame.** Back on the main line. A plain three-row readout table under the rows: `reward · KL from reference · total` for honest and hacked; a `β = 0.5` label. The `hacked` probability row from frame 7 is drawn `dim` (it returns only as the table's second row). | The KL column fills (0.184, 2.103); the total column counts down from the reward to reward minus penalty; the honest row's total ends larger. | The KL term subtracts a penalty for drifting from the reference. Flattery drifted far, so with the penalty the honest answer scores higher. | KL(honest ‖ ref) `= 0.184` · KL(hacked ‖ ref) `= 2.103` · β = 0: `1.000` vs `1.300` · β = 0.5: `1.0 − 0.5 · 0.184 = 0.908` vs `1.3 − 0.5 · 2.103 = 0.248` |
 | 9 | The four-model shelf, all `active`: `policy`, `reference`, `reward model`, `critic`, with a plain label `in memory at once`; a loop arrow (`flow`, carry `token`) policy → answers → reward model labeled `sample every step`. | The four blocks light one after another; the loop arrow runs once. | Classic RLHF keeps four models in memory and generates fresh answers at every step. That cost is why simpler methods took over most of this job. | `4 models` · `1 sampling loop per step` |
-| 10 | The pair from frame 1 again (A selected). Under each answer, a `cell` with its log-probability change versus the reference; a `β = 0.1` label; readouts `gap`, `loss`. The reward model and critic blocks fade to `dim` with the label `not needed`. | The two change cells fill (+0.5, −0.2); the gap readout types `0.07`; the loss readout types `0.659`. | DPO trains on the pairs directly: no reward model, no sampling. Measured against the reference, it widens the gap between the chosen and the rejected answer. | log π − log π_ref: A `+0.5`, B `−0.2` · β = 0.1 · implicit rewards `0.05`, `−0.02` · gap `0.07` · loss `−ln σ(0.07) = 0.659` (`ln 2 = 0.693` at zero gap) · update weight `σ(−0.07) = 0.483` |
+| 10 | The pair from frame 1 again (A selected; `chosen` / `rejected` printed beside the badges). Under each answer, a `cell` with its log-probability change versus the reference; a `β = 0.1` label; readouts `gap`, `loss`. The reward model and critic blocks fade to `dim` with the label `not needed`. | The two change cells fill (+0.5, −0.2); the gap readout types `0.07`; the loss readout types `0.659`. | DPO trains on the pairs directly: no reward model, no sampling. Measured against the reference, it widens the gap between the chosen and the rejected answer. | log π − log π_ref: A `+0.5`, B `−0.2` · β = 0.1 · implicit rewards `0.05`, `−0.02` · gap `0.07` · loss `−ln σ(0.07) = 0.659` (`ln 2 = 0.693` at zero gap) · update weight `σ(−0.07) = 0.483` |
 | 11 | A six-stage pipeline strip (the `training-pipeline` strip, dim) with two stages lit: a `DPO` tag between SFT and RL labeled `Olmo 3 (reported)`, and an `RLHF` tag on the final stage labeled `Nemotron 3 Super: judge-model reward`. | The two tags drop onto the strip one after the other. | In 2026, DPO is a cheap preference stage in smaller open pipelines. RLHF, now with a judge model as the reward, polishes style and safety at the end. | Olmo 3: SFT → DPO (~200K pairs) → RLVR (~105K prompts), reported · Nemotron 3 Super: RLVR → SWE-RL → RLHF with a principle-following judge, confirmed |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
@@ -165,7 +167,8 @@ them by hand."
    reason labs check likelihoods during preference training.
 3. At (0.5, −0.2), switch β from 0.1 to 0.5: gap 0.07 → 0.35, loss 0.659 → 0.533. Then, at β = 0.1, find
    the same loss: you need `dChosen = 3.5` with `dRejected = 0`, against `0.7` at β = 0.5. → **Insight: β
-   is the leash.** A larger β reaches the same loss with five times less drift from the reference. It plays
+   is the leash.** A larger β reaches the same loss with five times less drift from the reference (3.5 vs 0.7 of
+   log-probability). It plays
    the role the KL term's β plays in RLHF (frame 8), because DPO is derived from that same KL-anchored
    objective (§7).
 
@@ -224,7 +227,8 @@ first principles per spec §7 and cite arXiv 2203.02155 and 2305.18290.
 1. RLHF learns a reward model from preference pairs, then runs PPO against it: four models in memory
    (policy, reference, reward model, critic) and fresh samples every step.
 2. The reward model is an approximation the policy can game; the KL term against the frozen reference
-   model is the anchor that stops it, and the clip range caps each step.
+   model is the anchor that stops it, and the clip range switches a token's update off once it has moved far
+   enough.
 3. DPO gets the preference signal straight from the pairs (no reward model, no sampling) by widening the
    chosen-vs-rejected gap relative to the reference; in 2026 it is a cheap stage for open pipelines, while
    RLHF with a judge model polishes style and safety at the end.
@@ -246,7 +250,7 @@ totals 0.908 / 0.248 at β = 0.5; 1.000 / 1.300 at β = 0).
             Air    The   Rayleigh Great
  reference [0.40] [0.30] [0.20]  [0.10]   (frozen SFT copy)
  policy    [0.70] [0.15] [0.10]  [0.05]   ← followed
- hacked    [0.01] [0.01] [0.01]  [0.97]   (branch, frame 7)
+ hacked    [0.01] [0.01] [0.01]  [0.97]   (dim: branch, frame 7)
 
             reward   KL from ref   total (β = 0.5)
  honest     1.000      0.184        0.908
@@ -327,13 +331,18 @@ in `dChosen` and strictly increasing in `dRejected`; `weight + sigmoid(margin) =
 
 **Judgment calls:**
 - **Frame count (11).** One more than the pilots, because the term contract with `rlvr-grpo` needs six
-  terms on screen, one per frame. Frames 9 and 11 introduce no term and could merge if the reviewer
-  prefers ten.
+  terms on screen, one per frame. Accepted (expert review); if the build needs ten, frame 9 merges into
+  frame 8's return rather than dropping frame 11.
 - **Flattery as the hack.** A cartoon of reward hacking (a reward model that overrates an opener) is
   illustrative, not a documented case from the briefs; the page labels it as a stand-in branch. Brief 02
   supports only the general claim (KL "to prevent reward hacking"; ORMs "hackable").
 - **One-position KL.** Real KL penalties sum per-token KLs over the answer; the page says so in its
   stand-in line and math note (b).
-- **`verdict` for a preference.** ✓/✗ marks "picked / not picked" here, which reads as a correctness
-  judgment for this pair. If the reviewer finds it misleading next to `rlvr-grpo`'s checker ✓/✗, swap to
-  a plain text mark `picked`.
+- **`verdict` for a preference:** accepted (expert review) with `chosen` / `rejected` printed beside the
+  badges (frames 1 and 10).
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §6 (change log: `fix-recipe-review.md`):
+- Must 1: §3 ¶2's clip definition is direction-aware ("in the direction the update was pushing it"); the objective and takeaway 2 say the clip range "switches a token's update off once it has moved far enough", not "caps each step". Frame 5's caption (A > 0, moving up) is unchanged.
+- Should: the frame 3 answer is now `Air scatters blue light more than red` (correct physics; partial rebuttal: kept the first token `Air` instead of the suggested `Blue light scatters most in air`, so frame 6's candidate cells `Air · The · Rayleigh · Great` still describe this answer's first position); `chosen` / `rejected` printed beside the badges in frames 1 and 10; the hacked row is dimmed in frame 8; try-this 3 prints "3.5 vs 0.7"; §3 ¶3 names the chosen-answer-can-fall cost; the 11-frame ruling is recorded.
+- Nice: frame 2 prints the RM loss 0.201 beside 0.818.

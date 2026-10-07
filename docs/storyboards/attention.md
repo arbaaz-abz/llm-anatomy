@@ -35,8 +35,9 @@ Each misconception names the frame or try-this that corrects it in the first bui
   produce different patterns; their outputs are concatenated and mixed by W_O. (source: brief 01 §1,
   "Attention" row; §2 MHA paragraph) · corrected by frames 9–10, try-this 3
 - **Misconception:** "Earlier tokens' keys and values change as generation goes on." → **Reality:** with
-  a causal mask, a token's K and V depend only on itself and its past, so they never change once
-  computed (brief 01 §4: "K and V of earlier tokens never change (causal mask)"). That is the reason the
+  a causal mask, a token's K and V depend only on itself and its past, so during generation (forward
+  passes with fixed weights) they never change once computed (brief 01 §4: "K and V of earlier tokens
+  never change (causal mask)"); only a training step, which updates W_K and W_V, changes them. That is the reason the
   KV cache works; you'll meet it in `kv-cache`. · corrected within one layer by frames 1 and 5: each
   token's K and V row comes from that token alone, and no masked cell feeds an earlier row
 
@@ -107,7 +108,7 @@ here shows the arithmetic).
   current K row is printed beside the lifted q at the same size, so the dot product is readable without
   hover.
 - Bottom right: the output `vector` for the followed query; in frames 9–10, two `block` glyphs (head A,
-  head B) with their heatmaps and a `block` labeled "W_O [8 × 8]".
+  head B), each with its heatmap and the followed row of its output, and a `block` labeled "W_O [8 × 8]".
 - `flow` arrows carry the moving dot from the Q row to the K rows (frame 2), from the weights row to the
   V rows (frame 7), and from the joined outputs into W_O (frame 10).
 - **The followed query is marked the same way in every frame:** row "sat" carries the selection outline
@@ -116,6 +117,28 @@ here shows the arithmetic).
 - Each quantity is encoded once: a weight appears as a colored cell in the weights row, and the V row it
   applies to is linked by a small chip in the same cell color (frame 7), not by re-drawing the row's
   opacity or outline.
+- Hatch means "excluded / doesn't count" and nothing else on this page: masked score cells (frames
+  5–10), the masked cell of the weights row, and the V row of a masked token (frame 7). Nothing is dimmed
+  to mean "excluded".
+- Compare like with like: the row strip stacks three stages of one computation (scaled score, exp,
+  weight), each on its own color scale; a plain text line beside it says "three stages of one row, each
+  grid on its own scale; read the numbers". The two heatmaps in frames 9–10 share one scale (weights,
+  0 … 1).
+
+**Stage budget** (lesson 18: numbered cells are 43 px pitch at `NUMBER_CELL`; stage ≈ 580 × 366):
+- Frames 1–7: Q, K, V at 20 px (3 × 80 px + gaps ≈ 276 px) on the left; S at 43 px pitch (172 × 172) to
+  their right: ≈ 448 px wide. The row strip (4 cells, 172 px; up to three stacked rows, 129 px) sits under
+  the Q/K/V grids, left of S's column: height ≈ 30 (chips) + 80 (grids) + 129 + labels ≈ 290 px. Fits.
+- Frame 2: the lifted q and the current k row are stacked (two 172 px rows, 86 px tall) with the score
+  cell beside them, not side by side (which would be 344 px and overflow the left column).
+- Frames 8–10: the Q, K, V grids are not needed and fade out; the stage then holds, side by side, the
+  heatmap A (172) and O_A (172) in frame 8 (≈ 356 px). In frames 9–10 four full numbered grids would be
+  688 px, so O is **collapsed to the followed row**: each head block shows its 172 × 172 heatmap with the
+  "sat" row of O under it (172 × 43) and a plain text label "3 other rows not shown (see the toy)". Two
+  blocks side by side ≈ 356 px wide; with the [1 × 8] joined row (344 × 43) and the W_O block below,
+  height ≈ 172 + 43 + 43 + 40 + labels ≈ 330 px. Fits. No cell is ever shrunk to hover-only to make room.
+- Toy: the "both" view stacks the two heatmaps vertically at 400 px and puts the [1 × 8] concat row
+  (344 px) in a horizontally scrolling strip.
 
 Glyphs used (from spec §5.1): token, vector, matrix, heatmap (masked cells hatched), block (head / W_O),
 flow (carry = activation).
@@ -138,15 +161,15 @@ Captions: one idea, at most two sentences and 30 words, no formulas or operators
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | Four token chips. Below them, Q, K, V matrices [4 × 4] of head A, each labeled, with a dim block "W_Q, W_K, W_V [8 × 4]" between the chips and the matrices. Shape label "[4 tokens × d_head = 4]". Row "sat" outlined. | A flow dot leaves each chip, passes the W block, and the chip's row in Q, K and V fills in (rows fill top to bottom, progress 0 → 1). | In a real model, three learned matrices turn each token's vector into a query, a key and a value. Here they are hand-picked so you can check every number. | Q = [[1,0,−0.5,0],[0.5,0.5,0,−1],[0,2,0.5,0],[0.5,2,0,0]] · K = [[1,−0.5,0,0.5],[0,1.5,0,−0.5],[−0.5,0,1,0.5],[0.5,−0.5,0.5,1]] · V = [[1,0,−1,0],[0,2,0,1],[−1,0,1,0.5],[0.5,−1,0,1]] · d_head = 4 |
-| 2 | Row "sat" of Q lifts out to the row strip at `NUMBER_CELL`. The current K row is printed beside it at the same size. An empty score row (4 cells) under the K matrix. | The lifted q slides down the K rows; as it passes each row, that K row prints beside q, a flow dot lands in the score cell and the number appears (one key per quarter of progress). A mono line expands the "cat" product. | A score is the query dotted with a key. Against the four keys, "sat" scores −1.0, 3.0, 0.5 and −0.75; the biggest is "cat". | q_sat = [0, 2, 0.5, 0] · scores −1.0, 3.0, 0.5, −0.75 · expansion: 0·0 + 2·1.5 + 0.5·0 + 0·(−0.5) = 3.0 |
+| 2 | Row "sat" of Q lifts out to the row strip at `NUMBER_CELL`. The current K row is printed directly under it at the same size (stacked, 172 px wide). An empty score row (4 cells) beside them. | The lifted q slides down the K rows; as it passes each row, that K row prints under q, a flow dot lands in the score cell and the number appears (one key per quarter of progress). A mono line expands the "cat" product. | A score is the query dotted with a key. Against the four keys, "sat" scores −1.0, 3.0, 0.5 and −0.75; the biggest is "cat". | q_sat = [0, 2, 0.5, 0] · scores −1.0, 3.0, 0.5, −0.75 · expansion: 0·0 + 2·1.5 + 0.5·0 + 0·(−0.5) = 3.0 |
 | 3 | The score row docks into row 3 of the heatmap S. The other three rows fill. Label "S = QKᵀ [4 × 4]". | Rows 1, 2, 4 of S fill left to right together (one matrix product, not three more passes). Axis labels "queries ↓" and "keys →" fade in. | Every query scores every key at once, in one matrix product. The grid has one row per query and one column per key. | S = QKᵀ = [[1,0,−1,0.25],[−0.25,1.25,−0.75,−1],[−1,3,0.5,−0.75],[−0.5,3,−0.25,−0.75]] |
 | 4 | Same grid; a plain text label "÷ √d_head = ÷ √4 = ÷ 2" above it. | Every cell's number and color interpolate from the raw score to half of it. Nothing else moves. | Divide every score by the square root of the vector length: 4 numbers, so divide by 2. Longer vectors give bigger scores; dividing keeps softmax soft. | S/√d_head = S/2 = [[0.5,0,−0.5,0.125],[−0.125,0.625,−0.375,−0.5],[−0.5,1.5,0.25,−0.375],[−0.25,1.5,−0.125,−0.375]] |
 | 5 | Same grid. | The six cells above the diagonal hatch in, one anti-diagonal at a time, and their numbers become −∞. | Causal mask: a token may only look at itself and earlier tokens. Future cells become −∞, so softmax will give them exactly 0. | masked S/2; cells (1,2),(1,3),(1,4),(2,3),(2,4),(3,4) = −∞ |
 | 6 | Row "sat" lifts out again to the row strip, which now shows three stacked rows: scaled, exp, weight. | First the exp row fills (cells on the value scale, numbers typed in), then the weight row fills as each exp cell is divided by the sum; a plain text "Σ = 1.000" readout counts up to 1. The masked cell shows 0 throughout. | Softmax: exponentiate each score, then divide by the sum so the row adds to 1. "sat" now puts 70% of its attention on "cat". | scaled [−0.5, 1.5, 0.25, −∞] · exp [0.607, 4.482, 1.284, 0] · sum 6.372 · weights [0.095, 0.703, 0.202, 0] |
-| 7 | The weights row stays. Beside V rows 1–3 a one-cell chip in the matching weight color (0.095, 0.703, 0.202); an empty output vector [1 × 4] at the right. | The chips appear beside V rows 1–3, then the three V rows slide together into the output vector, whose cells fill. Row 4 of V gets no chip (weight 0) and stays dim. | The output is the weighted sum of the values. "sat" leaves carrying mostly cat's value. | 0.095·[1,0,−1,0] + 0.703·[0,2,0,1] + 0.202·[−1,0,1,0.5] = [−0.106, 1.407, 0.106, 0.804] |
-| 8 | The full heatmap A (weights) replaces the masked-score grid; a [4 × 4] output matrix O_A beside it. A permanent plain text annotation at row 1: "row 1 sees one key, so its weight is 1.0 whatever its score". | Rows 1, 2, 4 of the heatmap recolor from scores to weights and their output rows fill, all together. The annotation fades in with row 1. | Do the same for every row: one head is one attention pattern, the heatmap, and one output vector per token. | A = [[1,0,0,0],[0.321,0.679,0,0],[0.095,0.703,0.202,0],[0.114,0.656,0.129,0.101]] · O_A = [[1,0,−1,0],[0.321,1.358,−0.321,0.679],[−0.106,1.407,0.106,0.804],[0.035,1.212,0.015,0.821]] · every row of A sums to 1.000 |
-| 9 | Head A (heatmap + O_A) inside a `block` labeled "head A" slides left; a second `block` "head B" appears beside it with an empty heatmap and O_B. | Head B's heatmap fills (sub-diagonal pattern), then its O_B fills. Nothing else moves. | A second head has its own W_Q, W_K and W_V, so it finds a different pattern: here, each token looks one step back. | B = [[1,0,0,0],[0.798,0.202,0,0],[0.168,0.664,0.168,0],[0.129,0.146,0.578,0.146]] · O_B = [[0,1,0,0],[0.202,0.798,0,0],[0.664,0.168,0,0.168],[0.146,0.129,0.146,0.578]] |
-| 10 | Both head blocks stay. Below them an empty [4 × 8] strip, a `block` "W_O [8 × 8]" with a plain text line under it: "each of the 8 outputs is a weighted mix of all 8 joined numbers", and a plain text label "→ added to the residual stream". | O_A and O_B slide together into the [4 × 8] strip; the flow dot runs from the strip into W_O; the two labels fade in. | Heads run side by side. Their outputs are joined into one row of 8 numbers per token and mixed by one more matrix, W_O. | concat row "sat" = [−0.106, 1.407, 0.106, 0.804, 0.664, 0.168, 0, 0.168] · concat [4 × 8] · W_O [8 × 8] |
+| 7 | The weights row stays. Beside V rows 1–3 a one-cell chip in the matching weight color (0.095, 0.703, 0.202); an empty output vector [1 × 4] at the right. | The chips appear beside V rows 1–3, then the three V rows slide together into the output vector, whose cells fill. Row 4 of V gets no chip (weight 0) and is hatched: masked out, it counts for nothing. | The output is the weighted sum of the values. "sat" leaves carrying mostly cat's value. | 0.095·[1,0,−1,0] + 0.703·[0,2,0,1] + 0.202·[−1,0,1,0.5] = [−0.106, 1.407, 0.106, 0.804] |
+| 8 | The Q, K, V grids fade out. The full heatmap A (weights) replaces the masked-score grid; a [4 × 4] output matrix O_A at `NUMBER_CELL` beside it. A permanent plain text annotation at row 1: "row 1 sees one key, so its weight is 1.0 whatever its score". | Rows 1, 2, 4 of the heatmap recolor from scores to weights and their output rows fill, all together. The annotation fades in with row 1. | Do the same for every row: one head is one attention pattern, the heatmap, and one output vector per token. | A = [[1,0,0,0],[0.321,0.679,0,0],[0.095,0.703,0.202,0],[0.114,0.656,0.129,0.101]] · O_A = [[1,0,−1,0],[0.321,1.358,−0.321,0.679],[−0.106,1.407,0.106,0.804],[0.035,1.212,0.015,0.821]] · every row of A sums to 1.000 |
+| 9 | O_A collapses to its followed row "sat" (172 × 43) under heatmap A, with the plain text label "3 other rows not shown (see the toy)"; both sit inside a `block` labeled "head A" that slides left. A second `block` "head B" appears beside it with an empty heatmap and an empty "sat" row. | Head B's heatmap fills (sub-diagonal pattern), then its "sat" row fills. Nothing else moves. | A second head has its own W_Q, W_K and W_V, so it finds a different pattern: here, each token looks one step back. | B = [[1,0,0,0],[0.798,0.202,0,0],[0.168,0.664,0.168,0],[0.129,0.146,0.578,0.146]] · O_B row "sat" = [0.664, 0.168, 0, 0.168] (full O_B in §7) |
+| 10 | Both head blocks stay. Below them an empty [1 × 8] row labeled "sat, joined", a `block` "W_O [8 × 8]" with a plain text line under it: "each of the 8 outputs is a weighted mix of all 8 joined numbers", and a plain text label "→ added to the residual stream". | The two "sat" rows slide together into the [1 × 8] row; the flow dot runs from it into W_O; the two labels fade in. | Heads run side by side. Their outputs are joined into one row of 8 numbers per token and mixed by one more matrix, W_O. | concat row "sat" = [−0.106, 1.407, 0.106, 0.804, 0.664, 0.168, 0, 0.168] · for all tokens: concat [4 × 8] · W_O [8 × 8] |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. The heatmap keeps its position and orientation (rows = queries, columns = keys) from frame 3 to
@@ -461,35 +484,18 @@ numbers); S/2 and the row strip are `NUMBER_CELL` grids with printed numbers. At
 inside its container; the caption and controls stack below at full width.
 
 ## 12. Open questions for the reviewer
-Resolved by the rulings in §13; kept for the record.
-1. **Hand-authored Q/K/V vs seeded weights.** The spec says "fixed seeded weights"; this storyboard uses
-   hand-picked constants as the default (quarter-grid numbers, visibly different head patterns, a
-   hand-checkable hero row) and keeps seeded `randomMatrix` + `projectQKV` as an optional preset. The
-   seeded version gives 4-decimal numbers and a near-uniform pattern (row "sat" → [0.363, 0.282, 0.356]),
-   which nobody can check by hand. Confirm this trade-off, and whether the "from embeddings" preset is in
-   the pilot build or deferred.
-2. **`data/models.json` key granularity.** The task-4 key list has one `attention` string per model. This
-   page would be better served by `n_heads`, `n_kv_heads`, `head_dim`, `attention_sink` (bool) and
-   `qk_norm` (bool) keys, which `kv-compression` and `kv-cache` will also want for their calculators.
-   Recommend adding them; the §8 table maps to `attention` until then, with the expected strings given so
-   the data agent includes sinks and head counts.
-3. **GPT-3 facts are untagged background in brief 01** (§4 table: 96 L, 96 heads × 128). The data file
-   needs a `source_url`; the brief gives none. Suggest the data agent cites the GPT-3 paper and marks it
-   `confirmed`, or we drop the GPT-3 row and open §8 with gpt-oss.
-4. **FlashAttention.** Mentioned as timeless prose only. FA4's dated numbers (Mar 2026, ~1.6 PFLOP/s on
-   B200, [R]) have no home in `models.json` or `hardware.json`. Leave off, or add a `techniques` entry
-   type to `data/`?
-5. **W_O.** Drawn as a shape-labeled block with no numbers (frame 10, toy "both" view). Enough for this
-   page, or should the toy multiply the concat row by a seeded W_O to show the final [1 × 8] output?
-6. **Caption length.** Some frames are two sentences, which wrap to three lines at 400px. The spec says
-   "one-line caption"; I read that as one idea, not one visual line. Confirm.
-7. **Control naming.** "Divide scores by" (not "temperature") to avoid a clash with `sampling`'s
-   temperature slider. OK, or should the page name the equivalence explicitly in the control label?
-8. **Tokenization is skipped.** "The cat sat down" is presented as four tokens with no mention of the
-   tokenizer; `pretraining` covers that. A one-line footnote, or nothing?
-9. **Scrubbable numbers.** Brief 05 recommends the Tangle pattern. Letting the learner drag one value of
-   q_sat and watch the row recompute would be a strong fifth control but exceeds the 2–4 budget. Defer to
-   a later revision?
+None open. Every question raised in drafting was ruled on and the ruling is applied in the sections
+above (lesson 20); the rulings are listed in §13. As applied:
+1. Q, K, V are hand-picked `TOY` constants; the seeded "from embeddings" preset is deferred (§4, §6).
+2. §8 maps to `models.<id>.attention` / `.layers` / `.release_date`; finer keys (`n_heads`, `n_kv_heads`,
+   `head_dim`, `attention_sink`, `qk_norm`) come in the data-extension pass after Task 12.
+3. The GPT-3 row stays; the data-extension pass cites the GPT-3 paper (arXiv 2005.14165) as confirmed.
+4. FlashAttention is one line of timeless prose in §8; no FA4 numbers.
+5. W_O is a shape-only block (frame 10, toy "both" view).
+6. Captions: one idea, at most two sentences and 30 words, no formulas (§5).
+7. The control is "Divide scores by"; a visible line under it names the temperature equivalence (§6).
+8. One visible tokenization footnote links to `pretraining` (§3).
+9. Scrubbable numbers are deferred to a later revision.
 
 ## 13. Reviewer rulings (main session)
 Every number in §5, §6 and §7 was re-run against the shipped `math/core.js`; all match.
@@ -505,3 +511,11 @@ Every number in §5, §6 and §7 was re-run against the shipped `math/core.js`; 
 8. Tokenization: one footnote line linking to `pretraining` (text in §3).
 9. Scrubbable numbers: deferred to a later revision.
 10. Expert review 2026-10-07: `Prereqs` is `decoder-anatomy` (matches `shared/concepts.json`); "four steps" is "five steps" everywhere; the hook's *why* is answered in §3 ¶3; the row-1 fact is a permanent annotation; the residual-stream hand-off is printed in frame 10 and in §3 ¶4.
+11. Catch-up pass 2026-10-07 (README lessons 16–28 + settlements):
+    - Lesson 18 (stage budget): a "Stage budget" paragraph in §4 gives the per-frame arithmetic at 43 px pitch. Frame 2 stacks q over the current k row (172 px) instead of side by side (344 px). Frames 8–10 fade out the Q/K/V grids; frames 9–10 collapse O_A and O_B to the followed row "sat" with a printed "3 other rows not shown (see the toy)" label, since four full numbered grids (688 px) would overflow 580 px. No cell is shrunk to hover-only.
+    - Lesson 20 (settled rulings): §12 now states each ruling as applied and drops the alternatives.
+    - Lesson 21 (compare like with like): a printed line beside the row strip says the three stacked rows are stages of one computation, each on its own color scale; frames 9–10's heatmaps share one scale.
+    - Lesson 24 / hatch settlement: V row 4 in frame 7 is hatched (masked, counts for nothing), not dimmed; §4 states hatch means "excluded" only.
+    - Lesson 26 (which pass): misconception 5 says K and V are fixed during generation (forward passes with fixed weights) and change only when a training step updates W_K, W_V.
+    - Lessons 16, 17, 19, 22, 23, 25, 27, 28 and the byte-unit, `math/memory.js`, chip-memory, FORMATS, `--carry-activation` and data-id settlements: checked, nothing on this page applies (no bytes, share bars, throughput, chip or Llama figures; every slider stop is inside the toy's validity and the page says 2 is the model's value; `flow` keeps `carry = 'activation'`, which the theme now colors with the Architecture accent).
+    - No number was touched; the §7 regeneration record still covers every number in §5, §6 and §11.

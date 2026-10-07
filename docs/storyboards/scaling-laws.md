@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: pretraining
 Next: `scale-reliability` (GPUs & scale; the one slug whose `prereqs` list `scaling-laws`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §0 items 1–2, §1.3, §1.5, §1.8, §7 (scaling-laws and Muon rows) · 05 §1.1, §1.2. Beyond the
 briefs: the fitted constants of the Chinchilla scaling law as re-estimated by Besiroglu et al. (Epoch AI,
 2024, arXiv 2404.10102). Re-verified by the recipe storyboard author (Opus 5.5 sub-agent) on 2026-10-07 by
@@ -10,12 +10,12 @@ reading the paper's HTML version: "L(N,D) = 1.8172 + 482.01/N^0.3478 + 2085.43/D
 model implies an optimal ratio of around 20 tokens per parameter, which is consistent with both how the
 Chinchilla model was trained and the findings from Approaches 1 and 2." The original 2022 paper's own
 fitted constants are not used anywhere on this page: the re-estimate's authors show they imply about 70
-tokens per parameter, which contradicts the 20 the original paper itself trained with.
+tokens per parameter, which contradicts the 20 the original paper itself trained with. Independently
+re-verified by the expert reviewer (Fable 5.1 sub-agent) on 2026-10-07 against the same HTML (§3 and §3.3):
+constants, "approximately 20 tokens per parameter", and the "approximately 70" reading of the original fit.
 
-Scope decision (recorded as a judgment call in §12 and on `midtraining`): spec §3.2 lists LR schedules
-(cosine vs WSD) here. They move to `midtraining`, which needs the decay phase to explain annealing and does
-not have this page as a prereq. This page keeps the compute split, over-training, and the optimizer
-(AdamW → Muon).
+Ruling (main session, 2026-10-07): LR schedules live on `midtraining`; spec §3.2 to be amended. This page keeps the compute
+split, over-training, and the optimizer (AdamW → Muon).
 
 Definition used everywhere on this page (README lesson 16): **tokens per parameter = pretraining tokens ÷
 active parameters** (for a dense model active = total). A visible line under frame 8 and the toy states
@@ -36,7 +36,7 @@ optimizer does differently from AdamW.
   this to about 20 tokens per parameter. Corrected by frames 3–4 and try-this 1. (source: 02 §1.3 `[BG]`;
   the fit above)
 - **Misconception:** "Compute-optimal is the right way to train a model you will ship." → **Reality:**
-  compute-optimal minimizes *training* compute only. Every served token costs about 2 FLOPs per parameter,
+  compute-optimal minimizes *training* compute only. Every served token costs about 2 FLOPs per active parameter,
   so for a model that will serve 100T tokens the cheapest way to reach the same loss is a 29B model on
   14.4T tokens (495 tokens per parameter), 58.5% less total compute. Corrected by frames 6–7 and try-this 2.
   (source: 02 §1.3 "inference cost, not training cost, dominates the lifetime bill")
@@ -95,7 +95,8 @@ New glyphs proposed: none beyond the `bands` option on `curvePlot`.
 
 Stand-ins (visible line under the stage, frames 6–7 and the toy): "The loss values come from a published
 fit (Epoch AI's 2024 re-estimate of Chinchilla). Serving volumes are what-ifs, not any model's real
-traffic. Muon's update in frames 9–10 is a stand-in with two directions."
+traffic. Muon's update in frames 9–10 is a stand-in with two directions. In frame 2, block width is model
+size, printed beside each block."
 
 Terms introduced (one per frame): FLOPs and the compute budget (1) · tokens per parameter (2) · scaling-law
 fit (3) · compute-optimal (4) · none new (5) · serving (inference) compute (6) · over-training (7) · active
@@ -114,20 +115,20 @@ Thread order: 1–5 the compute split; 6–8 over-training; 9–10 the optimizer
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | Three plain readouts in a row: `parameters 49B (active)` · `tokens 33T` · `× 6`, combining into `compute ≈ 9.7 × 10²⁴ FLOPs` (DeepSeek-V4-Pro). | The three factors slide together; the product counts up. | Training costs about six floating-point operations per parameter per token: two forward, four backward. DeepSeek-V4-Pro's run comes to about ten trillion trillion. | `6 × 49e9 × 33e12 = 9.70 × 10²⁴` · Llama 3.1 405B (2024): `6 × 405e9 × 15.6e12 = 3.79 × 10²⁵` |
-| 2 | A fixed budget label `10²⁴ FLOPs`. Three `block`s of increasing width: `1B`, `96B`, `1T`, each with a token readout below. | The blocks grow in turn while their token readouts shrink. | The same budget can buy a small model reading many tokens or a big one reading few. Tokens per parameter measures the split. | `1B → 167T tokens (166,667 per param)` · `96B → 1.74T (18)` · `1T → 167B (0.17)` |
-| 3 | A `curvePlot`: x = parameters (log, 10⁹–10¹²), y = fitted loss (1.94–2.20). Three points from frame 2 drop on, then the full curve draws through them. | Points fall in; the line draws left to right. | A scaling law is a smooth fit of loss against parameters and tokens, from hundreds of smaller runs. Along a fixed budget, it is a valley. | `1B: 2.187` · `96B: 1.960` · `1T: 2.013` · also `10B: 2.008`, `30B: 1.972`, `300B: 1.972` |
+| 2 | A fixed budget label `10²⁴ FLOPs`. Three `block`s of increasing width: `1B`, `96B`, `1T`, each with a token readout below. | The blocks grow in turn while their token readouts shrink. | The same budget can buy a small model reading many tokens or a big one reading few. Tokens per parameter measures the split. | `1B → 167T tokens (166,667 per param, extrapolated)` · `96B → 1.74T (18)` · `1T → 167B (0.17, extrapolated)` |
+| 3 | A `curvePlot`: x = parameters (log, 10⁹–10¹²), y = fitted loss (1.94–2.20). Three points from frame 2 drop on, then the full curve draws through them. | Points fall in; the line draws left to right. | A scaling law is a smooth fit of loss against parameters and tokens, from hundreds of smaller runs (2022). Along a fixed budget, it is a valley. | `1B: 2.187` · `96B: 1.960` · `1T: 2.013` · also `10B: 2.008`, `30B: 1.972`, `300B: 1.972` |
 | 4 | Same `curvePlot`; the marker settles at the minimum with label `96B · 1.74T tokens · 18 per param`. A plain note: `2020 (Kaplan): mostly bigger · 2022 (Chinchilla): about 20 tokens per parameter`. | The marker slides along the curve to the bottom. | The bottom of the valley is the compute-optimal split: about 20 tokens per parameter, the 2022 Chinchilla rule. Earlier 2020 laws had favored bigger models. | `N* = 9.59 × 10¹⁰`, `D* = 1.74 × 10¹²`, `18.1 tokens/param`, loss `1.960` |
 | 5 | A plain table of the optimum at four budgets. | Rows type in. | Bigger budgets move the optimum along both axes together: model and data grow at about the same rate, and the ratio stays near 20. | `10²² → 9.0B, 184B tokens (20.4)` · `10²⁴ → 96B, 1.74T (18.1)` · `10²⁶ → 1.0T, 16.4T (16.1)` |
-| 6 | A second readout row under the curve: `serving: 2 FLOPs per parameter per token`, and a chip `served: 100T tokens` (what-if). Two stacked readouts for the compute-optimal model: `train 1.0 × 10²⁴` + `serve 1.9 × 10²⁵` = `lifetime 2.0 × 10²⁵`. | The serve readout counts up and dwarfs the train readout. | Serving costs about two operations per parameter for every token generated. For a popular model, serving can dwarf training. | compute-optimal 96B serving 100T tokens: `2 × 9.59e10 × 1e14 = 1.92 × 10²⁵` · lifetime `2.02 × 10²⁵` |
-| 7 | **Key frame.** Same curve and loss line `1.960`. A second marker (selection style) at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
-| 8 | A plain table `tokens per active parameter`: `Chinchilla rule 20 · Llama 3.1 405B (2024) 39 · DeepSeek-V4-Pro 673 · Nemotron 3 Super 2,083 · DeepSeek-V4-Flash 2,462`, with a dim second column `per total parameter: 39 · 21 · 208 · 113`. Definition line visible. | Rows type in; the second column fades in last. | 2026 open models train at hundreds to thousands of tokens per active parameter, far past Chinchilla. Counted per total parameter, the gap is much smaller. | `33T / 49B = 673` · `25T / 12B = 2,083` · `32T / 13B = 2,462` · `15.6T / 405B = 39` · per total: `33T / 1.6T = 21` · `25T / 120B = 208` · `32T / 284B = 113` |
-| 9 | Optimizer thread. A `block` "update for one weight matrix" with a two-cell `vector` `[3.00, 0.30]` labeled `stretch per direction (singular values)`; after normalizing, `[0.995, 0.100]`. A plain mark: `AdamW: steps mostly along the first direction`. | The two cells fill; then both scale down together to their normalized values. | A weight update stretches some directions far more than others; the stretch factors are its singular values. Here one direction is ten times stronger than the other. | `[3.0, 0.3] / √9.09 = [0.995, 0.100]` |
-| 10 | Same `vector`, labeled `Muon: Newton–Schulz iterations`. A step counter `0 → 10`. | The two cells step through the iterations: the small one jumps up, both oscillate near 1, and the last two DeepSeek steps settle them at 1.00. | Muon repeats a cheap polynomial step that pulls every singular value toward one, so every direction moves equally. DeepSeek-V4's last two steps land exactly on one. | Muon coefficients (3.4445, −4.7750, 2.0315): after 1 step `[0.705, 0.338]`, 2 `[1.109, 0.989]`, 8 `[1.092, 1.103]` (between 0.70 and 1.11 throughout) · then (2, −1.5, 0.5) twice: `[1.007, 1.009]`, `[1.000, 1.000]` |
+| 6 | A second readout row under the curve: `serving: 2 FLOPs per active parameter per token`, with the visible basis line `training counts the full step (forward + backward) per token; serving counts the forward pass only`, and a chip `served: 100T tokens` (what-if). Two stacked readouts for the compute-optimal model: `train 1.0 × 10²⁴` + `serve 1.9 × 10²⁵` = `lifetime 2.0 × 10²⁵`. | The serve readout counts up and dwarfs the train readout. | Serving costs about two operations per parameter for every token generated. For a popular model, serving can dwarf training. | compute-optimal 96B serving 100T tokens: `2 × 9.59e10 × 1e14 = 1.92 × 10²⁵` · lifetime `2.02 × 10²⁵` |
+| 7 | **Key frame.** Same curve and loss line `1.960`. A second marker (selection style) at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. Layout check at 580 × 366: `curvePlot` 360 × 240 at the left; the two lifetime readouts and the saving in a 200 px column at its right; the caption below. If the build finds it tight, the readouts move under the stage (the toy repeats them). | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
+| 8 | A plain table `tokens per active parameter`: `Chinchilla rule 20 · Llama 3.1 405B (2024) 39 · DeepSeek-V4-Pro 673 · Nemotron 3 Super 2,083 · DeepSeek-V4-Flash 2,462`, with a dim second column `per total parameter: 39 (dense: same number) · 21 · 208 · 113`. Definition line visible. | Rows type in; the second column fades in last. | 2026 open models train at hundreds to thousands of tokens per active parameter, far past Chinchilla. Counted per total parameter, the gap is much smaller. | `33T / 49B = 673` · `25T / 12B = 2,083` · `32T / 13B = 2,462` · `15.6T / 405B = 39` · per total: `33T / 1.6T = 21` · `25T / 120B = 208` · `32T / 284B = 113` |
+| 9 | Optimizer thread. A `block` "update for one weight matrix" with a two-cell `vector` `[3.00, 0.30]` labeled `stretch per direction (singular values)`; after normalizing, `[0.995, 0.100]`. A plain mark: `momentum step: the 10 : 1 stretch stays (AdamW rescales elements, not directions)`. | The two cells fill; then both scale down together to their normalized values. | A weight update stretches some directions far more than others; the stretch factors are its singular values. Here one direction is ten times stronger than the other. | `[3.0, 0.3] / √9.09 = [0.995, 0.100]` |
+| 10 | Same `vector`, labeled `Muon: Newton–Schulz iterations`. A step counter `0 → 10`. | The two cells step through the iterations: the small one jumps up, both oscillate near 1, and the last two DeepSeek steps settle them at 1.0000. | Muon repeats a cheap polynomial step that pulls every singular value toward one, so every direction moves equally. DeepSeek-V4's last two steps settle them on one to four decimals. | Muon coefficients (3.4445, −4.7750, 2.0315): after 1 step `[0.705, 0.338]`, 2 `[1.109, 0.989]`, 8 `[1.092, 1.103]` (between 0.70 and 1.11 throughout) · then (2, −1.5, 0.5) twice: `[1.007, 1.009]`, `[1.0000, 1.0000]` (exactly 1.000027 and 1.000047) |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 1–8 draw `trainingFlops` (imported from `math/scale.js`), `isoFlopLoss`, `computeOptimal`, `lifetimeFlops`,
-`inferenceAwareOptimum`, `tokensPerParam`; frames 9–10 draw `newtonSchulzSingular`. Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 22/2, 23/2, 26/2, 25/2, 24/1, 19/2,
-26/2, 25/2, 27/2, 26/2.
+`inferenceAwareOptimum`, `tokensPerParam`; frames 9–10 draw `newtonSchulzSingular`. Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 22/2, 23/2, 27/2, 25/2, 24/1, 19/2,
+26/2, 25/2, 27/2, 29/2 (re-run after review).
 
 ## 6. Toy
 "Spend a compute budget." A fixed budget, a model-size slider along the valley, and a serving-volume
@@ -140,6 +141,11 @@ what-if that moves the cheapest choice.
 | `logN` | Model size (active parameters) | Slider, log scale | 10⁹–10¹², step 0.05 decade; readout in B | the compute-optimal size for `C` | – |
 | `Dinf` | Tokens the model will serve over its life (what-if) | Preset chips | `0` / `1T` / `10T` / `100T` / `1,000T` | `0` | – |
 | reset | Reset | Button | – | – | – |
+
+Validity (visible line under the sliders, README lesson 22): "The fit was made on 2022-scale runs, smaller than
+most budgets here, so every value is an extrapolation; sizes far from the optimum (fewer than about 1 or more
+than about 10,000 tokens per parameter) are furthest from its data, and the readout tags them `extrapolated`." Frame 2's 1B and 1T examples
+carry the same tag.
 
 **Live outputs** (printed; the `curvePlot` marker mirrors them)
 | Output | Formula / `math/` function | Units / format |
@@ -202,7 +208,7 @@ AdamW is kept for the embedding, the output head and norm weights. Color links: 
 | DeepSeek-V4-Pro: 49B active, 33T tokens (673 tokens per active parameter; 21 per total) | `models.deepseek-v4-pro.active_params`, `.total_params`, `.pretrain_tokens` (existing, confirmed) | 02 §1.3, §1.8 |
 | DeepSeek-V4-Flash: 13B active / 284B total, 32T tokens (2,462 per active) | `models.deepseek-v4-flash.active_params` = 13e9, `.total_params` = 284e9, `.pretrain_tokens` = 32e12 (proposed, confirmed) | 02 §1.3, §1.8 |
 | Nemotron 3 Super: 12B active / 120B total, 25T tokens (2,083 per active) | `models.nemotron-3-super.active_params` = 12e9, `.total_params` = 120e9, `.pretrain_tokens` (proposed by `pretraining`) (confirmed) | 02 §1.3, §1.8 |
-| Llama 3.1 405B (2024): dense, 15.6T tokens (39 per parameter) | `models.llama-3-405b.total_params`, `.pretrain_tokens` (existing, confirmed) | data file |
+| Llama 3.1 405B (2024): dense, 15.6T tokens (39 per parameter) | `models.llama-3-405b.total_params`, `.pretrain_tokens` (existing, confirmed) | data entry only (source arXiv 2407.21783; not in brief 02) |
 | Olmo 3: ~5.9T tokens for 7B and 32B dense (185–840 per parameter) | `models.olmo-3.pretrain_tokens` = 5.9e12 (reported) | 02 §1.3, §1.8 |
 | Kimi K3 ran its own scaling-law studies (batch size, LR, tokens per parameter, shape) and claims about 2.5× scaling efficiency over K2 from architecture, data and recipe together | `models.kimi-k3.scaling_efficiency_vs_k2` = 2.5 (confirmed) | 02 §1.3 |
 | Muon (or a variant) in DeepSeek-V4 (with AdamW for embedding, head and norms), GLM-5 ("Muon Split"), Kimi K3 ("Per-Head Muon"); AdamW in MiMo-V2-Flash and Nemotron 3 Super | `models.deepseek-v4-pro.optimizer` (existing, confirmed); `models.glm-5.optimizer` = "Muon Split", `models.kimi-k3.optimizer` = "Per-Head Muon", `models.mimo-v2-flash.optimizer` = "AdamW", `models.nemotron-3-super.optimizer` = "AdamW" (proposed, confirmed) | 02 §0 item 2, §1.5 |
@@ -215,7 +221,7 @@ record in this file's header.
 ## 9. Takeaways
 1. Training compute ≈ 6 × parameters × tokens; for a fixed budget the loss is lowest near 20 tokens per
    parameter, with model and data scaled together.
-2. Serving costs about 2 FLOPs per parameter per token, so a model that will be used heavily should be
+2. Serving costs about 2 FLOPs per active parameter per token, so a model that will be used heavily should be
    smaller and trained on far more tokens: 2026 open models sit at hundreds to thousands of tokens per
    active parameter.
 3. Muon replaces AdamW for most weight matrices at DeepSeek, GLM and Kimi: it equalizes each update's
@@ -308,20 +314,22 @@ inferenceAwareOptimum({ targetLoss, inferenceTokens, fit, logNMin = 8, logNMax =
 
 // Muon's Newton–Schulz polynomial applied to each singular value of the Frobenius-normalized update.
 newtonSchulzSingular(singularValues: number[], schedule: [a, b, c][]) → number[][]   // trace incl. step 0
-//   ([3, 0.3], DeepSeek-V4's 8 + 2 schedule) → step 0 [0.995, 0.0995] … step 10 [1, 1]
+//   ([3, 0.3], DeepSeek-V4's 8 + 2 schedule) → step 0 [0.995, 0.0995] … step 9 [1.0071, 1.0094],
+//   step 10 [1.000027, 1.000047] (within 1e-4 of 1, not exactly 1)
 ```
 Test cases for the builder: `computeOptimal(C).loss ≤ isoFlopLoss(C, N).loss` for N on a grid around N*;
 `tokensForLoss(N, fittedLoss(N, D)) = D`; `inferenceAwareOptimum` with 0 serving tokens returns N within
 one grid step of `computeOptimal`; its `tokensPerParam` is non-decreasing as `inferenceTokens` grows;
-`newtonSchulzSingular` with (2, −1.5, 0.5) has fixed point 1; inputs are not mutated.
+`newtonSchulzSingular` with (2, −1.5, 0.5) has fixed point 1, and DeepSeek-V4's schedule from [3, 0.3]
+ends within 1e-4 of 1 (assert a tolerance, never equality); inputs are not mutated.
 
 ## 12. Open questions for the reviewer
 **Data-pass keys** (new): `deepseek-v4-flash.active_params` = 13e9, `.total_params` = 284e9 ·
 `nemotron-3-super.active_params` = 12e9, `.total_params` = 120e9, `.optimizer` = "AdamW" ·
 `olmo-3.pretrain_tokens` = 5.9e12 (reported) · `kimi-k3.scaling_efficiency_vs_k2` = 2.5 ·
 `kimi-k3.optimizer`, `glm-5.optimizer`, `mimo-v2-flash.optimizer` · `deepseek-v4-pro.muon_ns_schedule`. A
-non-model fact: the Chinchilla re-fit constants (proposed `papers.chinchilla-refit-2024`, arXiv 2404.10102,
-confirmed by the author's read on 2026-10-07; same "paper-level fact" question raised on `agentic-rl`).
+non-model fact: the Chinchilla re-fit constants (`papers.chinchilla-refit-2024`, arXiv 2404.10102,
+confirmed by the author and the reviewer on 2026-10-07; ruled to live in `data/papers.json`).
 
 **Cross-track reconciliation (resolved by the coordinator, 2026-10-07):** 6ND has one exporter,
 `trainingFlops({ params, tokens })` in `math/scale.js`, owned by `scale-reliability`. This page imports it
@@ -329,17 +337,20 @@ confirmed by the author's read on 2026-10-07; same "paper-level fact" question r
 3.7908e25. Note the dependency direction: a Recipe module imports a GPUs-track module although
 `scale-reliability` comes later in the graph; the learner meets 6ND here first.
 
-**Graph changes:** none. Adding `scaling-laws` to `midtraining`'s prereqs is not proposed, because the LR
-schedule now lives on `midtraining`; see below.
+**Graph changes:** none.
 
 **Judgment calls:**
-- **LR schedules moved to `midtraining`.** Spec §3.2 puts "LR schedules (cosine vs WSD)" here. `midtraining`
-  needs the decay phase to explain annealing and does not list this page as a prereq, so it owns schedules;
-  this page does not mention them. The reviewer may instead add `scaling-laws` to `midtraining`'s prereqs and
-  move them back.
-- **Beyond-brief source.** The fitted constants come from arXiv 2404.10102, re-verified as recorded in the
-  header. The alternative is a labeled stand-in fit tuned to 20 tokens per parameter.
+- **LR schedules:** Ruling (main session, 2026-10-07): LR schedules live on `midtraining`; spec §3.2 to be
+  amended.
+- **Beyond-brief source:** accepted (expert review); re-verified twice, as recorded in the header.
 - **Active-parameter denominator for MoE.** The fit is for dense models; the page applies it with active
   parameters and shows the per-total column beside it (frame 8), so the learner sees both.
 - **Serving what-ifs.** `Dinf` chips are hypothetical volumes, labeled as such; the briefs give no serving
   volumes per model.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §3 (change log: `fix-recipe-review.md`):
+- Must 1: frame 10's caption now says the last two DeepSeek steps "settle them on one to four decimals"; numbers print [1.0000, 1.0000] with the exact 1.000027 / 1.000047 (re-run); the builder test asserts a 1e-4 tolerance.
+- Must 2: the LR-schedule alternative is deleted; the ruling is stated as applied (header and §12).
+- Should: frame 9's mark describes the momentum step and what AdamW does; "2 FLOPs per active parameter" in misconception 2, frame 6 and takeaway 2; frame 3 dated "(2022)"; frame 7 carries a 580 × 366 layout check; the stand-in line covers frame 2's block widths; the reviewer's re-verification is in the header.
+- Nice: frame 8's Llama row says "(dense: same number)".

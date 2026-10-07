@@ -2,7 +2,7 @@
 
 Track: training · Section: recipe · Prereqs: decoder-recap
 Next: `pretraining` (the one slug whose `prereqs` list `training-pipeline`)
-Status: draft
+Status: approved (expert review)
 Sources: 02 §0, §1.8, §2, §3, §4.1, §4.2, §4.6, §4.8, §5 (the canonical pipeline), §7 ("whole pipeline"
 row) · 05 §1.1, §2 (pattern 9: overview → detail ladder)
 
@@ -17,7 +17,7 @@ Running example: one prompt, `What is 7 × 8?`, the one the RL lessons grade. Af
 checkpoint's reply changes; those replies are illustrative and labeled so on screen.
 
 ## 1. Learning objective
-After this page you can name the six stages of a 2026 training pipeline in order (pretraining,
+After this page you can name the six stages of the canonical 2026 pipeline in order (pretraining,
 mid-training, supervised fine-tuning, specialist reinforcement learning, merging by on-policy distillation,
 final polish), say in one sentence what each adds and which lesson teaches it, and explain why pretraining
 is nearly all of the tokens while post-training is no longer a small share of the compute.
@@ -39,7 +39,10 @@ is nearly all of the tokens while post-training is no longer a small share of th
 **Hook:** What happens between a pile of 30 trillion tokens and a model that thinks before it answers,
 calls tools, and holds a conversation?
 
-A 2026 model is built in six stages, each starting from the weights the last one left. **Pretraining**
+The canonical 2026 pipeline has six stages, each starting from the weights the last one left (smaller
+pipelines skip some; the toy shows which). Each stage needs data the one before could not use: text teaches
+knowledge but not conversation, conversations teach format but not which answer is right, and only a
+checker can teach that. **Pretraining**
 reads tens of trillions of tokens and learns to predict the next one; the result knows a great deal but
 only continues text. **Mid-training** is the end of that run, on the best data and with a longer context
 window. **Supervised fine-tuning** shows it worked conversations, so it learns to answer in turns and to
@@ -51,7 +54,8 @@ another model. This is where most 2026 gains in reasoning and tool use come from
 then merges the specialists back into one model that keeps each one's peak. A **final polish** tunes
 style and safety, and the weights are prepared for serving.
 
-The stages are very unequal. Pretraining is nearly all of the tokens: 94.6% of GLM-5's published budget.
+The stages are very unequal. Pretraining is nearly all of the tokens: 94.6% of GLM-5's published budget (28.5T; its
+published stages sum to 28.55T).
 But a post-training token is far more expensive than a pretraining one, since it has to be generated,
 scored and often run in a sandbox first, so post-training is no longer cheap: DeepSeek-V3.2 spent more
 than 10% of its pretraining compute on it. The rest of this section opens each stage in turn.
@@ -61,12 +65,13 @@ Glyphs used (spec §5.1 and the built library): `block` (the six stage blocks in
 `dim`; the checkpoint; specialist copies in frames 5–6), `flow` (carry `activation` for the weights handed
 from stage to stage; carry `token` for the prompt and replies), `token` (prompt and reply chips),
 `blockStack` (proposed on `decoder-anatomy`; drawn once, small, in frame 1 as "the model" so the learner
-sees it is the same decoder), `shareBar` (proposed on `decoder-anatomy`; token budget by stage with
-`not published` hatched segments), plain labeled text marks (the "adds:" line per stage, the stop links,
+sees it is the same decoder), `shareBar` (proposed on `decoder-anatomy`; token budget by stage; unknown
+segments in the neutral fill, labeled `not published`), plain labeled text marks (the "adds:" line per stage, the stop links,
 the compute-share line, `illustrative`).
 
 `shareBar` usage note for its builder: a segment with `unknown: true` is drawn at a fixed 12% of the bar
-width, hatched, outside the percentage scale, and labeled `not published`; known segments share the rest
+width in the neutral `--line`-tone fill (never hatched: hatch means masked or excluded elsewhere in the
+course), outside the percentage scale, and labeled `not published`; known segments share the rest
 in proportion.
 
 New glyphs proposed: none.
@@ -75,7 +80,7 @@ Stand-ins (visible line under the stage): "The replies to `What is 7 × 8?` are 
 model outputs. Token counts are published figures."
 
 Terms introduced (one per frame; each is defined in one clause and taught on its stop): stage and
-checkpoint (1) · base model (2) · mid-training (3) · supervised fine-tuning (4) · specialist (5) · merging
+checkpoint (1, two words for one idea: the weights each stage hands on) · base model (2) · mid-training (3) · supervised fine-tuning (4) · specialist (5) · merging
 by distillation (6) · polish (7) · token share (8) · compute share (9).
 Terms assumed from prereqs: decoder, block, parameters, total vs active (`decoder-anatomy`,
 `decoder-recap`); next-token prediction (named here, taught on `pretraining`).
@@ -90,18 +95,18 @@ Thread order: frames 1–7 walk the six stages left to right; 8–9 compare thei
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Six `block`s in a row, all `dim`: `1 pretrain · 2 mid-train · 3 SFT · 4 specialist RL · 5 merge · 6 polish`. At the left, a small `blockStack` labeled `the decoder (random weights)` and a reply chip row `zq mat ,, ,,` (`illustrative`). | The row draws left to right; the decoder fades in. | A 2026 model is trained in six stages. Each one starts from the weights the previous stage left, its checkpoint, and adds one thing. | 6 stages |
-| 2 | Stage 1 `active` (outlined). A `flow` of document chips into it from a label `25–33 trillion tokens of text`. The reply becomes `What is 9 × 6? What is 4 × 7?`. Stop links: `pretraining · scaling-laws`. | Chips stream in; the reply retypes. | Pretraining predicts the next token over tens of trillions of tokens. The base model it produces knows a lot but only continues text. | 25T–33T tokens (2026 open models) · adds: knowledge, language, code |
+| 1 | Six `block`s in a row, all `dim`: `1 pretrain · 2 mid-train · 3 SFT · 4 specialist RL · 5 merge · 6 polish`. At the left, a small `blockStack` labeled `the decoder (random weights)` and a reply chip row `zq mat ,, ,,` labeled `(random weights, illustrative)`. A plain mark under the row: `not every lab runs all six (see the toy)`. | The row draws left to right; the decoder fades in. | The 2026 recipe has six stages. Each one starts from the weights the previous stage left, its checkpoint, and adds one thing. | 6 stages |
+| 2 | Stage 1 `active` (outlined). A `flow` of document chips into it from a label `25–33 trillion tokens of text`. The reply becomes `What is 9 × 6? What is 4 × 7?`. Stop links: `pretraining · scaling-laws`. | Chips stream in; the reply retypes. | Pretraining predicts the next token over tens of trillions of tokens. The base model it produces knows a lot but only continues text. | 25T–33T tokens (2026 open frontier MoEs) · adds: knowledge, language, code |
 | 3 | Stage 2 `active`. A label `best data · longer context: 4K → 200K (GLM-5)`. Stop link: `midtraining`. | The stage block widens slightly as the context label grows. | Mid-training is the end of that run: the best data, and a context window stretched from thousands to hundreds of thousands of tokens. | GLM-5: 1.55T tokens, 4K → 200K · adds: long context, reasoning-heavy data |
-| 4 | Stage 3 `active`. The reply becomes `<think> 7 × 8 = 56 </think> 56`. Stop link: `sft`. | The reply retypes inside a chat template. | Supervised fine-tuning shows it worked conversations. Now it answers in turns, thinks between tags, and writes tool calls. | DeepSeek-R1: ~800K examples · Olmo 3: ~2.3M traces (reported) · adds: format, readable reasoning |
+| 4 | Stage 3 `active`. The reply becomes `<think> 7 × 8 = 56 </think> 56`. Stop link: `sft`. | The reply retypes inside a chat template. | Supervised fine-tuning shows it worked conversations. Now it answers in turns, thinks between tags, and writes tool calls. | DeepSeek-R1 (2025): ~800K examples · Olmo 3: ~2.3M traces (reported) · adds: format, readable reasoning |
 | 5 | Stage 4 `active`; the checkpoint splits into three specialist `block`s: `math & code`, `agents`, `chat`. Labels under each: `checked answers`, `sandbox tasks`, `judge model`. Stop links: `rlhf-dpo · rlvr-grpo · agentic-rl`. | The checkpoint copies into three; each specialist lights in turn. | The model is copied into specialists, each trained with reinforcement learning on its own tasks. This is where most 2026 reasoning and agent skill comes from. | Kimi K3: 9 specialists · GLM-5: >10K software environments |
 | 6 | Stage 5 `active`; the three specialists flow into one block. Stop link: `distillation`. | Three `flow`s converge into one model. | On-policy distillation merges the specialists back into one model that keeps each one's best skills. | DeepSeek-V4: > 10 teachers · Kimi K3: 9 |
 | 7 | Stage 6 `active`. Labels `style and safety (judge-model RL)` and `prepared for serving`. Stop links: `rlhf-dpo` (polish), `quantization` (serving). | The block lights; the labels type in. | A final polish tunes style and safety, often with RL against a judge model, and the weights are prepared for serving. | Nemotron 3 Super: separate final RLHF stage · DeepSeek-V4, Kimi K3: FP4-aware training in post-training |
-| 8 | **Key frame.** A `shareBar` under the row for GLM-5: `pretrain 94.6% · mid-train 5.4% · post-training not published` (hatched). | Segments slide in under their stages. | By tokens, pretraining is nearly everything: 94.6% of GLM-5's published budget. Post-training token counts are mostly not published. | `27T / 28.55T = 94.6%` · `1.55T / 28.55T = 5.4%` |
-| 9 | Same bar; a plain line beside the post-training segment: `DeepSeek-V3.2: post-training > 10% of pretraining compute`. Stop links: `gpu-primer`, `scale-reliability`. | The line types in; the hatched segment pulses once. | By compute, post-training is no longer small: over a tenth of pretraining for DeepSeek-V3.2. Each RL token is generated and scored before it teaches anything. | `> 10%` (DeepSeek-V3.2) · Mistral: ~33B RL tokens per day on ~3k GPUs |
+| 8 | **Key frame.** A `shareBar` under the row for GLM-5: `pretrain 94.6% · mid-train 5.4% · post-training not published` (neutral fill, fixed width outside the scale), with a legend `neutral = not published` and the label `28.5T (its published stages sum to 28.55T)`. | Segments slide in under their stages. | By tokens, pretraining is nearly everything: 94.6% of GLM-5's published budget. Post-training token counts are mostly not published. | `27T / 28.55T = 94.6%` · `1.55T / 28.55T = 5.4%` (shares from the stage counts) |
+| 9 | Same bar; a plain line beside the post-training segment: `DeepSeek-V3.2: post-training > 10% of pretraining compute`. Stop links: `gpu-primer`, `scale-reliability`. | The line types in; the neutral `not published` segment pulses once. | By compute, post-training is no longer small: over a tenth of pretraining for DeepSeek-V3.2. Each RL token is generated and scored before it teaches anything. | `> 10%` (DeepSeek-V3.2) · Mistral: ~33B RL tokens produced per day by one run on ~3k GPUs, of which ~16B are trainable completion tokens |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
-state. Frame 8 draws `budgetShares` (`math/pipeline.js`). Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07): 24/2, 23/2, 23/1, 18/2, 26/2, 15/1,
+state. Frame 8 draws `budgetShares` (`math/pipeline.js`). Caption counts (words/sentences, `rlvr-grpo`'s counter, run 2026-10-07, re-run after review): 22/2, 23/2, 23/1, 18/2, 26/2, 15/1,
 21/1, 18/2, 25/2.
 
 ## 6. Toy
@@ -119,7 +124,7 @@ each in its own units, and its token budget by stage.
 |---|---|---|
 | Stage strip: lit if the report describes the stage, `dim` with `not described` if not | preset data (§8 keys) | – |
 | Inspector for the selected stage: the published figure in its own unit, and the stop link | preset data | tokens, examples, pairs, prompts, environments or teachers, as published |
-| Token `shareBar` | `budgetShares(parts)` | percent, 1 decimal; hatched `not published` |
+| Token `shareBar` | `budgetShares(parts)` | percent, 1 decimal; neutral fill labeled `not published` |
 | Known tokens total | `budgetShares(parts).knownTotal` | T tokens |
 
 Preset contents (from §8; `—` = not described in the brief):
@@ -139,12 +144,12 @@ Preset contents (from §8; `—` = not described in the brief):
    described` for Nemotron 3 Super and Olmo 3. → **Insight: merging specialists is the 2026 frontier
    step,** used by the largest open MoE labs; smaller and fully open pipelines often stop at one RL stage
    (`distillation` explains the merge).
-2. With `GLM-5`, read the bar: pretrain 94.6%, mid-train 5.4%, post-training hatched. Then select stage 4
+2. With `GLM-5`, read the bar: pretrain 94.6%, mid-train 5.4%, post-training `not published`. Then select stage 4
    and read its unit: environments, not tokens. Switch to `Olmo 3`: 98.3% / 1.7%, and its post-training
    stages are counted in traces, pairs and prompts. → **Insight: tokens are the wrong ruler for
    post-training.** It is reported in examples, environments and compute, because each of its tokens costs
    far more than a pretraining token.
-3. Select `Kimi K3`: the bar is entirely hatched, yet every stage is lit. → **Insight: a recipe can be
+3. Select `Kimi K3`: the bar holds only neutral `not published` segments, yet every stage is lit. → **Insight: a recipe can be
    fully described without its budget.** Labs often publish the method but not the amounts, which is why
    the course labels unknowns rather than guessing.
 
@@ -160,8 +165,8 @@ unpublished post-training token count, so it cannot make post-training look smal
 ```tex
 \text{training compute} \approx 6\,N_{\text{active}}\,D \quad (\text{taught on } \texttt{scaling-laws})
 ```
-Panel notes: (a) shares are of the *published* total only; an unpublished stage is shown, hatched, never
-estimated. (b) Why an RL token costs more than a pretraining token: it is first generated one token at a
+Panel notes: (a) shares are of the *published* total only; an unpublished stage is shown in the neutral
+fill, never estimated. (b) Why an RL token costs more than a pretraining token: it is first generated one token at a
 time (decode, `prefill-decode`), then scored by a checker, sandbox or judge, and only then trained on.
 No formula is given because the ratio depends on the run. Color links: none (no live equation terms).
 
@@ -177,14 +182,14 @@ No formula is given because the ratio depends on the run. Color links: none (no 
 | Nemotron 3 Super: RLVR (21 environments) → SWE-RL → separate RLHF stage with a judge model | proposed on `rlhf-dpo` / `agentic-rl` | 02 §4.1, §4.6 |
 | DeepSeek-V4 and Kimi K3 use FP4 quantization-aware training in post-training | `models.deepseek-v4-pro.post_training_qat` = "MXFP4 (experts, indexer QK)", `models.kimi-k3.post_training_qat` = "MXFP4 weights + MXFP8 activations, from SFT" (proposed, confirmed) | 02 §1.7 item 2 |
 | DeepSeek-V3.2: post-training compute above 10% of pretraining | `models.deepseek-v3.2.post_training_compute_share` (proposed by `rlvr-grpo`) | 02 §4.3, §5 |
-| Mistral: ~33B RL tokens per day (~16B trainable) at ~3k GPUs | proposed on `agentic-rl` | 02 §4.7, §6 |
+| Mistral: ~33B RL tokens produced per day by one run (~16B of them trainable completion tokens) at ~3k GPUs | proposed on `agentic-rl` | 02 §4.7, §6 |
 | Olmo 3 (reported): ~5.9T pretrain, 100B mid-train, DPO ~200K pairs, RLVR ~105K prompts | proposed on `scaling-laws`, `midtraining`, `rlhf-dpo` | 02 §1.8, §2, §4.2 |
 
 Not on this page, by design: number formats and memory (`gpu-primer`, `training-memory`); which Nemotron 3
 model pretrained in NVFP4 (a known conflict, spec §7).
 
 ## 9. Takeaways
-1. A 2026 model is trained in six stages, each starting from the last one's weights: pretraining,
+1. The canonical 2026 pipeline is six stages, each starting from the last one's weights: pretraining,
    mid-training, SFT, specialist RL, merging by on-policy distillation, and a final polish.
 2. Pretraining gives knowledge; SFT gives format; specialist RL gives most of the reasoning and agent skill;
    distillation merges the specialists into one model.
@@ -204,12 +209,13 @@ Frame 8 (token shares), desktop width. Checked against the reproducer below.
 ```text
  [1 pretrain]→[2 mid-train]→[3 SFT]→[4 RL ×3]→[5 merge]→[6 polish]
    ▲ outlined
- GLM-5 published tokens (28.55T)
- ┌──────────────────────────────────────────┬──┬░░░░░░┐
- │ pretrain 94.6%                           │5.4│░n/p░│
- └──────────────────────────────────────────┴──┴░░░░░░┘
+ GLM-5: 28.5T (its published stages sum to 28.55T)
+ ┌──────────────────────────────────────────┬──┬▒▒▒▒▒▒┐
+ │ pretrain 94.6%                           │5.4│▒ n/p▒│
+ └──────────────────────────────────────────┴──┴▒▒▒▒▒▒┘
    27T                                   1.55T  post-training
                                                  not published
+ neutral = not published
  By tokens, pretraining is nearly everything: 94.6% of GLM-5's
  published budget. Post-training token counts are mostly not
  published.
@@ -250,8 +256,8 @@ known shares; the input array is not mutated.
 **Data-pass keys** (new): `deepseek-v4-pro.post_training_qat`, `kimi-k3.post_training_qat` (confirmed, 02
 §1.7). All other keys on this page are proposed on the stage pages and listed there.
 
-**Graph changes:** none on this page. (`midtraining` is a leaf; its §12 discusses whether `sft` should list
-it.)
+**Graph changes:** none. Ruling (main session, 2026-10-07): `sft` does not list `midtraining`; the stop
+list above carries the curriculum order.
 
 **Judgment calls:**
 - **Stops into other tracks.** Frame 7 links `quantization` (Serving) and frame 9 links `gpu-primer` and
@@ -259,6 +265,15 @@ it.)
   `pretraining` per README lesson 1.
 - **`blockStack` in frame 1** depends on `decoder-anatomy`'s glyph proposal; if it is not accepted, frame 1
   uses a single `block` "the decoder".
-- **`shareBar` unknown-segment width** (fixed 12%, outside the scale) is a usage rule this page needs; it
-  should be agreed with `decoder-anatomy`'s author, who proposed the glyph.
+- **`shareBar` unknown segments:** ruled (expert review, 2026-10-07): fixed 12% width, outside the scale,
+  neutral fill, labeled `not published`, never hatched; to be recorded in `decoder-anatomy`'s `shareBar` spec
+  at build time.
 - **Illustrative replies** to `What is 7 × 8?` are not model outputs; labeled on screen.
+
+## 13. Reviewer rulings (expert review, 2026-10-07)
+Applied from `track-review-recipe.md` §1 (change log: `fix-recipe-review.md`):
+- Must 1: "not published" segments use the neutral fill with a legend, never hatch (frames 8–9, §4, §6, try-this 2–3, §7 note, §11).
+- Must 2: "six stages" scoped to the canonical pipeline (objective, §3, frame 1 caption plus the visible "not every lab runs all six" mark, takeaway 1).
+- Must 3: GLM-5 printed as "28.5T (its published stages sum to 28.55T)"; shares from the stage counts, mid-training 5.4%.
+- Should: frame 2 "(2026 open frontier MoEs)"; DeepSeek-R1 dated 2025; §3 says why one objective cannot do every stage; §4 notes "stage and checkpoint" are one idea; specialist names `math & code · agents · chat` used track-wide.
+- Nice: frame 1's random reply labeled "(random weights, illustrative)".
