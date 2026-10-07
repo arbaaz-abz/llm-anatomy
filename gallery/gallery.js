@@ -190,8 +190,6 @@ function rowMarker(s, x, y) {
 }
 const easeOut = (p) => 1 - (1 - p) ** 2;
 function renderDemo(index, progress, stage) {
-  stage.dataset.step = String(index);
-  stage.dataset.progress = String(progress);
   // One <svg> per stage, cleared each frame: the DOM of a frame is then a pure function of (index, progress).
   const s = stage.querySelector('svg') ?? svg(stage, STAGE_W, STAGE_H, { role: 'img' });
   G.hatchFill(s); // claims the svg's hatch id up front, so frames with and without hatching share one <svg> element state
@@ -262,8 +260,6 @@ function renderDemo(index, progress, stage) {
   });
 }
 const stepper = mountStepper($('#stepper-root'), { steps: STEPS, render: renderDemo, label: 'One row of attention' });
-// Test hook (browser tests seek the pure render at a chosen progress without waiting on the clock).
-$('#stepper-root').seekDemo = (index, progress) => renderDemo(index, progress, stepper.stage);
 
 // ---- slider demo ----
 const BYTES_PER_TOKEN = 2 * 36 * 8 * 64 * 2; // 2 (K,V) · layers · kv heads · head dim · bytes (BF16)

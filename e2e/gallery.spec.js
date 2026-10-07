@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { collectConsoleErrors } from './helpers.js';
+import { glyphOverflows, startPausedClock, animateTo, MID_MS, END_MS } from './lesson-helpers.js';
 
 const stepper = (page) => page.locator('#stepper-root');
 const caption = (page) => page.locator('#stepper-root .stepper-caption');
@@ -118,25 +119,6 @@ test('stepper controls: arrow icon buttons with accessible names, seven speeds, 
   await expect(stepper(page).locator('select')).toHaveValue('1');
 });
 
-// Every glyph (stroke inflated by 2px) must sit inside its SVG's viewBox: figures, and the stage at every step.
-async function glyphOverflows(page, svgSelector) {
-  return page.evaluate((sel) => {
-    const out = [];
-    for (const svg of document.querySelectorAll(sel)) {
-      const box = svg.getBoundingClientRect();
-      for (const el of svg.querySelectorAll('.glyph')) {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 && r.height === 0) continue;
-        const pad = 2;
-        if (r.left - pad < box.left - 0.5 || r.top - pad < box.top - 0.5 || r.right + pad > box.right + 0.5 || r.bottom + pad > box.bottom + 0.5) {
-          out.push(`${el.getAttribute('class')} in ${svg.getAttribute('aria-labelledby') ?? svg.getAttribute('aria-label')}`);
-        }
-      }
-    }
-    return out;
-  }, svgSelector);
-}
-
 test('no glyph is clipped by its SVG: figures and every stepper step', async ({ page }) => {
   await settle(page);
   expect(await glyphOverflows(page, '#figures svg')).toEqual([]);
@@ -229,10 +211,12 @@ test('the query is marked the same way in every frame: "query" under the sat chi
   }
 });
 
+const DISSOLVE_MS = 480; // 30 frames of the 16 ms grid: eased progress 0.7408, inside the 0.6–0.9 dissolve
+
 test('mid-step 5: the travelling rows are drawn on top of o_sat, dissolve, and never leave the SVG', async ({ page }) => {
-  await settle(page);
-  const sample = async (progress) => {
-    await page.evaluate((p) => document.querySelector('#stepper-root').seekDemo(4, p), progress);
+  await startPausedClock(page, '/gallery/');
+  await page.evaluate(() => document.fonts.ready);
+  const sample = async () => {
     const overflow = await glyphOverflows(page, '#stepper-root .stepper-stage svg');
     const ghosts = await page.evaluate(() => {
       const svg = document.querySelector('#stepper-root .stepper-stage svg');
@@ -241,14 +225,17 @@ test('mid-step 5: the travelling rows are drawn on top of o_sat, dissolve, and n
     });
     return { overflow, ghosts };
   };
-  const mid = await sample(0.5);
+  await animateTo(page, '#stepper-root', 4, MID_MS);
+  const mid = await sample();
   expect(mid.overflow).toEqual([]);
   expect(mid.ghosts).toHaveLength(3);
   expect(mid.ghosts.every((g) => g.afterOutput && g.opacity === 1)).toBe(true);
-  const dissolving = await sample(0.75);
+  await page.clock.runFor(DISSOLVE_MS - MID_MS);
+  const dissolving = await sample();
   expect(dissolving.overflow).toEqual([]);
   expect(dissolving.ghosts.every((g) => g.afterOutput && g.opacity > 0 && g.opacity < 1)).toBe(true);
-  expect((await sample(1)).ghosts).toHaveLength(0);
+  await page.clock.runFor(END_MS - DISSOLVE_MS);
+  expect((await sample()).ghosts).toHaveLength(0);
 });
 
 test('the slider demo updates its output on input', async ({ page }) => {

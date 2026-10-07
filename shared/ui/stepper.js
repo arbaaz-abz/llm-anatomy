@@ -70,6 +70,12 @@ export function mountStepper(root, { steps, render, label = 'Animation', transit
   const caption = q('.stepper-caption');
   const speedSelect = q('select');
   const stage = q('.stepper-stage');
+  // The stage carries the frame it shows, so tests and tools read state through the public DOM.
+  const paint = (index, progress) => {
+    stage.dataset.step = String(index);
+    stage.dataset.progress = String(progress);
+    render(index, progress, stage);
+  };
 
   const stop = () => { cancelAnimationFrame(frame); clearTimeout(timer); };
 
@@ -80,7 +86,7 @@ export function mountStepper(root, { steps, render, label = 'Animation', transit
     const start = performance.now();
     const tick = (now) => {
       const progress = duration === 0 ? 1 : Math.min((now - start) / duration, 1);
-      render(index, easeInOut(progress), stage);
+      paint(index, easeInOut(progress));
       if (progress < 1) {
         frame = requestAnimationFrame(tick);
       } else if (state.playing) {
@@ -127,7 +133,7 @@ export function mountStepper(root, { steps, render, label = 'Animation', transit
   root.addEventListener('keydown', onKey);
 
   sync();
-  render(0, 1, stage); // complete at rest: the first frame is fully drawn before any interaction
+  paint(0, 1); // complete at rest: the first frame is fully drawn before any interaction
 
   return {
     dispatch,
