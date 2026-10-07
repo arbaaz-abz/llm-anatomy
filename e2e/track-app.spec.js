@@ -12,9 +12,10 @@ for (const { id, count } of TRACKS) {
 }
 
 test('an unbuilt lesson shows the coming-soon card with prereq links', async ({ page }) => {
-  await page.goto('/architecture/#rope');
-  await expect(page.locator('.coming-soon h2')).toHaveText('RoPE');
-  await expect(page.locator('.coming-soon a')).toHaveText(['Attention, step by step']);
+  // Training is built in a later plan, so this lesson stays unbuilt for all of Plan 2.
+  await page.goto('/training/#pretraining');
+  await expect(page.locator('.coming-soon h2')).toHaveText('Pretraining');
+  await expect(page.locator('.coming-soon a')).toHaveText(['The 2026 training pipeline']);
 });
 
 for (const hash of ['#key=value', '#RoPE', '#..%2Fx', '#%E0%A4%A', '#']) {
