@@ -1,0 +1,92 @@
+{
+  "as_of": "2026-10-07",
+  "entries": [
+    {
+      "id": "chinchilla-refit-2024",
+      "name": "Chinchilla Scaling: A replication attempt (Epoch AI, 2024)",
+      "facts": {
+        "E": {
+          "value": 1.8172,
+          "note": "Irreducible loss. Epoch AI replication fit (Besiroglu et al., 2024), Eq. 3: L(N,D) = E + A/N^alpha + B/D^beta; read in the paper's HTML version (v2) on 2026-10-07.",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "A": {
+          "value": 482.01,
+          "note": "Epoch AI replication fit (Besiroglu et al., 2024), Eq. 3: L(N,D) = E + A/N^alpha + B/D^beta; read in the paper's HTML version (v2) on 2026-10-07.",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "B": {
+          "value": 2085.43,
+          "note": "Epoch AI replication fit (Besiroglu et al., 2024), Eq. 3: L(N,D) = E + A/N^alpha + B/D^beta; read in the paper's HTML version (v2) on 2026-10-07.",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "alpha": {
+          "value": 0.3478,
+          "note": "Epoch AI replication fit (Besiroglu et al., 2024), Eq. 3: L(N,D) = E + A/N^alpha + B/D^beta; read in the paper's HTML version (v2) on 2026-10-07.",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "beta": {
+          "value": 0.3658,
+          "note": "Epoch AI replication fit (Besiroglu et al., 2024), Eq. 3: L(N,D) = E + A/N^alpha + B/D^beta; read in the paper's HTML version (v2) on 2026-10-07. Hoffmann et al.'s original values were E 1.6934, A 406.4, B 410.7, alpha 0.3392, beta 0.2849.",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "arxiv": {
+          "value": "2404.10102",
+          "source_url": "https://arxiv.org/abs/2404.10102",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "fp16-mismatch-2025",
+      "name": "Defeating the Training-Inference Mismatch via FP16 (Qi et al., 2025)",
+      "facts": {
+        "finding": {
+          "value": "BF16 rounding error breaks consistency between the trainer and the rollout engine in RL fine-tuning; reverting to FP16 effectively eliminates the mismatch",
+          "note": "Abstract read 2026-10-07. Kept reported (brief 02 §4.7 REPORTED via search; storyboards rule it reported): the paper's own claim, not independently replicated.",
+          "source_url": "https://arxiv.org/abs/2510.26788",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "arxiv": {
+          "value": "2510.26788",
+          "note": "Submitted 2025-10-30.",
+          "source_url": "https://arxiv.org/abs/2510.26788",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "on-policy-distillation-2025",
+      "name": "On-Policy Distillation (Thinking Machines, 2025)",
+      "facts": {
+        "compute_savings_vs_rl": {
+          "value": "about an order of magnitude or more",
+          "note": "Blog (Kevin Lu and Thinking Machines Lab, 2025-10-27), read 2026-10-07: 9x cost reduction with an existing SFT dataset (closer to 18x in GPU-hours), about 30x including teacher sampling, and 50-100x compute efficiency vs RL in a self-distillation experiment. Lab claim, so reported.",
+          "source_url": "https://thinkingmachines.ai/blog/on-policy-distillation/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "popularized_by": {
+          "value": "Thinking Machines (blog, Oct 2025) and Qwen3",
+          "note": "The blog replicates Qwen3's on-policy distillation result and cites the Qwen3 technical report (brief 02 §4.8 item 3).",
+          "source_url": "https://thinkingmachines.ai/blog/on-policy-distillation/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    }
+  ]
+}

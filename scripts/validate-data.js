@@ -62,8 +62,10 @@ export function validateDataset(json, label) {
   return errors;
 }
 
+export const DATA_FILES = ['models', 'hardware', 'serving', 'papers'];
+
 async function main() {
-  const files = ['models', 'hardware'];
+  const files = DATA_FILES;
   const results = await Promise.all(files.map(async (file) => {
     const url = new URL(`../data/${file}.json`, import.meta.url);
     try {

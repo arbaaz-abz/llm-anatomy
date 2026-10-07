@@ -1,0 +1,1028 @@
+{
+  "as_of": "2026-10-07",
+  "entries": [
+    {
+      "id": "hf-continuous-batching",
+      "name": "Hugging Face: Continuous batching from first principles (Nov 2025)",
+      "facts": {
+        "pad_waste_example": {
+          "value": 693,
+          "unit": "pad tokens",
+          "note": "B = 8, n = 100: adding an n-token prompt to B decoding prompts under padded batching wastes (n-1)(B-1) pad tokens.",
+          "source_url": "https://huggingface.co/blog/continuous_batching",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "orca",
+      "name": "Orca (iteration-level scheduling)",
+      "facts": {
+        "venue": {
+          "value": "OSDI 2022",
+          "note": "USENIX OSDI '22 (Yu et al.). Its throughput gain is deliberately not stored (pages do not show it).",
+          "source_url": "https://www.usenix.org/conference/osdi22/presentation/yu",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm",
+      "name": "vLLM engine",
+      "facts": {
+        "engine_loop": {
+          "value": "schedule → forward pass (run model, sample) → postprocess (append tokens, detokenize, check stops), every step",
+          "note": "Gordić, \"Inside vLLM\" (2025-09-05), read 2026-10-07; the post folds sampling into the forward pass.",
+          "source_url": "https://vllm.ai/blog/2025-09-05-anatomy-of-vllm",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "scheduler_knobs": {
+          "value": "per-step token budget (max_num_batched_tokens), seat cap (max_num_seqs), FCFS by default, priority classes, preemption when KV blocks run out",
+          "note": "Brief 04 §2.3 marks the knob list general knowledge (prior). The cited post confirms FCFS or priority policy and a per-step token budget; it does not name max_num_batched_tokens or max_num_seqs.",
+          "source_url": "https://vllm.ai/blog/2025-09-05-anatomy-of-vllm",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "v1_preemption": {
+          "value": "recompute",
+          "note": "Post: the engine \"may attempt recompute preemption (swap preemption was supported in V0)\". Read 2026-10-07; beyond brief 04.",
+          "source_url": "https://vllm.ai/blog/2025-09-05-anatomy-of-vllm",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "default_block_size": {
+          "value": 16,
+          "unit": "tokens",
+          "note": "PagedAttention paper §7.2: \"vLLM sets its default block size as 16\" (PDF read 2026-10-07); Gordić post: \"Each block stores 16 tokens by default\".",
+          "source_url": "https://arxiv.org/abs/2309.06180",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "sarathi-serve",
+      "name": "Sarathi-Serve (chunked prefill)",
+      "facts": {
+        "venue": {
+          "value": "OSDI 2024",
+          "source_url": "https://arxiv.org/abs/2403.02310",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gain_mistral7b_a100": {
+          "value": 2.6,
+          "unit": "x",
+          "note": "Up to 2.6x serving capacity within SLO, Mistral-7B on one A100, vs Orca and vLLM (abstract).",
+          "source_url": "https://arxiv.org/abs/2403.02310",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gain_falcon180b_8xa100": {
+          "value": 6.9,
+          "unit": "x",
+          "note": "Up to 6.9x, Falcon-180B on 8 A100s, vs Orca and vLLM (abstract).",
+          "source_url": "https://arxiv.org/abs/2403.02310",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-gb200-dsr1",
+      "name": "vLLM on GB200: DeepSeek-R1 disaggregated (Feb 2026)",
+      "facts": {
+        "note_chunking": {
+          "value": "Smaller prefill chunks add overhead from repeated kernel launches and synchronization (GPU bubbles); MLA throughput plateaus as the prefill batch grows from 16K to 64K tokens",
+          "note": "Post read 2026-10-07. Brief 04 §2.2 paraphrased this as \"minimized chunking overheads mattered for 64K-token prefill batches\"; the post's own wording is stored.",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "prefill_instances": {
+          "value": 4,
+          "unit": "instances",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "prefill_gpus_each": {
+          "value": 2,
+          "unit": "GPUs",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_gpus": {
+          "value": 8,
+          "unit": "GPUs",
+          "note": "One decode instance of 8 GB200; 16 GPUs in total.",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "prefill_tok_s_gpu": {
+          "value": 26200,
+          "unit": "tok/s/GPU",
+          "note": "Prefill \"TPGS\" (tokens per GPU-second) on prefill GPUs, so it counts input (prompt) tokens. Workload 2K input / 2K output, NVFP4 MoE experts and output projection, FP8 MLA query up-projection.",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_tok_s_gpu": {
+          "value": 10100,
+          "unit": "tok/s/GPU",
+          "note": "Decode TPGS on decode GPUs, so it counts output (generated) tokens. Workload 2K input / 2K output.",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "pagedattention",
+      "name": "PagedAttention (Kwon et al., SOSP 2023)",
+      "facts": {
+        "kv_useful_before_pct": {
+          "value": [
+            20.4,
+            38.2
+          ],
+          "unit": "%",
+          "note": "One source, not a conflict: paper §2 / Fig. 2 profiling of existing systems found only 20.4%-38.2% of KV cache memory held actual token states (2023).",
+          "source_url": "https://arxiv.org/abs/2309.06180",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "waste_before_pct": {
+          "value": [
+            60,
+            80
+          ],
+          "unit": "%",
+          "note": "One source, not a conflict: vLLM launch post (2023-06-20): \"existing systems waste 60% - 80% of memory due to fragmentation and over-reservation\". The paper's Fig. 2 (20.4-38.2% useful) is the stricter figure.",
+          "source_url": "https://vllm.ai/blog/2023-06-20-vllm",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "waste_after_pct_max": {
+          "value": 4,
+          "unit": "%",
+          "note": "Launch post: \"a mere waste of under 4%\".",
+          "source_url": "https://vllm.ai/blog/2023-06-20-vllm",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "throughput_gain": {
+          "value": [
+            2,
+            4
+          ],
+          "unit": "x",
+          "note": "One source, not a conflict: abstract, \"improves the throughput of popular LLMs by 2-4x with the same level of latency\" vs FasterTransformer and Orca; the paper measures throughput as served request rate at equal normalized latency (2023).",
+          "source_url": "https://arxiv.org/abs/2309.06180",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kernel_overhead_2023_pct": {
+          "value": [
+            20,
+            26
+          ],
+          "unit": "%",
+          "note": "One source, not a conflict: paper §7.1, \"20-26% higher attention kernel latency, compared to the highly-optimized FasterTransformer implementation\" (2023 measurement).",
+          "source_url": "https://arxiv.org/abs/2309.06180",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "engines": {
+          "value": "vLLM, SGLang, TensorRT-LLM (\"paged KV cache\")",
+          "note": "Brief 04 §3.2 statement (prior); the paper introduces the method but does not list the other engines.",
+          "source_url": "https://arxiv.org/abs/2309.06180",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v3-production",
+      "name": "DeepSeek-V3/R1 production inference (Feb 2025)",
+      "facts": {
+        "kv_hit_rate_pct": {
+          "value": 56.3,
+          "unit": "%",
+          "note": "342B of 608B input tokens in 24 h hit the on-disk KV cache.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "input_tokens_per_day": {
+          "value": 608000000000,
+          "unit": "tokens",
+          "note": "Input tokens over 24 h (168B output tokens).",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "avg_kv_length_tokens": {
+          "value": 4989,
+          "unit": "tokens",
+          "note": "Average KV cache length per output token.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "prefill_ep": {
+          "value": 32,
+          "note": "Routed experts EP32, MLA and shared expert DP32, over 4 nodes; 9 routed + 1 shared expert per GPU.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_ep": {
+          "value": 144,
+          "note": "Routed experts EP144, MLA and shared expert DP144, over 18 nodes.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_experts_per_gpu": {
+          "value": "2 routed + 1 shared",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "prefill_tok_s_node": {
+          "value": 73700,
+          "unit": "tok/s per H800 node",
+          "note": "Input tokens per second per node during prefill, including cache hits (source: \"~73.7k tokens/s input (including cache hits)\"). 24-hour production average.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "decode_tok_s_node": {
+          "value": 14800,
+          "unit": "tok/s per H800 node",
+          "note": "Output tokens per second per node during decode. 24-hour production average.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_per_day_usd": {
+          "value": 87072,
+          "unit": "USD per day",
+          "note": "At an assumed $2 per H800 GPU-hour.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gpu_hour_usd": {
+          "value": 2,
+          "unit": "USD per GPU-hour",
+          "note": "The source's assumed H800 leasing cost (an accounting assumption, not a measured price).",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "inferencex-v4-pro-gb300",
+      "name": "InferenceX: DeepSeek-V4-Pro on GB300 NVL72",
+      "facts": {
+        "max_throughput_tok_s_gpu": {
+          "value": 11056,
+          "unit": "tok/s/GPU",
+          "note": "Peak throughput point (low interactivity) on GB300 NVL72. InferenceX, DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, disaggregated Dynamo + vLLM, measured 2026-05-22. Counting: the source does not state whether tok/s/GPU counts output tokens only or input + output.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "max_throughput_tok_s_user": {
+          "value": 13.1,
+          "unit": "tok/s/user",
+          "note": "Per-user speed at the peak-throughput point. Interactivity: output tokens per second per user (InferenceX x-axis). DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "throughput_tok_s_gpu": {
+          "value": 6182,
+          "unit": "tok/s/GPU",
+          "note": "At 27 tok/s/user (iso-interactivity table) on GB300 NVL72. InferenceX, DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, disaggregated Dynamo + vLLM, measured 2026-05-22. Counting: the source does not state whether tok/s/GPU counts output tokens only or input + output.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "interactivity_tok_s_user": {
+          "value": 27,
+          "unit": "tok/s/user",
+          "note": "The iso-interactivity operating point. Interactivity: output tokens per second per user (InferenceX x-axis). DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_per_m": {
+          "value": 0.12,
+          "unit": "USD per M tokens",
+          "note": "At 27 tok/s/user on GB300 NVL72. Per M total (input + output) tokens: the article defines \"cost per million total tokens\" = $/GPU-hr x 1e6 / (3600 x tok/s/GPU). Measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gpu_hour_usd": {
+          "value": 2.65,
+          "unit": "USD per GPU-hour",
+          "note": "SemiAnalysis AI Cloud TCO model rental price used by the article.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "per_gpu_gain_vs_gb200": {
+          "value": 2.83,
+          "unit": "x",
+          "note": "\"Up to 2.83x throughput per GPU vs GB200 NVL72 at iso-interactivity\" (27 tok/s/user); attributed to 288 GB allowing EP 16 and larger prefill batches. Same tok/s/GPU counting caveat as throughput_tok_s_gpu.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "inferencex-v4-pro-gb200",
+      "name": "InferenceX: DeepSeek-V4-Pro on GB200 NVL72",
+      "facts": {
+        "max_throughput_tok_s_gpu": {
+          "value": 8933,
+          "unit": "tok/s/GPU",
+          "note": "Peak throughput point (low interactivity) on GB200 NVL72. InferenceX, DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, disaggregated Dynamo + vLLM, measured 2026-05-22. Counting: the source does not state whether tok/s/GPU counts output tokens only or input + output.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "max_throughput_tok_s_user": {
+          "value": 15.3,
+          "unit": "tok/s/user",
+          "note": "Per-user speed at the peak-throughput point. Interactivity: output tokens per second per user (InferenceX x-axis). DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "throughput_tok_s_gpu": {
+          "value": 2189,
+          "unit": "tok/s/GPU",
+          "note": "At 27 tok/s/user (iso-interactivity table) on GB200 NVL72. InferenceX, DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, disaggregated Dynamo + vLLM, measured 2026-05-22. Counting: the source does not state whether tok/s/GPU counts output tokens only or input + output.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "interactivity_tok_s_user": {
+          "value": 27,
+          "unit": "tok/s/user",
+          "note": "The iso-interactivity operating point. Interactivity: output tokens per second per user (InferenceX x-axis). DeepSeek-V4-Pro, ISL 8192 / OSL 1024, FP4, measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_per_m": {
+          "value": 0.28,
+          "unit": "USD per M tokens",
+          "note": "At 27 tok/s/user on GB200 NVL72. Per M total (input + output) tokens: the article defines \"cost per million total tokens\" = $/GPU-hr x 1e6 / (3600 x tok/s/GPU). Measured 2026-05-22.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "gpu_hour_usd": {
+          "value": 2.21,
+          "unit": "USD per GPU-hour",
+          "note": "SemiAnalysis AI Cloud TCO model rental price used by the article.",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "inferencex-kimi-k2.5-b200",
+      "name": "InferenceX: Kimi K2.5 on B200 (NVFP4) vs H200 (INT4)",
+      "facts": {
+        "cost_per_m_at_32": {
+          "value": 0.14,
+          "unit": "USD per M tokens",
+          "note": "At 32 tok/s/user, B200 NVFP4, vLLM, ISL 8192 / OSL 1024, run 2026-05-19. Counting: $/M = $/GPU-hr x 1e6 / (3600 x tok/s/GPU); the article does not say whether the throughput counts input tokens.",
+          "source_url": "https://inferencex.semianalysis.com/blog/b200-nvfp4-vs-h200-int4-kimi-k2-vllm-perf-per-dollar",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_per_m_at_90": {
+          "value": 0.347,
+          "unit": "USD per M tokens",
+          "note": "At 90 tok/s/user (iso-interactivity table). Counting: the article does not say whether its tok/s/GPU (and so $/M) counts output tokens only or input + output.",
+          "source_url": "https://inferencex.semianalysis.com/blog/b200-nvfp4-vs-h200-int4-kimi-k2-vllm-perf-per-dollar",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_gain_vs_h200": {
+          "value": [
+            2.71,
+            2.95
+          ],
+          "unit": "x",
+          "note": "Brief 04 §5 says 2.75-2.95x; the article (read 2026-10-07) says \"2.71x-2.95x cheaper per million tokens than H200 INT4 in the 30-90 tok/s/user serving band\" (2.75x is its 60 tok/s/user table point). The article's range is stored.",
+          "source_url": "https://inferencex.semianalysis.com/blog/b200-nvfp4-vs-h200-int4-kimi-k2-vllm-perf-per-dollar",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "lmsys-gb300-longctx",
+      "name": "LMSYS: DeepSeek-R1 long context on GB300 NVL72 (2026-02-19)",
+      "facts": {
+        "ttft_128k_s": {
+          "value": 8.6,
+          "unit": "s",
+          "note": "DeepSeek-R1 NVFP4 on GB300, 128K-token prompt, chunked pipeline-parallel prefill (32K initial chunk, dynamic chunking), 1P/1D disaggregated on 8 GPUs.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mtp_per_user_gain_pct": {
+          "value": 87,
+          "unit": "%",
+          "note": "Per-user output speed (TPS/User) rose from 23 to 43 with MTP; DeepSeek-R1 NVFP4 on GB300 NVL72, 128K input / 8K output, peak system throughput maintained.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "engines",
+      "name": "Serving engines (2026)",
+      "facts": {
+        "names": {
+          "value": "vLLM, SGLang, TensorRT-LLM",
+          "note": "The engines Dynamo 1.0 wraps as workers (brief 04 §7.1, §7.2). No verifiable market-share figure exists.",
+          "source_url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Enters-Production-With-Dynamo-the-Broadly-Adopted-Inference-Operating-System-for-AI-Factories/default.aspx",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "dynamo",
+      "name": "NVIDIA Dynamo",
+      "facts": {
+        "ga_date": {
+          "value": "2026-03-16",
+          "note": "Dynamo 1.0 general availability, announced at GTC.",
+          "source_url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Enters-Production-With-Dynamo-the-Broadly-Adopted-Inference-Operating-System-for-AI-Factories/default.aspx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_aware_router": {
+          "value": "Routes requests \"to GPUs that already have the most relevant short-term memory from earlier steps\"",
+          "source_url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Enters-Production-With-Dynamo-the-Broadly-Adopted-Inference-Operating-System-for-AI-Factories/default.aspx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "llm-d",
+      "name": "llm-d",
+      "facts": {
+        "cncf_sandbox_date": {
+          "value": "2026-03-12",
+          "note": "Accepted into CNCF Sandbox; brief 04 §7.1-7.2 via search snippet.",
+          "source_url": "https://www.cncf.io/blog/2026/03/24/welcome-llm-d-to-the-cncf-evolving-kubernetes-into-sota-ai-infrastructure/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "prefix_aware_routing": {
+          "value": "Prefix-cache-aware routing in its inference scheduler (Gateway API Inference Extension, \"EPP\")",
+          "note": "Brief 04 §2.4 via search snippet.",
+          "source_url": "https://www.cncf.io/blog/2026/03/24/welcome-llm-d-to-the-cncf-evolving-kubernetes-into-sota-ai-infrastructure/",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-tiered-kv",
+      "name": "vLLM tiered KV offloading (2026-09-10)",
+      "facts": {
+        "tiers": {
+          "value": "HBM → host DRAM → storage (filesystem, S3-compatible via NIXL, peer-to-peer RDMA)",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "kv_events": {
+          "value": "Engines emit KV events so routers know what each replica holds",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "hbm_conversations": {
+          "value": 64,
+          "unit": "conversations",
+          "note": "Qwen-35B on 2 x H100: up to 64 conversations fit in HBM.",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cpu_offload_range": {
+          "value": [
+            64,
+            128
+          ],
+          "unit": "conversations",
+          "note": "One source, not a conflict: between 64 and 128 conversations need CPU offload (Qwen-35B, 2 x H100).",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "storage_gain": {
+          "value": "more than 2x beyond 128",
+          "note": "Beyond 128 conversations, storage offload \"more than doubled throughput\" (Qwen-35B, 2 x H100).",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-fp8-kv",
+      "name": "vLLM FP8 KV cache (2026-04-22)",
+      "facts": {
+        "bytes_factor": {
+          "value": 0.5,
+          "note": "FP8 (e4m3) KV halves bytes per element vs BF16.",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "naive_niah_128k_pct": {
+          "value": 13,
+          "unit": "%",
+          "note": "128K needle-in-a-haystack accuracy with the naive FP8 implementation.",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "baseline_niah_128k_pct": {
+          "value": 91,
+          "unit": "%",
+          "note": "128K needle-in-a-haystack accuracy before the drop (BF16 baseline).",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "throughput_gain_llama_pct": {
+          "value": 14.9,
+          "unit": "%",
+          "note": "Throughput gain on Llama (+4.8% on gpt-oss-20b).",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "breakeven_tokens": {
+          "value": 7000,
+          "unit": "tokens",
+          "note": "About 7K tokens; below this, FP8 KV is not worth it.",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-prefix-cache",
+      "name": "vLLM automatic prefix caching",
+      "facts": {
+        "granularity": {
+          "value": "full blocks",
+          "note": "Design doc (read 2026-10-07): \"We only cache full blocks\"; block hash = hash(parent hash, token ids, extra keys such as LoRA ids).",
+          "source_url": "https://docs.vllm.ai/en/latest/design/prefix_caching.html",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "eviction": {
+          "value": "LRU free queue",
+          "note": "The free queue's head is the least recently used block and is evicted first.",
+          "source_url": "https://docs.vllm.ai/en/latest/design/prefix_caching.html",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "sglang",
+      "name": "SGLang",
+      "facts": {
+        "radix_attention": {
+          "value": "Cached KV kept in a radix tree keyed by token sequences, with LRU leaf eviction",
+          "note": "Brief 04 §3.3 marks the paper (prior).",
+          "source_url": "https://arxiv.org/abs/2312.07104",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "mooncake",
+      "name": "Mooncake (Kimi)",
+      "facts": {
+        "capacity_gain_pct": {
+          "value": [
+            59,
+            498
+          ],
+          "unit": "%",
+          "note": "One source, not a conflict: effective request capacity up 59%-498% under SLOs (FAST'25 coverage; paper arXiv 2407.00079 not re-fetched).",
+          "source_url": "https://www.tsinghua.edu.cn/en/info/1245/14138.htm",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "pricing-anthropic",
+      "name": "Anthropic API pricing (read 2026-10-07)",
+      "facts": {
+        "cache_read_mult": {
+          "value": 0.1,
+          "unit": "x base input",
+          "note": "Most models; Opus 5.5 is 0.05x, Fable 5.1 0.025x.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cache_write_5m_mult": {
+          "value": 1.25,
+          "unit": "x base input",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cache_write_1h_mult": {
+          "value": 2,
+          "unit": "x base input",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "output_input_ratio": {
+          "value": 5,
+          "unit": "x",
+          "note": "Output price per M output tokens is 5x the input price per M input tokens across current tiers.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "batch_discount_pct": {
+          "value": 50,
+          "unit": "%",
+          "note": "Batch API: 50% off both input and output.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "flat_1m_context": {
+          "value": true,
+          "note": "Claude 4.6+ charge 1M-token context at the flat per-token price.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "pricing-anthropic-sonnet-5.5",
+      "name": "Anthropic Sonnet 5.5 pricing",
+      "facts": {
+        "input_usd_per_m": {
+          "value": 2,
+          "unit": "USD per M input tokens",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "output_usd_per_m": {
+          "value": 10,
+          "unit": "USD per M output tokens",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "pricing-anthropic-opus-5.5",
+      "name": "Anthropic Opus 5.5 pricing",
+      "facts": {
+        "input_usd_per_m": {
+          "value": 4,
+          "unit": "USD per M input tokens",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "output_usd_per_m": {
+          "value": 20,
+          "unit": "USD per M output tokens",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cache_read_mult": {
+          "value": 0.05,
+          "unit": "x base input",
+          "note": "$0.20 per M cached input tokens.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "pricing-deepseek-v4-pro",
+      "name": "DeepSeek V4-Pro API pricing (off-peak, read 2026-10-07)",
+      "facts": {
+        "input_miss_usd_per_m": {
+          "value": 0.66,
+          "unit": "USD per M input tokens",
+          "note": "Off-peak, cache miss.",
+          "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "input_hit_usd_per_m": {
+          "value": 0.022,
+          "unit": "USD per M input tokens",
+          "note": "Off-peak, cache hit (3.3% of the miss price); no cache-write fee.",
+          "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "output_usd_per_m": {
+          "value": 1.98,
+          "unit": "USD per M output tokens",
+          "note": "Off-peak.",
+          "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "peak_mult": {
+          "value": 2,
+          "unit": "x",
+          "note": "Peak rates are 2x off-peak; peak = 01-04 and 06-10 UTC, Mon-Fri.",
+          "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "deepseek-v3-mtp",
+      "name": "DeepSeek-V3 multi-token prediction as a drafter",
+      "facts": {
+        "acceptance_pct": {
+          "value": [
+            85,
+            90
+          ],
+          "unit": "%",
+          "note": "One source, not a conflict: the DeepSeek-V3 report gives 85%-90% acceptance of the second (MTP-predicted) token.",
+          "source_url": "https://arxiv.org/pdf/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "tps_gain": {
+          "value": 1.8,
+          "unit": "x",
+          "note": "About 1.8x tokens per second (per-user decode speed, as the report states it).",
+          "source_url": "https://arxiv.org/pdf/2412.19437",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "eagle-3",
+      "name": "EAGLE-3 (2025)",
+      "facts": {
+        "peak_speedup": {
+          "value": 6.5,
+          "unit": "x",
+          "note": "Up to 6.5x vs vanilla decoding at small batch (abstract).",
+          "source_url": "https://arxiv.org/abs/2503.01840",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "batch64_throughput_gain": {
+          "value": 1.38,
+          "unit": "x",
+          "note": "Throughput gain at batch 64 in SGLang (abstract).",
+          "source_url": "https://arxiv.org/abs/2503.01840",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "p-eagle",
+      "name": "P-EAGLE parallel drafting (vLLM, 2026-03-13)",
+      "facts": {
+        "gain_vs_eagle3": {
+          "value": 1.69,
+          "unit": "x",
+          "note": "Up to 1.69x over EAGLE-3 on B200.",
+          "source_url": "https://vllm.ai/blog/2026-03-13-p-eagle",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-specdec",
+      "name": "vLLM speculative decoding",
+      "facts": {
+        "exact_distribution": {
+          "value": true,
+          "note": "\"Preserves the verifier model's output distribution exactly via rejection sampling.\"",
+          "source_url": "https://vllm.ai/blog/2026-07-28-speculators-parallel-drafting",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "parallel_drafters_note": {
+          "value": "Parallel drafters (P-EAGLE, DFlash, DSpark) are framed as the state of the art versus autoregressive EAGLE-3, and remove the need to retune speculation length as load changes",
+          "source_url": "https://vllm.ai/blog/2026-07-28-speculators-parallel-drafting",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "mainstream_note": {
+          "value": "Self-drafting heads (MTP, EAGLE-family) are the norm in open-model serving; separate draft models are a legacy option",
+          "note": "Brief 04 §4.3 \"safe claim\"; no share of traffic is published.",
+          "source_url": "https://vllm.ai/blog/2026-07-28-speculators-parallel-drafting",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "disaggregation",
+      "name": "Prefill/decode disaggregation",
+      "facts": {
+        "note": {
+          "value": "Prefill and decode run on different GPU pools and the KV cache moves between them; gains: no prefill-induced decode stalls, per-pool parallelism and batch size; costs: KV transfer and two pools to size",
+          "note": "Brief 04 §6.1 summary of the technique; DistServe is the cited primary.",
+          "source_url": "https://arxiv.org/abs/2401.09670",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "distserve",
+      "name": "DistServe (OSDI 2024)",
+      "facts": {
+        "goodput_gain": {
+          "value": 7.4,
+          "unit": "x",
+          "note": "Abstract (read 2026-10-07): \"7.4x more requests or 12.6x tighter SLO\" vs state-of-the-art systems. Brief 04 had it REPORTED via a summary.",
+          "source_url": "https://arxiv.org/abs/2401.09670",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "slo_gain": {
+          "value": 12.6,
+          "unit": "x",
+          "note": "Abstract: 12.6x tighter SLO (the alternative to 7.4x more requests).",
+          "source_url": "https://arxiv.org/abs/2401.09670",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "splitwise",
+      "name": "Splitwise (Microsoft)",
+      "facts": {
+        "throughput_gain": {
+          "value": 1.4,
+          "unit": "x",
+          "note": "Abstract (read 2026-10-07): \"1.4x higher throughput at 20% lower cost\". Brief 04 had it REPORTED via a summary.",
+          "source_url": "https://arxiv.org/abs/2311.18677",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "cost_cut_pct": {
+          "value": 20,
+          "unit": "%",
+          "source_url": "https://arxiv.org/abs/2311.18677",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "throughput_gain_same_cost": {
+          "value": 2.35,
+          "unit": "x",
+          "note": "Abstract: \"2.35x more throughput with the same cost and power budgets\".",
+          "source_url": "https://arxiv.org/abs/2311.18677",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "nixl",
+      "name": "NIXL (NVIDIA Inference Xfer Library)",
+      "facts": {
+        "transports": {
+          "value": "NVLink, InfiniBand / RoCE RDMA, TCP fallback; used by Dynamo, llm-d, vLLM, Ray Serve LLM",
+          "source_url": "https://developer.nvidia.com/blog/nvidia-dynamo-accelerates-llm-d-community-initiatives-for-advancing-large-scale-distributed-inference",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "vllm-large-scale",
+      "name": "vLLM large-scale serving (Dec 2025)",
+      "facts": {
+        "disagg_moe_note": {
+          "value": "Disaggregation helps most for MoE with expert parallelism: one compute-bound prefill in the EP group delays the whole group's forward pass",
+          "source_url": "https://vllm.ai/blog/large-scale-serving",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "wide_ep_note": {
+          "value": "Wide-EP = data-parallel attention + expert-parallel MoE (\"a single set of experts are shared across ranks\"); helpers DeepEP, DeepGEMM, EPLB, dual-batch overlap",
+          "source_url": "https://vllm.ai/blog/large-scale-serving",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "sglang-large-ep",
+      "name": "SGLang open reproduction of DeepSeek serving (May 2025)",
+      "facts": {
+        "output_gain_vs_tp16": {
+          "value": 5,
+          "unit": "x",
+          "note": "Up to 5x output throughput over TP16; 96 H100 (12 nodes), PD + EP with 288 experts (256 + 32 redundant).",
+          "source_url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "eplb_prefill_gain": {
+          "value": 1.49,
+          "unit": "x",
+          "source_url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "eplb_decode_gain": {
+          "value": 2.54,
+          "unit": "x",
+          "source_url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "quant-weight-only",
+      "name": "Weight-only INT4 quantization (GPTQ, AWQ)",
+      "facts": {
+        "note": {
+          "value": "Weights to 4 bits, activations stay 16-bit: about 4x fewer bytes read in decode, but math still runs in 16-bit, so less useful at large compute-bound batches",
+          "note": "Brief 04 §5; GPTQ (2210.17323) and AWQ (2306.00978) marked (prior).",
+          "source_url": "https://arxiv.org/abs/2210.17323",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "nvfp4",
+      "name": "NVFP4 format",
+      "facts": {
+        "r1_accuracy_loss_pct_max": {
+          "value": 1,
+          "unit": "%",
+          "note": "Vendor claim (NVIDIA blog, 2025-06-24, read 2026-10-07): DeepSeek-R1-0528 FP8 → NVFP4 post-training quantization shows 1% or less accuracy loss on key tasks.",
+          "source_url": "https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference",
+          "confidence": "reported",
+          "last_verified": "2026-10-07"
+        }
+      }
+    }
+  ]
+}
