@@ -1,6 +1,7 @@
 // Stacked bars: shareBar (categorical parts, decoder-anatomy §4) and memBar (paged-attention).
 // One geometry (barSegments) under both, so the two never drift apart.
 import { svgEl, group, text, hatchRect } from './core.js';
+import { sharePct } from '../../math/memory.js';
 
 const PART_HUES = 5;
 const MIN_PCT_WIDTH = 30; // narrower segments print their share in the legend instead
@@ -22,7 +23,11 @@ export function barSegments(values, w, gap = 2) {
   }));
 }
 
-export const formatShare = (share) => `${(share * 100).toFixed(share >= 0.01 ? 1 : 2)}%`;
+// The shareBar label: sharePct (math/memory.js, the one definition), one decimal from 1 %, two below.
+export const formatShare = (share) => {
+  const decimals = share >= 0.01 ? 1 : 2;
+  return `${sharePct(share, 1, { decimals }).toFixed(decimals)}%`;
+};
 
 function checkParts(parts) {
   if (!Array.isArray(parts) || parts.length === 0) throw new RangeError('glyphs.shareBar: parts must be a non-empty array');
