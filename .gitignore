@@ -8,3 +8,4 @@ playwright-report/
 .superpowers/
 docs/superpowers/
 .claude/settings.local.json
+.worktrees/
