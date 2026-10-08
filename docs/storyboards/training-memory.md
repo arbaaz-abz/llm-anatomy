@@ -73,7 +73,8 @@ A `shareBar` of one parameter's bytes builds left to right in frames 1–4 (weig
 moments · master copy), with each segment's bytes printed in it. Under it, a "GPT-3 needs" counter (GB
 and H100s) and a short row of `gpu` glyphs, the row collapsed to at most four glyphs plus a plain text
 "+ N more" (lesson 18). Frames 5–7 switch to a `blockStack` of GPT-3's 96 blocks with the activations
-each block saves drawn as a plain filled bar beside it whose length is GB (printed). Frames 8–10 show
+each block saves drawn as a `shareBar` beside it (ruling P3-R19: a library glyph, not a plain bar; fill
+`--part-5`; its width is proportional to the GB it holds, and the GB is printed). Frames 8–10 show
 three GPUs side by side as `gpu` glyphs with their GB printed (GPU 1, GPU 2, "61 others", GPU 64); the
 followed GPU ("GPU 1") carries the selection outline in every frame it appears, and only GPU 1's
 composition is drawn, as one full-width `shareBar` (420 px) under the row, so its smallest slice (the
@@ -117,9 +118,9 @@ nominal; H200 141 GB nominal; B200 180 GB usable of 192 nominal; B300 288 GB nom
 | 2 | Same bar. | Segment "gradient 2 B" grows; counter 350 → 700 GB; the GPU row collapses to four full glyphs and the text "+ 5 more" (lesson 18). | Backpropagation writes a gradient for every weight, the same shape and size. That is 2 more bytes per parameter, 700 GB so far. | 2 + 2 = 4 B · 700 GB · 8.8 H100s |
 | 3 | Same bar. | Segment "Adam moments 8 B" grows (the widest so far); counter 700 → 2,100 GB. | Adam keeps two running averages per parameter, called optimizer states, in FP32 so tiny updates stay precise. They add 8 bytes, the biggest share. | 2 × 4 B = 8 B · 2,100 GB · 26.3 H100s |
 | 4 | Same bar, now complete, with the total "16 B" printed at its end. | Segment "master copy 4 B" grows; counter 2,100 → 2,800 GB; GPU row "+ 31 more". | The optimizer updates an FP32 master copy of each weight, then rounds it to BF16 for the next step. Total: 16 bytes per parameter, 2.8 TB for GPT-3. | 2 + 2 + 8 + 4 = 16 B · 2.8 TB · 35 H100s · weights alone are 2 of 16 (12.5%) |
-| 5 | `blockStack` of 96 blocks (two drawn, "⋮ × 96"). Beside each drawn block, a bar "saved: 2.87 GB". Total "275 GB". Plain marks: "one 2,048-token sequence"; "formula: Korthikanti et al. 2022, micro-batch 1". | A `flow` dot (carry `activation`) runs down the stack; each block leaves its bar behind; the total counts up. | The backward pass needs numbers the forward pass computed, called activations, so each block saves them. For one 2,048-token sequence, GPT-3's 96 blocks save 275 GB. | per block: 2,048 × 12,288 × (34 + 80) bytes = 2.87 GB · × 96 = 275.4 GB |
-| 6 | Zoom on one block: its 2.87 GB bar splits into "attention scores 2.01 GB" and "everything else 0.86 GB". | The scores segment fades out; the bar shrinks; the total recounts 275 → 82 GB. | Most of it is the attention-score grid. Recomputing it during the backward pass, or never storing it as FlashAttention does, cuts the save to 82 GB. | scores 80 of 114 parts (70%) · 34 × 2,048 × 12,288 = 0.86 GB per block · × 96 = 82.1 GB |
-| 7 | Back to the stack. Each block's bar shrinks to a sliver "input 50 MB"; a second, dashed `flow` (carry `activation`) re-runs each block during the backward pass. Readout "extra compute: about +33%". | Bars shrink; the re-run dot passes once. | Full recomputation keeps only each block's input and reruns its forward pass during backward. Saved activations drop to 4.8 GB for about a third more compute. | 2 × 2,048 × 12,288 = 50.3 MB per block · × 96 = 4.83 GB · forward 1 + backward 2 + rerun 1 = 4 units instead of 3 |
+| 5 | `blockStack` of 96 blocks (two drawn, "⋮ × 96"). Beside each drawn block, a one-part `shareBar` "saved: 2.87 GB". Total "275 GB". Plain marks: "one 2,048-token sequence"; "formula: Korthikanti et al. 2022, micro-batch 1". | A `flow` dot (carry `activation`) runs down the stack; each block leaves its bar behind; the total counts up. | The backward pass needs numbers the forward pass computed, called activations, so each block saves them. For one 2,048-token sequence, GPT-3's 96 blocks save 275 GB. | per block: 2,048 × 12,288 × (34 + 80) bytes = 2.87 GB · × 96 = 275.4 GB |
+| 6 | Zoom on one block: its 2.87 GB `shareBar` splits into two parts, "attention scores 2.01 GB" and "everything else 0.86 GB". | The scores segment fades out; the bar shrinks; the total recounts 275 → 82 GB. | Most of it is the attention-score grid. Recomputing it during the backward pass, or never storing it as FlashAttention does, cuts the save to 82 GB. | scores 80 of 114 parts (70%) · 34 × 2,048 × 12,288 = 0.86 GB per block · × 96 = 82.1 GB |
+| 7 | Back to the stack. Each block's bar shrinks to a sliver "input 50 MB"; a second, solid `flow` (carry `activation`, labeled "re-run") re-runs each block during the backward pass (no dashes, ruling P3-R11). Readout "extra compute: about +33%". | Bars shrink; the re-run dot passes once. | Full recomputation keeps only each block's input and reruns its forward pass during backward. Saved activations drop to 4.8 GB for about a third more compute. | 2 × 2,048 × 12,288 = 50.3 MB per block · × 96 = 4.83 GB · forward 1 + backward 2 + rerun 1 = 4 units instead of 3 |
 | 8 | Three `gpu` glyphs labeled GPU 1 (outlined), GPU 2, GPU 64, with "61 others" between them, each with the overflow label "needs 2,800 GB of 80"; under the row, GPU 1's full-width `shareBar` (weight · gradient · moments · master). Each GPU gets a different data chip "batch 1", "batch 2", "batch 64". | Data chips drop into each GPU; the bars appear identical. | Sixty-four GPUs, each training on different data, is data parallelism. Every GPU keeps a full copy, so each one still needs all 2.8 TB. | per GPU 2,800 GB · 64 copies = 179.2 TB in total |
 | 9 | Same GPUs, each printing its GB. On GPU 1's full-width bar the moments-and-master segment shrinks to an 18.8 px slice, labeled "slice 1 of 64" beside it with a leader line; GPU 2 and GPU 64 print "slice 2 of 64", "slice 64 of 64" under their glyphs. | GPU 1's optimizer segment splits; 63 pieces fly off toward the other GPUs; every GPU's GB recounts. | ZeRO shards the optimizer states: each GPU keeps one sixty-fourth and updates only that slice. Per-GPU memory falls from 2,800 GB to 733 GB. | 4 × 175e9 + 12 × 175e9 ÷ 64 = 700 + 32.8 = 732.8 GB · weights still 350 GB, gradients 350 GB |
 | 10 | Same GPUs; gradient and weight segments shard too. GPU 1's bar (rescaled to its new total, full width): 5.5 + 5.5 + 32.8 = 43.75 GB; the `gpu` memory bar drops to 55%. For layer 1, `flow` arrows (carry `weight`) from GPU 2 and GPU 64 into GPU 1 carry that layer's weight slices (label "all-gather before the layer, forward and again backward"). A small readout: "+ activations 4.8 GB (full recompute) = 48.6 GB: fits". | Segments split and scatter; GPU 1's GB counts down; the all-gather arrows run once. | Shard gradients and weights too, and each GPU holds 44 GB of state. Before each layer runs, forward and backward, the GPUs gather its weights: that is ZeRO-3, or FSDP. | ZeRO-2 on the way: 388.3 GB · ZeRO-3: 2,800 ÷ 64 = 43.75 GB · traffic 1.5× plain data parallel · + 4.83 GB activations = 48.58 GB of 80 |
@@ -162,8 +163,20 @@ replaced by the visible note "activations: shape not modeled here (MoE / MLA lay
 | **Per-GPU total and verdict** | state total + activations vs the chip's usable HBM | GB; "fits" (`--sem-ok`) / "does not fit" (`--sem-bad`), always with the numbers |
 | Composition | the four or five parts | `shareBar` with labels and % |
 | GPUs just to hold the state (any sharding, no activations) | `gpusToHoldStates({ params, bytesPerParam: total, hbmBytes })` | integer |
-| Traffic vs plain data parallel | stage 3 → 1.5×, otherwise 1× (03 §3.4: 3Ψ vs 2Ψ words per step) | multiplier |
+| Traffic vs plain data parallel | stage 3 → 1.5×, otherwise 1× (03 §3.4: 3Ψ vs 2Ψ words per step) | `formatRatio` |
 | Extra compute from recomputation | full → about +33% (one extra forward); selective → "small, not quantified here" (hover adds: "it recomputes only the attention-score grid"); none → 0 | % / text |
+
+**Check my work** (default state: GPT-3 175B, Adam 16 B, ZeRO stage 0, 64 GPUs, H100, 2,048 tokens, store
+everything; templated from `trainingBytesPerParam`, `zeroPerGpuBytes` and `activationBytesPerLayer` for any
+state, a sharded part printing its "÷ dp"; other presets print "activations: not modeled"; mono,
+`aria-live="polite"`; this exact text appears on the page):
+```text
+weights     = 175B × 2 B = 350 GB
+gradients   = 175B × 2 B = 350 GB
+optimizer   = 175B × (4 + 8) B = 2,100 GB   (stage 0: nothing sharded)
+activations = 96 × 2,048 × 12,288 × (34 + 5 × 96 × 2,048 ÷ 12,288) B = 275.41 GB
+total       = 3,075.41 GB vs 80 GB (H100, nominal) → does not fit
+```
 
 **Try this** (each leads to a named insight)
 1. Pick "ZeRO paper 7.5B", keep 64 GPUs, and step ZeRO stage 0 → 1 → 2 → 3: 120 → 31.41 → 16.64 →
@@ -362,3 +375,13 @@ Settled and applied (README lesson 20):
   state; the `recipe` argument is a `TRAINING_RECIPES` entry; frame 10 names both passes (lesson 26);
   frame 1 prints what the bar and the GPUs each measure (lesson 21).
 - Data pass 2026-10-07: chip memory labels now say nominal for H100, H200 and B300 (no usable figure in data); B200 stays 180 GB usable; no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R19: frames 5–6's activation bar is a `shareBar` (one part, then two), not a plain filled bar.
+- P3-R11: frame 7's re-run `flow` is solid, labeled "re-run".
+- X-1: "Kimi K2 (2025)" and "Llama 3.1 405B (2024)" stay: `models.kimi-k2.release_date` = "2025-07"
+  (confirmed, arXiv 2507.20534) and `models.llama-3.1-405b.release_date` = "2024-07-23" (confirmed) added.
+- X-2 / P3-R16: "Check my work" added (§6), from `zeroPerGpuBytes` and `activationBytesPerLayer`.
+- README lesson 35: the traffic multiplier prints through `formatRatio`.
+- Conventions (Plan 3 Review Focus 5): the `gpu` chips cite `b200.hbm_usable_gb` with "usable" and nominal
+  `hbm_gb` with "nominal" (`tests/training-conventions.test.js` (c)).
