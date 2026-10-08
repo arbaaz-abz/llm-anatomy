@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell, pixelFill, blockStackLayout, barSegments, formatShare, shareBarLayout } from '../shared/glyphs.js';
+import { valueColor, valueLevel, levelFromFill, tokenWidth, requestSlot, formatCell, pixelFill, blockStackLayout, barSegments, formatShare, shareBarLayout, shareBar } from '../shared/glyphs.js';
 
 test('zero, NaN and non-numeric inputs map to the zero token, never a "NaN%" string', () => {
   assert.equal(valueColor(0, 3), 'var(--val-zero)');
@@ -564,4 +564,31 @@ test('curvePlotLayout: a series label sits above its end, or above-left of its m
   assert.equal(L.bands[0].labelY, L.plot.top + 11);
   assert.equal(L.bands[1].labelY, L.plot.bottom - 5);
   assert.throws(() => curvePlotLayout({ w: 300, h: 200, xAxis: { ticks: [0, 10] }, yAxis: { ticks: [0, 10] }, series: [{ points: [], labelAt: 'start' }] }), /series labelAt must be end or mid/);
+});
+
+// ---- shareBar tailFormat (S3.5): the zoomed tail bar has its own label format (midtraining frame 6) ----
+// A minimal SVG document: enough for shareBar without hatched parts (createElementNS, setAttribute, append, textContent).
+function withFakeDocument(run) {
+  const make = (tag) => ({ tag, attrs: {}, children: [], textContent: '', setAttribute(k, v) { this.attrs[k] = v; }, append(...kids) { this.children.push(...kids); } });
+  const saved = globalThis.document;
+  globalThis.document = { createElementNS: (_ns, tag) => make(tag) };
+  try { return run(make('svg')); } finally { globalThis.document = saved; }
+}
+const textsOf = (node, cls) => node.children.flatMap((c) => [...(c.attrs.class === cls ? [c.textContent] : []), ...textsOf(c, cls)]);
+const MIDTRAINING = [{ name: '4K', value: 27, hue: 1 }, { name: '32K', value: 1, hue: 2 }, { name: '128K', value: 0.5, hue: 3 }, { name: '200K', value: 0.05, hue: 4 }];
+const twoDecimals = (s) => `${(s * 100).toFixed(2)}%`;
+
+test('shareBar tailFormat: the main bar at 2 decimals, the zoomed tail at 1 ("94.57%", "64.5%"; midtraining frame 6)', () => {
+  withFakeDocument((svg) => {
+    const g = shareBar(svg, { x: 0, y: 0, w: 560, parts: MIDTRAINING, tailBasis: 'tail', tailLabel: 'last 5%', format: twoDecimals, tailFormat: formatShare });
+    assert.deepEqual(textsOf(g, 'g-pct'), ['94.57%', '64.5%', '32.3%']);
+    assert.ok(textsOf(g, 'g-label').includes('200K · 3.2% of last 5%'), 'a tail part in the legend uses the tail format');
+  });
+});
+
+test('shareBar tailFormat defaults to format: both bars print with the one format', () => {
+  withFakeDocument((svg) => {
+    const g = shareBar(svg, { x: 0, y: 0, w: 560, parts: MIDTRAINING, tailBasis: 'tail', tailLabel: 'last 5%', format: twoDecimals });
+    assert.deepEqual(textsOf(g, 'g-pct'), ['94.57%', '64.52%', '32.26%']);
+  });
 });
