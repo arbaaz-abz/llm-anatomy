@@ -75,23 +75,24 @@ link speed. Traffic is a `flow` dot on a link (carry
 dispatch). Each cut's cost is a two-lane `laneTimeline` (compute lane, comm lane) on one time axis,
 with the percentage printed and the visible line "one full training step; both lanes in the same time
 units" (lesson 21). The compute lane is drawn 120 px wide; a longer comm lane is cut at the 520 px track
-(4.33× compute) with the `laneTimeline` option `cap: { at, label }` (ruling P3-R9), and ends in an arrow
-with its number printed, "continues: 250%". Pods in frame 7 are faint filled regions (no outline: outlines mean
+(4.33× compute) with the `laneTimeline` options `scale: 1.2` (px per unit, so the compute lane's 100 units
+are 120 px) and one global `cap: { at: 433.3, label: 'continues: 250%' }` (520 px ÷ 1.2; ruling P3-R9), and
+ends in an arrow with its number printed before it; `w` is the lane-label gutter plus the 520 px track. Pods in frame 7 are faint filled regions (no outline: outlines mean
 selection) labeled with their size. The followed GPU, "GPU 1" of server 1, has the selection outline in
 every frame.
 
 Glyphs used (from spec §5.1 and the built library): `rack` (frames 1–2, 6–10), `gpu` (frame 2:
 one GPU, `showMem: false`), `flow`, `block` (frame 7:
 leaf and spine switches as small labeled blocks), `token` (frame 8: one token chip traveling).
-Shared glyph built in S3: `laneTimeline` (ruling P3-R9; `kind: 'compute' | 'comm'`, `cap`) for comm vs
-compute.
+Shared glyph built in S3: `laneTimeline` (ruling P3-R9; segments `{ from, to, kind: 'compute' | 'comm',
+label }`, `scale`, one global `cap`) for comm vs compute.
 
 New glyphs proposed: none. Glyph options built in S3: `rack` `labels: ['1', …, '8']` so frame 8 can
 number rails; `gpu` `showMem: false`.
 
 Frame 10 layout (lesson 18): the 72-GPU `rack` at `cols: 9` is 244 × 218 px (the built geometry, ruling
 P3-R8); it stands alone at the left with the printed line "= 9 HGX servers". The nine servers appear only
-as the merge's start state, collapsed to three 8-GPU racks (114 × 62 px each at `cols: 4`) and the text
+as the merge's start state, collapsed to three 8-GPU racks (each 114 × 62 px overall at `cols: 4`) and the text
 "+ 6 other servers", so the frame stays inside 580 × 366.
 
 Plain labeled marks: link bandwidth labels; "one full training step; compute at dense BF16 peak; real
@@ -361,6 +362,8 @@ Settled and applied (README lesson 20):
   are printed (§4, frames 1 and 6); the rack sizes are the built ones (244 × 218 at `cols: 9`, 114 × 62 at
   `cols: 4`).
 - P3-R9: the capped comm lane is `laneTimeline`'s `cap` option.
+- S3-C final API (reconciled 2026-10-08): the lanes use `scale: 1.2` px per unit and one global `cap` at
+  433.3 units (the 520 px track); an 8-GPU rack at `cols: 4` is 114 × 62 overall.
 - X-3: "(4.3× compute)" → "(4.33× compute)" (§4, §6), through `formatRatio`.
 - P3-R12: "inside" stays disabled with its visible note.
 - P3-R13: `epCommRatio`'s default `flopsPerByte` (6,144) carries an equality test against
