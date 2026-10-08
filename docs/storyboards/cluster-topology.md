@@ -76,7 +76,7 @@ dispatch). Each cut's cost is a two-lane `laneTimeline` (compute lane, comm lane
 with the percentage printed and the visible line "one full training step; both lanes in the same time
 units" (lesson 21). The compute lane is drawn 120 px wide; a longer comm lane is cut at the 520 px track
 (4.33× compute) with the `laneTimeline` options `scale: 1.2` (px per unit, so the compute lane's 100 units
-are 120 px) and one global `cap: { at: 433.3, label: 'continues: 250%' }` (520 px ÷ 1.2; ruling P3-R9), and
+are 120 px) and one global `cap: { at: 433.3, label: 'continues: N%' }` (e.g. 'continues: 537%' for tensor 16 over the network; 520 px ÷ 1.2; ruling P3-R9), and
 ends in an arrow with its number printed before it; `w` is the lane-label gutter plus the 520 px track. Pods in frame 7 are faint filled regions (no outline: outlines mean
 selection) labeled with their size. The followed GPU, "GPU 1" of server 1, has the selection outline in
 every frame.
@@ -118,7 +118,7 @@ TFLOPS). Numbers from `math/topology.js` (§6).
 |---|---|---|---|---|
 | 1 | One `rack` glyph of 8 GPUs labeled "H100 server (HGX)"; internal links (default width) labeled "NVLink: 900 GB/s per GPU, both directions = 450 each way". GPU 1 outlined. | Links draw from GPU 1 to every other GPU. | Inside a server, eight GPUs talk through NVLink switches at 450 GB/s each way on H100s. That fast island is called the scale-up domain. | 8 GPUs · 900 GB/s bidirectional = 450 GB/s each way |
 | 2 | Four servers in a row; thin links from each GPU to a network switch, labeled "400 Gb/s = 50 GB/s each way". A side ladder, each way only: NVLink 450 → network 50 GB/s (HBM is a shared total and stays off this ladder, lesson 28; `gpu-primer` link). | The network links draw; the ladder's second bar shrinks to one ninth. | Between servers, each GPU gets one network port: 50 GB/s each way, nine times slower than NVLink. That second layer is the scale-out network. | 450 ÷ 50 = 9× |
-| 3 | Tensor parallelism over 8 GPUs, drawn twice: inside one server, and spread over 8 servers. Under each, a `laneTimeline`: compute vs comm. Plain mark: "one full training step; compute at dense BF16 peak; real kernels run slower, so real ratios are smaller". | All-reduce dots run on both; the comm lanes grow to 28% and 250% of the compute lane (the second cut at the track with "continues: 250%"). | Tensor parallelism all-reduces inside every layer, and the next layer waits. Over NVLink that takes 28% as long as the math; over the network, two and a half times longer. | per layer per step (forward and backward): 352 MB sent per GPU vs 2,783 GFLOP per GPU · ratio 27.8% (NVLink) vs 250.4% (network) |
+| 3 | Tensor parallelism over 8 GPUs, drawn twice: inside one server, and spread over 8 servers. Under each, a `laneTimeline`: compute vs comm. Plain mark: "one full training step; compute at dense BF16 peak; real kernels run slower, so real ratios are smaller". | All-reduce dots run on both; the comm lanes grow to 28% and 250% of the compute lane (both fit under the 4.33× cap). | Tensor parallelism all-reduces inside every layer, and the next layer waits. Over NVLink that takes 28% as long as the math; over the network, two and a half times longer. | per layer per step (forward and backward): 352 MB sent per GPU vs 2,783 GFLOP per GPU · ratio 27.8% (NVLink) vs 250.4% (network) |
 | 4 | Data parallelism across 64 servers' worth of GPUs (collapsed: "GPU 1 of servers 1, 2, …, 64", "61 others"). One gradient sync per step, its comm lane drawn *under* the backward part of the compute lane. Plain mark: "tokens per replica per step: 262,144 (stand-in)". | The sync dot runs while the backward segment of the compute lane is still filling. | Data parallelism syncs gradients once per step, and the sync can overlap with the backward pass that produces them. Over the network it costs 5% of the compute time here. | ratio 5.0% (network) · rises to 79.2% at 16,384 tokens per replica |
 | 5 | Pipeline parallelism, 16 stages, one per server; a small activation dot hops forward between servers, then a gradient dot hops back. | The dots hop; the comm lane stays a sliver. | Pipeline stages hand over one activation per micro-batch at each boundary, and its gradient comes back. Even over the network that is about 1.5% of the compute. | ratio 1.5% (network), 0.2% (NVLink) at 16 stages |
 | 6 | Llama 3's 8,192-GPU layout: tensor 8 inside each server (on NVLink, labeled), pipeline 16 across servers, data 64 across groups of pipelines. A plain list "innermost → outermost: tensor, context, pipeline, data". Visible note: "data parallelism sends more per unit of compute than pipeline here (5.0% vs 1.5%), but it overlaps with backward; pipeline hand-offs sit between stages". | The three cuts light in order, innermost first. | So the cut that blocks compute gets the fastest link. Llama 3 kept tensor parallelism inside each 8-GPU server and put pipeline, then data parallelism, on the network. | 8 × 16 × 64 = 8,192 · order TP, CP, PP, DP |
@@ -161,8 +161,10 @@ but their order is the same."
 cut's function in `math/topology.js` with its bytes and FLOPs per GPU; mono, `aria-live="polite"`; this
 exact text appears on the page):
 ```text
-bytes per GPU, one layer, full step = 4 × ring all-reduce of 2,048 × 12,288 × 2 B over 8 GPUs = 352.32 MB
-FLOPs per GPU, one layer, full step = 72 × 2,048 × 12,288² ÷ 8 = 2,783.1 GFLOP
+bytes per GPU, one layer, full step
+  = 4 × ring all-reduce of 2,048 × 12,288 × 2 B over 8 GPUs = 352.32 MB
+FLOPs per GPU, one layer, full step
+  = 72 × 2,048 × 12,288² ÷ 8 = 2,783.1 GFLOP
 comm ÷ compute = (352.32 MB ÷ 450 GB/s) ÷ (2,783.1 GFLOP ÷ 989 TFLOPS) = 27.8%
 ```
 
@@ -298,8 +300,7 @@ Racks and networks                 3 / 10  [<] [Play] [>]
  | 5==6==7==8        |          |  ---- switch ----
  +-- NVLink 450 GB/s +          |    network 50 GB/s
  compute [==========]           | compute [==========]
- comm    [===]  27.8%           | comm    [=========================>
-                                |   continues: 250.4%
+ comm    [===]  27.8%           | comm    [=========================]  250.4%
  352 MB sent, 2,783 GFLOP per GPU per layer per step
  Tensor parallelism all-reduces inside every layer, ...
 ```

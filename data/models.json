@@ -376,6 +376,12 @@
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
+        "opd_teachers": {
+          "value": "more than 10",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
         "dpo_stage": {
           "value": "not listed",
           "note": "Absent from the report read; not proof of non-use.",
@@ -782,6 +788,12 @@
           "source_url": "https://arxiv.org/abs/2607.24653",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "rl_expert_grid": {
+          "value": "3 domains (general, general agents, coding agents) × 3 effort levels",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         },
         "rl_rollouts": {
           "value": "partial rollouts (λ), AgentEnv microVMs",
@@ -1754,6 +1766,12 @@
           "source_url": "https://arxiv.org/abs/2606.19348",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "lr_schedule": {
+          "value": "peak 2.7e-4, batch ramped to 75.5M tokens",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2049,6 +2067,14 @@
           "source_url": "https://arxiv.org/abs/2512.02556",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "rl_tasks": {
+          "value": 4417,
+          "unit": "tasks",
+          "note": "Brief 02 §4.6.",
+          "source_url": "https://arxiv.org/abs/2512.02556",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         },
         "rl_patches": {
           "value": "weak/zero KL (math), off-policy sequence masking, Keep Routing, Keep Sampling Mask",
