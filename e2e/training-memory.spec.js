@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerLessonContract } from './lesson-helpers.js';
+import { registerLessonContract, seekAndRun, LESSON_STEPPER } from './lesson-helpers.js';
 import { collectConsoleErrors } from './helpers.js';
 import { CAPTIONS, CHECK_WORK, TRY_THIS } from '../tests/training-memory-expected.js';
 
@@ -9,6 +9,12 @@ registerLessonContract({ name: 'training-memory', url: URL, captions: CAPTIONS, 
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
 const pick = (page, group, value) => page.locator(`#${group} [data-value="${value}"]`).click();
+
+test('frame 6 at rest keeps the attention-score share on screen', async ({ page }) => {
+  await page.goto(URL);
+  await seekAndRun(page, LESSON_STEPPER, 5, 5000);
+  await expect(page.locator(`${LESSON_STEPPER} .stepper-stage`)).toContainText('attention scores: 80 of 114 parts (70%), 2.01 GB per block, no longer saved');
+});
 
 test.describe('training-memory toy: will it fit?', () => {
   test.beforeEach(async ({ page }) => { await page.goto(URL); });

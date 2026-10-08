@@ -62,6 +62,7 @@ export function drawFrame6(svg, p) {
     G.block(zoom, { x: BAR_X, y: STACK.y + 86, w: 190, h: 32, label: 'attention scores', state: 'idle' });
     note(zoom, BAR_X, STACK.y + 134, `scores ${Math.round(parts)} of ${Math.round(wholeParts)} parts (${Math.round(sharePct(parts, wholeParts))}%)`);
   }
+  note(svg, STACK.x, STACK_BOTTOM + 80, `attention scores: ${Math.round(parts)} of ${Math.round(wholeParts)} parts (${Math.round(sharePct(parts, wholeParts))}%), ${sizeText(SPLIT.scores)} per block, no longer saved`, { opacity: seg(p, 0.6, 1) });
   marks(svg, (scores + SPLIT.rest) * GPT3.layers);
 }
 

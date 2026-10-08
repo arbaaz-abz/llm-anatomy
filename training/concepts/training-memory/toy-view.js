@@ -105,7 +105,7 @@ export function tryThis(data) {
     {
       prompt: `GPT-3, ZeRO-3, 64 GPUs, H100: state is ${num(zero(g3, 3))} GB. With "store everything" the total is ${withAct('none', 3)} GB (does not fit); "skip attention scores" ${withAct('selective', 3)} GB (still no); "block inputs only" ${withAct('full', 3)} GB (fits). Now set ZeRO stage 0: ${withAct('full', 0)} GB even with full recomputation.`,
       insight: "ZeRO's stages shard state, never activations; recomputation shrinks activations, never state; you need both.",
-      rest: ' Activations are per GPU because each GPU holds its own data; [[parallelism]] splits them further with tensor and pipeline parallelism.',
+      rest: ' Activations are per GPU because each GPU holds its own data; tensor and pipeline parallelism split them further (see [[parallelism]]).',
     },
     {
       prompt: `DeepSeek-V4-Pro's size ({deepseek-v4-pro.total_params|count} total, {deepseek-v4-pro.active_params|count} active) at the Adam recipe, H100: "GPUs just to hold the state" reads ${hold(v4, 'adam', 'h100')}. Switch to B200: ${hold(v4, 'adam', 'b200')}; B300: ${hold(v4, 'adam', 'b300')}. Switch the recipe to Muon (V4's own): ${hold(v4, 'muon', 'b300')}. Then pick GPT-3 (175B dense) with H100 and Adam again: ${hold(g3, 'adam', 'h100')} H100s.`,

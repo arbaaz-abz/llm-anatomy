@@ -60,6 +60,6 @@ export const BELOW = Object.freeze([
   ['Real recipes recompute selectively and offload too; the "In today\'s models" list below names two.'],
   [],
   [],
-  ["Llama 3.1 405B ({llama-3.1-405b.release_date|year}) shards optimizer states and gradients with FSDP but does not re-shard the weights after the forward pass. [[parallelism]] splits activations and state further."],
+  ["Llama 3.1 405B ({llama-3.1-405b.release_date|year}) shards optimizer states and gradients with FSDP but does not re-shard the weights after the forward pass. Splitting the model itself cuts activations and state further: see [[parallelism]]."],
   ['What a mixture of experts is: [[moe]]. DeepSeek-V4-Pro ({deepseek-v4-pro.total_params|count} total, {deepseek-v4-pro.active_params|count} active) is the example.'],
 ]);
