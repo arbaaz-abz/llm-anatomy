@@ -97,7 +97,7 @@ sequence…" position note and the recipe labels in frame 10 are plain text labe
 Color: patch greys are image content (not the value scale). Vectors use the value scale with seeded values
 from `randomMatrix` (hover-only; nothing load-bearing is in them). Image-token rows and word rows are told
 apart by labels ("img₁ … img₄", word chips), never by hue. The followed patch 6 (and the merged token it
-lands in, img₂) carries the selection outline.
+lands in, img₁) carries the selection outline.
 
 ## 5. Animation script
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
@@ -105,8 +105,8 @@ lands in, img₂) carries the selection outline.
 | 1 | The 16 × 16 image; grid lines draw at every 4 pixels; it separates into 16 `patch` glyphs numbered 1–16; patch 6 outlined. | Grid lines draw; patches slide apart slightly. | The image is cut into a grid of square patches. Here each patch is 4 by 4 pixels; real models use 14 by 14. | 16 × 16 pixels ÷ 4 × 4 = 16 patches · each patch 16 grey values · Kimi K3, MiniMax-M3: patch 14 |
 | 2 | Patch 6's 16 greys flatten into a row; a `block` "patch embedding [16 → 8]"; out comes one 8-cell `vector`; then all 16 patches do the same. | Patch 6 flattens and passes the block; the other 15 follow together. | Each patch's pixels are flattened and multiplied by one learned matrix, giving one vector per patch. That is the patch embedding. | 16 greys → 8 numbers · 16 patch vectors · matrix [16 × 8] = 128 parameters |
 | 3 | The 16 vectors enter a `block` "vision encoder"; inside, a small 16 × 16 pattern grid with every cell read (no hatching), labeled "within one image, every patch sees every patch". | Flow dots run between patch vectors inside the block; the vectors retint. | A vision encoder, a transformer of its own, lets every patch attend to every other one, with no causal mask. Each vector now describes its patch in context. | 16 × 16 = 256 patch pairs read · Kimi K3's encoder: 27 layers, 401M parameters |
-| 4 | The 4 × 4 grid of encoded vectors groups into 2 × 2 blocks; each group of four concatenates into one 32-cell vector. Patch 6 lands in group 2. | Groups of four slide together and fuse. | Neighboring patches are merged four into one, so the image costs a quarter of the tokens. Kimi K3 merges 2 by 2; DeepSeek's newest encoder merges 3 by 3. | 16 → 4 vectors of 4 × 8 = 32 numbers · K3 2 × 2 (÷ 4) · DeepSeek-ViT 3 × 3 (÷ 9, reported) |
-| 5 | Each merged vector passes a `block` "projector [32 → 8]" and comes out 8 wide; labels img₁ … img₄; img₂ outlined. | Four flows through the projector; four rows appear at the stream's width. | A small projector maps each merged vector to the language model's width. Now the image is four tokens, the same shape as a word's vector. | 32 → 8 · 4 image tokens of d_model 8 · projector: a small MLP (2 layers in DeepSeek-ViT, reported) |
+| 4 | The 4 × 4 grid of encoded vectors groups into 2 × 2 blocks; each group of four concatenates into one 32-cell vector. Patch 6 (row 2, column 2) lands in group 1, the top-left block. | Groups of four slide together and fuse. | Neighboring patches are merged four into one, so the image costs a quarter of the tokens. Kimi K3 merges 2 by 2; DeepSeek's newest encoder merges 3 by 3. | 16 → 4 vectors of 4 × 8 = 32 numbers · K3 2 × 2 (÷ 4) · DeepSeek-ViT 3 × 3 (÷ 9, reported) |
+| 5 | Each merged vector passes a `block` "projector [32 → 8]" and comes out 8 wide; labels img₁ … img₄; img₁ outlined. | Four flows through the projector; four rows appear at the stream's width. | A small projector maps each merged vector to the language model's width. Now the image is four tokens, the same shape as a word's vector. | 32 → 8 · 4 image tokens of d_model 8 · projector: a small MLP (2 layers in DeepSeek-ViT, reported) |
 | 6 | The stream: img₁ … img₄ then The cat sat down, eight rows; label "in this sequence the words sit at 5–8"; an 8 × 8 causal pattern grid beside it, the word rows reading all four image columns. | Word chips slide in under the image rows; the grid fills row by row. | Image tokens and words share one sequence. Under the causal mask, every word can attend to the image, and the blocks treat both alike. | 8 positions · each word row reads 4 image tokens + the words before it · row "sat" (position 7) reads 7 keys |
 | 7 | A plain text prompt first, for one second: "How many tokens is a phone photo?" Then a coarse grid for a 1,008 × 1,008 photo at patch 14: "72 × 72 = 5,184 patches → 1,296 tokens"; then the largest input K3 accepts, 3,584 × 3,584: "65,536 → 16,384". | The grid's counters type in; then the grid redraws four times larger per side. | Tokens grow with the image's area. A 1,008-pixel square photo costs 1,296 tokens, and Kimi K3's largest input costs 16,384. | 1008 ÷ 14 = 72 · 72² = 5,184 · ÷ 4 = 1,296 (0.12% of 1,048,576) · 3584 ÷ 14 = 256 · 256² = 65,536 · ÷ 4 = 16,384 (1.6%) · visible line: "64 of these fill a 1M window" |
 | 8 | A wide 1,008 × 504 photo: left, squashed into a square (1,296 tokens, label "stretched"); right, kept at its shape (648 tokens). | The square version deflates into the wide grid; the counter drops. | Dynamic resolution keeps each image's own shape instead of resizing it to a square. A wide photo then costs only the tokens it actually covers. | 1008 × 504 at patch 14: 72 × 36 = 2,592 patches → 648 tokens (vs 1,296 as a square) |
@@ -115,7 +115,7 @@ lands in, img₂) carries the selection outline.
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. The patch grid keeps its position in frames 1–4; the stream keeps its position in frames 5–6; patch 6
-and img₂ keep the selection outline.
+and img₁ keep the selection outline.
 
 Caption word counts (README lesson 2; ≤ 30 words, ≤ 2 sentences, no operators): 24 · 21 · 28 · 29 · 25 ·
 24 · 20 · 25 · 24 · 26.
@@ -279,8 +279,8 @@ Frame 6 (image and words in one sequence), desktop width; counts from the §6 re
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │ ▦▦▦▦     vision     2×2      projector                   │
-│ ▦►▦▦▦ →  encoder  → merge →  [32→8]  →  img₁ ▪▪▪▪▪▪▪▪    │
-│ ▦▦▦▦    (all see    16→4               ►img₂ ▪▪▪▪▪▪▪▪    │
+│ ▦►▦▦▦ →  encoder  → merge →  [32→8]  → ►img₁ ▪▪▪▪▪▪▪▪    │
+│ ▦▦▦▦    (all see    16→4                img₂ ▪▪▪▪▪▪▪▪    │
 │ ▦▦▦▦     all)                           img₃ ▪▪▪▪▪▪▪▪    │
 │ 16 patches                              img₄ ▪▪▪▪▪▪▪▪    │
 │                                        [The]₅ [cat]₆     │
@@ -294,7 +294,7 @@ Frame 6 (image and words in one sequence), desktop width; counts from the §6 re
 │ [◄] [Pause] [►]  ━━━━━●━━━━━━  6 / 10  speed [1×]        │
 └──────────────────────────────────────────────────────────┘
 ```
-"►" is the selection outline on patch 6 and the token it merged into (img₂). The sketch shows only row
+"►" is the selection outline on patch 6 and the token it merged into (img₁). The sketch shows only row
 "sat" of the 8 × 8 pattern grid; the stage draws all eight rows at 18 px. At 400 px the pipeline wraps into
 two rows.
 
