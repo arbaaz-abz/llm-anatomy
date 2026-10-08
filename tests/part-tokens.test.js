@@ -65,6 +65,21 @@ const deltaE = (a, b) => { const [x, y] = [oklab(a), oklab(b)]; return 100 * Mat
 const ACCENT_MIN_DELTA_E = 15;
 const accents = (text) => Object.fromEntries([...text.matchAll(/--(accent-(?:arch|train|serve)): (#[0-9a-f]{6})/g)].map((m) => [m[1], m[2]]));
 
+const PART_ACCENT_MIN_DELTA_E = 12;
+
+test('every part hue stays clear of all three track accents in every theme (OKLab ΔE ≥ 12)', () => {
+  const close = [];
+  for (const [name, text] of Object.entries(blocks())) {
+    const acc = accents(text ?? '');
+    for (const [token, hex] of Object.entries(tokens(text ?? '', 'part'))) {
+      for (const [accent, ahex] of Object.entries(acc)) {
+        if (deltaE(hex, ahex) < PART_ACCENT_MIN_DELTA_E) close.push(`${name} ${token} ${hex} vs ${accent} ${ahex}: ΔE ${deltaE(hex, ahex).toFixed(1)}`);
+      }
+    }
+  }
+  assert.deepEqual(close, []);
+});
+
 // --part-4 ("other") is the violet-adjacent slot; on an Architecture page it must never read as the accent (selection).
 test('--part-4 stays clear of all three track accents in every theme (OKLab ΔE ≥ 15)', () => {
   for (const [name, text] of Object.entries(blocks())) {
