@@ -77,3 +77,9 @@ test('fillText equals the joined fillClaim segments and does not mutate the data
   assert.equal(JSON.stringify(DATA), before);
   assert.throws(() => fillText(42, DATA), TypeError);
 });
+
+test('count5 prints five significant figures: the gpt-oss card figure 116.83B', () => {
+  const data = { models: { entries: [{ id: 'gpt-oss-120b', facts: { total_params: fact(116.83e9) } }] } };
+  assert.equal(fillText('{gpt-oss-120b.total_params|count5}', data), '116.83B');
+  assert.equal(CLAIM_FORMATS.count5(116.83e9), '116.83B');
+});
