@@ -14,7 +14,8 @@ const ONE_T = FRAME_2_SIZES[2];
 const POINTS = Object.freeze([ONE_B, NEAR_OPT, ONE_T]);
 const SERVE_BASIS = '2 FLOPs per active parameter per token';
 const NOTES_2020_2022 = Object.freeze(['2020 (Kaplan): mostly bigger', '2022 (Chinchilla): about 20 tokens per parameter']);
-const pointMarker = (n, followed = false) => marker(n, sizeText(n), { followed });
+// The end points are named in the column and on the axis ticks; only the followed point is labeled on the curve.
+const pointMarker = (n, followed = false) => marker(n, followed ? sizeText(n) : '', { followed });
 
 // ---- frame 3: three points drop onto the valley, then the fitted curve draws through them ----
 export function drawFrame3(svg, p) {

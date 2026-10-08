@@ -70,7 +70,7 @@ export function drawFrame2(svg, p) {
 
 // ---- frame 5: the optimum at three budgets ----
 const TABLE_BUDGETS = Object.freeze([1e22, 1e24, 1e26]);
-const TABLE = Object.freeze({ x: 24, w: 532, headY: 52, firstY: 80, rowH: 44, rowGap: 10, cols: { budget: 36, N: 250, D: 390, ratio: 536 } });
+const TABLE = Object.freeze({ x: 24, w: 532, headY: 52, firstY: 80, rowH: 44, rowGap: 10, cols: { budget: 36, N: 236, D: 350, ratio: 536 } });
 const HIGHLIGHT_ROW = 1; // 10^24: the budget the other frames use
 
 export function drawFrame5(svg, p) {
@@ -96,7 +96,7 @@ export function drawFrame5(svg, p) {
 }
 
 // ---- frame 8: tokens per active parameter, then per total ----
-const RATIO = Object.freeze({ nameX: 12, calcX: 180, valueX: 318, totalCalcX: 344, totalValueX: 566, headY: 52, firstY: 76, rowH: 36, rowW: 556 });
+const RATIO = Object.freeze({ nameX: 12, calcX: 180, valueX: 318, totalCalcX: 360, totalValueX: 484, headY: 52, firstY: 76, rowH: 36, rowW: 556 });
 const DENSE_NOTE = 'dense: same';
 const fraction = (tokens, params) => `${tokensText(tokens)} ÷ ${sizeText(params)}`;
 
