@@ -165,7 +165,7 @@ Title on page: "Route, count, rebalance." Two panels, one state object, one `ren
 |---|---|---|---|---|---|
 | `routed` | Routed experts | Slider (snapped) | [0 (dense), 2, 4, 8, 16, 32] | 8 | — |
 | `split` | Split each expert into | segmented | 1 · 2 · 4 (hidden 8 / 4 / 2, top-k × split) | 1 | — |
-| `shared` | Shared expert | toggle | off / on (one expert of the routed size; top-k halves when on, so active stays 384 per block) | off | — |
+| `shared` | Shared expert | toggle | off / on (one expert of the routed size; top-k becomes 2 · split − 1 when on, so active stays 384 per block) | off | — |
 | `real` | Compare a real model | preset chips | DeepSeek-V4-Pro · Kimi K3 · Qwen3.8 · GLM-5.3 · MiniMax-M3 · gpt-oss-120b | — | published totals, actives, expert counts from `data/models.json` |
 | `gamma` | Balancing step | Slider (snapped) | [0 (off), 0.05, 0.1, 0.2] | 0.1 | — |
 | `step` | Batch | Slider | 0–9 | 0 | — |
@@ -330,11 +330,11 @@ the balancing method."
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
 | DeepSeek-V4-Pro (2026): 1.6T / 49B (3.1%), 384 routed + 1 shared, top-6, expert hidden 3,072 | `models.deepseek-v4-pro.total_params`, `.active_params`, `.experts_total`, `.experts_active` (existing, confirmed); `.expert_hidden` = 3072, `.experts_shared` = 1 (proposed, `decoder-anatomy` §8) | 01 §5 table [C] |
-| Kimi K3 (2026): 2.78T / 104.2B (3.7%), 896 routed + 2 shared, top-16; experts work in a smaller "latent" space (3,584, half the model width) to cut traffic between GPUs | `models.kimi-k3.*` (existing, confirmed); `.experts_shared` = 2, `.moe_latent_dim` = 3584 (proposed) | 01 §5 table, core ideas [C] |
+| Kimi K3: 2.78T / 104.2B (3.7%), 896 routed + 2 shared, top-16; experts work in a smaller "latent" space (3,584, half the model width) to cut traffic between GPUs | `models.kimi-k3.*` (existing, confirmed); `.experts_shared` = 2, `.moe_latent_dim` = 3584 (proposed) | 01 §5 table, core ideas [C] |
 | Qwen3.8 (2026): 2.4T / 95B (4.0%), 512 routed + 1 shared, top-10 | `models.qwen3.8.*` (existing, confirmed) | 01 §5 table [C] |
-| GLM-5.3 (2026): 753B / 40B (5.3%, the active count carried over from GLM-5), 256 routed + 1 shared, top-8 | `models.glm-5.3.total_params` (confirmed), `.active_params` (**reported**), `.experts_total` = 256, `.experts_active` = 8 (proposed) | 01 §5 table [C]/[R] |
-| MiniMax-M3 (2026): about 428B / 23B (5.4%), 128 routed + 1 shared, top-4, first 3 layers dense | `models.minimax-m3.*` (existing, confirmed); `.experts_total` = 128, `.experts_active` = 4, `.experts_shared` = 1, `.dense_layers` = 3 (proposed) | 01 §5 table [C] |
-| gpt-oss-120b (2025): 116.8B / 5.1B (4.4%), 128 experts top-4, no shared expert | `models.gpt-oss-120b.*` (existing, confirmed) | 01 §5 table [C] |
+| GLM-5.3: 753B / 40B (5.3%, the active count carried over from GLM-5), 256 routed + 1 shared, top-8 | `models.glm-5.3.total_params` (confirmed), `.active_params` (**reported**), `.experts_total` = 256, `.experts_active` = 8 (proposed) | 01 §5 table [C]/[R] |
+| MiniMax-M3: about 428B / 23B (5.4%), 128 routed + 1 shared, top-4, first 3 layers dense | `models.minimax-m3.*` (existing, confirmed); `.experts_total` = 128, `.experts_active` = 4, `.experts_shared` = 1, `.dense_layers` = 3 (proposed) | 01 §5 table [C] |
+| gpt-oss-120b (2025): 116.8B / 5.13B (4.4%), 128 experts top-4, no shared expert | `models.gpt-oss-120b.*` (existing, confirmed) | 01 §5 table [C] |
 | Mistral Large 4 (preview Oct 2026): 1.05T / 49B routed-active (52B counting embeddings), "granular MoE", expert count unpublished | `models.mistral-large-4.total_params`, `.active_params` + its note (existing, \`reported\`: the blog says 52B active, the briefs 49B) | 01 §5 table, §7 verdicts |
 | The trend: about 3–5% active in 2026, down from 9–28% in 2023–25 (Mixtral 8x7B, Dec 2023, about 28%; Qwen3-235B, 2025, 9%) | derived from the rows above (no new key); the two background ratios as text with year | 01 §5 "Active ratios" |
 | Routers: softmax top-k (Mixtral, Qwen3); sigmoid plus bias (DeepSeek-V3); "sqrt-softplus" scores and a fixed hash of the token id for the first 3 MoE layers (DeepSeek-V4) | `models.deepseek-v4-pro.router` = "sqrt-softplus; hash routing in first 3 MoE layers" (proposed) | 01 §5 core ideas [C for V4] |
