@@ -124,7 +124,7 @@ const PRE_S3 = {
   rack72: [{ x: 0, y: 0, gpus: 72, cols: 9 }, '5ff689f9c867e922'],
   flowActivation: [{ from: [0, 0], to: [120, 40], carry: 'activation', progress: 0.25 }, 'c897f1204c71450c'],
   flowGradient: [{ from: [0, 0], to: [120, 0], carry: 'gradient', progress: 0.5 }, 'fdf1dafda17f31d9'],
-  vector: [{ x: 0, y: 0, values: [1, 0, 0.25, -0.5], cell: 40, orient: 'col', label: 'R' }, '9af5c50b3af02524'],
+  vector: [{ x: 0, y: 0, values: [1, 0, 0.25, -0.5], cell: 40, orient: 'col', label: 'R' }, 'e14527294151166d'], // re-pinned (shared-8): each cell group now also carries the `glyph` class
   shareBar: [{ x: 4, y: 6, w: 172, label: 'toy model', parts: [
     { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },
     { name: 'other (norms)', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 }, { name: 'not published', value: 60, unknown: true },
@@ -210,7 +210,7 @@ for (const theme of ['light', 'dark']) {
     const out = await probe(page, 'vector', { x: 0, y: 0, values: [1, 0, 0, 1], cell: 40, fill: ['ok', 'bad', 'bad', 'ok'], label: 'R' }, (g) => [...g.querySelectorAll('.g-cell')].map((c) => ({
       cls: c.getAttribute('class'), level: c.dataset.level, fill: getComputedStyle(c.querySelector('rect')).fill, ink: getComputedStyle(c.querySelector('.g-text')).fill, text: c.querySelector('.g-text').textContent,
     })), theme);
-    expect(out.map((c) => c.cls)).toEqual(['g-cell g-cell--ok', 'g-cell g-cell--bad', 'g-cell g-cell--bad', 'g-cell g-cell--ok']);
+    expect(out.map((c) => c.cls)).toEqual(['glyph g-cell g-cell--ok', 'glyph g-cell g-cell--bad', 'glyph g-cell g-cell--bad', 'glyph g-cell g-cell--ok']);
     expect(out.map((c) => c.text)).toEqual(['1', '0', '0', '1']);
     expect(out[0].fill).not.toBe(out[1].fill);
     expect(out.every((c) => c.level === '0')).toBe(true);

@@ -107,6 +107,11 @@ export function deepFreeze(value) {
 const GROUPED = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, useGrouping: true });
 const groupedThreeSig = (x) => GROUPED.format(Number(x.toPrecision(3)));
 
+// Mantissa of a duration: 3 significant figures at any magnitude ("0.543", "1,180"), unlike GROUPED, which caps decimals at 2.
+const THREE_SIG = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3, useGrouping: true });
+
+const roundedThreeSig = (x) => Number(THREE_SIG.format(x).replaceAll(',', ''));
+
 const isFiniteNumber = (x) => typeof x === 'number' && Number.isFinite(x);
 
 // "N×" for a ratio (X-3): 12×, 2×, 73.9×, 3.56×, 1,180×. A ratio below 1 is never "N×", so it throws.
@@ -131,6 +136,8 @@ export function formatDuration(seconds) {
   if (!isFiniteNumber(seconds) || seconds < 0) throw new RangeError(`formatDuration: seconds must be a finite number ≥ 0, got ${seconds}`);
   if (seconds === 0) return '0 s';
   const firstUnit = DURATION_UNITS.findIndex((u) => seconds < u.below);
-  const unit = DURATION_UNITS.slice(firstUnit).find((u) => Number((seconds / u.seconds).toPrecision(3)) * u.seconds < u.below);
-  return `${groupedThreeSig(seconds / unit.seconds)} ${unit.name}`;
+  const unit = DURATION_UNITS.slice(firstUnit).find((u) => roundedThreeSig(seconds / u.seconds) * u.seconds < u.below);
+  // A value that rounded up into this unit sits just under 1 of it (59.97 s): print the 1, not 0.999.
+  const mantissa = unit === DURATION_UNITS[firstUnit] ? seconds / unit.seconds : Math.max(1, seconds / unit.seconds);
+  return `${THREE_SIG.format(mantissa)} ${unit.name}`;
 }
