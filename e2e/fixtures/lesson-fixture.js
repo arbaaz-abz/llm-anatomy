@@ -46,9 +46,10 @@ const lesson = (toyMount) => ({
   animation: { label: 'Fixture animation', steps: CAPTIONS.map((caption) => ({ caption })), render, standIn: 'These numbers are hand-picked stand-ins.', belowFor: (i) => (i === 2 ? ['Page text under the stage on step 3.'] : []) },
   toy: { title: 'Try the fixture', intro: 'Doubles or squares n.', mount: toyMount },
   math: { blocks: [{ tex: '\\htmlClass{hl-q}{q} = x\\,W_Q', note: 'x [1 × 8], W_Q [8 × 4].' }] },
-  facts: { framing: 'Two facts read live from [[decoder-anatomy]]\'s data.', rows: [
+  facts: { framing: 'Three facts read live from [[decoder-anatomy]]\'s data.', rows: [
     { claim: 'DeepSeek-V4-Pro has {deepseek-v4-pro.total_params|count} parameters.' },
     { claim: 'GPT-3 ({gpt-3.release_date|year}) stacked {gpt-3.layers} blocks.' },
+    { claim: 'DeepSeek-V3 accepts {sv:deepseek-v3-mtp.acceptance_pct}% of its multi-token-prediction drafts.' },
   ] },
   takeaways: ['One.', 'Two.', 'Three.'],
   links: { next: ['attention'], further: [{ title: 'Example', href: 'https://example.org/', note: 'a stand-in link' }] },
@@ -58,8 +59,8 @@ const root = document.getElementById('lesson');
 let unmount = null;
 try {
   // loadJSON resolves relative to shared/data.js, so these paths are the same from any page.
-  const [models, hardware] = await Promise.all([loadJSON('../data/models.json'), loadJSON('../data/hardware.json')]);
-  const ctx = { concept: { slug: 'fixture', title: 'Lesson fixture', prereqs: ['decoder-anatomy'] }, data: { models, hardware }, href: (slug) => `../../architecture/#${slug}` };
+  const [models, hardware, serving, papers] = await Promise.all(['models', 'hardware', 'serving', 'papers'].map((f) => loadJSON(`../data/${f}.json`)));
+  const ctx = { concept: { slug: 'fixture', title: 'Lesson fixture', prereqs: ['decoder-anatomy'] }, data: { models, hardware, serving, papers }, href: (slug) => `../../architecture/#${slug}` };
   const sync = () => {
     unmount?.();
     unmount = null;

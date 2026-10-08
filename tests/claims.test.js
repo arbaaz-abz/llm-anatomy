@@ -46,3 +46,16 @@ test('formats print real minus signs and grouping', () => {
   assert.equal(lookupFact(DATA.models, 'gpt-3', 'layers').value, 96);
   assert.equal(lookupFact(undefined, 'gpt-3', 'layers'), null);
 });
+
+test('sv: reads serving.json and paper: reads papers.json; models and hw: are unchanged', () => {
+  const data = {
+    ...DATA,
+    serving: { entries: [{ id: 'deepseek-v3-mtp', facts: { acceptance_pct: fact([85, 90], { source_url: 'https://example.org/s' }) } }] },
+    papers: { entries: [{ id: 'chinchilla-refit-2024', facts: { E: fact(1.8172, { source_url: 'https://example.org/p', confidence: 'reported' }) } }] },
+  };
+  const r = fillClaim('MTP accepts {sv:deepseek-v3-mtp.acceptance_pct}%; E = {paper:chinchilla-refit-2024.E|raw}; {gpt-3.layers} · {hw:h100.hbm_gb}', data);
+  assert.equal(text(r), 'MTP accepts 85–90%; E = 1.8172; 96 · 80');
+  assert.deepEqual(r.sources, ['https://example.org/s', 'https://example.org/p', 'https://example.org/a']);
+  assert.equal(r.reported, true);
+  assert.deepEqual(fillClaim('{sv:deepseek-v3-mtp.acceptance_pct}', DATA).missing, ['sv:deepseek-v3-mtp.acceptance_pct']);
+});

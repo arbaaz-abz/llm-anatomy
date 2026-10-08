@@ -67,10 +67,10 @@ test('a planted bad concept is caught: a path out of concepts/, a missing re-exp
   ]);
 });
 
-test('the artifact ships both data files, and no concept fetches JSON itself (facts come from ctx.data)', async () => {
+test('the artifact ships every data file ctx.data holds, and no concept fetches JSON itself (facts come from ctx.data)', async () => {
   const pageDir = join(ROOT, 'architecture');
   const files = await artifactFiles(pageDir, ROOT);
-  assert.ok('data/models.json' in files && 'data/hardware.json' in files);
+  for (const name of ['models', 'hardware', 'serving', 'papers']) assert.ok(`data/${name}.json` in files, `data/${name}.json is published`);
   const fetchers = [];
   for (const file of await walk(join(pageDir, 'concepts'))) {
     if (/\bfetch\s*\(|\bloadJSON\s*\(/.test(await readFile(file, 'utf8'))) fetchers.push(relative(ROOT, file));

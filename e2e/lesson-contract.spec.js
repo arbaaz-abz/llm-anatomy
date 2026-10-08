@@ -8,7 +8,7 @@ const CAPTIONS = [
   'The row slides back into place, still marked as the one we follow.',
 ];
 
-registerLessonContract({ name: 'fixture', url: `${FIXTURE}#fixture`, captions: CAPTIONS, factRows: 2, leaveHash: 'away', returnHash: 'fixture' });
+registerLessonContract({ name: 'fixture', url: `${FIXTURE}#fixture`, captions: CAPTIONS, factRows: 3, leaveHash: 'away', returnHash: 'fixture' });
 
 test('fixture: clock sampling through the public UI equals the pure render at the same (step, progress)', async ({ page }) => {
   await startPausedClock(page, `${FIXTURE}#fixture`);
@@ -35,6 +35,7 @@ test('fixture: sections render in spec §4 order with rich text, stand-in line a
   await expect(page.locator('.below-stage')).toHaveText('Page text under the stage on step 3.');
   await expect(page.locator('[data-section="takeaways"] li')).toHaveCount(3);
   await expect(page.locator('[data-section="facts"] .fact-row').first()).toContainText('1.6T parameters');
+  await expect(page.locator('[data-section="facts"] .fact-row').nth(2)).toContainText('accepts 85–90%'); // sv: reads serving.json
 });
 
 test('fixture: the toy renders live from one state object', async ({ page }) => {

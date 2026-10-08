@@ -45,9 +45,11 @@ export function safeUnmount(unmount) {
 }
 
 export async function mountTrack({ root, track }) {
-  const [graph, links, models, hardware] = await Promise.all([
+  const [graph, links, models, hardware, serving, papers] = await Promise.all([
     loadJSON('./concepts.json'), loadJSON('./links.json'), loadJSON('../data/models.json'), loadJSON('../data/hardware.json'),
+    loadJSON('../data/serving.json'), loadJSON('../data/papers.json'),
   ]);
+  const data = Object.freeze({ models, hardware, serving, papers }); // every lesson's facts (fillClaim prefixes: none, hw:, sv:, paper:)
   const index = indexConcepts(graph.concepts);
   const trackInfo = graph.tracks.find((t) => t.id === track);
   if (!trackInfo) throw new Error(`mountTrack: unknown track "${track}"`);
@@ -137,7 +139,7 @@ export async function mountTrack({ root, track }) {
     const container = el('article', { className: 'concept' });
     main.replaceChildren(container);
     if (result.status === 'ok') {
-      const mounted = mountSafely(result.module, container, { concept, data: { models, hardware }, href });
+      const mounted = mountSafely(result.module, container, { concept, data, href });
       if (mounted.status === 'ok') {
         unmount = mounted.unmount;
         container.append(learnedButton(concept.slug));

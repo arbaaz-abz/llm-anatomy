@@ -2,9 +2,12 @@
 // so every dated number on a page comes from the data files (spec §7).
 //   {gpt-3.layers}            models.json, default format     {hw:h100.hbm_gb}   hardware.json
 //   {deepseek-v3.total_params|count}  a named format (CLAIM_FORMATS)
+//   {sv:deepseek-v3-mtp.acceptance_pct}  serving.json   {paper:chinchilla-refit-2024.E}  papers.json
 import { formatCount, formatBytes } from '../math/core.js';
 
-const REF = /\{(?:(hw):)?([a-z0-9][a-z0-9.-]*)\.([a-z0-9_]+)(?:\|([a-z0-9]+))?\}/g;
+const REF = /\{(?:(hw|sv|paper):)?([a-z0-9][a-z0-9.-]*)\.([A-Za-z0-9_]+)(?:\|([a-z0-9]+))?\}/g;
+// Placeholder prefix → the ctx.data dataset it reads; no prefix reads models.json.
+const DATASETS = Object.freeze({ hw: 'hardware', sv: 'serving', paper: 'papers' });
 const realMinus = (s) => s.replace(/^-/, '−');
 
 export const CLAIM_FORMATS = Object.freeze({
@@ -37,10 +40,10 @@ export function fillClaim(claim, data) {
   let reported = false;
   let last = 0;
   for (const m of claim.matchAll(REF)) {
-    const [ref, hw, entryId, key, formatName] = m;
+    const [ref, prefix, entryId, key, formatName] = m;
     if (m.index > last) segments.push({ type: 'text', text: claim.slice(last, m.index) });
     last = m.index + ref.length;
-    const fact = lookupFact(hw ? data?.hardware : data?.models, entryId, key);
+    const fact = lookupFact(data?.[prefix ? DATASETS[prefix] : 'models'], entryId, key);
     if (!fact) {
       missing.push(ref.slice(1, -1));
       segments.push({ type: 'text', text: '—' });
