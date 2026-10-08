@@ -89,8 +89,8 @@ const FIGURES = [
     G.heatmap(s, { x: 44, y: 38, values: MASKED, mask: MASK, cell: 22, label: 'S / 2', rowLabels: TOKENS, colLabels: TOKENS.map((t) => t[0]), maxAbs: 1.5 });
     G.heatmap(s, { x: 180, y: 38, values: A, cell: 22, label: 'A', maxAbs: 1 });
   }],
-  ['heatmap format', 'format: the page picks the printed precision, here weights at 3 d.p. (default: formatCell, 2 d.p.)', 300, 70, (s) => {
-    G.heatmap(s, { x: 60, y: 22, values: [A[2]], cell: G.NUMBER_CELL, label: 'weights', rowLabels: ['sat'], maxAbs: 1, format: (v) => (v === 0 ? '0' : v.toFixed(3)) });
+  ['heatmap format', 'format: the page picks the printed precision, here weights at 3 d.p. (default: formatCell, 2 d.p.); hatch: a masked weight is 0 and counts for nothing, so it is hatched and still printed', 300, 70, (s) => {
+    G.heatmap(s, { x: 60, y: 22, values: [A[2]], cell: G.NUMBER_CELL, label: 'weights', rowLabels: ['sat'], maxAbs: 1, format: (v) => (v === 0 ? '0' : v.toFixed(3)), hatch: [MASK[2].map((visible) => !visible)] });
   }],
   ['block', 'head / expert / layer: active = filled accent, idle = outline, dim = dashed', 300, 50, (s) => {
     G.block(s, { x: 4, y: 5, w: 88, h: 40, label: 'head A', state: 'active' });

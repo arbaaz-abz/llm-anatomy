@@ -236,6 +236,8 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-cell[data-level="8"] .g-text, .g-token[data-level="8"] .g-text, .g-token[data-level="8"] .g-sub { fill: var(--cell-ink-8); } .g-cell[data-level="9"] .g-text, .g-token[data-level="9"] .g-text, .g-token[data-level="9"] .g-sub { fill: var(--cell-ink-9); }
 .g-cell[data-level="10"] .g-text, .g-token[data-level="10"] .g-text, .g-token[data-level="10"] .g-sub { fill: var(--cell-ink-10); }
 .g-cell--masked .g-text { fill: var(--ink-muted); }
+/* Hatched cells (masked "−∞" or a hatched value) print over the stripes: a surface halo keeps the digits clear. */
+.g-cell--masked .g-text, .g-cell--hatched .g-text { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
 .g-token .g-frame { stroke-width: 1.2; }
 .g-token .g-text { text-anchor: middle; dominant-baseline: central; font-weight: 500; }
 .g-token--active .g-frame { fill: var(--accent); stroke: var(--accent); }

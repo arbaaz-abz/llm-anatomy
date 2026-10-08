@@ -82,3 +82,16 @@ test('format: a masked cell keeps "−∞" unless the format handles it', async 
   const handled = await cellTexts(page, 'heatmap', { x: 0, y: 0, values: [['-Infinity']], cell: 40, formatName: 'masked' });
   expect(handled.map((c) => [c.text, c.masked])).toEqual([['none', true]]);
 });
+
+test('hatch: a hatched cell prints format(v), keeps its value color, and draws the hatch; mask still hides', async ({ page }) => {
+  const cells = await cellTexts(page, 'heatmap', {
+    x: 0, y: 0, values: [[0.095, 0.703, 0.202, 0], [0.5, '-Infinity', 0, 0]], cell: 40, formatName: 'fixed3',
+    hatch: [[false, false, false, true], [false, false, true, false]],
+    mask: [[true, true, true, true], [true, false, true, true]],
+  });
+  expect(cells.map((c) => c.text)).toEqual(['0.095', '0.703', '0.202', '0.000', '0.500', '−∞', '0.000', '0.000']);
+  expect(cells.map((c) => c.hatched)).toEqual([false, false, false, true, false, true, true, false]);
+  expect(cells.map((c) => c.masked)).toEqual([false, false, false, false, false, true, false, false]);
+  expect(cells[3].title).toBe('0.000');
+});
+

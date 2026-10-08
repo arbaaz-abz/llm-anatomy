@@ -120,16 +120,17 @@ function maskedText(format) {
   return typeof out === 'string' && out !== '' && !/Infinity|NaN/.test(out) ? out : null;
 }
 
-// One value cell. Masked cells (mask === false or v === −∞) are hatched.
+// One value cell. Masked cells (mask === false or v === −∞) are hatched. A `hatched` cell is a value that
+// counts for nothing (e.g. a masked weight of 0): it keeps its value fill and text, with the hatch over it.
 // `format` (optional) prints the cell text and its tooltip; without it the text is formatCell(v)
 // and the tooltip the value at 3 d.p.
-export function cell(parent, { x, y, size, v, maxAbs, masked = false, format }) {
+export function cell(parent, { x, y, size, v, maxAbs, masked = false, hatched = false, format }) {
   const isMasked = masked || v === -Infinity;
-  const g = svgEl('g', { class: `g-cell${isMasked ? ' g-cell--masked' : ''}`, transform: `translate(${x} ${y})`, 'data-level': isMasked ? 0 : valueLevel(v, maxAbs) }, parent);
+  const g = svgEl('g', { class: `g-cell${isMasked ? ' g-cell--masked' : hatched ? ' g-cell--hatched' : ''}`, transform: `translate(${x} ${y})`, 'data-level': isMasked ? 0 : valueLevel(v, maxAbs) }, parent);
   const inset = { x: CELL_GAP / 2, y: CELL_GAP / 2, width: size - CELL_GAP, height: size - CELL_GAP, rx: 3 };
   const rect = svgEl('rect', inset, g);
   rect.style.fill = isMasked ? 'var(--surface)' : valueColor(v, maxAbs);
-  if (isMasked) hatchRect(g, inset);
+  if (isMasked || hatched) hatchRect(g, inset);
   const maskLabel = isMasked ? maskedText(format) : null;
   const label = isMasked ? (maskLabel ?? '−∞') : (format ?? formatCell)(v);
   const title = svgEl('title', {}, g);
@@ -160,7 +161,9 @@ export function vector(parent, { x, y, values, cell: size = 18, orient = 'col', 
 }
 
 // `format` (optional): (v) → the printed cell text and tooltip, e.g. (v) => v.toFixed(3) for weights.
-function grid(parent, cls, { x, y, values, mask, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [], format }) {
+// `mask` (optional, [n × m], true = visible): hidden cells print "−∞". `hatch` (optional, [n × m],
+// true = hatched): the cell is drawn over with the hatch and still prints format(v).
+function grid(parent, cls, { x, y, values, mask, hatch, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [], format }) {
   const rows = values.length;
   const cols = values[0]?.length ?? 0;
   const g = group(parent, cls, x, y);
@@ -169,7 +172,7 @@ function grid(parent, cls, { x, y, values, mask, cell: size = 18, maxAbs = maxAb
   if (label) text(g, 0, -10 - (colLabels.length ? 14 : 0), `${label} [${rows} × ${cols}]`, 'g-label');
   rowLabels.forEach((r, i) => text(g, -10, i * size + size / 2, r, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' }));
   colLabels.forEach((c, j) => text(g, j * size + size / 2, -8, c, 'g-label', { 'text-anchor': 'middle' }));
-  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false, format })));
+  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false, hatched: hatch?.[i]?.[j] === true, format })));
   return g;
 }
 
