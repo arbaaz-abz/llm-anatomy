@@ -154,7 +154,7 @@ chips and position, never by hue. Hovering a term in the math panel outlines the
 Architecture accent.
 
 ## 5. Animation script
-Hero row: query "sat" (row 3), head A. Numbers are 3 d.p. unless exact. Token positions are 1-based.
+Hero row: query "sat" (row 3), head A. Numbers are 3 d.p. unless exact. On the stage, a cell prints at most five characters: scaled scores show 3 d.p. when that fits and 2 d.p. otherwise (−0.13); outputs show 2 d.p., as the "Check my work" output line does. The toy prints every value at 3 d.p. Token positions are 1-based.
 Captions: one idea, at most two sentences and 30 words, no formulas or operators (formulas live in
 "Numbers shown" and §7).
 
@@ -166,14 +166,13 @@ Captions: one idea, at most two sentences and 30 words, no formulas or operators
 | 4 | Same grid; a plain text label "÷ √d_head = ÷ √4 = ÷ 2" above it. | Every cell's number and color interpolate from the raw score to half of it. Nothing else moves. | Divide every score by the square root of the vector length: 4 numbers, so divide by 2. Longer vectors give bigger scores; dividing keeps softmax soft. | S/√d_head = S/2 = [[0.5,0,−0.5,0.125],[−0.125,0.625,−0.375,−0.5],[−0.5,1.5,0.25,−0.375],[−0.25,1.5,−0.125,−0.375]] |
 | 5 | Same grid. | The six cells above the diagonal hatch in, one anti-diagonal at a time, and their numbers become −∞. | Causal mask: a token may only look at itself and earlier tokens. Future cells become −∞, so softmax will give them exactly 0. | masked S/2; cells (1,2),(1,3),(1,4),(2,3),(2,4),(3,4) = −∞ |
 | 6 | Row "sat" lifts out again to the row strip, which now shows three stacked rows: scaled, exp, weight. | First the exp row fills (cells on the value scale, numbers typed in), then the weight row fills as each exp cell is divided by the sum; a plain text "Σ = 1.000" readout counts up to 1. The masked cell shows 0 throughout. | Softmax: exponentiate each score, then divide by the sum so the row adds to 1. "sat" now puts 70% of its attention on "cat". | scaled [−0.5, 1.5, 0.25, −∞] · exp [0.607, 4.482, 1.284, 0] · sum 6.372 · weights [0.095, 0.703, 0.202, 0] |
-| 7 | The weights row stays. Beside V rows 1–3 a one-cell chip in the matching weight color (0.095, 0.703, 0.202); an empty output vector [1 × 4] at the right. | The chips appear beside V rows 1–3, then the three V rows slide together into the output vector, whose cells fill. Row 4 of V gets no chip (weight 0) and is hatched: masked out, it counts for nothing. | The output is the weighted sum of the values. "sat" leaves carrying mostly cat's value. | 0.095·[1,0,−1,0] + 0.703·[0,2,0,1] + 0.202·[−1,0,1,0.5] = [−0.106, 1.407, 0.106, 0.804] |
+| 7 | The weights row stays. Beside V rows 1–3 a one-cell 20 px chip in the matching weight color (the weights 0.095, 0.703, 0.202 are printed in the weights row); an empty output vector [1 × 4] at the right. | The chips appear beside V rows 1–3, then the three V rows slide together into the output vector, whose cells fill. Row 4 of V gets no chip (weight 0) and is hatched: masked out, it counts for nothing. | The output is the weighted sum of the values. "sat" leaves carrying mostly cat's value. | 0.095·[1,0,−1,0] + 0.703·[0,2,0,1] + 0.202·[−1,0,1,0.5] = [−0.106, 1.407, 0.106, 0.804] |
 | 8 | The Q, K, V grids fade out. The full heatmap A (weights) replaces the masked-score grid; a [4 × 4] output matrix O_A at `NUMBER_CELL` beside it. A permanent plain text annotation at row 1: "row 1 sees one key, so its weight is 1.0 whatever its score". | Rows 1, 2, 4 of the heatmap recolor from scores to weights and their output rows fill, all together. The annotation fades in with row 1. | Do the same for every row: one head is one attention pattern, the heatmap, and one output vector per token. | A = [[1,0,0,0],[0.321,0.679,0,0],[0.095,0.703,0.202,0],[0.114,0.656,0.129,0.101]] · O_A = [[1,0,−1,0],[0.321,1.358,−0.321,0.679],[−0.106,1.407,0.106,0.804],[0.035,1.212,0.015,0.821]] · every row of A sums to 1.000 |
 | 9 | O_A collapses to its followed row "sat" (172 × 43) under heatmap A, with the plain text label "3 other rows not shown (see the toy)"; both sit inside a `block` labeled "head A" that slides left. A second `block` "head B" appears beside it with an empty heatmap and an empty "sat" row. | Head B's heatmap fills (sub-diagonal pattern), then its "sat" row fills. Nothing else moves. | A second head has its own W_Q, W_K and W_V, so it finds a different pattern: here, each token looks one step back. | B = [[1,0,0,0],[0.798,0.202,0,0],[0.168,0.664,0.168,0],[0.129,0.146,0.578,0.146]] · O_B row "sat" = [0.664, 0.168, 0, 0.168] (full O_B in §7) |
 | 10 | Both head blocks stay. Below them an empty [1 × 8] row labeled "sat, joined", a `block` "W_O [8 × 8]" with a plain text line under it: "each of the 8 outputs is a weighted mix of all 8 joined numbers", and a plain text label "→ added to the residual stream". | The two "sat" rows slide together into the [1 × 8] row; the flow dot runs from it into W_O; the two labels fade in. | Heads run side by side. Their outputs are joined into one row of 8 numbers per token and mixed by one more matrix, W_O. | concat row "sat" = [−0.106, 1.407, 0.106, 0.804, 0.664, 0.168, 0, 0.168] · for all tokens: concat [4 × 8] · W_O [8 × 8] |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
-state. The heatmap keeps its position and orientation (rows = queries, columns = keys) from frame 3 to
-frame 10; the row strip keeps its position from frame 2 to frame 7; the followed row "sat" keeps its
+state. The heatmap keeps its position and orientation (rows = queries, columns = keys) from frame 3 to frame 8; in frame 9 it moves up and left into head A's block, where it stays in frame 10. The token chips and the row-1 annotation fade out in frame 9 to make room; the row strip keeps its position from frame 2 to frame 7; the followed row "sat" keeps its
 selection outline in every frame.
 
 Nothing load-bearing is behind hover: the row-1 fact is a permanent annotation (frame 8), "Σ = 1.000"
@@ -208,7 +207,7 @@ checkable: "typical score size for random ±1 entries: 4 terms → 2; 128 terms 
 **Live outputs** (one state object, one `render()`; every number is tabular mono)
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
-| Score row for the selected query | `attentionHead(Q, K, V, {causal, divisor}).scores[i]` | 4 numbers, 2 d.p.; future cells dimmed when mask on |
+| Score row for the selected query | `attentionHead(Q, K, V, {causal, divisor}).scores[i]` | 4 numbers, 2 d.p.; future cells hatched (number kept) when the mask is on |
 | Scaled row | `.scaled[i]` | 4 numbers, 3 d.p. |
 | Masked row | `.masked[i]` | 3 d.p.; masked cells show "−∞" and are hatched |
 | Weights row + "Σ = 1.000" | `.weights[i]` | 3 d.p., bar-free (cells on the value scale) |
@@ -408,8 +407,7 @@ Output: `A.W [[1,0,0,0],[0.321,0.679,0,0],[0.095,0.703,0.202,0],[0.114,0.656,0.1
 `div 0.5 [0,0.993,0.007,0]`, `div 8 [0.259,0.428,0.313,0]`, row sums 1 ± 2e-16.
 
 ## 8. In today's models (Oct 2026)
-Framing paragraph on the page: "These five steps are the 2017 formula, and they are unchanged in every
-layer that still uses softmax attention. Real models often let several query heads share one set of keys
+Framing paragraph on the page: "These five steps are the 2017 formula, and every layer that still uses softmax attention runs them, with at most the two small additions in (3) below. Real models often let several query heads share one set of keys
 and values to save memory (`kv-compression`). What 2026 models change is (1) how many keys and values
 each layer stores per token (→ `kv-compression`), (2) which past tokens a query reads, because every
 query scoring every key gives a grid of n × n cells, so doubling the sequence quadruples the work
@@ -429,7 +427,7 @@ year from `release_date`.
 | gpt-oss-120b (2025): 64 query heads share 8 sets of keys and values, each 64 numbers wide; layers alternate full attention with a 128-token window; a learned sink per head | `models.gpt-oss-120b.attention` (expected: "GQA 64Q/8KV, head_dim 64, alternating full + SWA-128, learned sinks, attention_bias"), `models.gpt-oss-120b.layers` = 36, `.release_date` | 01 §1 "Biases" and "Attention sink" rows [C]; §2 sliding-window bullet [C]; §4 table; §7 table [C] |
 | DeepSeek-V4-Pro (2026): one set of keys and values per layer, 512 numbers wide, shared by all query heads, plus compression and sparsity (`long-context-attention`); Q and K normalized; a learned sink | `models.deepseek-v4-pro.attention` (expected: "1 KV head, head_dim 512; CSA/HCA + SWA-128; QK-norm; learned sink"), `.release_date` | 01 §1 "QK-norm" and "Attention sink" rows [C]; §2 MHA/MQA/GQA paragraph [C]; §7 table [C] |
 | Kimi K3 (2026): 96 heads; only 24 of its 93 layers run this softmax attention, the other 69 are linear-attention layers (`long-context-attention`) | `models.kimi-k3.attention` (expected: "69 KDA + 24 MLA (NoPE), 96 heads"), `models.kimi-k3.layers` = 93, `.release_date` | 01 §2 hybrid bullet [C]; §5 table [C]; §7 table [C] |
-| MiniMax-M3 (2026): 64 query heads, 4 sets of keys and values; from layer 3 on, each query reads only the 16 most relevant blocks of 128 past tokens | `models.minimax-m3.attention` (expected: "GQA 64Q/4KV + MSA block 128 top-16, sparse from layer 3"), `.release_date` | 01 §2 MSA bullet [C]; §7 table [C] |
+| MiniMax-M3 (2026): 64 query heads, 4 sets of keys and values; from layer 4 on, each query reads only the 16 most relevant blocks of 128 past tokens | `models.minimax-m3.attention` (expected: "GQA 64Q/4KV + MSA block 128 top-16"), `.sparse_from_layer` = 4 (the config's per-layer list counts from 0: its first sparse entry is index 3, the 4th layer), `.sparse_top_blocks`, `.sparse_block`, `.release_date` | 01 §2 MSA bullet [C]; §7 table [C] |
 | Qwen3.8-2.4T-A95B (2026): 64 query heads, 4 sets of keys and values; only 1 layer in 4 is softmax attention, the other 3 are linear-attention layers | `models.qwen3.8.attention` (expected: "3 GDN : 1 attention, 64Q/4KV heads"), `.release_date` | 01 §2 hybrid bullet [C]; §7 table [C] |
 
 Prose beside the table, timeless and therefore not a data fact: "In production kernels the 4 × 4 grid
