@@ -248,7 +248,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-block--active .g-frame { fill: var(--accent); stroke: var(--accent); }
 .g-block--active .g-text { fill: var(--ink-on-accent); }
 .g-block--dim { opacity: 0.4; }
-.g-block--dim .g-frame { stroke-dasharray: 3 3; }
+.g-block--dim .g-frame { stroke-dasharray: none; } /* opacity only: a dashed frame means "draft" (lesson 24) */
 .g-kv .g-k { fill: color-mix(in oklab, var(--sem-memory) 35%, var(--surface)); stroke: var(--sem-memory); }
 .g-kv .g-v { fill: color-mix(in oklab, var(--sem-memory) 18%, var(--surface)); stroke: var(--sem-memory); }
 .g-kv .g-hl { stroke: var(--accent); stroke-width: 2; fill: none; }
@@ -303,7 +303,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-adder path { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; }
 .g-stack .g-lane { stroke: var(--line); stroke-width: 3; stroke-linecap: round; }
 .g-stack .g-link { stroke: var(--line); stroke-width: 1.5; }
-.g-stack .g-stack-frame { fill: none; stroke: var(--line); stroke-dasharray: 4 3; }
+.g-stack .g-stack-frame { fill: none; stroke: var(--line); stroke-dasharray: none; }
 .g-stack .g-collapse { font-weight: 600; }
 /* token draft state: a guess that may still count (README lesson 24). Dashed and muted, never hatched. */
 .g-token--draft .g-frame { fill: var(--surface); stroke: var(--ink-muted); stroke-dasharray: 4 3; }
@@ -336,6 +336,15 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .fact-rows { padding-left: var(--space-4); }
 .fact-row { margin-bottom: var(--space-2); max-width: var(--measure); }
 .fact-missing { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--sem-bad); }
+/* Toy number readouts: rows of value cells (pages set only the per-cell valueColor / valueLevel inline). */
+.toy-rows { display: grid; gap: 3px; overflow-x: auto; max-width: 100%; }
+.toy-row { display: flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--fs-s); }
+.toy-row-label { flex: 0 0 7.5em; color: var(--ink-muted); font-family: var(--font-body); }
+.toy-row .cell { flex: 0 0 4.6em; text-align: center; padding: 6px 0; border-radius: var(--radius-s); }
+/* A masked HTML cell: hatched, its number on a solid surface chip so no stripe crosses the glyphs. */
+.cell--masked { background: repeating-linear-gradient(45deg, color-mix(in oklab, var(--ink-muted) 55%, transparent) 0 1px, var(--surface) 1px 8px); }
+.cell--masked .cell-text { background: var(--surface); color: var(--ink); padding: 0 3px; border-radius: 2px; }
+.toy-maps { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 
 /* ---------- motion ---------- */
 .stepper-caption, .nav-link, button, .concept-card { transition: background-color var(--duration) var(--ease), border-color var(--duration) var(--ease); }

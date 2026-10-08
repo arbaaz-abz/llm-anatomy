@@ -258,12 +258,14 @@ test('KaTeX renders the math panel with hover-linked terms', async ({ page }) =>
   await expect(stage(page)).toHaveAttribute('data-hl', 'k');
 });
 
-test('a draft token is dashed and muted, never hatched (README lesson 24)', async ({ page }) => {
+test('a draft token is dashed and muted, never hatched; dim patches, dim blocks and stack frames are not dashed (README lesson 24)', async ({ page }) => {
   await page.goto('/gallery/');
   const draft = page.locator('#figures .g-token--draft').first();
   expect(await draft.locator('.g-frame').evaluate((r) => getComputedStyle(r).strokeDasharray)).not.toBe('none');
   await expect(draft.locator('.g-hatch')).toHaveCount(0);
   expect(await page.locator('#figures .g-patch--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+  expect(await page.locator('#figures .g-block--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+  expect(await page.locator('#figures .g-stack .g-stack-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
 });
 
 test('memBar keeps its exact output (labels, percentages, geometry) through the shareBar refactor', async ({ page }) => {

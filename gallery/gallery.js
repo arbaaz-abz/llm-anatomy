@@ -92,7 +92,7 @@ const FIGURES = [
   ['heatmap format', 'format: the page picks the printed precision, here weights at 3 d.p. (default: formatCell, 2 d.p.); hatch: a masked weight is 0 and counts for nothing, so it is hatched and still printed', 300, 70, (s) => {
     G.heatmap(s, { x: 60, y: 22, values: [A[2]], cell: G.NUMBER_CELL, label: 'weights', rowLabels: ['sat'], maxAbs: 1, format: (v) => (v === 0 ? '0' : v.toFixed(3)), hatch: [MASK[2].map((visible) => !visible)] });
   }],
-  ['block', 'head / expert / layer: active = filled accent, idle = outline, dim = dashed', 300, 50, (s) => {
+  ['block', 'head / expert / layer: active = filled accent, idle = outline, dim = faded (never dashed: dashed means draft)', 300, 50, (s) => {
     G.block(s, { x: 4, y: 5, w: 88, h: 40, label: 'head A', state: 'active' });
     G.block(s, { x: 104, y: 5, w: 88, h: 40, label: 'head B' });
     G.block(s, { x: 204, y: 5, w: 88, h: 40, label: 'W_O [8×8]', state: 'dim' });
