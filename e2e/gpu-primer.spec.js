@@ -92,9 +92,10 @@ test.describe('gpu-primer toy: where does this multiply sit on the roof?', () =>
     await expect(page.locator('[data-section="toy"]')).toContainText('bandwidth: sources conflict, 19.2 or 22 TB/s');
     await setTokens(page, 512);
     await expect(readout(page, 'verdict')).toHaveText('compute-bound at 22 TB/s, memory-bound at 19.2 TB/s');
-    await chip(page, 'mi355x').click();
-    await expect(fmt(page, 'bf16')).toHaveAttribute('aria-pressed', 'true');
-    await fmt(page, 'fp4').click();
+    await chip(page, 'mi355x').click(); // the MI355X has FP4 too (MXFP4), so the format stays
+    await expect(fmt(page, 'fp4')).toHaveAttribute('aria-pressed', 'true');
+    await expect(fmt(page, 'bf16')).toBeEnabled();
+    await expect(page.locator('#fmt [data-choice-note]')).toBeHidden();
     await expectReadouts(page, { ridge: '1,250', 'tokens-needed': '361.3' });
     await expect(readout(page, 'check-work')).toContainText('bytes     = 0.53125 × (');
     expect(errors).toEqual([]);

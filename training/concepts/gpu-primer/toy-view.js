@@ -5,7 +5,7 @@ import { formatBytes, formatCount, formatDuration, formatRatio } from '@math/cor
 import { chipPreset, formatOptions } from './hardware.js';
 import { analyze, checkWork, verdictText, fixed1, int, pct2, rangeText } from './format.js';
 
-export const PLOT_DOMAIN = Object.freeze({ x: Object.freeze([0.1, 1e5]), y: Object.freeze([0.1, 1e5]) }); // fixed, so chips compare
+export const PLOT_DOMAIN = Object.freeze({ x: Object.freeze([0.1, 1e6]), y: Object.freeze([0.1, 1e5]) }); // fixed, so chips compare
 export const FP8_NOTE = 'FP8 is counted at 8 bits per number (one per-tensor scale); the per-tile scales you meet in [[scale-reliability]] are not counted.';
 export const SAME_FORMAT_NOTE = 'Inputs and outputs are stored in the same format as the weights.';
 export const RESIDUAL_NOTE = 'residual add: element-wise ops are always memory-bound, so kernels fuse many of them into one trip to HBM';
