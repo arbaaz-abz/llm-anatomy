@@ -85,21 +85,24 @@ the MFU gap, then the failure loss, each segment printed with its number. It is 
 last is drawn hatched, the library's "excluded / doesn't count" hatch (README lesson 24), through a
 `hatched: true` flag on a `shareBar` part (proposed below). Step
 time is a two-lane `laneTimeline` (compute, communication) in frames 4–5; the failure frames use a
-single-lane `laneTimeline` of the run: `compute` segments, thin `save` ticks, `lost` segments (hatched,
-the work since the last save) and `restart` gaps after each failure mark. A failure is a plain labeled
+single-lane `laneTimeline` of the run (ruling P3-R9): `kind: 'compute'` segments, checkpoint saves as
+`ticks: [{ t, label: 'save' }]`, the work since the last save as a hatched `kind: 'idle'` segment labeled
+`lost` (hatch = doesn't count, README lesson 24), and each restart as `gaps: [{ from, to, label: 'restart' }]`
+after the failure mark. A failure is a plain labeled
 mark ("✕ failure"), not a glyph. The followed run (Llama 3.1 405B) carries the selection outline on its bar in
 every frame where several runs appear.
 
 Glyphs used (from spec §5.1 and approved proposals): `rack` (frame 8: 16,384 GPUs collapsed to two
-racks + "2,046 others", 8 GPUs each), `gpu` (frame 5: one GPU's SM grid with 20 SMs lit for
-communication), `block` (frame 6: "GEMM in FP8", "accumulate in FP32" as labeled blocks), `matrix`
+racks + "2,046 others", 8 GPUs each), `gpu` (frame 5: one GPU's SM grid with the S3 option `litSms` lighting 2 of
+its 12 drawn cells, about 15%, for communication; the printed label and the glyph's `<title>` carry the
+real count, 20 of 132), `block` (frame 6: "GEMM in FP8", "accumulate in FP32" as labeled blocks), `matrix`
 (frame 6: a 4 × 4 grid of tiles standing for 128 × 128 blocks, shape-only), `shareBar`
-(`decoder-anatomy`), `laneTimeline` and `bitLayout` (both proposed by `gpu-primer`).
+(`decoder-anatomy`), `laneTimeline` and `bitLayout` (both built in S3, from `gpu-primer`'s proposals).
 
-New glyphs proposed: none. Glyph option proposed: `shareBar` parts accept `hatched: true` (the
+New glyphs proposed: none. Glyph option built in S3: `shareBar` parts accept `hatched: true` (the
 `heatmap` mask hatch, meaning excluded, never unknown; unknown parts keep the neutral fill, README lesson
-19); reused by any page whose bar has a part that doesn't count. `laneTimeline`'s `save`, `lost` and
-`restart` kinds are in `gpu-primer`'s proposal. Frame 9's lane shows a 90-minute window of the run
+19); reused by any page whose bar has a part that doesn't count. The lane's saves, lost work and restarts
+use `laneTimeline`'s `ticks`, hatched `idle` segments and `gaps`. Frame 9's lane shows a 90-minute window of the run
 (about six saves), not all 54 days. Frame 10 prints "same scale: 36.97M GPU-h = full width" over its
 two bars (lesson 21).
 
@@ -122,16 +125,16 @@ Numbers from `math/scale.js` (reproducer in §6). H100 BF16 peak 989 TFLOPS, FP8
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Plain equation card "6 × N × D" with Llama 3.1 405B's numbers dropping in; a small two-part bar "forward 2 · backward 4" and the line "why 6: each multiply-add is 2 FLOPs; backward does two matmuls for each forward one". | The factors drop into place; the product types in. | Training costs about 6 FLOPs per parameter per token: 2 in the forward pass, 4 in the backward. For Llama 3.1 405B that matches the paper's own total. | 6 × 405e9 × 15.6e12 = 3.79 × 10²⁵ FLOPs · ignores attention FLOPs, which grow at long context |
-| 2 | The run bar appears with one segment, "at peak: 10.65M GPU-hours", and a dashed outline where the reported total ends: "model card: 30.84M". | The segment grows; the dashed end mark drops in far to its right. | Divide by the H100's peak and the run needs 10.6 million GPU-hours, 27 days on 16,384 GPUs. Meta's model card reports 30.8 million GPU-hours. | 3.79e25 ÷ (989e12 × 3,600) = 10.65M GPU-h · ÷ 16,384 ÷ 24 = 27.1 days · reported 30.84M = 2.9× |
+| 1 | Plain equation card "6 × N × D" with Llama 3.1 405B's numbers dropping in; a small two-part `shareBar` "forward 2 · backward 4" (ruling P3-R19) and the line "why 6: each multiply-add is 2 FLOPs; backward does two matmuls for each forward one". | The factors drop into place; the product types in. | Training costs about 6 FLOPs per parameter per token: 2 in the forward pass, 4 in the backward. For Llama 3.1 405B that matches the paper's own total. | 6 × 405e9 × 15.6e12 = 3.79 × 10²⁵ FLOPs · ignores attention FLOPs, which grow at long context |
+| 2 | The run bar appears with one segment, "at peak: 10.65M GPU-hours", and a labeled tick on the bar's axis where the reported total ends: "model card: 30.84M" (no outline, no dashes: ruling P3-R11). | The segment grows; the tick drops in far to its right. | Divide by the H100's peak and the run needs 10.6 million GPU-hours, 27 days on 16,384 GPUs. Meta's model card reports 30.8 million GPU-hours. | 3.79e25 ÷ (989e12 × 3,600) = 10.65M GPU-h · ÷ 16,384 ÷ 24 = 27.1 days · reported 30.84M = 2.9× |
 | 3 | The bar splits: "useful (MFU)" and "below peak". A readout "MFU while training: 38–43% (paper) · run-average MFU: 34.5% or more (card; covers more stages than 6ND counts)". | The "below peak" segment grows until the bar reaches 26.6M at 40%. | Model FLOPs utilization, MFU, is the share of peak a run actually delivers. Llama 3.1 ran at 38 to 43% while training, so most of the gap is utilization. | run-average 3.79e25 ÷ (30.84M × 3,600 × 989e12) = 34.5% (a floor) · at 40% while training: 26.62M GPU-h, 67.7 days · 34.5% ÷ 0.90 = 38.4% |
 | 4 | Two-lane `laneTimeline` of one step: compute 100 ms, then communication 40 ms, in sequence; the compute lane idles (hatched) during the communication. Stand-in label. | The communication segment draws after the compute segment; the idle hatch appears. | Exposed communication is time GPUs spend waiting on other GPUs. A step that computes for 100 ms, then waits 40 ms, keeps its tensor cores busy 71% of the time. | stand-in step: 100 + 40 = 140 ms · 100 ÷ 140 = 71% |
 | 5 | The same lanes, the communication segment sliding under the compute segment. A `gpu` glyph whose SM grid shows a few SMs lit in a different shade, labeled "20 of 132 SMs run communication (DeepSeek-V3)". | The comm segment slides left until it sits under compute; the step shortens to 100 ms. | Overlap hides it: send one layer's gradients while computing the next. DeepSeek-V3 set aside 20 of each GPU's 132 SMs to run communication alongside the math. | overlapped step: max(100, 40) = 100 ms · 20 of 132 SMs (15%) |
 | 6 | `bitLayout` FP8 E4M3 (1/4/3) beside BF16 (1/8/7). A `matrix` of tiles: activations scaled per 1 × 128 tile, weights per 128 × 128 block; one tile holds an outlier and only that tile's scale grows. A `block` "accumulate in FP32" under the GEMM block. | The outlier tile's scale label changes; the other tiles keep theirs; partial sums flow into the FP32 block. | DeepSeek-V3 ran its big matrix multiplies in FP8, with one scale per 128 numbers so an outlier spoils only its own tile. Its loss stayed within 0.25% of BF16. | tiles: 1 × 128 (activations), 128 × 128 (weights) · E4M3 everywhere · partial sums promoted to FP32 · loss error < 0.25% · kept in BF16/FP32: embeddings, output head, gating, norms, attention |
 | 7 | Two runs side by side, each with its achieved TFLOPS per GPU and two percentages: "Llama 4 Behemoth: 390 TFLOPS per GPU (FP8): 39% of BF16 peak · 20% of FP8 peak" and "DeepSeek-V3: 343 TFLOPS per GPU (FP8), run-average: 35% · 17%". Plain mark: "measured against H100 peaks; neither lab gave an MFU". | The two percentages for each run type in, one per denominator. | With FP8, utilization depends on which peak you divide by. Behemoth's 390 TFLOPS per GPU is 39% of an H100's BF16 peak, or 20% of its FP8 peak. | 390 ÷ 989 = 39.4% · 390 ÷ 1,979 = 19.7% · DeepSeek-V3: 6 × 37e9 × 14.8e12 ÷ (2.664M × 3,600) = 343 TFLOPS → 34.6% / 17.3% |
-| 8 | Two `rack`s + "2,046 others" (16,384 GPUs). "✕ failure" marks appear on random GPUs along a 54-day timeline: 419 of them, drawn as ticks. Readout "one every 3.1 h". | Ticks accumulate along the timeline; the readout counts. | Llama 3.1's 16,384 GPUs hit 419 unexpected interruptions in 54 days, one every 3.1 hours. The cluster's mean time between failures, MTBF, is one GPU's divided by the GPU count. | 54 × 24 ÷ 419 = 3.09 h · × 16,384 = 50,677 h per GPU (5.8 years) · 78% hardware, GPU issues 58.7% |
+| 8 | Two `rack`s + "2,046 others" (16,384 GPUs). "✕ failure" marks appear on random GPUs along a 54-day timeline: 419 of them, drawn as ticks. Readout "one every 3.09 h". | Ticks accumulate along the timeline; the readout counts. | Llama 3.1's 16,384 GPUs hit 419 unexpected interruptions in 54 days, one every 3.1 hours. The cluster's mean time between failures, MTBF, is one GPU's divided by the GPU count. | 54 × 24 ÷ 419 = 3.09 h · × 16,384 = 50,677 h per GPU (5.8 years) · 78% hardware, GPU issues 58.7% |
 | 9 | Single-lane `laneTimeline` of a 90-minute window of the run: compute segments separated by `save` ticks every 13.6 min; a "✕ failure" mark; the work since the last save turns hatched (`lost`), then a `restart` gap. Stand-in label. | The run plays; at the failure the lost segment hatches and the restart gap opens. | Here the run saves a checkpoint every few minutes. A failure loses the work since the last save plus the restart; saving too often loses time to the saves. | save 30 s, restart 3 min (stand-ins) · best interval 13.6 min · loss 9.0% (save 3.7% + lost work 3.7% + restarts 1.6%) · Llama 3.1 reported >90% effective |
-| 10 | The run bar for 16,384 GPUs (outlined) beside one for 100,000 GPUs, labeled "same scale: 36.97M GPU-h = full width": "useful 26.62M" the same; "lost to failures" (hatched) 2.62M vs 10.35M GPU-h. | The second bar's lost segment grows; the days readouts type in. | With 100,000 of the same GPUs, failures come every 30 minutes and checkpointing loses 28% of the run. Faster saves and restarts now matter as much as faster chips. | MTBF 3.09 h → 0.51 h · best interval 13.6 → 5.5 min · loss 9.0% → 28.0% · 74.4 → 15.4 days · 29.24M → 36.97M GPU-h |
+| 10 | The run bar for 16,384 GPUs (outlined) beside one for 100,000 GPUs, labeled "same scale: 36.97M GPU-h = full width": "useful 26.62M" the same; "lost to failures" (hatched) 2.62M vs 10.35M GPU-h. | The second bar's lost segment grows; the days readouts type in. | With 100,000 of the same GPUs, failures come every 30 minutes and checkpointing loses 28% of the run. Faster saves and restarts now matter as much as faster chips. | MTBF 3.09 h → 30.4 min · best interval 13.6 → 5.51 min · loss 9.0% → 28.0% · 74.4 → 15.4 days · 29.24M → 36.97M GPU-h |
 | 11 | A plain line: "DeepSeek-V3: 2.788M H800-hours × $2 = $5.576M (DeepSeek's own price assumption; excludes research and ablations)". | The product types in. | The bill is GPU-hours times the price of an hour. DeepSeek priced V3's 2.79 million H800-hours at $2 each: $5.6 million, for the final run alone. | 2.788e6 × 2 = $5.576M · pre-training 2.664M H800-h = 180K per trillion tokens · 54.2 days on 2,048 GPUs |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
@@ -165,13 +168,15 @@ Llama 3.1's 419 interruptions and includes non-GPU causes."
 |---|---|---|
 | Training FLOPs | `trainingFlops({ params, tokens })` | scientific, 3 s.f. |
 | Useful GPU-hours, at the MFU while training | `gpuHoursAt({ flops, peakTflops, mfu })` | M GPU-h, 2 decimals |
-| Cluster MTBF | `clusterMtbfHours({ perGpuMtbfHours, gpus })` | h, 2 decimals |
-| Best interval (when "best") | `bestInterval({ saveH, mtbfH })` | min, 1 decimal |
-| **Lost to checkpointing and failures** | `checkpointLoss({ intervalH, saveH, restartH, mtbfH })`, split into save / lost work / restart | %, 1 decimal |
-| **GPU-hours, days, cost** | `runPlan(...)` → `gpuHours`, `days`, `cost`, `valid` | M GPU-h · days (1 decimal) · $M (1 decimal); when `valid` is false the readouts are replaced by "outside the formula's range: interval plus restart exceed half the cluster MTBF" |
+| Cluster MTBF | `clusterMtbfHours({ perGpuMtbfHours, gpus })` | `formatDuration` ("3.09 h", "30.4 min") |
+| Best interval (when "best") | `bestInterval({ saveH, mtbfH })` | `formatDuration` ("13.6 min", "5.51 min") |
+| **Lost to checkpointing and failures** | `checkpointLossParts({ intervalH, saveH, restartH, mtbfH })` → `{ save, lostWork, restart, total }` (`checkpointLoss` is its `.total`) | %, 1 decimal |
+| **GPU-hours, days, cost** | `runPlan(...)` → `gpuHours`, `days`, `cost`, `valid` | M GPU-h · days through `formatDuration` ("74.4 days") · $M (1 decimal); when `valid` is false the readouts are replaced by "outside the formula's range: interval plus restart exceed half the cluster MTBF" |
 | Run-average MFU | `mfuFrom({ flops, gpuHours: runPlan(...).gpuHours, peakTflops })` = while-training × (1 − loss) | %, 1 decimal |
 | Run bar | useful / below peak / lost | `shareBar` |
 | Check against the record | Llama preset: reported 30.84M GPU-h (the card covers more stages than 6ND counts); DeepSeek preset: "reproduces 2.664M by construction (MFU while training set from the record)": useful 2.589M + failure tax 2.8% = 2.664M | text |
+
+**Check my work:** none (the "Check against the record" output is this page's check, ruling P3-R16).
 
 **Try this** (each leads to a named insight)
 1. Llama 3.1 preset at MFU 40%: 29.24M GPU-hours, 74.4 days, against the model card's 30.84M. Slide MFU
@@ -182,7 +187,7 @@ Llama 3.1's 419 interruptions and includes non-GPU causes."
    grows 9.0% → 13.6% → 28.0% and GPU-hours 29.24M → 30.81M → 36.97M. → **Insight: more GPUs finish
    sooner but pay a bigger failure tax, because the cluster's MTBF falls as the GPU count rises.**
 3. At 16,384 GPUs set the interval to 5 min (loss 13.0%), 60 min (18.6%), then "best" (13.6 min,
-   9.0%). Halve the save time to 15 s: best becomes 9.6 min and the loss 6.8%; at 100,000 GPUs the same
+   9.0%). Halve the save time to 15 s: best becomes 9.63 min and the loss 6.8%; at 100,000 GPUs the same
    change takes 28.0% to 22.7%. → **Insight: the best checkpoint interval balances save cost against
    lost work, and faster checkpointing is worth the most on the biggest clusters.**
 
@@ -211,8 +216,10 @@ checkpointLoss({ intervalH, saveH, restartH, mtbfH }) → number
 //   first-order fraction of time lost: save/T + (T/2 + restart)/MTBF (valid when T, restart ≪ MTBF)
 //   (13.6/60, 30/3600, 3/60, 3.093) → 0.0896 · (5/60, …) → 0.130 · (1, …) → 0.186
 bestInterval({ saveH, mtbfH }) → number                   // √(2 · save · MTBF), the minimum of the formula above
-//   (30/3600, 3.093) → 0.2271 h (13.6 min) · (30/3600, 0.507) → 0.0919 h (5.5 min) · (15/3600, 3.093) → 0.1605 h (9.6 min)
-stepTime({ computeMs, commMs, overlap }) → number         // overlap ? max : sum
+//   (30/3600, 3.093) → 0.2270 h (13.6 min) · (30/3600, 0.507) → 0.0919 h (5.5 min) · (15/3600, 3.093) → 0.1605 h (9.6 min)
+trainingStepMs({ computeMs, commMs, overlap }) → number   // overlap ? max : sum (P3-R4: "step time" alone is Serving's)
+checkpointLossParts({ intervalH, saveH, restartH, mtbfH }) → { save, lostWork, restart, total }
+//   (0.2270, 30/3600, 3/60, 3.093) → { 0.0367, 0.0367, 0.0162, 0.0896 }   (frame 9's 3.7 + 3.7 + 1.6 = 9.0%)
 //   (100, 40, false) → 140 · (100, 40, true) → 100
 runCost({ gpuHours, dollarsPerGpuHour }) → number
 //   (2.788e6, 2) → 5.576e6
@@ -240,7 +247,7 @@ import("./math/scale.js").then((m) => {
   for (const [k, o] of [["base", {}], ["mfu38", { mfu: 0.38 }], ["32k", { gpus: 32768 }], ["100k", { gpus: 100000 }], ["T5", { intervalH: 5 / 60 }], ["T60", { intervalH: 1 }],
     ["save15", { saveH: 15 / 3600 }], ["save15 100k", { saveH: 15 / 3600, gpus: 100000 }]]) { const r = m.runPlan({ ...base, ...o });
     console.log(k, f(r.mtbfH, 3), f(r.intervalH * 60, 1), f(100 * r.loss, 1), f(r.gpuHours / 1e6), f(r.days, 1), f(r.cost / 1e6, 1)); }
-  console.log(m.stepTime({ computeMs: 100, commMs: 40, overlap: false }), m.stepTime({ computeMs: 100, commMs: 40, overlap: true }));
+  console.log(m.trainingStepMs({ computeMs: 100, commMs: 40, overlap: false }), m.trainingStepMs({ computeMs: 100, commMs: 40, overlap: true }));
   const ds = m.runPlan({ ...base, params: 37e9, tokens: 14.8e12, gpus: 2048, mfu: 0.35637 }); console.log("dsv3", f(ds.loss, 4), f(ds.usefulGpuHours / 1e6, 3), f(ds.gpuHours / 1e6, 3), f(ds.days, 1), ds.valid);
   console.log(m.runPlan({ ...base, gpus: 100000 }).valid, m.runPlan({ ...base, gpus: 200000, restartH: 0.5 }).valid);
 });'
@@ -253,7 +260,7 @@ $5.576M; per-GPU MTBF 50,677 h. runPlan (MTBF h / interval min / loss % / M GPU-
 15 s 9.6 / 6.8 / 28.56 · save 15 s at 100K 3.9 / 22.7 / 34.43. Step 140 / 100 ms. After the review: DeepSeek preset (MFU while training 0.35637) → loss 0.0280,
 useful 2.589M, total 2.664M GPU-h, 54.2 days, valid; `valid` at 100K GPUs true, at 200K with a 30-minute
 restart false; Llama base run-average MFU 0.364 = 0.40 × (1 − 0.0896). Frame 9's split of
-9.0%: save 0.00833 ÷ 0.2271 = 3.7%, lost work 0.1135 ÷ 3.093 = 3.7%, restarts 0.05 ÷ 3.093 = 1.6%.
+9.0%: save 0.00833 ÷ 0.2270 = 3.7%, lost work 0.1135 ÷ 3.093 = 3.7%, restarts 0.05 ÷ 3.093 = 1.6%.
 
 Tests to write first: the worked examples; `runPlan(...).valid` is false when `intervalH + restartH >
 mtbfH / 2`; the DeepSeek preset returns 2.664e6 GPU-hours to 3 significant figures; run-average MFU =
@@ -294,13 +301,13 @@ card, `hl-peak` = the "at peak" segment, `hl-mfu` = the "below peak" segment, `h
 | Llama 3.1 405B (2024): 15.6T tokens, 3.8 × 10²⁵ FLOPs, up to 16,384 H100s | `models.json/llama-3.1-405b.pretrain_tokens`, `.training_gpus` (existing); `.training_flops` = 3.8e25 *(proposed)* | 03 §5.5, §6 |
 | Llama 3.1 405B model card: 30.84M H100 GPU-hours | `models.json/llama-3.1-405b.training_gpu_hours` = 30.84e6 *(proposed)* | 03 §5.5 |
 | Llama 3.1 405B BF16 MFU: 43% (TP8/PP16/DP64, 8,192 GPUs, 430 TFLOPS), 41% (16,384 GPUs, 400 TFLOPS), 38% (long-context stage, 380 TFLOPS) | `models.json/llama-3.1-405b.mfu_bf16` = [0.38, 0.43] *(proposed; note lists the three configs)* | 03 §4.6, §5.1 |
-| Llama 3.1 54-day window: 466 interruptions, 47 planned, 419 unexpected; 78% hardware; GPU issues 58.7% of unexpected; >90% effective training time; only 3 needed manual intervention | `models.json/llama-3.1-405b.interruptions_54d` = 419, `.effective_time` = ">90%" *(proposed)* | 03 §5.4 |
+| Llama 3.1 54-day window: 466 interruptions, 47 planned, 419 unexpected; 78% hardware; GPU issues 58.7% of unexpected; >90% effective training time; only 3 needed manual intervention | `models.json/llama-3.1-405b.interruptions_54d` = 419, `.interruptions_planned` = 47, `.interruptions_hardware_share` = 0.78, `.interruptions_gpu_share` = 0.587, `.effective_time` = ">90%" (confirmed) | 03 §5.4 |
 | Llama 3.1 405B run: "even a single straggler can slow down thousands of other GPUs"; 1–2% diurnal throughput swing from temperature; 6 silent data corruptions | `models.json/llama-3.1-405b.reliability_notes` *(proposed, string)* | 03 §5.4 |
 | DeepSeek-V3 (2024): 2.788M H800-hours total, 2.664M for pre-training (180K per trillion tokens, 3.7 days per trillion on 2,048 GPUs), "$5.576M at $2 per GPU-hour", excluding research and ablations | `models.json/deepseek-v3.training_gpu_hours` = 2.788e6, `.pretrain_gpu_hours` = 2.664e6, `.training_cost_usd_reported` = 5.576e6 *(proposed)* | 03 §5.5, §6 |
 | DeepSeek-V3 FP8 recipe: all three GEMMs in FP8 (E4M3), 1 × 128 activation tiles, 128 × 128 weight blocks, FP32 promotion of partial sums, BF16 optimizer states; loss error vs BF16 < 0.25% | `models.json/deepseek-v3.fp8_recipe`, `.fp8_loss_error` = "<0.25%" *(proposed)* | 03 §5.3, §1.3 |
 | DeepSeek-V3 reserves 20 of 132 SMs for communication; all-to-all and pipeline traffic "can be fully hidden" | `models.json/deepseek-v3.comm_sms` *(proposed by `parallelism`)* | 03 §4.5, §5.2 |
-| Llama 4 Behemoth (2025): 32K GPUs, FP8, 390 TFLOPS per GPU; Meta gave no MFU | `models.json/llama-4-behemoth.achieved_tflops_per_gpu` = 390, `.training_gpus` = "32K", `.pretrain_precision` = "FP8" *(the source says "32K", exact count unknown)* | 03 §5.1, §6 |
-| NVIDIA Megatron Core on GB300 NVL72: 1,648 TFLOPS per GPU on DeepSeek-V3 pre-training with 256 GPUs, about 3× GB200 NVL72's 606 (precision not stated, so no MFU is derivable) | `hardware.json/gb300-nvl72.megatron_dsv3_tflops_per_gpu` = 1648 *(proposed)* | 03 §5.1 |
+| Llama 4 Behemoth: 32K GPUs, FP8, 390 TFLOPS per GPU; Meta gave no MFU | `models.json/llama-4-behemoth.achieved_tflops_per_gpu` = 390, `.training_gpus` = "32K", `.pretrain_precision` = "FP8" *(the source says "32K", exact count unknown)* | 03 §5.1, §6 |
+| NVIDIA Megatron Core on GB300 NVL72: 1,648 TFLOPS per GPU on DeepSeek-V3 pre-training with 256 GPUs, 2.72× GB200 NVL72's 606 (precision not stated, so no MFU is derivable) | `hardware.json/gb300-nvl72.megatron_dsv3_tflops_per_gpu` = 1648 *(proposed)* | 03 §5.1 |
 | Low-precision pretraining in 2026: MiMo-V2-Flash trained in FP8 over 27T tokens; Nemotron 3 Super and Ultra, both pretrained in NVFP4 (confirmed by both arXiv abstracts); DeepSeek-V4 and Kimi K3 use FP4 quantization-aware training only in post-training | `models.json/mimo-v2-flash.pretrain_precision` = "FP8"; `models.json/nemotron-3-super.pretrain_precision` and `nemotron-3-ultra.pretrain_precision` = "NVFP4" (confirmed) | 02 §1.7; 03 §1.3 |
 | DeepSeek-V4 warns that fully fused kernels make power throttling a limiter | `models.json/deepseek-v4-pro.notes_power` *(proposed, string)* | 03 §5.2 |
 | Kimi K2 (2025): zero loss spikes over 15.5T tokens with MuonClip: training stability, not hardware reliability | `models.json/kimi-k2.loss_spikes` = 0 *(proposed)* | 03 §5.4 |
@@ -335,7 +342,7 @@ Training at 10,000 GPUs           10 / 11  [<] [Play] [>]
  same scale: 36.97M GPU-h = full width
 (16,384 GPUs)  MTBF 3.09 h   checkpoint every 13.6 min
  [useful 26.62M GPU-h        |/lost 2.62/]   9.0%  74.4 days
- 100,000 GPUs  MTBF 0.51 h   checkpoint every 5.5 min
+ 100,000 GPUs  MTBF 30.4 min checkpoint every 5.51 min
  [useful 26.62M GPU-h        |////lost 10.35M////] 28.0%  15.4 days
  save 30 s, restart 3 min (stand-ins)
  With 100,000 of the same GPUs, failures come every 30
@@ -394,3 +401,20 @@ Settled and applied (README lesson 20):
   scale; frame 1 says why 6; the GB300 Megatron row says no MFU is derivable; §3's closing claim is
   scoped to what try-this 3 shows.
 - Data pass 2026-10-07: `llama-4-behemoth` and `mimo-v2-flash` precision cite `pretrain_precision`; Nemotron 3 Super and Ultra are both NVFP4 (no conflict); H800 has NVLink only, so the stand-in H100 peaks stay labeled.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R4: `stepTime` → `trainingStepMs` (§6 signature, reproducer); unqualified "step time" is Serving's.
+- P3-R19: frame 1's two-part bar is a `shareBar`.
+- P3-R11: frame 2's dashed outline is a labeled tick on the bar.
+- P3-R9: frame 9's lane uses `ticks` (saves), hatched `idle` segments labeled `lost`, and `gaps` (restarts).
+- S3 options: `gpu` `litSms` (frame 5), `shareBar` `hatched: true` parts (frames 3, 10).
+- S3-B: the save / lost work / restart split is `checkpointLossParts`; `bestInterval`'s example reads 0.2270 h.
+- X-3: "about 3× GB200 NVL72's 606" → "2.72×" (1,648 ÷ 606), through `formatRatio`.
+- README lesson 35: MTBF, intervals and days print through `formatDuration` (3.09 h → 30.4 min; 13.6 →
+  5.51 min; 9.63 min; 74.4 days); the reproducer and signatures keep raw numbers.
+- X-1: "Llama 4 Behemoth (2025)" drops its year (no confirmed release date); "Llama 3.1 405B (2024)" and
+  "Kimi K2 (2025)" stay with confirmed `release_date` keys added.
+- P3-R14 (data gap 19): `llama-3.1-405b.interruptions_hardware_share` = 0.78 and
+  `.interruptions_gpu_share` = 0.587 (confirmed, arXiv 2407.21783) back frame 8's "78% hardware, GPU issues
+  58.7%".
+- P3-R16: no "Check my work" (the "Check against the record" output is the check).
