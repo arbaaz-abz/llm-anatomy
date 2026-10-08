@@ -4,10 +4,12 @@
 import { paramBreakdown, PRESETS } from '@math/params.js';
 import { sharePct } from '@math/memory.js';
 import { formatCount } from '@math/core.js';
-import { fillClaim, lookupFact } from '@shared/claims.js';
+import { lookupFact } from '@shared/claims.js';
 
 const fact = (data, id, key) => lookupFact(data?.models, id, key)?.value ?? null;
 // The table's Mixture-of-Experts entries: the basis for every total ÷ active ratio and the "blocks deep" range.
+// The earlier MoE models the 2026-norm row compares against (storyboard §8 row 11).
+const EARLIER_MOE = Object.freeze(['mixtral-8x7b', 'qwen3-235b-a22b']);
 export const MOE_TABLE = Object.freeze(['gpt-oss-120b', 'deepseek-v4-pro', 'kimi-k3', 'qwen3.8', 'glm-5.3', 'minimax-m3', 'mistral-large-4']);
 
 const activeShare = (data, id) => {
@@ -37,10 +39,18 @@ const OURS = Object.freeze({
   v3: paramBreakdown(PRESETS.deepseekV3),
 });
 
+const MONTHS = Object.freeze(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+// "2023-12" → "Dec 2023" (a data release_date of year and month).
+const monthYear = (date) => (/^\d{4}-\d{2}/.test(date) ? `${MONTHS[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}` : '—');
+
 function normRow(data) {
   const shares = MOE_TABLE.map((id) => activeShare(data, id));
+  const [mixtral, qwen] = EARLIER_MOE.map((id) => ({ share: activeShare(data, id), date: String(fact(data, id, 'release_date') ?? '') }));
+  const whole = (v) => (v == null ? '—' : `${Math.round(v)}%`);
+  const years = mixtral.date && qwen.date ? `${mixtral.date.slice(0, 4)}–${qwen.date.slice(2, 4)}` : '—';
   return `2026 norm: about ${range(shares)}% of parameters active per token (the table's entries run ${range(shares, (v) => v.toFixed(1))}%), `
-    + 'a much smaller share than in earlier Mixture-of-Experts models such as Mixtral 8x7B and Qwen3-235B.';
+    + `down from ${range([mixtral.share, qwen.share])}% in ${years} (Mixtral 8x7B, ${monthYear(mixtral.date)}, was ${whole(mixtral.share)}; `
+    + `Qwen3-235B, ${qwen.date.slice(0, 4) || '—'}, ${whole(qwen.share)}).`;
 }
 
 function v3Row(data) {
@@ -55,7 +65,7 @@ function v3Row(data) {
 export function factRows(data) {
   return [
     { claim: `GPT-3 {gpt-3.total_params|count} ({gpt-3.release_date|year}): {gpt-3.layers} blocks, d_model {gpt-3.d_model}, {gpt-3.n_heads} heads × {gpt-3.head_dim}, vocab {gpt-3.vocab_size}, {gpt-3.context_length} positions, dense; our count ${count(OURS.gpt3.total, 4)}.` },
-    { claim: `gpt-oss-120b ({gpt-oss-120b.release_date|year}): {gpt-oss-120b.total_params|count4} total / {gpt-oss-120b.active_params|count4} active (${pct(data, 'gpt-oss-120b')}), {gpt-oss-120b.layers} blocks, {gpt-oss-120b.experts_total} experts top-{gpt-oss-120b.experts_active}; config d {gpt-oss-120b.d_model}, {gpt-oss-120b.n_heads} Q / {gpt-oss-120b.n_kv_heads} KV heads × {gpt-oss-120b.head_dim}, vocab {gpt-oss-120b.vocab_size}, expert hidden {gpt-oss-120b.expert_hidden}; our count ${count(OURS.gptOss.total, 5)} / ${count(OURS.gptOss.active, 3)}.` },
+    { claim: `gpt-oss-120b ({gpt-oss-120b.release_date|year}): {gpt-oss-120b.total_params|count5} total / {gpt-oss-120b.active_params|count4} active (${pct(data, 'gpt-oss-120b')}), {gpt-oss-120b.layers} blocks, {gpt-oss-120b.experts_total} experts top-{gpt-oss-120b.experts_active}; config d {gpt-oss-120b.d_model}, {gpt-oss-120b.n_heads} Q / {gpt-oss-120b.n_kv_heads} KV heads × {gpt-oss-120b.head_dim}, vocab {gpt-oss-120b.vocab_size}, expert hidden {gpt-oss-120b.expert_hidden}; our count ${count(OURS.gptOss.total, 5)} / ${count(OURS.gptOss.active, 3)}.` },
     { claim: v3Row(data) },
     { claim: `DeepSeek-V4-Pro: {deepseek-v4-pro.total_params|count} / {deepseek-v4-pro.active_params|count} (${pct(data, 'deepseek-v4-pro')}), {deepseek-v4-pro.layers} blocks, {deepseek-v4-pro.experts_total} + {deepseek-v4-pro.experts_shared} experts top-{deepseek-v4-pro.experts_active}, expert hidden {deepseek-v4-pro.expert_hidden}, d {deepseek-v4-pro.d_model}; input: {deepseek-v4-pro.modalities} only.` },
     { claim: `Kimi K3: {kimi-k3.total_params|count} / {kimi-k3.active_params|count4} (${pct(data, 'kimi-k3')}), {kimi-k3.layers} blocks, {kimi-k3.experts_total} + {kimi-k3.experts_shared} experts top-{kimi-k3.experts_active}, vocab {kimi-k3.vocab_size}, d {kimi-k3.d_model}; native multimodal with a {kimi-k3.vision_encoder_params|count}-parameter vision encoder.` },
@@ -85,10 +95,3 @@ export const BELOW = Object.freeze([
   ['How a token is picked from these probabilities (temperature, top-k, top-p): [[sampling]].'],
   ['Per position, GPT-3 ({gpt-3.release_date|year}, at 2 bytes per number) stored {gpt-3.kv_bytes_per_token|int} B ≈ {gpt-3.kv_bytes_per_token|bytes}; DeepSeek-V3 ({deepseek-v3.release_date|year}) {deepseek-v3.kv_bytes_per_token|int} B ≈ {deepseek-v3.kv_bytes_per_token|bytes}, derived from its config; 2026 designs go to a few kB: [[kv-cache]]. Sliding-window and linear-attention layers store less: [[long-context-attention]].'],
 ]);
-
-// Lesson text with {entry.key|format} placeholders → plain text; a missing fact prints "—" and is logged.
-export function fillText(text, data) {
-  const filled = fillClaim(text, data);
-  if (filled.missing.length && data) console.error(`decoder-anatomy: fact missing from data/*.json: ${filled.missing.join(', ')}`);
-  return filled.segments.map((s) => s.text).join('');
-}

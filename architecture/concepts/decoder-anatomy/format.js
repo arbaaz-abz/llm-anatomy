@@ -53,10 +53,10 @@ function blockRows(config, b) {
   const rows = [[columns([['  attention', BLOCK_LABEL], ['W_Q, W_K, W_V, W_O', MATRICES], [`4 × (${d} × ${q})`]]), b.perLayer.attention]];
   if (moe) {
     const he = moe.hidden;
-    rows.push([columns([['  experts', BLOCK_LABEL], [`${moe.routed} × (W_in, W_gate [${d} × ${he}], W_out [${he} × ${d}])`, MATRICES], [`${moe.routed} × 3 × ${d} × ${he}`]]), b.parts.experts / layers]);
+    rows.push([columns([['  experts', BLOCK_LABEL], [`${moe.routed} × (W_in, W_gate, W_out)`, MATRICES], [`${moe.routed} × 3 × (${d} × ${he})`]]), b.parts.experts / layers]);
     rows.push([columns([['  router', BLOCK_LABEL], [`W_router [${d} × ${moe.routed}]`, MATRICES], [`${d} × ${moe.routed}`]]), b.parts.router / layers]);
   } else {
-    rows.push([columns([['  MLP', BLOCK_LABEL], [`W_in, W_gate [${d} × ${mlp.hidden}], W_out [${mlp.hidden} × ${d}]`, MATRICES], [`3 × ${d} × ${mlp.hidden}`]]), b.perLayer.mlp]);
+    rows.push([columns([['  MLP', BLOCK_LABEL], ['W_in, W_gate, W_out', MATRICES], [`3 × (${d} × ${mlp.hidden})`]]), b.perLayer.mlp]);
   }
   rows.push([columns([['  norms', BLOCK_LABEL], [`2 × ${d}`]]), b.perLayer.norms]);
   return rows;

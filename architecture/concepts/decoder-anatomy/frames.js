@@ -1,7 +1,7 @@
 // decoder-anatomy stage: render(index, progress, stage) draws frame index+1 into one fixed 580 × 366 <svg>.
 // Every frame is a pure function of (index, progress): no module state, no clock, no randomness.
 import * as G from '@shared/glyphs.js';
-import { STAGE } from './layout.js';
+import { STAGE } from './stage.js';
 import { CAPTIONS } from './captions.js';
 import { drawFrame1, drawFrame2, drawFrame3 } from './frames-input.js';
 import { drawFrame4, drawFrame5, drawFrame6 } from './frames-block.js';

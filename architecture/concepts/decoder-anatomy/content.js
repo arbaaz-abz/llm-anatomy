@@ -3,7 +3,8 @@
 import { render } from './frames.js';
 import { mount } from './toy.js';
 import { CAPTIONS } from './captions.js';
-import { BELOW, factRows, framing, fillText } from './facts.js';
+import { fillText } from '@shared/claims.js';
+import { BELOW, factRows, framing } from './facts.js';
 
 const SLUG = 'decoder-anatomy';
 

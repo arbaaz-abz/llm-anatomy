@@ -3,7 +3,7 @@
 import { paramBreakdown, partialBreakdown, mlpParams, PRESETS, V4_PRO_PARTIAL } from '@math/params.js';
 import { sharePct } from '@math/memory.js';
 import { formatCount } from '@math/core.js';
-import { lookupFact } from '@shared/claims.js';
+import { lookupFact, fillText } from '@shared/claims.js';
 import { formatShare } from '@shared/glyphs/bars.js';
 import { PART_ORDER, int, toyConfig, checkWork, gapLine, perBlockLine, barParts } from './format.js';
 
@@ -23,7 +23,7 @@ export const PART_LABELS = Object.freeze({
 export const INITIAL_STATE = Object.freeze({ preset: 'toy', layers: 2, dModel: 8, experts: 0 });
 export const EXPERTS_EDGE_NOTE = '2 of 2 experts used: this is a dense MLP with a router';
 // Line breaks are part of the text: the box keeps its lines (white-space: pre) so it never wraps mid-sum.
-const REAL_CHECK_NOTE = ['The line-by-line count is for the toy preset.', 'Real presets use the same formulas, plus', 'the biases, learned positions and latent', 'projections their configs list.'].join('\n');
+const REAL_CHECK_NOTE = ['The line-by-line count is for the', 'toy preset. Real presets use the same', 'formulas, plus the biases, learned', 'positions and latent projections', 'their configs list.'].join('\n');
 
 const fact = (data, id, key) => lookupFact(data?.models, id, key)?.value ?? null;
 const pctText = (part, whole) => `${sharePct(part, whole).toFixed(1)}%`;
@@ -128,8 +128,30 @@ export function kimiLine(data) {
 }
 
 // The "explain the gap" line under the DeepSeek-V3 chip.
+// The "explain the gap" line under the DeepSeek-V3 chip: the checkpoint's extra module, then the active gap (README lesson 27).
 export function v3GapLine(data) {
-  const [total, mtp] = ['total_params', 'mtp_params'].map((k) => fact(data, 'deepseek-v3', k));
-  if (!total || !mtp) return '';
-  return `Explain the gap: the Hugging Face checkpoint is ${formatCount(total + mtp)} because it also ships the ${formatCount(mtp)} multi-token-prediction (MTP) module; the paper's ${formatCount(total)} is the main model alone.`;
+  const [total, mtp, publishedActive] = ['total_params', 'mtp_params', 'active_params'].map((k) => fact(data, 'deepseek-v3', k));
+  if (!total || !mtp || !publishedActive) return '';
+  const b = paramBreakdown(PRESETS.deepseekV3);
+  return `Explain the gap: the Hugging Face checkpoint is ${formatCount(total + mtp)} because it also ships the ${formatCount(mtp)} multi-token-prediction (MTP) module; the paper's ${formatCount(total)} is the main model alone. `
+    + `Active: our ${formatCount(b.active)} leaves out the ${formatCount(b.parts.embedding)} embedding table; counting it gives ${formatCount(b.activeWithEmbedding)}. The published ${formatCount(publishedActive)} sits between the two, and the paper does not say how it counts, so neither convention matches it exactly.`;
+}
+
+// Storyboard §6 try-this prompts: [prompt, insight, rest]. Try-this 3's real-model numbers are filled from the data.
+const TRY_THIS = Object.freeze([
+  ['Toy preset, read the shares: MLP 48.7%, attention 32.5%, embedding + head 16.2%, norms 2.5%. Tap GPT-3: MLP 66.4%, attention 33.2%, embedding 0.35%. Tap gpt-oss-120b: experts 98.2%, attention 0.8%.',
+    'Most parameters think per token; they don\'t talk between tokens.',
+    ' A dense block\'s MLP is 8·d² against attention\'s 4·d² (1.5× in the toy, whose hidden is 2·d); turn the MLP into experts and attention shrinks to a rounding error.'],
+  ['Toy preset, set Blocks = 1 and d_model = 8: embedding + head = 256 of 920, 27.8%. Now Blocks = 8, d_model = 64: 0.6%. The far end is in the line below this list.',
+    'The embedding table is vocab × d_model, the blocks are about 10–12 · N · d_model² (10 in this toy, 12 in GPT-3); the table only matters in small models.',
+    ' Read gpt-oss-120b\'s "% of active" column: its unembedding is 579M of 5.13B active, 11%, so in a sparse model the head is a visible slice of what each token actually multiplies.'],
+  ['Toy preset, Blocks = 2, slide Routed experts 0 → 8 → 16: total 1,576 → 4,008 → 7,208; active 1,448 → 1,576 → 1,704. Then tap DeepSeek-V4-Pro: {deepseek-v4-pro.total_params|count} total, {deepseek-v4-pro.active_params|count} active, %ACTIVE%.',
+    'MoE grows total with the number of experts; active barely moves.',
+    ' Two active experts of hidden 8 (2 × 192 = 384) are exactly one dense MLP of hidden 16, so the only active growth is the router: one row of d_model per expert per block (64 → 128 here). Real 2026 experts are fine-grained in the same way.'],
+]);
+
+export function tryThis(data) {
+  const [total, active] = ['total_params', 'active_params'].map((k) => fact(data, 'deepseek-v4-pro', k));
+  const pct = total && active ? `${sharePct(active, total).toFixed(1)}%` : '—';
+  return TRY_THIS.map(([prompt, insight, rest]) => ({ prompt: fillText(prompt, data).replace('%ACTIVE%', pct), insight, rest }));
 }

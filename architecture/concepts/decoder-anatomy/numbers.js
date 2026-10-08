@@ -24,6 +24,9 @@ const snapHalf = (v) => Math.round(v * 2) / 2 + 0; // + 0 turns −0 into 0
 // The embedding table E [16 × 8]: the four lit rows are X; the 12 unused rows are seeded and only ever drawn dim.
 export const E = deepFreeze([...X, ...randomMatrix(12, D_MODEL, 11, 1).map((row) => row.map(snapHalf))]);
 
+// Frame 2's image side lane: what the projector would hand the stream (its own seeded stand-in, never a vocabulary row).
+export const PATCH_VEC = deepFreeze(randomMatrix(1, D_MODEL, 12, 1)[0].map(snapHalf));
+
 export const addRows = (a, b) => {
   if (a.length !== b.length) throw new RangeError(`addRows: length ${a.length} vs ${b.length}`);
   return a.map((v, i) => v + b[i]);

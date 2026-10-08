@@ -1,7 +1,7 @@
 // decoder-anatomy stage layout: fixed positions shared by every frame, and small drawing helpers built on the glyph
 // library. The stream keeps its anchor from frame 3 to 9, the block lane from 3 to 7, the lifted strip in 4, 5, 6 and 8.
 import * as G from '@shared/glyphs.js';
-import { TOKENS, MAX_ABS } from './stream.js';
+import { TOKENS, MAX_ABS } from './numbers.js';
 
 export const STAGE = Object.freeze({ w: 580, h: 366 });
 export const CELL = G.NUMBER_CELL; // numbers the learner reads
@@ -21,6 +21,11 @@ export const EAR = Object.freeze([0.18, 0.22, 0.78, 0.9, 0.2, 0.55, 0.86, 0.95, 
 export const clamp01 = (t) => Math.min(Math.max(t, 0), 1);
 export const seg = (p, a, b) => clamp01((p - a) / (b - a)); // progress p remapped to the sub-phase [a, b]
 export const lerp = (a, b, t) => a + (b - a) * t;
+// Each frame starts from the previous frame's end state (template rule 4): what leaves fades out and what arrives fades in
+// during [0, HANDOFF].
+export const HANDOFF = 0.15;
+export const arriving = (p) => seg(p, 0, HANDOFF);
+export const leaving = (p) => 1 - seg(p, 0, HANDOFF);
 export const dip = (t) => 1 - 0.55 * Math.sin(Math.PI * clamp01(t)); // "dim and brighten" for the norm stage
 
 export const chipWidths = (words) => words.map((w) => G.tokenWidth(w));
@@ -37,38 +42,50 @@ export function note(parent, x, y, str, { cls = 'g-label', anchor = 'start' } = 
   return g;
 }
 
-export function chips(parent, words = TOKENS, { opacity = () => 1, dx = () => 0 } = {}) {
+export const CHIP_H = 24; // the token glyph's height
+
+// The token chips; `follow` marks the followed chip(s) with the selection outline (template rule 5), at `selOpacity`.
+export function chips(parent, words = TOKENS, { opacity = () => 1, dx = () => 0, follow = [], selOpacity = 1 } = {}) {
   words.forEach((text, i) => G.token(layer(parent, opacity(i)), { x: chipX(i, words) + dx(i), y: CHIPS.y, text, index: i + 1 }));
+  follow.forEach((i) => {
+    if (selOpacity > 0) G.selectionMark(layer(parent, selOpacity), { x: chipX(i, words), y: CHIPS.y, w: G.tokenWidth(words[i]), h: CHIP_H });
+  });
 }
 
 // A row of cells that a math term can name: the wrapper carries data-link and an invisible frame for the hover outline.
-export function linkedRow(parent, letter, { x, y, values, cell, maxAbs = MAX_ABS, label }) {
+export function linkedRow(parent, letter, { x, y, values, cell, maxAbs = MAX_ABS, label, format }) {
   const g = G.svgEl('g', { 'data-link': letter }, parent);
   G.svgEl('rect', { class: 'g-frame', x: x - 1, y: y - 1, width: values.length * cell + 2, height: cell + 2, rx: 3, fill: 'none', stroke: 'none' }, g);
-  G.vector(g, { x, y, values, cell, orient: 'row', maxAbs, label });
+  G.vector(g, { x, y, values, cell, orient: 'row', maxAbs, label, format });
   return g;
 }
 
-// The residual stream X [n × 8] at its fixed anchor; `selected` rows carry the one selection outline.
-export function stream(parent, rows, { cell = SMALL, selected = [], words = TOKENS } = {}) {
+// The residual stream X [n × 8] at its fixed anchor; `selected` rows carry the one selection outline, at `selOpacity`.
+export function stream(parent, rows, { cell = SMALL, selected = [], words = TOKENS, selOpacity = 1 } = {}) {
   const g = G.matrix(parent, { x: STREAM.x, y: STREAM.y, values: rows, cell, maxAbs: MAX_ABS, label: cell >= CELL ? 'residual stream X' : 'stream X', rowLabels: words.slice(0, rows.length) });
   g.setAttribute('data-link', 'x');
-  selected.forEach((r) => G.selectionMark(parent, { x: STREAM.x, y: STREAM.y + r * cell, w: rows[0].length * cell, h: cell }));
+  selected.forEach((r) => {
+    if (selOpacity > 0) G.selectionMark(layer(parent, selOpacity), { x: STREAM.x, y: STREAM.y + r * cell, w: rows[0].length * cell, h: cell });
+  });
   return g;
 }
+
+// Two real states of one row, interpolated cell by cell (template rule 7: never scaled up from 0).
+export const blendRows = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
 export const streamRowY = (r, cell = SMALL) => STREAM.y + r * cell;
 export const rowLabelX = (x) => x - ROW_LABEL_GAP;
 
 // The block lane: blockStack at its fixed place. fold = true draws "block 1, ⋮ × N, block N".
 export function lane(parent, { halves = ['attention', 'MLP'], active = null, fold = false, opacity = 1 } = {}) {
-  const g = G.blockStack(layer(parent, opacity), { x: LANE.x, y: LANE.y, w: LANE.w, count: fold ? 3 : 2, shown: fold ? 1 : 2, halves, active, countLabel: '⋮ × N' });
-  if (fold) {
-    // blockStack prints "block 3" for the last of three; on this stage the last block is block N (shared request filed).
-    const last = [...g.querySelectorAll('text.g-sub')].find((t) => t.textContent === 'block 3');
-    if (last) last.textContent = 'block N';
-  }
-  return g;
+  if (opacity <= 0) return null;
+  return G.blockStack(layer(parent, opacity), { x: LANE.x, y: LANE.y, w: LANE.w, count: fold ? 3 : 2, shown: fold ? 1 : 2, halves, active, countLabel: '⋮ × N', lastLabel: fold ? 'block N' : undefined });
+}
+
+// A change of lane state (which half is active, what the halves are called): `to` fades in over `from`, which then goes.
+export function laneBlend(parent, from, to, t) {
+  if (t < 1) lane(parent, from);
+  if (t > 0) lane(parent, { ...to, opacity: t * (to.opacity ?? 1) });
 }
 
 // Where the lane's blocks sit (blockStack geometry: 16 px header, 26 px halves, 6 px between, 8 px pad, 12 px gaps).
