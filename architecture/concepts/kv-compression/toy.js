@@ -19,18 +19,21 @@ const output = (name, props = {}) => {
 };
 const note = (children) => el('p', { className: 'toy-note' }, children);
 
+// A slider host is a grid (theme.css), which beats the hidden attribute, so a hidden slider hides its wrapper.
+const wrap = (box, child) => { box.append(child); return box; };
+
 function buildDom(host, shapes) {
   const pre = el('pre', { className: 'check-work', ariaLive: 'polite' });
   pre.dataset.readout = 'check-work';
   const refs = {
-    chips: el('div'), scheme: el('div'), kv: el('div'), latent: el('div'), context: el('div'), pattern: el('div'),
+    chips: el('div'), scheme: el('div'), kv: el('div'), latent: el('div'), context: el('div'), pattern: el('div'), kvBox: el('div'), latentBox: el('div'),
     wiring: el('div', { className: 'scroll-x' }), maps: el('div', { className: 'toy-maps' }), table: el('div'),
     spec: output('spec'), groups: output('groups'), whatIf: output('what-if'), check: pre,
   };
   const items = tryThis(shapes).map(({ prompt, insight, rest }) => el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` }), rest]));
   host.append(
     refs.chips, note([refs.spec]),
-    el('div', { className: 'toy-controls' }, [refs.scheme, refs.kv, refs.latent, refs.context]),
+    el('div', { className: 'toy-controls' }, [refs.scheme, wrap(refs.kvBox, refs.kv), wrap(refs.latentBox, refs.latent), refs.context]),
     refs.wiring, note([refs.groups]), refs.table, note([refs.whatIf]),
     el('h4', { textContent: 'Check my work' }), pre,
     el('h4', { textContent: 'Same keys, different questions' }), refs.pattern, refs.maps,
@@ -56,8 +59,8 @@ function paint(refs, view, state) {
   refs.groups.textContent = view.groups;
   refs.whatIf.textContent = view.whatIf;
   refs.check.textContent = view.checkWork;
-  refs.kv.hidden = state.scheme !== 'gqa';
-  refs.latent.hidden = state.scheme !== 'mla';
+  refs.kvBox.hidden = state.scheme !== 'gqa';
+  refs.latentBox.hidden = state.scheme !== 'mla';
   refs.wiring.hidden = view.wiring === null;
   refs.wiring.replaceChildren(...(view.wiring ? [wiringFigure(view.wiring)] : []));
   refs.table.replaceChildren(memoryTable(view));

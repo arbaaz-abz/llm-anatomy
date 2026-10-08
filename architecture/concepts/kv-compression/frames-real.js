@@ -9,7 +9,7 @@ import { TOY_SHAPE, DEFAULT_CONTEXT } from './numbers.js';
 import { ladder, mlaRatio, realHeadBaseline, compare } from './ladder.js';
 import { int, timesText } from './format.js';
 
-const ROW = Object.freeze({ y: 82, pitch: 34, name: 60, toy: 300, v3: 520 });
+const ROW = Object.freeze({ y: 82, pitch: 34, name: 29, toy: 300, v3: 520 });
 const LADDER_ORDER = Object.freeze(['mha', 'gqa8', 'gqa2', 'mqa', 'mla']); // MLA lands last, into the slot its toy number gives it
 const SLOT = Object.freeze({ mha: 0, gqa8: 1, gqa2: 2, mla: 3, mqa: 4 });
 const COLUMN = Object.freeze({ centers: [80, 220, 360, 500], name: 56, bytes: 142, size: 218 });

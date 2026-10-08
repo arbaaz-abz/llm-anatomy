@@ -99,6 +99,7 @@ export function drawFrame7(svg, p) {
   label(svg, STORE.x, NOTE_Y, 'latent');
   posLabels(svg, 1);
   label(svg, HEADER.x, 38, 'queries with the K-rebuild folded in', { opacity: seg(p, 0.7, 0.95) });
+  label(svg, W_O.x + W_O.w / 2, W_O.y - 14, 'V-rebuild folded in', { anchor: 'middle', opacity: seg(p, 0.7, 0.95) });
   readout(svg, TOY_SHAPE.dLatent + TOY_SHAPE.dRope);
   swapKey(svg, LINES.x, LINES.y[0], '8 + 2 = 10 numbers per token per layer', '0 rebuilt K or V rows stored', p, [0, 0.2, 0.7]);
   key(svg, LINES.x, LINES.y[1], 'q · (c W_UK) = (q W_UKᵀ) · c', { opacity: seg(p, 0.7, 0.95) });

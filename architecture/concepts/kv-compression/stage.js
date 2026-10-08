@@ -17,13 +17,13 @@ export const Q = Object.freeze({ w: 60, h: 28, y: 52, x0: 29, pitch: 66 }); // 8
 export const QUERY_HEADS = 8;
 export const qx = (h) => Q.x0 + h * Q.pitch;
 export const qcx = (h) => qx(h) + Q.w / 2;
-export const STACK = Object.freeze({ tile: 10, tiles: 4, y: 132, w: 46, h: 22 }); // a kvStack: 4 tokens, K above V
+export const STACK = Object.freeze({ tile: 9, tiles: 4, y: 150, w: 42, h: 20 }); // a kvStack: 4 tokens, K above V
 export const HEAD_CENTERS = Object.freeze(Array.from({ length: QUERY_HEADS }, (_, h) => qcx(h)));
 export const GROUP_CENTERS = Object.freeze([(qcx(0) + qcx(3)) / 2, (qcx(4) + qcx(7)) / 2]); // centered under Q1–Q4 and Q5–Q8
 export const SINGLE_CENTER = (qcx(0) + qcx(7)) / 2;
 export const HEADER = Object.freeze({ x: 29, y: 20 });
 export const READOUT = Object.freeze({ x: 551, y: 20 });
-export const LINES = Object.freeze({ x: 29, y: [282, 304, 326, 348], share: 236 }); // the "Numbers shown" lines under the figure (share: frames 1–3)
+export const LINES = Object.freeze({ x: 29, y: [282, 304, 326, 348], share: 262 }); // the "Numbers shown" lines under the figure (share: frames 1–3)
 export const REST_DOT = 0.62; // where a flow's dot rests: clear of both ends
 
 // ---- drawing helpers ----

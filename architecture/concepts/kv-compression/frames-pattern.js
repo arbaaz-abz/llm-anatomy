@@ -9,9 +9,9 @@ const QUERY = 2; // "sat", the row we follow
 const TOKENS = TOY.tokens;
 const CHIP_X = Object.freeze([50, 98, 146, 194]);
 const CHIP_Y = 36;
-const MAP_Y = 118;
+const MAP_Y = 124;
 const MAP_X = Object.freeze({ a: 62, b: 342 });
-const TITLE_Y = 92;
+const TITLE_Y = 88;
 
 const { a: HEAD_A, shared: HEAD_B } = patternFor();
 export const rowFilled = (p) => Math.floor(seg(p, 0.5, 1) * 4 + 1e-9); // head B's heatmap fills row by row
