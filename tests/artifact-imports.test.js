@@ -17,18 +17,19 @@ async function walk(dir) {
 }
 
 // Where a specifier lands in the published artifact (paths relative to the artifact root), or why it can't.
-function publishedPath(spec, file, { pageDir, concepts }) {
+function publishedPath(spec, file, { track, pageDir, concepts }) {
   if (spec.startsWith('@shared/')) return `shared/${spec.slice(8)}`;
   if (spec.startsWith('@math/')) return `math/${spec.slice(6)}`;
   if (!spec.startsWith('./') && !spec.startsWith('../')) return { error: `bare or absolute specifier "${spec}"` };
   const target = resolve(file, '..', spec);
-  if (!target.startsWith(concepts + sep)) return { error: `"${spec}" leaves architecture/concepts/ (use @shared/ or @math/)` };
+  if (!target.startsWith(concepts + sep)) return { error: `"${spec}" leaves ${track}/concepts/ (use @shared/ or @math/)` };
   return relative(pageDir, target).split(sep).join(posix.sep);
 }
 
-// Every problem with the imports of <root>/architecture/concepts/**, as "<file>: <why>" lines.
-async function importProblems(root) {
-  const pageDir = join(root, 'architecture');
+// Every problem with the imports of <root>/<track>/concepts/**, as "<file>: <why>" lines.
+// <track>/index.html is published as its own artifact, so a concept may reach only @shared/, @math/ and its own concepts/.
+async function importProblems(root, track) {
+  const pageDir = join(root, track);
   const concepts = join(pageDir, 'concepts');
   const files = await artifactFiles(pageDir, root);
   const problems = [];
@@ -36,7 +37,7 @@ async function importProblems(root) {
     const name = relative(root, file).split(sep).join(posix.sep);
     for (const m of (await readFile(file, 'utf8')).matchAll(IMPORT)) {
       const spec = m[1] ?? m[2];
-      const where = publishedPath(spec, file, { pageDir, concepts });
+      const where = publishedPath(spec, file, { track, pageDir, concepts });
       if (typeof where !== 'string') problems.push(`${name}: ${where.error}`);
       else if (!(where in files)) problems.push(`${name}: "${spec}" → ${where} is not published`);
     }
@@ -44,9 +45,14 @@ async function importProblems(root) {
   return problems;
 }
 
-test('every import and re-export in architecture/concepts/** resolves to a file the artifact publishes', async () => {
-  assert.deepEqual(await importProblems(ROOT), []);
-});
+// Each track is published as its own artifact; a track with no concepts/ directory yet passes trivially.
+const TRACK_IDS = ['architecture', 'training', 'serving'];
+
+for (const track of TRACK_IDS) {
+  test(`every import and re-export in ${track}/concepts/** resolves to a file the ${track} artifact publishes`, async () => {
+    assert.deepEqual(await importProblems(ROOT, track), []);
+  });
+}
 
 test('a planted bad concept is caught: a path out of concepts/, a missing re-export, a missing export-star', async (t) => {
   const repo = await mkdtemp(join(tmpdir(), 'artifact-imports-'));
@@ -60,20 +66,33 @@ test('a planted bad concept is caught: a path out of concepts/, a missing re-exp
     "export * from './bad/also-missing.js';",
     "export const label = 'not an import';",
   ].join('\n'));
-  assert.deepEqual(await importProblems(repo), [
+  assert.deepEqual(await importProblems(repo, 'architecture'), [
     'architecture/concepts/bad.js: "../../shared/x.js" leaves architecture/concepts/ (use @shared/ or @math/)',
     'architecture/concepts/bad.js: "./other.js" → concepts/other.js is not published',
     'architecture/concepts/bad.js: "./bad/also-missing.js" → concepts/bad/also-missing.js is not published',
   ]);
 });
 
-test('the artifact ships every data file ctx.data holds, and no concept fetches JSON itself (facts come from ctx.data)', async () => {
-  const pageDir = join(ROOT, 'architecture');
-  const files = await artifactFiles(pageDir, ROOT);
-  for (const name of ['models', 'hardware', 'serving', 'papers']) assert.ok(`data/${name}.json` in files, `data/${name}.json is published`);
-  const fetchers = [];
-  for (const file of await walk(join(pageDir, 'concepts'))) {
-    if (/\bfetch\s*\(|\bloadJSON\s*\(/.test(await readFile(file, 'utf8'))) fetchers.push(relative(ROOT, file));
-  }
-  assert.deepEqual(fetchers, []);
+test('a training concept that imports another track\'s concept code is caught', async (t) => {
+  const repo = await mkdtemp(join(tmpdir(), 'artifact-imports-'));
+  t.after(() => rm(repo, { recursive: true, force: true }));
+  const put = async (rel, text = 'x') => { await mkdir(join(repo, rel, '..'), { recursive: true }); await writeFile(join(repo, rel), text); };
+  for (const rel of ['shared/glyphs.js', 'training/index.html', 'architecture/concepts/moe/stage.js']) await put(rel);
+  await put('training/concepts/bad.js', "import { x } from '../../architecture/concepts/moe/stage.js';\n");
+  assert.deepEqual(await importProblems(repo, 'training'), [
+    'training/concepts/bad.js: "../../architecture/concepts/moe/stage.js" leaves training/concepts/ (use @shared/ or @math/)',
+  ]);
 });
+
+for (const track of TRACK_IDS) {
+  test(`the ${track} artifact ships every data file ctx.data holds, and no ${track} concept fetches JSON itself (facts come from ctx.data)`, async () => {
+    const pageDir = join(ROOT, track);
+    const files = await artifactFiles(pageDir, ROOT);
+    for (const name of ['models', 'hardware', 'serving', 'papers']) assert.ok(`data/${name}.json` in files, `data/${name}.json is published`);
+    const fetchers = [];
+    for (const file of await walk(join(pageDir, 'concepts'))) {
+      if (/\bfetch\s*\(|\bloadJSON\s*\(/.test(await readFile(file, 'utf8'))) fetchers.push(relative(ROOT, file));
+    }
+    assert.deepEqual(fetchers, []);
+  });
+}
