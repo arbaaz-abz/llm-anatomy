@@ -138,3 +138,47 @@ test('lessonFor never mutates the data it reads', () => {
   lessonFor(data).animation.belowFor(8);
   assert.equal(JSON.stringify(data), before);
 });
+
+// ---- the toy's view model (toy-view.js) ----
+const toyView = await import('../architecture/concepts/sampling/toy-view.js');
+
+test('toy view, default state: the animation\'s probabilities, 16 of 16 kept, seed 1\'s 20 draws and the exact "Check my work"', () => {
+  const v = toyView.view(STATE);
+  assert.deepEqual(v.rows.map((r) => [r.label, r.pre, r.post]), [['on', '0.390', '0.390'], ['"."', '0.237', '0.237'], ['and', '0.087', '0.087'], ['the', '0.053', '0.053'], ['12 others', '0.019', '0.019']]);
+  assert.equal(v.rows[4].postSub, 'together 0.233 · 12 of 12 kept');
+  assert.deepEqual([v.kept, v.mass], ['16 of 16', '1.000']);
+  assert.deepEqual(v.counts, [6, 8, 1, 1, 4]);
+  assert.equal(v.firstEight, 'and on . then was on . the');
+  assert.equal(v.checkWork, CHECK_WORK);
+  assert.equal(v.drawsTitle, '20 draws, seed 1');
+});
+
+test('toy view, top-k 3: the cut tokens read 0.000 and "cut", the survivors are rescaled', () => {
+  const v = toyView.view({ ...STATE, topK: 3 });
+  assert.deepEqual(v.rows.map((r) => r.post), ['0.547', '0.331', '0.122', '0.000', '0.000']);
+  assert.equal(v.rows[3].postSub, 'cut');
+  assert.equal(v.rows[4].postSub, 'together 0.000 · 0 of 12 kept');
+  assert.deepEqual([v.kept, v.mass], ['3 of 16', '0.714']);
+});
+
+test('toy view, greedy: probability 1 on "on", every draw "on"', () => {
+  const v = toyView.view({ ...STATE, greedy: true });
+  assert.equal(v.rows[0].post, '1.000');
+  assert.deepEqual(v.counts, [20, 0, 0, 0, 0]);
+  assert.equal(v.firstEight, 'on on on on on on on on');
+  assert.equal(v.rows[0].pre, '1.000', 'temperature 0 is already a one-hot, so "after temperature" shows it too');
+});
+
+test('toy view, top-p 0.7 at temperature 2: 9 kept, 5 of the 12 tied words', () => {
+  const v = toyView.view({ ...STATE, temperature: 2, topP: 0.7 });
+  assert.deepEqual([v.kept, v.mass], ['9 of 16', '0.705']);
+  assert.match(v.rows[4].postSub, /5 of 12 kept$/);
+});
+
+test('try-this text is computed from the same functions and carries the storyboard numbers', () => {
+  const [one, two, three] = toyView.tryThis();
+  assert.match(one, /"on" 0\.682, the 12 others 0\.020 together; seed 1 draws "on" 15 times in 20\. Temperature 2: "on" 0\.189, others 0\.506; 8 of 20 draws/);
+  assert.match(two, /Top-p 0\.7 at temperature 1: 3 kept\. At 0\.5: 2 kept\. At 2: 9 kept \(5 of the 12 tied words/);
+  assert.match(two, /top-k 3 instead: 3 kept at every temperature/);
+  assert.match(three, /seed 2: the on on \. a and \. on\)\. Return to seed 1 and they come back exactly \("and on \. then was on \. the"\)/);
+});
