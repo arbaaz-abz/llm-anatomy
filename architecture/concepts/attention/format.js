@@ -86,6 +86,11 @@ function columns(values, suffix = '') {
   return suffix ? `${placed.padEnd(Math.max(SUFFIX_COLUMN, placed.length + 5))}${suffix}` : placed;
 }
 
+// Frame 2's mono line: one dot product written out ("0·0 + 2·1.5 + 0.5·0 + 0·(−0.5) = 3.0").
+export function expansion(q, k, score) {
+  return `${q.map((qi, i) => `${factor(qi)}·${factor(k[i])}`).join(' + ')} = ${signedScore(score).trim()}`;
+}
+
 const labelled = (label, values, suffix) => `${label.padEnd(LABEL_WIDTH)}→${columns(values, suffix)}`;
 
 function divideLabel(divisor) {
