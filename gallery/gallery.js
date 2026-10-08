@@ -29,7 +29,7 @@ function swatches(root, list) {
 }
 swatches($('#sw-base'), [['--bg', 'page'], ['--surface', 'panels'], ['--surface-2', 'inset'], ['--ink', 'text, 16:1 / 15:1'], ['--ink-muted', 'notes, 5.5:1 / 7.3:1'], ['--line', 'hairlines']]);
 swatches($('#sw-accent'), [['--accent-arch', 'architecture'], ['--accent-train', 'training'], ['--accent-serve', 'serving']]);
-swatches($('#sw-sem'), [['--sem-compute', 'compute-bound'], ['--sem-memory', 'memory-bound, KV'], ['--sem-ok', 'pass, hit, useful'], ['--sem-bad', 'fail, miss, wasted']]);
+swatches($('#sw-sem'), [['--sem-compute', 'compute-bound'], ['--sem-memory', 'memory-bound, KV'], ['--sem-comm', 'communication'], ['--sem-ok', 'pass, hit, useful'], ['--sem-bad', 'fail, miss, wasted'], ['--carry-weight', 'weights in motion (flow dot)']]);
 swatches($('#sw-req'), [['--req-1', 'request A'], ['--req-2', 'request B'], ['--req-3', 'request C'], ['--req-4', 'request D']]);
 for (let i = -10; i <= 10; i += 1) {
   const cellEl = document.createElement('i');
@@ -53,6 +53,84 @@ const poolSlots = [...'AAAAAAAA'.split('').map((o) => ({ owner: o, state: 'fille
   ...'BBBBB'.split('').map((o) => ({ owner: o, state: 'filled' })), { owner: 'B', state: 'reserved' }, { owner: 'B', state: 'reserved' }, { owner: 'B', state: 'reserved' },
   ...'CCCCCCCCCC'.split('').map((o) => ({ owner: o, state: 'filled' })), { owner: 'C', state: 'reserved' }, { owner: 'C', state: 'reserved' },
   ...Array.from({ length: 20 }, () => ({ state: 'free' }))];
+
+// ---- Shared prep S3: the Training glyphs and options (numbers from the Training storyboards; schedules and fits illustrative) ----
+const range = (n, f) => Array.from({ length: n }, (_, i) => f(i));
+const LOSS_FIT = (n) => 1.8 + 400 / n ** 0.34; // illustrative power law, not a published fit
+const DECADES = range(7, (i) => 10 ** (8 + i / 2));
+const gpipe = (row) => row.map((c, t) => ({ from: t, to: t + 1, kind: c ? (c[0] === 'F' ? 'forward' : 'backward') : 'idle', label: c ?? undefined }));
+const TRAINING_FIGURES = [
+  ['curvePlot', 'a small line chart: shaded bands with printed labels, a solid series, a muted one (never dashed), a followed marker with the selection mark (illustrative schedule)', 300, 200, (s) => {
+    G.curvePlot(s, { x: 0, y: 0, w: 276, h: 196, label: 'learning-rate schedule',
+      xAxis: { label: 'step (thousands)', ticks: [0, 20, 40, 60, 80, 100] }, yAxis: { label: 'learning rate (×10⁻⁴)', ticks: [0, 1, 2, 3, 4] },
+      bands: [{ from: 0, to: 10, label: 'warm' }, { from: 10, to: 80, label: 'stable' }, { from: 80, to: 100, label: 'decay' }],
+      series: [{ points: [[0, 0], [10, 3], [80, 3], [100, 0.3]], label: 'WSD' }, { points: [[60, 3], [80, 0.3]], label: 'branch', style: 'muted' }],
+      markers: [{ x: 80, y: 3, label: 'decay starts', followed: true }] });
+  }],
+  ['curvePlot refY', 'log x axis (each decade the same width), the dashed labeled reference line (drawn like the bars reference), printed marker labels (illustrative fit)', 300, 200, (s) => {
+    G.curvePlot(s, { x: 0, y: 0, w: 276, h: 196, label: 'loss against parameters',
+      xAxis: { label: 'parameters', log: true, ticks: [{ value: 1e8, label: '100M' }, { value: 1e9, label: '1B' }, { value: 1e10, label: '10B' }, { value: 1e11, label: '100B' }] },
+      yAxis: { label: 'loss', ticks: [1.8, 2, 2.2, 2.4, 2.6] },
+      series: [{ points: DECADES.map((n) => [n, LOSS_FIT(n)]), label: 'fit' }, { points: DECADES.map((n) => [n, LOSS_FIT(n) - 0.06]), label: '2× data', style: 'muted' }],
+      refY: { value: 1.96, label: 'same loss 1.960' },
+      markers: [{ x: 1e10, y: LOSS_FIT(1e10), label: `10B · ${LOSS_FIT(1e10).toFixed(3)}`, followed: true }] });
+  }],
+  ['roofline', 'H100 BF16 from two numbers: the sloped roof (memory) and the flat roof (compute) with both values printed, the ridge printed at the bend, points on the roof (gpu-primer frames 6–8)', 300, 230, (s) => {
+    G.roofline(s, { x: 0, y: 0, w: 276, h: 226, peakTflops: 989, bandwidthTBps: 3.35, label: 'H100 BF16',
+      points: [{ intensity: 2, label: 'toy', followed: true }, { intensity: 2048, label: '4,096 tokens' }] });
+  }],
+  ['roofline ridgeRange', 'when sources conflict on bandwidth, the ridge is a band with both ends printed (Rubin NVFP4, gpu-primer frame 11)', 300, 230, (s) => {
+    G.roofline(s, { x: 0, y: 0, w: 276, h: 226, peakTflops: 35000, bandwidthTBps: 22, yDomain: [1, 1e5], ridgeRange: [35000 / 22, 35000 / 19.2], label: 'Rubin NVFP4', points: [] });
+  }],
+  ['laneTimeline', 'lanes on one clock; a segment prints its text inside from 36 px, beside it when shorter; idle hatched (gpu-primer frame 7)', 300, 70, (s) => {
+    G.laneTimeline(s, { x: 0, y: 0, w: 280, label: 'one multiply', lanes: [
+      { label: 'HBM', segments: [{ from: 0, to: 40.1, kind: 'memory', label: 'memory 40.1 µs' }] },
+      { label: 'SMs', segments: [{ from: 0, to: 0.54, kind: 'compute', label: 'compute 0.54 µs' }, { from: 0.54, to: 40.1, kind: 'idle' }] },
+    ] });
+  }],
+  ['laneTimeline schedule', 'forward and backward cells in the carry colors, idle hatched: a GPipe schedule, 2 stages × 2 micro-batches (parallelism frames 6–8)', 300, 70, (s) => {
+    G.laneTimeline(s, { x: 0, y: 0, w: 286, label: 'GPipe', lanes: [
+      { label: 'stage 1', segments: gpipe(['F1', 'F2', null, null, 'B1', 'B2']) },
+      { label: 'stage 2', segments: gpipe([null, 'F1', 'F2', 'B1', 'B2', null]) },
+    ] });
+  }],
+  ['laneTimeline cap, ticks, gaps', 'cap: a lane cut at the track ends in an arrow with its number printed (cluster-topology); ticks for saves, a hatched lost segment and a restart gap (scale-reliability frame 9)', 300, 150, (s) => {
+    G.laneTimeline(s, { x: 0, y: 0, w: 280, scale: 0.6, cap: { at: 228 / 0.6, label: 'continues: 2,254%' }, label: 'tensor parallelism over the network', lanes: [
+      { label: 'compute', segments: [{ from: 0, to: 100, kind: 'compute', label: '100%' }] },
+      { label: 'comm', segments: [{ from: 0, to: 2254, kind: 'comm', label: 'comm' }] },
+    ] });
+    G.laneTimeline(s, { x: 0, y: 76, w: 280, label: '90 minutes of the run', ticks: [{ t: 13.6, label: 'save' }, { t: 27.2, label: 'save' }, { t: 58, label: 'save' }],
+      gaps: [{ from: 40, to: 43, label: 'restart' }], lanes: [{ label: 'run', segments: [
+        { from: 0, to: 27.2, kind: 'compute' }, { from: 27.2, to: 40, kind: 'lost', label: 'lost' }, { from: 43, to: 90, kind: 'compute' },
+      ] }] });
+  }],
+  ['bitLayout', 'number formats as bit fields, colored by role (never by value) and labeled S / E / M; a shared block scale with its bracket (gpu-primer frame 10)', 300, 130, (s) => {
+    G.bitLayout(s, { x: 56, y: 4, bitW: 11, format: { layout: '1/8/7' }, label: 'BF16' });
+    G.bitLayout(s, { x: 56, y: 34, bitW: 11, format: { layout: '1/4/3' }, label: 'FP8 E4M3' });
+    const four = G.bitFields('1/2/1');
+    G.bitLayout(s, { x: 56, y: 64, bitW: 11, fields: [...four, ...four, ...four, { role: 'scale', bits: 8 }], sharedBy: 16, label: 'NVFP4' });
+  }],
+  ['gpu showMem, litSms', 'showMem: false drops the memory bar; litSms lights SM tiles and titles the count (20 of 132 SMs drawn as 2 of 12 tiles)', 300, 100, (s) => {
+    G.gpu(s, { x: 10, y: 6, showMem: false, label: 'GPU 1' });
+    G.gpu(s, { x: 150, y: 6, showMem: false, litSms: [0, 5], label: '20 of 132 SMs: comm' });
+  }],
+  ['vector fill', 'semantic fills for a pass/fail number (R: --sem-ok for 1, --sem-bad for 0) beside a value-scale column (A) (rlvr-grpo frame 2)', 300, 310, (s) => {
+    G.vector(s, { x: 8, y: 18, values: [1, 0, 0, 0, 1, 0, 0, 0], cell: 36, label: 'R', fill: [1, 0, 0, 0, 1, 0, 0, 0].map((r) => (r ? 'ok' : 'bad')) });
+    G.vector(s, { x: 56, y: 18, values: [1.73, -0.58, -0.58, -0.58, 1.73, -0.58, -0.58, -0.58], cell: 36, label: 'A', maxAbs: 1.73 });
+  }],
+  ['matrix shards', 'a matrix cut between GPUs: each GPU\'s columns (or rows) take its tint, shape only (parallelism frames 3–4)', 300, 230, (s) => {
+    G.matrix(s, { x: 4, y: 24, values: range(4, () => Array(16).fill(0)), cell: 16, label: 'W_in, by columns', shards: [{ cols: [1, 8], gpu: 1 }, { cols: [9, 16], gpu: 2 }] });
+    G.matrix(s, { x: 4, y: 124, values: range(8, () => Array(8).fill(0)), cell: 12, label: 'W_out, by rows', shards: [{ rows: [1, 4], gpu: 1 }, { rows: [5, 8], gpu: 2 }] });
+  }],
+  ['shareBar unknown', 'value null = not published: neutral, off the scale, never hatched (training-pipeline frame 8); a bar with nothing published prints "no published shares" (Kimi K3)', 300, 130, (s) => {
+    G.shareBar(s, { x: 4, y: 6, w: 60, tail: 'none', label: 'GLM-5 tokens', parts: [{ name: 'pretrain', value: 27, hue: 1 }, { name: 'mid-train', value: 1.55, hue: 2 }, { name: 'post-training', value: null }] });
+    G.shareBar(s, { x: 4, y: 96, w: 60, label: 'Kimi K3 tokens', parts: [{ name: 'pretrain', value: null }, { name: 'mid-train', value: null }, { name: 'post-training', value: null }] });
+  }],
+  ['shareBar hatched, tailBasis', 'hatched part = excluded / doesn\'t count (scale-reliability); tailBasis "tail": the zoomed bar\'s shares are of the tail and say so (midtraining frame 6)', 300, 290, (s) => {
+    G.shareBar(s, { x: 4, y: 6, w: 280, label: 'run GPU-hours', parts: [{ name: 'useful', value: 26.62, hue: 3 }, { name: 'below peak', value: 4.22, hue: 4 }, { name: 'lost to failures', value: 2.62, hue: 5, hatched: true }] });
+    G.shareBar(s, { x: 4, y: 104, w: 280, tailBasis: 'tail', tailLabel: 'last 5%', label: 'GLM-5 by context length', parts: [{ name: '4K', value: 27, hue: 1 }, { name: '32K', value: 1, hue: 2 }, { name: '128K', value: 0.5, hue: 3 }, { name: '200K', value: 0.05, hue: 4 }] });
+  }],
+];
 
 const FIGURES = [
   ['token', 'idle · active · dim · value fill · hatched (gradient off)', 300, 44, (s) => {
@@ -93,17 +171,17 @@ const FIGURES = [
     G.gpu(s, { x: 10, y: 6, memFill: 0.3, label: 'H100 · 30 %' });
     G.gpu(s, { x: 130, y: 6, memFill: 0.85, label: 'GB300 · 85 %' });
   }],
-  ['rack', 'GPUs in a frame; link thickness = bandwidth (NVLink vs network)', 300, 100, (s) => {
-    G.rack(s, { x: 10, y: 6, gpus: 8, linkWidth: 4, label: 'HGX, 8 NVLink' });
-    G.rack(s, { x: 150, y: 6, gpus: 8, linkWidth: 1, label: 'scale-out, 8 Ethernet' });
+  ['rack', 'GPUs in a frame; every link at the default width (thickness never encodes bandwidth: print it, P3-R8); labels number the GPUs', 300, 100, (s) => {
+    G.rack(s, { x: 10, y: 6, gpus: 8, label: 'NVLink 450 GB/s', labels: ['1', '2', '3', '4', '5', '6', '7', '8'] });
+    G.rack(s, { x: 150, y: 6, gpus: 8, label: 'network 50 GB/s' });
   }],
   ['request', 'prefill segment (compute) then decode ticks (memory)', 300, 70, (s) => {
     G.request(s, { x: 30, y: 8, prefill: 8, decode: 4, label: 'A' });
     G.request(s, { x: 30, y: 28, prefill: 5, decode: 2, label: 'B' });
     G.request(s, { x: 30, y: 48, prefill: 10, decode: 6, label: 'C' });
   }],
-  ['flow', 'arrow with a moving dot; dot color = what it carries', 300, 100, (s) => {
-    [['activation', 0.25], ['gradient', 0.5], ['kv', 0.75], ['token', 1]].forEach(([carry, p], i) => {
+  ['flow', 'arrow with a moving dot; dot color = what it carries (weight: gpu-primer, training-memory, parallelism)', 300, 120, (s) => {
+    [['activation', 0.25], ['gradient', 0.5], ['kv', 0.75], ['token', 1], ['weight', 0.4]].forEach(([carry, p], i) => {
       const label = G.svgEl('text', { x: 8, y: 16 + i * 22, class: 'g-label' }, G.svgEl('g', { class: 'glyph' }, s));
       label.textContent = carry;
       G.flow(s, { from: [80, 12 + i * 22], to: [290, 12 + i * 22], carry, progress: p });
@@ -163,6 +241,7 @@ const FIGURES = [
       { name: 'other (norms)', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 }, { name: 'not published', value: 60, unknown: true },
     ] });
   }],
+  ...TRAINING_FIGURES,
 ];
 $('#figures').replaceChildren(...FIGURES.map(([name, note, w, h, draw]) => {
   const fig = document.createElement('figure');
@@ -170,12 +249,12 @@ $('#figures').replaceChildren(...FIGURES.map(([name, note, w, h, draw]) => {
   const box = document.createElement('div');
   box.className = 'scroll-x';
   // role="group", not "img": children such as verdict badges carry their own labels.
-  const figureSvg = svg(box, w, h, { role: 'group', 'aria-labelledby': `cap-${name}` });
+  const figureSvg = svg(box, w, h, { role: 'group', 'aria-labelledby': `cap-${name.replace(/\W+/g, '-')}` });
   draw(figureSvg);
   G.fitViewBox(figureSvg, 8);
   document.fonts?.ready.then(() => G.fitViewBox(figureSvg, 8));
   const cap = document.createElement('figcaption');
-  cap.id = `cap-${name}`;
+  cap.id = `cap-${name.replace(/\W+/g, '-')}`;
   cap.innerHTML = '<b></b><span></span>';
   cap.querySelector('b').textContent = `${name}()`;
   cap.querySelector('span').textContent = note;

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { collectConsoleErrors } from './helpers.js';
-import { glyphOverflows, startPausedClock, animateTo, toggleTop, MID_MS, END_MS } from './lesson-helpers.js';
+import { glyphOverflows, accentStrokeOffenders, startPausedClock, animateTo, toggleTop, MID_MS, END_MS } from './lesson-helpers.js';
 
 const stepper = (page) => page.locator('#stepper-root');
 const caption = (page) => page.locator('#stepper-root .stepper-caption');
@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(24);
+  await expect(page.locator('#figures figure')).toHaveCount(37);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(24);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(37);
   expect(errors).toEqual([]);
 });
 
@@ -298,7 +298,7 @@ for (const width of [1280, 400]) {
 
 test('shareBar prints "not published" beside its off-scale segment, inside the figure (decoder-anatomy §4)', async ({ page }) => {
   await page.goto('/gallery/');
-  const share = page.locator('#figures .g-share');
+  const share = page.locator('#figures .g-share').first(); // the decoder-anatomy figure; the S3 figures follow it
   await expect(share.locator('.g-unknown-label')).toHaveText(['not published']);
   await page.evaluate(() => document.fonts.ready);
   // getBoundingClientRect, not locator.boundingBox(): WebKit's protocol box for SVG text is unreliable.
@@ -344,3 +344,25 @@ test('dial (rope §4) and bars (moe §4) figures: printed magnitude, never-seen 
   const accentUses = await page.locator('#figures .g-dial *, #figures .g-bars *').evaluateAll((els, a) => els.filter((e) => { const cs = getComputedStyle(e); return cs.stroke === a || cs.fill === a; }).length, accent);
   expect(accentUses).toBe(0); // nothing on a dial or a bar uses the track accent (rope §4 c, moe §4 b)
 });
+
+// ---- Shared prep S3: the Training glyph figures ----
+for (const scheme of ['light', 'dark']) {
+  test(`S3 figures (${scheme}): nothing clipped, no accent stroke over 2 px, printed numbers in place`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await settle(page);
+    expect(await glyphOverflows(page, '#figures svg')).toEqual([]);
+    expect(await accentStrokeOffenders(page, '#figures')).toEqual([]);
+    const roof = page.locator('#figures .g-roofline').first();
+    await expect(roof.locator('.g-ridge-label')).toHaveText('ridge point 295');
+    await expect(roof.locator('.g-series-label')).toHaveText(['3.35 TB/s', '989 TFLOPS']);
+    await expect(roof.locator('.g-select')).toHaveCount(1); // the followed point carries the one selection mark
+    await expect(page.locator('#figures .g-roofline').nth(1).locator('.g-band-label')).toHaveText('ridge 1,591–1,823');
+    await expect(page.locator('#figures .g-plot-ref-label')).toHaveText('same loss 1.960');
+    expect(await page.locator('#figures .g-plot-ref').evaluate((l) => getComputedStyle(l).strokeDasharray)).not.toBe('none');
+    expect(await page.locator('#figures .g-series--muted').first().evaluate((l) => getComputedStyle(l).strokeDasharray)).toBe('none');
+    await expect(page.locator('#figures .g-lane-cap')).toHaveText('continues: 2,254%');
+    await expect(page.locator('#figures .g-lanes .g-lane-text').filter({ hasText: 'compute 0.54 µs' })).toBeVisible();
+    await expect(page.locator('#figures .g-bits')).toHaveCount(3);
+    await expect(page.locator('#figures .g-gpu--lit title')).toHaveText('20 of 132 SMs: comm: SM grid, 2 of 12 tiles lit');
+  });
+}

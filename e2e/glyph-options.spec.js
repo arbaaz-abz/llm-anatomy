@@ -259,5 +259,5 @@ test('S3 shareBar: hatched parts draw the hatch, value-null parts print "not pub
   }));
   expect(tail.tailLabel).toBe('last 5%');
   expect(tail.pcts).toEqual(['94.6%', '64.5%', '32.3%']);
-  expect(tail.legend).toEqual(['200K · 3.2% of last 5%', 'others: zoomed in the bar below, as shares of last 5%']);
+  expect(tail.legend).toEqual(['200K · 3.2% of last 5%', 'others: zoomed below, shares of last 5%']);
 });
