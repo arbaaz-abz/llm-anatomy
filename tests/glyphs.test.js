@@ -153,7 +153,7 @@ test('shareBarLayout rejects nameless, duplicate, hue-less and negative parts', 
   assert.throws(() => shareBarLayout([{ name: 'a', value: 1, hue: 1 }, { name: 'a', value: 2, hue: 2 }]), /names must be unique/);
   assert.throws(() => shareBarLayout([{ name: 'a', value: 1 }]), /needs hue 1–5 or unknown: true/);
   assert.throws(() => shareBarLayout([{ name: 'a', value: -1, hue: 1 }]), /value must be a finite number ≥ 0/);
-  assert.throws(() => shareBarLayout([{ name: 'a', value: 1, unknown: true }]), /at least one known part/);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: 0, hue: 1 }, { name: 'b', value: 1, unknown: true }]), /at least one known part/); // all-unknown bars draw since S3 (P3-R6); known parts all 0 still throw
 });
 
 test('shareBarLayout folds by drawn width: a part whose ideal is 19 px draws at 17 px after its 2 px gap, so it folds (lesson 19)', () => {
@@ -503,4 +503,52 @@ test('bitLayoutLayout rejects unknown roles, bad bit counts, a sharedBy with no 
   assert.throws(() => bitLayoutLayout({ fields: [{ role: 'sign', bits: 1 }], sharedBy: 16 }), /glyphs.bitLayout: sharedBy needs a scale field/);
   assert.throws(() => bitLayoutLayout({ format: { layout: '1/8' } }), /glyphs.bitLayout: layout must read "sign\/exponent\/mantissa"/);
   assert.throws(() => bitLayoutLayout({}), /glyphs.bitLayout: pass fields or format/);
+});
+
+// ---- shareBar options (P3-R6 unknown parts as value null and all-unknown bars, P3-R7 tail basis, lesson 24 hatched parts) ----
+test('shareBarLayout: value null is an unknown part with no share; known shares are of the known total (training-pipeline frame 8)', () => {
+  const glm5 = [{ name: 'pretrain', value: 27e12, hue: 1 }, { name: 'mid-train', value: 1.55e12, hue: 2 }, { name: 'post-training', value: null }];
+  const { main, unknown, unknownLabel } = shareBarLayout(glm5, { w: 560 });
+  assert.deepEqual(main.map((s) => s.name), ['pretrain', 'mid-train']);
+  assert.equal(formatShare(main[0].share), '94.6%');
+  assert.equal(formatShare(main[1].share), '5.4%');
+  assert.deepEqual(unknown.map(({ name, x, width, share }) => [name, x, width, share]), [['post-training', 566, 24, null]]);
+  assert.equal(unknownLabel, 'post-training: not published');
+});
+
+test('shareBarLayout: a bar whose parts are all unknown draws each at 24 px with "no published shares" and no scale (P3-R6, Kimi K3)', () => {
+  const kimi = [{ name: 'pretrain', value: null }, { name: 'mid-train', value: null }, { name: 'post-training', value: null }];
+  const { main, tail, unknown, unknownLabel, allUnknown } = shareBarLayout(kimi, { w: 300 });
+  assert.equal(allUnknown, true);
+  assert.deepEqual(main, []);
+  assert.deepEqual(tail, []);
+  assert.deepEqual(unknown.map((p) => [p.x, p.width]), [[0, 24], [26, 24], [52, 24]]);
+  assert.equal(unknownLabel, 'no published shares');
+  assert.equal(shareBarLayout([{ name: 'x', value: 5, unknown: true }]).allUnknown, true); // the older unknown: true form too
+});
+
+test('shareBarLayout: the existing unknown: true parts keep their value, share of the whole and printed name (decoder-anatomy)', () => {
+  const { unknown, unknownLabel, allUnknown } = shareBarLayout([{ name: 'experts', value: 97, hue: 3 }, { name: 'not published', value: 3, unknown: true }], { w: 300 });
+  assert.equal(unknown[0].share, 0.03);
+  assert.equal(unknownLabel, 'not published');
+  assert.equal(allUnknown, false);
+});
+
+test('shareBarLayout: tailBasis "tail" gives the zoomed bar shares of the tail that add to 100 % (P3-R7, midtraining frame 6)', () => {
+  const glm5 = [{ name: '4K', value: 27e12, hue: 1 }, { name: '32K', value: 1e12, hue: 2 }, { name: '128K', value: 0.5e12, hue: 3 }, { name: '200K', value: 0.05e12, hue: 4 }];
+  const whole = shareBarLayout(glm5, { w: 560 });
+  const tailed = shareBarLayout(glm5, { w: 560, tailBasis: 'tail' });
+  assert.deepEqual(tailed.tail.map((s) => s.name), ['32K', '128K', '200K']);
+  assert.deepEqual(tailed.tail.map((s) => formatShare(s.share)), ['64.5%', '32.3%', '3.2%']);
+  assert.ok(near(tailed.tail.reduce((s, p) => s + p.share, 0), 1));
+  assert.deepEqual(tailed.main.map((s) => s.share), whole.main.map((s) => s.share), 'the main bar keeps shares of the whole');
+  assert.equal(whole.tail.reduce((s, p) => s + p.share, 0) < 0.06, true, 'the default basis stays the whole');
+  assert.throws(() => shareBarLayout(glm5, { tailBasis: 'part' }), /glyphs.shareBar: tailBasis must be "whole" or "tail"/);
+});
+
+test('shareBarLayout: a hatched part keeps its hue and share and is flagged for the hatch (README lesson 24)', () => {
+  const run = [{ name: 'useful', value: 26.62, hue: 3 }, { name: 'below peak', value: 4.22, hue: 4 }, { name: 'lost to failures', value: 2.62, hue: 5, hatched: true }];
+  const { main } = shareBarLayout(run, { w: 400 });
+  assert.deepEqual(main.map((s) => [s.name, s.hatched === true]), [['useful', false], ['below peak', false], ['lost to failures', true]]);
+  assert.throws(() => shareBarLayout([{ name: 'a', value: 1, hue: 1 }, { name: 'b', value: null, hatched: true }]), /glyphs.shareBar: part "b" is unknown and cannot be hatched/);
 });

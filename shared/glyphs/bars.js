@@ -31,26 +31,51 @@ export const formatShare = (share) => {
   return `${sharePct(share, 1, { decimals }).toFixed(decimals)}%`;
 };
 
-function checkParts(parts) {
+// Unknown: `value: null` (a share that is not published, P3-R6) or the older `unknown: true` (off the scale, with a value).
+const isUnknown = (p) => p.unknown === true || p.value === null;
+const NOT_PUBLISHED = 'not published';
+const ALL_UNKNOWN = 'no published shares';
+
+function checkParts(parts, tailBasis) {
   if (!Array.isArray(parts) || parts.length === 0) throw new RangeError('glyphs.shareBar: parts must be a non-empty array');
   parts.forEach((p, i) => {
     if (typeof p?.name !== 'string' || p.name.trim() === '') throw new RangeError(`glyphs.shareBar: part ${i} needs a name`);
-    if (!p.unknown && !(Number.isInteger(p.hue) && p.hue >= 1 && p.hue <= PART_HUES)) throw new RangeError(`glyphs.shareBar: part "${p.name}" needs hue 1–${PART_HUES} or unknown: true`);
-    if (!(Number.isFinite(p.value) && p.value >= 0)) throw new RangeError(`glyphs.shareBar: part "${p.name}" value must be a finite number ≥ 0, got ${p.value}`);
+    if (!isUnknown(p) && !(Number.isInteger(p.hue) && p.hue >= 1 && p.hue <= PART_HUES)) throw new RangeError(`glyphs.shareBar: part "${p.name}" needs hue 1–${PART_HUES} or unknown: true`);
+    if (p.value !== null && !(Number.isFinite(p.value) && p.value >= 0)) throw new RangeError(`glyphs.shareBar: part "${p.name}" value must be a finite number ≥ 0 (or null: not published), got ${p.value}`);
+    if (p.hatched && isUnknown(p)) throw new RangeError(`glyphs.shareBar: part "${p.name}" is unknown and cannot be hatched (unknown is neutral, hatched means excluded: README lessons 19, 24)`);
   });
   if (new Set(parts.map((p) => p.name)).size !== parts.length) throw new RangeError('glyphs.shareBar: part names must be unique');
+  if (tailBasis !== 'whole' && tailBasis !== 'tail') throw new RangeError(`glyphs.shareBar: tailBasis must be "whole" or "tail", got ${tailBasis}`);
 }
 
-const sumOf = (list) => list.reduce((acc, p) => acc + p.value, 0);
+const sumOf = (list) => list.reduce((acc, p) => acc + (p.value ?? 0), 0);
+
+// The printed text beside the off-scale parts: the older unknown parts print their names; value-null parts add
+// "not published"; a bar with nothing known prints "no published shares" (P3-R6).
+function unknownText(unknown, allUnknown) {
+  if (allUnknown) return ALL_UNKNOWN;
+  const named = unknown.filter((p) => p.value !== null).map((p) => p.name);
+  const missing = unknown.filter((p) => p.value === null).map((p) => p.name);
+  return [...named, ...(missing.length ? [`${missing.join(' · ')}: ${NOT_PUBLISHED}`] : [])].join(' · ');
+}
+
+function placeUnknown(parts, { x0, whole }) {
+  return parts.filter(isUnknown).map((p, i) => ({ ...p, x: x0 + i * (UNKNOWN_W + 2), width: UNKNOWN_W, share: p.value === null ? null : p.value / whole }));
+}
 
 // Geometry only (pure). Known parts narrower than minSegment px fold into one "others" segment at the end of
 // the main bar and are redrawn on a zoomed tail bar; unknown parts sit off the scale at a fixed width.
-// Every share is of the whole (unknown parts included), so printed percentages read the same on both bars.
-export function shareBarLayout(parts, { w = 240, minSegment = 18 } = {}) {
-  checkParts(parts);
+// Every share is of the whole (unknown parts with a value included), so printed percentages read the same on
+// both bars, unless tailBasis is 'tail': then the zoomed bar's shares are of the tail and add to 100 % (P3-R7).
+export function shareBarLayout(parts, { w = 240, minSegment = 18, tailBasis = 'whole' } = {}) {
+  checkParts(parts, tailBasis);
   if (!(minSegment >= 0)) throw new RangeError(`glyphs.shareBar: minSegment must be a number ≥ 0, got ${minSegment}`);
   const whole = sumOf(parts);
-  const known = parts.filter((p) => !p.unknown && p.value > 0);
+  const known = parts.filter((p) => !isUnknown(p) && p.value > 0);
+  if (known.length === 0 && parts.every(isUnknown)) {
+    const unknown = placeUnknown(parts, { x0: 0, whole });
+    return { main: [], tail: [], unknown, unknownLabel: unknownText(unknown, true), allUnknown: true };
+  }
   if (known.length === 0) throw new RangeError('glyphs.shareBar: at least one known part must be more than 0');
   const knownTotal = sumOf(known);
   // Judged on the drawn width (after the gap), so a kept segment is never drawn under minSegment.
@@ -58,74 +83,95 @@ export function shareBarLayout(parts, { w = 240, minSegment = 18 } = {}) {
   const folded = known.filter(isNarrow);
   const kept = known.filter((p) => !isNarrow(p));
   const mainParts = folded.length ? [...kept, { name: 'others', value: sumOf(folded), others: true }] : kept;
-  const place = (list) => barSegments(list.map((p) => p.value), w)
-    .map((seg, i) => ({ ...list[i], x: seg.x, width: seg.width, share: list[i].value / whole }));
+  const place = (list, basis) => barSegments(list.map((p) => p.value), w)
+    .map((seg, i) => ({ ...list[i], x: seg.x, width: seg.width, share: list[i].value / basis }));
+  const unknown = placeUnknown(parts, { x0: w + UNKNOWN_GAP, whole });
   return {
-    main: place(mainParts),
-    tail: folded.length ? place(folded) : [],
-    unknown: parts.filter((p) => p.unknown)
-      .map((p, i) => ({ ...p, x: w + UNKNOWN_GAP + i * (UNKNOWN_W + 2), width: UNKNOWN_W, share: p.value / whole })),
+    main: place(mainParts, whole),
+    tail: folded.length ? place(folded, tailBasis === 'tail' ? sumOf(folded) : whole) : [],
+    unknown,
+    unknownLabel: unknownText(unknown, false),
+    allUnknown: false,
   };
 }
 
 const partAttrs = (part, cls) => ({
-  class: `${cls}${part.unknown ? ' g-part-none' : ''}${part.others ? ' g-part-others' : ''}`,
-  'data-part': part.unknown || part.others ? null : part.hue,
+  class: `${cls}${isUnknown(part) ? ' g-part-none' : ''}${part.others ? ' g-part-others' : ''}`,
+  'data-part': isUnknown(part) || part.others ? null : part.hue,
 });
 
-function drawBar(g, segs, { y, h, format }) {
+// `basisNote` (tail basis only) follows each share in the segment's tooltip, e.g. "64.5% of last 5%".
+function drawBar(g, segs, { y, h, format, basisNote = '', pctOthers = true }) {
   segs.forEach((seg) => {
     const rect = svgEl('rect', { ...partAttrs(seg, 'g-seg'), x: seg.x, y, width: seg.width, height: h, rx: 2 }, g);
-    svgEl('title', {}, rect).textContent = `${seg.name}: ${format(seg.share)}`;
-    if (seg.width >= MIN_PCT_WIDTH) text(g, seg.x + seg.width / 2, y + h + 13, format(seg.share), 'g-pct', { 'text-anchor': 'middle' });
+    svgEl('title', {}, rect).textContent = `${seg.name}: ${seg.share === null ? NOT_PUBLISHED : format(seg.share) + basisNote}`;
+    if (seg.hatched) hatchRect(g, { x: seg.x, y, width: seg.width, height: h, rx: 2 });
+    if (seg.share !== null && seg.width >= MIN_PCT_WIDTH && (pctOthers || !seg.others)) text(g, seg.x + seg.width / 2, y + h + 13, format(seg.share), 'g-pct', { 'text-anchor': 'middle' });
   });
 }
 
 // Off-scale parts get a printed label beside them (decoder-anatomy §4: "the printed label 'not published'").
-function drawUnknownLabel(g, unknown, { h }) {
-  if (!unknown.length) return;
-  const last = unknown[unknown.length - 1];
-  text(g, last.x + last.width + UNKNOWN_LABEL_GAP, h / 2, unknown.map((p) => p.name).join(' · '), 'g-label g-unknown-label', { 'dominant-baseline': 'central' });
+function drawUnknownLabel(g, layout, { h }) {
+  if (!layout.unknown.length) return;
+  const last = layout.unknown[layout.unknown.length - 1];
+  text(g, last.x + last.width + UNKNOWN_LABEL_GAP, h / 2, layout.unknownLabel, 'g-label g-unknown-label', { 'dominant-baseline': 'central' });
 }
 
 // The bracket joins the "others" segment to the zoomed bar under it, below the main bar's printed shares.
-function drawBracket(g, others, { h, w, tailY }) {
+function drawBracket(g, others, { h, w, tailY, tailLabel }) {
   const below = h + 17;
   const d = `M${others.x} ${h + 2}V${below}L0 ${tailY - 3}M${others.x + others.width} ${h + 2}V${below}L${w} ${tailY - 3}`;
   svgEl('path', { class: 'g-bracket', d }, g);
+  if (tailLabel) text(g, others.x - 4, h + 13, tailLabel, 'g-label g-tail-label', { 'text-anchor': 'end' });
 }
 
-function legendRows(parts, layout, format) {
+function legendText(p, { printed, whole, format, tailNames, tailShares, basisNote }) {
+  if (p.value === null) return `${p.name} · ${NOT_PUBLISHED}`;
+  if (printed.has(p.name)) return p.name;
+  if (tailNames.has(p.name) && basisNote) return `${p.name} · ${format(tailShares.get(p.name))}${basisNote}`;
+  return `${p.name} · ${format(p.value / whole)}`;
+}
+
+function legendRows(parts, layout, format, { tailBasis, tailLabel }) {
   const printed = new Set([...layout.main, ...layout.tail].filter((s) => s.width >= MIN_PCT_WIDTH).map((s) => s.name));
-  const whole = sumOf(parts);
-  const rows = parts.map((p) => ({ ...p, text: printed.has(p.name) ? p.name : `${p.name} · ${format(p.value / whole)}` }));
+  const basisNote = tailBasis === 'tail' ? ` of ${tailLabel ?? 'the others'}` : '';
+  const ctx = { printed, whole: sumOf(parts), format, tailNames: new Set(layout.tail.map((s) => s.name)), tailShares: new Map(layout.tail.map((s) => [s.name, s.share])), basisNote };
+  const rows = parts.map((p) => ({ ...p, text: legendText(p, ctx) }));
   const others = layout.main.find((s) => s.others);
-  return others ? [...rows, { ...others, text: 'others: zoomed in the bar below' }] : rows;
+  const othersText = basisNote ? `others: zoomed in the bar below, as shares${basisNote}` : 'others: zoomed in the bar below';
+  return others ? [...rows, { ...others, text: othersText }] : rows;
 }
 
 function drawLegend(g, rows, { y }) {
   rows.forEach((row, i) => {
     const ly = y + i * LEGEND_ROW;
     svgEl('rect', { ...partAttrs(row, 'g-swatch'), x: 0, y: ly - 9, width: 10, height: 10, rx: 2 }, g);
+    if (row.hatched) hatchRect(g, { x: 0, y: ly - 9, width: 10, height: 10, rx: 2 });
     text(g, 16, ly, row.text, 'g-label');
   });
 }
 
+const spokenShare = (p, whole, format) => (p.value === null ? NOT_PUBLISHED : format(p.value / whole));
+
 // Categorical stacked bar: segment length plus a printed share (under the segment, or in the legend when narrow).
-export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = formatShare, label = 'shares', minSegment = 18, tail = 'zoom' }) {
+// Parts: { name, value, hue } · { name, value: null } (not published, neutral, off the scale) · hatched: true
+// (excluded / doesn't count, README lesson 24). tailBasis 'tail' + tailLabel: the zoomed bar's shares are of the
+// tail, and the bracket and legend say so (P3-R7).
+export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = formatShare, label = 'shares', minSegment = 18, tail = 'zoom', tailBasis = 'whole', tailLabel = null }) {
   if (tail !== 'zoom' && tail !== 'none') throw new RangeError(`glyphs.shareBar: tail must be "zoom" or "none", got ${tail}`);
-  const layout = shareBarLayout(parts, { w, minSegment: tail === 'zoom' ? minSegment : 0 });
+  const layout = shareBarLayout(parts, { w, minSegment: tail === 'zoom' ? minSegment : 0, tailBasis });
   const whole = sumOf(parts);
-  const spoken = parts.map((p) => `${p.name} ${format(p.value / whole)}`).join(', ');
+  const spoken = parts.map((p) => `${p.name} ${spokenShare(p, whole, format)}`).join(', ');
   const g = group(parent, 'g-share', x, y, { role: 'img', 'aria-label': `${label}: ${spoken}` });
-  drawBar(g, [...layout.main, ...layout.unknown], { y: 0, h, format });
-  drawUnknownLabel(g, layout.unknown, { h });
+  drawBar(g, [...layout.main, ...layout.unknown], { y: 0, h, format, pctOthers: !tailLabel });
+  drawUnknownLabel(g, layout, { h });
   const tailY = h + TAIL_GAP;
   if (layout.tail.length) {
-    drawBracket(g, layout.main.find((s) => s.others), { h, w, tailY });
-    drawBar(g, layout.tail, { y: tailY, h, format });
+    const basisNote = tailBasis === 'tail' ? ` of ${tailLabel ?? 'the others'}` : '';
+    drawBracket(g, layout.main.find((s) => s.others), { h, w, tailY, tailLabel });
+    drawBar(g, layout.tail, { y: tailY, h, format, basisNote });
   }
-  drawLegend(g, legendRows(parts, layout, format), { y: (layout.tail.length ? tailY : 0) + h + 32 });
+  drawLegend(g, legendRows(parts, layout, format, { tailBasis, tailLabel }), { y: (layout.tail.length ? tailY : 0) + h + 32 });
   return g;
 }
 
