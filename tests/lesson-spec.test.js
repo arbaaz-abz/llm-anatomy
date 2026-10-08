@@ -50,3 +50,23 @@ test('each missing or malformed part is named', () => {
   assert.match(validateLessonSpec({ ...VALID, animation: { ...VALID.animation, standIn: 3 } }).join(), /standIn must be a string/);
   assert.match(validateLessonSpec(undefined).join(), /slug must be/);
 });
+
+test('optional prose fields are checked when given, so a malformed one is named instead of crashing the page', () => {
+  assert.deepEqual(validateLessonSpec({ ...VALID, intuitionNote: 'A note.', toy: { ...VALID.toy, intro: 'Intro.' }, math: { blocks: [{ tex: 'x', note: 'n' }], notes: ['One.'] }, facts: { ...VALID.facts, prose: ['More.'] } }), []);
+  const problems = validateLessonSpec({
+    ...VALID,
+    intuitionNote: '',
+    toy: { ...VALID.toy, intro: 3 },
+    math: { blocks: [{ tex: 'x', note: 7 }], notes: 'text' },
+    facts: { ...VALID.facts, prose: [''] },
+    links: { ...VALID.links, further: [{ title: 'T', href: 'https://example.org/', note: 4 }] },
+  });
+  assert.deepEqual(problems, [
+    'intuitionNote must be a non-empty string when given',
+    'toy.intro must be a non-empty string when given',
+    'math.blocks[].note must be a non-empty string when given',
+    'math.notes must be a list of non-empty paragraphs when given',
+    'facts.prose must be a list of non-empty paragraphs when given',
+    'links.further must hold 1–3 { title, href: https://…, note? }',
+  ]);
+});

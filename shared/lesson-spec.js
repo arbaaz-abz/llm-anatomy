@@ -31,17 +31,25 @@ function animationProblems(animation) {
   ];
 }
 
-const furtherOk = (f) => isText(f?.title) && /^https:\/\/\S+$/.test(f?.href ?? '');
+// Optional fields pass when absent and must be well formed when given.
+const optionalText = (x) => x === undefined || isText(x);
+const optionalParagraphs = (x) => x === undefined || (Array.isArray(x) && x.every(isText));
+const furtherOk = (f) => isText(f?.title) && /^https:\/\/\S+$/.test(f?.href ?? '') && optionalText(f?.note);
 
 export function validateLessonSpec(spec) {
   const checks = [
     [SLUG_PATTERN.test(spec?.slug ?? ''), 'slug must be a kebab-case slug'],
     [isText(spec?.hook), 'hook must be a non-empty string'],
     [Array.isArray(spec?.intuition) && spec.intuition.length >= 2 && spec.intuition.length <= 4 && spec.intuition.every(isText), 'intuition must be 2–4 non-empty paragraphs (spec §4)'],
+    [optionalText(spec?.intuitionNote), 'intuitionNote must be a non-empty string when given'],
     [isText(spec?.toy?.title) && isFn(spec?.toy?.mount), 'toy needs a title and mount(el, ctx) → destroy'],
+    [optionalText(spec?.toy?.intro), 'toy.intro must be a non-empty string when given'],
     [Array.isArray(spec?.math?.blocks) && spec.math.blocks.length > 0 && spec.math.blocks.every((b) => isText(b?.tex)), 'math.blocks must be a non-empty list of { tex, note? }'],
+    [!Array.isArray(spec?.math?.blocks) || spec.math.blocks.every((b) => optionalText(b?.note)), 'math.blocks[].note must be a non-empty string when given'],
+    [optionalParagraphs(spec?.math?.notes), 'math.notes must be a list of non-empty paragraphs when given'],
     [isText(spec?.facts?.framing), 'facts.framing must be the framing paragraph'],
     [Array.isArray(spec?.facts?.rows) && spec.facts.rows.length > 0 && spec.facts.rows.every((r) => isText(r?.claim)), 'facts.rows must be a non-empty list of { claim, derived? }'],
+    [optionalParagraphs(spec?.facts?.prose), 'facts.prose must be a list of non-empty paragraphs when given'],
     [Array.isArray(spec?.takeaways) && spec.takeaways.length === 3 && spec.takeaways.every(isText), 'takeaways must be exactly 3 strings (spec §4)'],
     [Array.isArray(spec?.links?.next) && spec.links.next.every((s) => SLUG_PATTERN.test(s)), 'links.next must be a list of slugs'],
     [Array.isArray(spec?.links?.further) && spec.links.further.length >= 1 && spec.links.further.length <= 3 && spec.links.further.every(furtherOk), 'links.further must hold 1–3 { title, href: https://…, note? }'],
