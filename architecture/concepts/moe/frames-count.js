@@ -5,7 +5,7 @@ import { mlpParams, paramBreakdown, PRESETS } from '@math/params.js';
 import { expertCombinations } from '@math/moe.js';
 import { SAT, SCORES_SAT, PICKS, SAT_FINE, FINE_PICKS, TOP1_SAT, SCORE_MAX } from './numbers.js';
 import {
-  X0, SMALL, HALF, NOTES_X, SCORES_Y, EXPERTS, SHARED, SAT_ROW, LINES_Y, LINE_GAP, CELL,
+  X0, SMALL, HALF, ROUTER_LABEL, ROUTER_LABEL_FINE, NOTES_X, SCORES_Y, EXPERTS, SHARED, SAT_ROW, LINES_Y, LINE_GAP, CELL,
   seg, lerp, arriving, leaving, dip, layer, fade, note, fadeOutOf, header, scoreRow, expertRow, colLeft, colCenter,
 } from './stage.js';
 import { drawFrame4 } from './frames-route.js';
@@ -93,7 +93,7 @@ const halvesOf = (coarse) => coarse.flatMap((e) => [2 * e, 2 * e + 1]);
 function fineScene(parent, p) {
   const swap = seg(p, 0.1, 0.4);
   const t = seg(p, 0.15, 0.55);
-  header(parent);
+  header(parent, { routerLabel: swap >= 0.5 ? ROUTER_LABEL_FINE : ROUTER_LABEL });
   fade(parent, 1 - swap, (g) => scoreRow(g, { values: SCORES_SAT, hatch: HATCH_SAT }));
   fade(parent, swap, (g) => fineScores(g, HATCH_FINE.map((hatched) => hatched && p >= 0.6)));
   if (t === 0) expertRow(parent, { active: SAT_PICKS });
@@ -119,7 +119,7 @@ function sharedBlock(parent, p) {
 export function drawFrame7(svg, p) {
   const swap = seg(p, 0.1, 0.4);
   const t = 1 - seg(p, 0.15, 0.55);
-  header(svg);
+  header(svg, { routerLabel: swap < 0.5 ? ROUTER_LABEL_FINE : ROUTER_LABEL });
   fade(svg, 1 - swap, (g) => fineScores(g, HATCH_FINE));
   fade(svg, swap, (g) => scoreRow(g, { values: SCORES_SAT, hatch: HATCH_TOP1 }));
   if (t === 0) expertRow(svg, { active: p >= 0.8 ? TOP1_SAT : [] });

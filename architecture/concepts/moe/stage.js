@@ -18,6 +18,8 @@ export const NOTES_X = X0 + WIDTH8 + 12; // the notes column right of the rows
 export const SAT_ROW = Object.freeze({ x: X0, y: 8 });
 export const ROUTER = Object.freeze({ x: X0, y: 44, w: 144, h: 28 });
 export const SHARED = Object.freeze({ x: 232, y: 44, w: 100, h: 28 });
+export const ROUTER_LABEL = 'router [8 × 8]';
+export const ROUTER_LABEL_FINE = 'router [8 × 16]'; // frame 6: one score per half-size expert
 export const SCORES_Y = 112;
 export const ARROW_X = X0 + 2 * PITCH; // between the E2 and E3 columns, clear of the column labels
 export const EXPERTS = Object.freeze({ y: 164, w: 36, h: 28 });
@@ -74,11 +76,11 @@ export function satRow(parent, { opacity = 1 } = {}) {
 }
 
 // sat → router → the score row: the two arrows (each with a dot at `intoRouter`, `outOfRouter` progress) and the router block.
-export function header(parent, { intoRouter = 1, outOfRouter = 1, opacity = 1 } = {}) {
+export function header(parent, { intoRouter = 1, outOfRouter = 1, opacity = 1, routerLabel = ROUTER_LABEL } = {}) {
   const g = layer(parent, opacity);
   satRow(g);
   G.flow(g, { from: [ARROW_X, SAT_ROW.y + SMALL + 3], to: [ARROW_X, ROUTER.y - 2], carry: 'activation', progress: intoRouter });
-  G.block(g, { x: ROUTER.x, y: ROUTER.y, w: ROUTER.w, h: ROUTER.h, label: 'router [8 × 8]' }).setAttribute('data-link', 'score');
+  G.block(g, { x: ROUTER.x, y: ROUTER.y, w: ROUTER.w, h: ROUTER.h, label: routerLabel }).setAttribute('data-link', 'score');
   G.flow(g, { from: [ARROW_X, ROUTER.y + ROUTER.h + 2], to: [ARROW_X, SCORES_Y - 12], carry: 'activation', progress: outOfRouter });
   return g;
 }

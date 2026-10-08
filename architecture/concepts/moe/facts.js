@@ -61,7 +61,7 @@ export function factRows(data) {
     { claim: `GLM-5.3: {glm-5.3.total_params|count} / {glm-5.3.active_params|count} (${pct(data, 'glm-5.3')}, the active count carried over from GLM-5), {glm-5.3.experts_total} routed + {glm-5.3.experts_shared} shared, top-{glm-5.3.experts_active}.` },
     { claim: `MiniMax-M3: about {minimax-m3.total_params|count} / {minimax-m3.active_params|count} (${pct(data, 'minimax-m3')}), {minimax-m3.experts_total} routed + {minimax-m3.experts_shared} shared, top-{minimax-m3.experts_active}, first {minimax-m3.dense_layers} layers dense.` },
     { claim: `gpt-oss-120b ({gpt-oss-120b.release_date|year}): {gpt-oss-120b.total_params|count4} / {gpt-oss-120b.active_params|count} (${pct(data, 'gpt-oss-120b')}), {gpt-oss-120b.experts_total} experts, top-{gpt-oss-120b.experts_active}, no shared expert.` },
-    { claim: 'Mistral Large 4 (preview, {mistral-large-4.release_date|year}): {mistral-large-4.total_params|count} total, {mistral-large-4.active_params|count} routed-active (more if the embedding table is counted), a "granular MoE" whose expert count is unpublished.' },
+    { claim: 'Mistral Large 4 (preview, {mistral-large-4.release_date|year}): {mistral-large-4.total_params|count} total, {mistral-large-4.active_params|count} routed-active ({mistral-large-4.active_params_with_embeddings|count} with embeddings), a "granular MoE" whose expert count is unpublished.' },
     { claim: trendRow(data), derived: true },
     { claim: 'Routers: softmax top-k (Mixtral, Qwen3); sigmoid plus bias (DeepSeek-V3); DeepSeek-V4: {deepseek-v4-pro.router}.' },
     { claim: 'Balancing: aux-loss-free bias (DeepSeek, 2024); DeepSeek-V4-Pro: {deepseek-v4-pro.balancing}; Kimi K3: {kimi-k3.balancing} instead.' },
@@ -93,7 +93,7 @@ const DENSE_EXPERT = mlpParams({ kind: 'swiglu', hidden: PRESETS.toy.mlp.hidden 
 const SHARED_LINE = `One shared expert of ${int(DENSE_EXPERT)} parameters plus one routed expert of ${int(DENSE_EXPERT)} is the same ${int(2 * DENSE_EXPERT)} as before.`;
 
 export const belowFor = (data) => Object.freeze([
-  ['This opens the Mixture-of-Experts branch of [[decoder-anatomy]] frame 6, with the same toy: 8 experts of hidden 8, top-2.'],
+  ['This opens the Mixture-of-Experts branch from frame 6 of [[decoder-anatomy]], with the same toy: 8 experts of hidden 8, top-2.'],
   [],
   ['Softmax over the chosen two, as Mixtral and Qwen3 do; DeepSeek normalizes sigmoid scores instead.'],
   ['The router scores vectors, not topics; this page makes no claim about what each expert learns.'],
