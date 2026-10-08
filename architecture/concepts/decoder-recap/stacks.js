@@ -5,7 +5,7 @@ import * as G from '@shared/glyphs.js';
 import { STACK_W, LEFT_X, RIGHT_X, layer, note, select, pulse } from './stage.js';
 import { GPT3_FACTS, MODERN_FACTS } from './numbers.js';
 
-const Y = Object.freeze({ title: 12, pos: 22, frameTop: 52, norm1: 60, attn: 84, subAttn: 123, norm2: 156, mlp: 180, subMlp: 219, frameBottom: 242, times: 258, summary: 276 });
+const Y = Object.freeze({ title: 14, pos: 22, frameTop: 52, norm1: 60, attn: 84, subAttn: 123, norm2: 156, mlp: 180, subMlp: 219, frameBottom: 242, times: 258, summary: 276 });
 const LANE = 10;
 const BOX = Object.freeze({ x: 24, w: 88 });
 const SUB_X = 14;
