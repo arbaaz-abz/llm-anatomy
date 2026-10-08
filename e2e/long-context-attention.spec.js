@@ -35,6 +35,13 @@ test.describe('long-context-attention animation: the counters on the stage', () 
     expect(text).toContain('stored (memory): 8 entries');
   });
 
+  test('frame 6 keeps its question on screen at rest, with the answer under it', async ({ page }) => {
+    await goToStep(page, 5);
+    const text = await stageText(page);
+    expect(text).toContain('Did the cache shrink?');
+    expect(text).toContain('No: it still stores 16.');
+  });
+
   test('frame 8 prints the state counter and the shape-not-size line; frame 4 ends on the sink split', async ({ page }) => {
     await goToStep(page, 7);
     const text = await stageText(page);
@@ -102,6 +109,20 @@ test.describe('long-context-attention toy: what does each trick read, and what d
     await setStop(page, 'gate', 1);
     await expect(cells(page, 'linear-output')).toHaveText(['−0.75', '3', '0.75', '1.75']);
     await expect(page.locator('[data-section="toy"] .g-matrix .g-text')).toHaveCount(16);
+  });
+
+  test('the try-this list is printed inside the toy, numbered, each with a bold insight', async ({ page }) => {
+    const items = page.locator('[data-section="toy"] ol.try-this li');
+    await expect(items).toHaveCount(3);
+    await expect(items.nth(0)).toContainText('DSA reads 2,048 and stores 1,048,576; CSA reads 1,152 and stores 262,272.');
+    await expect(items.nth(2).locator('strong')).toContainText('Insight: a linear layer trades exact lookup');
+  });
+
+  test('the linear note follows the gate', async ({ page }) => {
+    await choose(page, 'pattern', 'linear');
+    await expect(page.locator('[data-section="toy"]')).toContainText('gate 1 keeps every addition');
+    await setStop(page, 'gate', 1);
+    await expect(page.locator('[data-section="toy"]')).toContainText('gate 0.5 halves the state before each new token');
   });
 
   test('the followed token is a slider: token 8 of a window reads its own last 4', async ({ page }) => {

@@ -6,7 +6,7 @@ import { fillClaim, fillText } from '../shared/claims.js';
 import { LESSON, lessonFor } from '../architecture/concepts/long-context-attention/content.js';
 import { belowFor } from '../architecture/concepts/long-context-attention/facts.js';
 import { int, trimNumber, cellText, formatFor, windowScoresFor, sinkSplit } from '../architecture/concepts/long-context-attention/format.js';
-import { INITIAL_STATE, toyView, visibleControls, patternView, sinkView, linearView, realView, realOptions } from '../architecture/concepts/long-context-attention/toy-view.js';
+import { INITIAL_STATE, toyView, visibleControls, patternView, sinkView, linearView, realView, realOptions, tryThis, linearNote } from '../architecture/concepts/long-context-attention/toy-view.js';
 import { gptOssCache, qwenCache, minimaxCache, v4Estimate, layerColumns } from '../architecture/concepts/long-context-attention/real-scale.js';
 import { CAPTIONS } from './long-context-attention-expected.js';
 
@@ -146,4 +146,27 @@ test('the lesson never mutates the data', () => {
   lessonFor(data).animation.belowFor(9);
   toyView(state({ real: 'deepseek-v4-pro' }), data);
   assert.equal(JSON.stringify(data), before);
+});
+
+test('the three try-this prompts and insights are the storyboard\'s, with numbers from the math and the data (X-5)', () => {
+  const [one, two, three] = tryThis(data);
+  assert.equal(one.prompt, 'Pattern sparse top-k, k = 4: token 16 reads 4 entries, stores 16. Switch to compressed (merge 4, top 1): reads 5, stores 8. At real scale, tap GLM-5.3 then DeepSeek-V4-Pro: DSA reads 2,048 and stores 1,048,576; CSA reads 1,152 and stores 262,272.');
+  assert.equal(one.insight, 'picking what to read saves compute; only merging, windows or a fixed state save memory.');
+  assert.equal(two.prompt, 'Pattern window + sink, sink logit 1: the sink takes 0.600 and the four tokens share 0.400. Set the sink logit to −2: [0.189, 0.311, 0.189, 0.242] + sink 0.069, almost the no-sink row.');
+  assert.match(two.insight, /^the sink is a learned "nothing here" option;/);
+  assert.equal(three.prompt, 'Pattern linear, gate 1: the output for "sat" is [−1.5, 6, 1.5, 3.25], weighted by the raw scores −1, 3, 0.5 with no softmax. Set the gate to 0.5: the state halves before each new token, output [−0.75, 3, 0.75, 1.75]. The state stays 16 numbers however long the text.');
+  assert.match(three.insight, /^a linear layer trades exact lookup for a fixed-size memory/);
+});
+
+test('the linear note follows the gate (README lesson 5)', () => {
+  assert.equal(linearNote(state({ gate: 1 })), 'The state has 16 numbers however long the text; gate 1 keeps every addition.');
+  assert.equal(linearNote(state({ gate: 0.5 })), 'The state has 16 numbers however long the text; gate 0.5 halves the state before each new token.');
+});
+
+test('no fact row prints a reported release year (X-1): only gpt-oss, DeepSeek-V4-Pro and Qwen3.8 years remain', () => {
+  const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
+  assert.ok(!/(GLM-5\.3|MiniMax-M3|Kimi K3) \(20\d\d\)/.test(rows.join('\n')));
+  assert.match(rows[4], /^DeepSeek V3\.2's DSA, as GLM-5\.3 uses it:/);
+  assert.match(rows[5], /^MiniMax-M3: GQA/);
+  assert.match(rows[9], /^Kimi K3: 69/);
 });

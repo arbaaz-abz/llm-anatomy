@@ -4,7 +4,7 @@ import { TOY } from '@math/attention.js';
 import { formatBytes } from '@math/core.js';
 import { fillText } from '@shared/claims.js';
 import { TOKENS, WINDOW, INDEXER, ONE_M, CONTEXTS, SINK_LOGITS, GATES, STATE_SIZE } from './numbers.js';
-import { int, windowScoresFor, sinkSplit, sumOf } from './format.js';
+import { int, windowScoresFor, sinkSplit, sumOf, trimNumber } from './format.js';
 import { layerColumns, gptOssCache, qwenCache, minimaxCache, v4Estimate, fact, PRESET_MODEL } from './real-scale.js';
 
 // The toy opens on full attention at the real-scale default of 1M tokens, following the newest token.
@@ -54,7 +54,7 @@ export function patternView(state) {
   const compressed = state.pattern === 'compressed';
   const read = pattern.mask[row];
   const veils = Array.from({ length: TOKENS }, (_, i) => {
-    if (state.pattern === 'window' || state.pattern === 'sink') return i < TOKENS - pattern.stored ? 1 : 0;
+    if (state.pattern === 'window' || state.pattern === 'sink') return i >= pattern.stored ? 1 : 0;
     return state.pattern === 'sparse' && !read[i] ? 0.65 : 0;
   });
   return {
@@ -143,6 +143,40 @@ export const toyView = (state, data) => ({
   controls: visibleControls(state),
   pattern: patternView(state),
   sink: state.pattern === 'sink' ? sinkView(state) : null,
-  linear: state.pattern === 'linear' ? linearView(state) : null,
+  linear: state.pattern === 'linear' ? { ...linearView(state), note: linearNote(state) } : null,
   real: realView(state, data),
 });
+
+// The three "Try this" prompts of storyboard §6 with their insights; every number comes from the same functions the toy calls.
+export function tryThis(data) {
+  const sparse = patternView({ ...INITIAL_STATE, pattern: 'sparse', topK: 4 });
+  const merged = patternView({ ...INITIAL_STATE, pattern: 'compressed', topK: 1, merge: 4 });
+  const col = (preset) => layerColumns(preset, data, ONE_M)?.columns[0];
+  const [dsa, csa] = [col('glm-5.3'), col('deepseek-v4-pro')];
+  const sinkOn = sinkSplit(windowScoresFor(TOKENS, WINDOW), 1);
+  const sinkOff = sinkSplit(windowScoresFor(TOKENS, WINDOW), -2);
+  const three = (xs) => `[${xs.map((x) => x.toFixed(3)).join(', ')}]`;
+  const gate1 = linearView({ ...INITIAL_STATE, gate: 1 }).output;
+  const gateHalf = linearView({ ...INITIAL_STATE, gate: 0.5 }).output;
+  const list = (xs) => `[${xs.map((x) => trimNumber(x)).join(', ')}]`;
+  return [
+    {
+      prompt: `Pattern sparse top-k, k = 4: token 16 reads ${sparse.reads} entries, stores ${sparse.stored}. Switch to compressed (merge 4, top 1): reads ${merged.reads}, stores ${merged.stored}. At real scale, tap GLM-5.3 then DeepSeek-V4-Pro: DSA reads ${dsa?.reads ?? '—'} and stores ${dsa?.stored ?? '—'}; CSA reads ${csa?.reads ?? '—'} and stores ${csa?.stored ?? '—'}.`,
+      insight: 'picking what to read saves compute; only merging, windows or a fixed state save memory.',
+    },
+    {
+      prompt: `Pattern window + sink, sink logit 1: the sink takes ${sinkOn.sink.toFixed(3)} and the four tokens share ${(1 - sinkOn.sink).toFixed(3)}. Set the sink logit to −2: ${three(sinkOff.window)} + sink ${sinkOff.sink.toFixed(3)}, almost the no-sink row.`,
+      insight: 'the sink is a learned "nothing here" option; when a window holds nothing useful, the layer can attend to nothing instead of to noise.',
+    },
+    {
+      prompt: `Pattern linear, gate 1: the output for "sat" is ${list(gate1)}, weighted by the raw scores −1, 3, 0.5 with no softmax. Set the gate to 0.5: the state halves before each new token, output ${list(gateHalf)}. The state stays ${STATE_SIZE.dKey * STATE_SIZE.dValue} numbers however long the text.`,
+      insight: 'a linear layer trades exact lookup for a fixed-size memory that blends and fades; that is why hybrids keep some full layers.',
+    },
+  ];
+}
+
+// The linear note follows the gate (README lesson 5: text matches the state).
+export function linearNote(state) {
+  const base = `The state has ${STATE_SIZE.dKey * STATE_SIZE.dValue} numbers however long the text; `;
+  return state.gate === 1 ? `${base}gate 1 keeps every addition.` : `${base}gate ${state.gate} halves the state before each new token.`;
+}

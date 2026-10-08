@@ -78,7 +78,7 @@ export function twoRoutes(parent, p = 1, opacity = 1) {
     route.models.forEach((name, k) => {
       const appear = Math.min(Math.max(typed - index, 0), 1);
       index += 1;
-      if (appear > 0) fade(G.token(holder, { x: 40, y: route.y + 40 + k * (MODEL_H + 8), text: name }), appear);
+      if (appear > 0) fade(G.block(holder, { x: 40, y: route.y + 40 + k * (MODEL_H + 8), w: 150, h: MODEL_H, label: name, state: 'idle' }), appear);
     });
   });
   const arrows = ease(seg(p, 0.65, 1));

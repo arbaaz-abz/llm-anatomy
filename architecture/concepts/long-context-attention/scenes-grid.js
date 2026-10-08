@@ -12,10 +12,12 @@ import {
 const NO_VEIL = Object.freeze(Array(TOKENS).fill(0));
 export const row16 = (mask) => mask[FOLLOWED_ROW].filter(Boolean).length;
 
-// Tiles 1–12 slide out of a window layer, oldest first: `t` runs 0 → 1.
-export const leavingVeils = (t) => Array.from({ length: TOKENS }, (_, i) => (i < TOKENS - WINDOW ? Math.min(Math.max(t * (TOKENS - WINDOW) - i, 0), 1) : 0));
-// ... and come back, newest first.
-export const returningVeils = (t) => Array.from({ length: TOKENS }, (_, i) => (i < TOKENS - WINDOW ? 1 - Math.min(Math.max(t * (TOKENS - WINDOW) - (TOKENS - WINDOW - 1 - i), 0), 1) : 0));
+// The kept tiles stay left, beside the K / V row letters; the other 12 fade out of the right end as `t` runs 0 → 1 ...
+const LEAVING = TOKENS - WINDOW;
+const clamp = (x) => Math.min(Math.max(x, 0), 1);
+export const leavingVeils = (t) => Array.from({ length: TOKENS }, (_, i) => (i >= WINDOW ? clamp(t * LEAVING - (i - WINDOW)) : 0));
+// ... and come back, last first.
+export const returningVeils = (t) => Array.from({ length: TOKENS }, (_, i) => (i >= WINDOW ? 1 - clamp(t * LEAVING - (TOKENS - 1 - i)) : 0));
 export const dimVeils = (t) => Array.from({ length: TOKENS }, (_, i) => (PICKS.includes(i) ? 0 : 0.65 * t));
 
 // Pattern, 16-tile stack and counters; `stats` overrides the numbers a mask cannot give (entries read in a compressed layer).

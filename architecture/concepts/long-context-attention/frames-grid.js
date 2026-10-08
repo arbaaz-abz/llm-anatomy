@@ -2,7 +2,7 @@
 // its progress p (0 → 1); the end of frame n is the start of frame n + 1 (frame 3 shows the layer stack in between).
 import { TOKENS } from './numbers.js';
 import {
-  PATTERNS, RIGHT, FOLLOWED_ROW, countMask, seg, ease, morph, lines, scene, chip, gridAxes, patternGrid, tileStack, counters,
+  PATTERNS, RIGHT, NOTE_STEP, FOLLOWED_ROW, countMask, seg, ease, morph, lines, scene, chip, gridAxes, patternGrid, tileStack, counters,
 } from './stage.js';
 import {
   END, gridView, row16, leavingVeils, returningVeils, dimVeils, sinkBlock, indexerBlock, compressedStacks, groupBrackets, COMPRESSED_NOTES,
@@ -15,7 +15,7 @@ const SPARSE = PATTERNS.sparse.mask;
 const COMPRESSED = PATTERNS.compressed.mask;
 const NO_VEIL = Object.freeze(Array(TOKENS).fill(0));
 const distanceBack = (i, j) => i - j;
-const PROMPT_Y = 306;
+const PROMPT_Y = 296;
 
 // ---- frame 1: the full causal grid fills row by row, the stack grows to 16 ----
 export function drawFrame1(svg, p) {
@@ -50,12 +50,17 @@ export function drawFrame5(svg, p) {
   indexerBlock(svg, { fill: seg(p, 0.25, 0.55), picks: seg(p, 0.55, 0.7) });
 }
 
+// Frame 6's question stays on screen (at rest, in reduced motion); its answer fades in under it.
+const prompt = (svg, answer, opacity = 1) => {
+  lines(svg, RIGHT, PROMPT_Y, ['Did the cache shrink?'], opacity);
+  lines(svg, RIGHT, PROMPT_Y + NOTE_STEP, ['No: it still stores 16.', 'The indexer needs them all.'], Math.min(answer, opacity));
+};
+
 // ---- frame 6: reading fewer keys does not shrink the cache ----
 export function drawFrame6(svg, p) {
   gridView(svg, { ...END[5], veils: dimVeils(ease(seg(p, 0.35, 0.8))) });
   indexerBlock(svg, { fill: 1, picks: 1 });
-  lines(svg, RIGHT, PROMPT_Y, ['Did the cache shrink?'], 1 - seg(p, 0.25, 0.35));
-  lines(svg, RIGHT, PROMPT_Y, ['stored: 16.', 'The indexer needs them all.'], seg(p, 0.75, 0.9));
+  prompt(svg, seg(p, 0.5, 0.7));
 }
 
 // ---- frame 7: merging every 4 tokens ----
@@ -73,6 +78,6 @@ export function drawFrame7(svg, p) {
   counters(holder, p >= 0.6 ? compressed : { reads: row16(SPARSE), stored: TOKENS, cells: countMask(SPARSE) });
   if (out > 0) {
     indexerBlock(svg, { fill: 1, picks: 1, opacity: out });
-    lines(svg, RIGHT, PROMPT_Y, ['stored: 16.', 'The indexer needs them all.'], out);
+    prompt(svg, 1, out);
   }
 }

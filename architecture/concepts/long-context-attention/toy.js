@@ -6,7 +6,7 @@ import { createToyState } from '@shared/ui/toy-state.js';
 import { readoutTable } from '@shared/ui/readout-table.js';
 import { CONTEXTS, SINK_LOGITS, GATES, TOKENS } from './numbers.js';
 import { int } from './format.js';
-import { INITIAL_STATE, PATTERN_OPTIONS, realOptions, toyView } from './toy-view.js';
+import { INITIAL_STATE, PATTERN_OPTIONS, realOptions, toyView, tryThis } from './toy-view.js';
 import { numberRowView, newFigure, drawPattern, drawState } from './toy-dom.js';
 
 const WEIGHT_SCALE = 1;
@@ -18,7 +18,12 @@ function sliderBox() {
   return { outer: el('div', {}, [inner]), inner };
 }
 
-function buildDom(host) {
+function tryThisList(data) {
+  const items = tryThis(data).map(({ prompt, insight }) => el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` })]));
+  return [el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, items)];
+}
+
+function buildDom(host, data) {
   const refs = {
     pattern: el('div'), real: el('div'),
     boxes: Object.fromEntries(['window', 'topK', 'merge', 'query', 'sinkLogit', 'gate', 'context'].map((n) => [n, sliderBox()])),
@@ -26,12 +31,13 @@ function buildDom(host) {
     realTable: el('div'), cacheTable: el('div'), note: el('p', { className: 'toy-note' }),
   };
   refs.sinkNote = el('p', { className: 'toy-note' });
-  refs.linearNote = el('p', { className: 'toy-note', textContent: 'The state has 16 numbers however long the text; the gate halves it before each new token.' });
+  refs.linearNote = el('p', { className: 'toy-note' });
   const b = Object.fromEntries(Object.entries(refs.boxes).map(([name, box]) => [name, box.outer]));
   host.append(
     refs.pattern, b.window, b.topK, b.merge, b.sinkLogit, b.gate, b.query,
     el('div', { className: 'scroll-x' }, [refs.figure]), refs.table, refs.sink.node, refs.sinkNote, refs.linear.node, refs.linearNote,
     el('h4', { textContent: 'At real scale' }), refs.real, b.context, refs.realTable, refs.cacheTable, refs.note,
+    ...tryThisList(data),
   );
   return refs;
 }
@@ -48,7 +54,7 @@ function mountControls(refs, set, data) {
     mountSlider(b.context, { id: 'context', label: 'Context', values: CONTEXTS, value: INITIAL_STATE.context, format: int, unit: 'tokens', onInput: (v) => set({ context: v }) }),
   ];
   const choices = [
-    mountChoice(refs.pattern, { id: 'pattern', label: 'Layer type', options: PATTERN_OPTIONS, value: INITIAL_STATE.pattern, onChange: (v) => set({ pattern: v }) }),
+    mountChoice(refs.pattern, { id: 'pattern', label: 'Layer type', variant: 'chips', options: PATTERN_OPTIONS, value: INITIAL_STATE.pattern, onChange: (v) => set({ pattern: v }) }),
     mountChoice(refs.real, { id: 'real', label: 'Model', variant: 'chips', options: realOptions(data), value: INITIAL_STATE.real, onChange: (v) => set({ real: v }) }),
   ];
   return [...sliders, ...choices];
@@ -87,7 +93,10 @@ function paint(refs, state, data) {
     refs.sinkNote.textContent = `${view.sink.sumText}: the sink takes the share the window does not.`;
   }
   refs.linear.node.hidden = refs.linearNote.hidden = !view.linear;
-  if (view.linear) refs.linear.set(view.linear.output, 'output', STATE_SCALE);
+  if (view.linear) {
+    refs.linear.set(view.linear.output, 'output', STATE_SCALE);
+    refs.linearNote.textContent = view.linear.note;
+  }
   const tables = realTables(view.real);
   refs.realTable.replaceChildren(tables.layers);
   refs.cacheTable.replaceChildren(tables.cache);
@@ -97,7 +106,7 @@ function paint(refs, state, data) {
 
 export function mount(host, ctx) {
   const data = ctx?.data;
-  const refs = buildDom(host);
+  const refs = buildDom(host, data);
   let toy = null;
   const controls = mountControls(refs, (patch) => toy?.set(patch), data);
   toy = createToyState(INITIAL_STATE, (state) => paint(refs, state, data));
