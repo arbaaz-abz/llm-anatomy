@@ -10,16 +10,16 @@ export const FACT_ROWS = Object.freeze([
   { claim: 'DeepSeek-V3 ({deepseek-v3.release_date|year}): one MTP module (depth {deepseek-v3.mtp_depth}) predicts one extra token; the second token is accepted {sv:deepseek-v3-mtp.acceptance_pct}% of the time, about {sv:deepseek-v3-mtp.tps_gain|raw}× tokens per second (for one user, as the V3 report states it).' },
   { claim: 'DeepSeek-V4 ({deepseek-v4-pro.release_date|year}): MTP depth {deepseek-v4-pro.mtp_depth}, also used as an auxiliary training loss.' },
   { claim: 'GLM-5 ({glm-5.release_date|year}): shares {glm-5.mtp_layers} MTP layers; mean accepted length {glm-5.mtp_accept_length|raw} tokens per step in its report.' },
-  { claim: 'Kimi K3 ({kimi-k3.release_date|year}): MTP depth {kimi-k3.mtp_depth}, fine-tuned as an EAGLE-3-style draft.' },
+  { claim: 'Kimi K3: MTP depth {kimi-k3.mtp_depth}, fine-tuned as an EAGLE-3-style draft.' },
   { claim: 'In serving, MTP raised per-user speed by {sv:lmsys-gb300-longctx.mtp_per_user_gain_pct}% for DeepSeek-R1 on GB300 NVL72 at 128K input / 8K output, with peak throughput kept (LMSYS, Feb 2026).' },
 ]);
 
 // Page text under the stage, one list per frame (index 0 = frame 1): dated notes and the hand-offs to other lessons.
 export const BELOW = Object.freeze([
-  ['The 16-word vocabulary here is a toy: Kimi K3 ({kimi-k3.release_date|year}) has {kimi-k3.vocab_size|int} entries and gpt-oss-120b ({gpt-oss-120b.release_date|year}) has {gpt-oss-120b.vocab_size|int}. Where the logits come from: [[decoder-anatomy]]. The loss that shapes them: [[pretraining]].'],
+  ['The 16-word vocabulary here is a toy: Kimi K3 has {kimi-k3.vocab_size|int} entries and gpt-oss-120b ({gpt-oss-120b.release_date|year}) has {gpt-oss-120b.vocab_size|int}. Where the logits come from: [[decoder-anatomy]]. The loss that shapes them: [[pretraining]].'],
   [],
   [],
-  ['The divisor slider in [[attention]] is a different temperature: it works inside attention, not on these scores.'],
+  ['The divisor slider on [[attention]] is a different temperature: it works inside attention, not on these scores.'],
   [],
   [],
   [],

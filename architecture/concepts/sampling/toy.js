@@ -50,9 +50,9 @@ function readouts(host) {
   firstEight.dataset.readout = 'first-eight';
   const check = el('pre', { className: 'check-work', ariaLive: 'polite' });
   check.dataset.readout = 'check-work';
-  const tries = tryThis().map((text) => el('p', { className: 'toy-note', textContent: text }));
+  const tries = tryThis().map(({ prompt, insight }) => el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` })]));
   host.append(tables, drawsTitle, bars, el('p', { className: 'toy-note', textContent: 'first eight draws:' }), firstEight,
-    el('h4', { textContent: 'Check my work' }), check, el('h4', { textContent: 'Try this' }), ...tries);
+    el('h4', { textContent: 'Check my work' }), check, el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, tries));
   return { tables, drawsTitle, bars, firstEight, check };
 }
 

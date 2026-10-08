@@ -59,7 +59,7 @@ test('the §8 rows print the storyboard numbers from the data', () => {
   assert.match(rows[1], /DeepSeek-V3 \(2024\).*depth 1.*accepted 85–90% of the time, about 1\.8× tokens per second \(for one user/);
   assert.match(rows[2], /DeepSeek-V4 \(2026\): MTP depth 1, also used as an auxiliary training loss/);
   assert.match(rows[3], /GLM-5 \(2026\): shares 3 MTP layers; mean accepted length 2\.76 tokens per step/);
-  assert.match(rows[4], /Kimi K3 \(2026\): MTP depth 1, fine-tuned as an EAGLE-3-style draft/);
+  assert.match(rows[4], /Kimi K3: MTP depth 1, fine-tuned as an EAGLE-3-style draft/);
   assert.match(rows[5], /raised per-user speed by 87% for DeepSeek-R1 on GB300 NVL72 at 128K input \/ 8K output/);
 });
 
@@ -175,10 +175,24 @@ test('toy view, top-p 0.7 at temperature 2: 9 kept, 5 of the 12 tied words', () 
   assert.match(v.rows[4].postSub, /5 of 12 kept$/);
 });
 
-test('try-this text is computed from the same functions and carries the storyboard numbers', () => {
+test('try-this items are { prompt, insight }, computed from the same functions, with the storyboard numbers', () => {
   const [one, two, three] = toyView.tryThis();
-  assert.match(one, /"on" 0\.682, the 12 others 0\.020 together; seed 1 draws "on" 15 times in 20\. Temperature 2: "on" 0\.189, others 0\.506; 8 of 20 draws/);
-  assert.match(two, /Top-p 0\.7 at temperature 1: 3 kept\. At 0\.5: 2 kept\. At 2: 9 kept \(5 of the 12 tied words/);
-  assert.match(two, /top-k 3 instead: 3 kept at every temperature/);
-  assert.match(three, /seed 2: the on on \. a and \. on\)\. Return to seed 1 and they come back exactly \("and on \. then was on \. the"\)/);
+  assert.match(one.prompt, /"on" 0\.682, the 12 others 0\.020 together; seed 1 draws "on" 15 times in 20\. Temperature 2: "on" 0\.189, others 0\.506; 8 of 20 draws.*Tap Greedy: "on" every time\.$/);
+  assert.match(two.prompt, /Top-p 0\.7 at temperature 1: 3 kept\. At 0\.5: 2 kept\. At 2: 9 kept \(5 of the 12 tied words/);
+  assert.match(two.prompt, /top-k 3 instead: 3 kept at every temperature\.$/);
+  assert.match(three.prompt, /seed 2: the on on \. a and \. on\)\. Return to seed 1 and they come back exactly \("and on \. then was on \. the"\)\.$/);
+  assert.deepEqual([one, two, three].map((t) => t.insight), [
+    'temperature is one dial from "always the favorite" to "almost uniform"; it changes how the draw spends probability, not what the model knows.',
+    'top-p adapts to how sure the model is; top-k does not.',
+    'the randomness lives in the sampler, not in the model; fix the seed and the text repeats.',
+  ]);
+});
+
+test('no reported release year is printed: the Kimi K3 MTP row and the frame-1 note carry none (X-1), and the attention link is not a subject (X-4)', () => {
+  const lesson = lessonFor(data);
+  const kimiRow = fillText(lesson.facts.rows[4].claim, data);
+  assert.equal(kimiRow, 'Kimi K3: MTP depth 1, fine-tuned as an EAGLE-3-style draft.');
+  assert.equal(fillClaim(lesson.facts.rows[4].claim, data).reported, false);
+  assert.match(lesson.animation.belowFor(0)[0], /^The 16-word vocabulary here is a toy: Kimi K3 has 163,840 entries and gpt-oss-120b \(2025\) has 201,088\./);
+  assert.match(lesson.animation.belowFor(3)[0], /^The divisor slider on \[\[attention\]\] is a different temperature/);
 });

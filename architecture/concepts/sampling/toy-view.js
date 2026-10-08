@@ -41,7 +41,7 @@ export function view(state) {
   };
 }
 
-// The three "try this" suggestions, with every number computed from the same functions the toy uses.
+// The three "try this" items ({ prompt, insight }), with every number computed from the same functions the toy uses.
 export function tryThis() {
   const at = (temperature) => ({ probs: applyTemperature(LOGITS, temperature), dist: samplingDistribution(LOGITS, { temperature }) });
   const counts = (temperature) => categoryCounts(drawSamples(at(temperature).probs, DRAWS, INITIAL_STATE.seed));
@@ -50,9 +50,18 @@ export function tryThis() {
   const tiedKept = collapseOthers(keptAt(2).probs, NAMED).others.kept;
   const seedText = (seed) => first(drawSamples(applyTemperature(LOGITS, 1), DRAWS, seed));
   return [
-    `Temperature 0.5: "on" ${half.on}, the 12 others ${half.others} together; seed 1 draws "on" ${half.counts[0]} times in ${DRAWS}. Temperature 2: "on" ${twice.on}, others ${twice.others}; ${twice.counts[4]} of ${DRAWS} draws come from the 12 unlikely words. Tap Greedy: "on" every time. Temperature is one dial from "always the favorite" to "almost uniform"; it changes how the draw spends probability, not what the model knows.`,
-    `Top-p 0.7 at temperature 1: ${keptAt(1).kept} kept. At 0.5: ${keptAt(0.5).kept} kept. At 2: ${keptAt(2).kept} kept (${tiedKept} of the 12 tied words, chosen by vocabulary order). Now top-k 3 instead: ${samplingDistribution(LOGITS, { topK: 3 }).kept} kept at every temperature. Top-p adapts to how sure the model is; top-k does not.`,
-    `Temperature 1, no filters, step the seed 1 → 2 → 3: the first eight tokens change each time (seed 2: ${seedText(2)}). Return to seed 1 and they come back exactly ("${seedText(1)}"). The randomness lives in the sampler, not in the model; fix the seed and the text repeats.`,
+    {
+      prompt: `Temperature 0.5: "on" ${half.on}, the 12 others ${half.others} together; seed 1 draws "on" ${half.counts[0]} times in ${DRAWS}. Temperature 2: "on" ${twice.on}, others ${twice.others}; ${twice.counts[4]} of ${DRAWS} draws come from the 12 unlikely words. Tap Greedy: "on" every time.`,
+      insight: 'temperature is one dial from "always the favorite" to "almost uniform"; it changes how the draw spends probability, not what the model knows.',
+    },
+    {
+      prompt: `Top-p 0.7 at temperature 1: ${keptAt(1).kept} kept. At 0.5: ${keptAt(0.5).kept} kept. At 2: ${keptAt(2).kept} kept (${tiedKept} of the 12 tied words, chosen by vocabulary order). Now top-k 3 instead: ${samplingDistribution(LOGITS, { topK: 3 }).kept} kept at every temperature.`,
+      insight: 'top-p adapts to how sure the model is; top-k does not.',
+    },
+    {
+      prompt: `Temperature 1, no filters, step the seed 1 → 2 → 3: the first eight tokens change each time (seed 2: ${seedText(2)}). Return to seed 1 and they come back exactly ("${seedText(1)}").`,
+      insight: 'the randomness lives in the sampler, not in the model; fix the seed and the text repeats.',
+    },
   ];
 }
 
