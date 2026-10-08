@@ -181,7 +181,7 @@ snaps the shape sliders to that preset's values, so the learner is never left on
 |---|---|---|
 | Panel A: positions computed, whole reply | `decodeWork({ prompt, generated: reply, cache }).positions` | count, `formatCount` past 10,000 |
 | Panel A: keys read per head per layer, whole reply | `.keyReads` | count |
-| Panel A: the same two numbers with the cache flipped, and their ratio | `decodeWork({ …, cache: !cache })` | "× fewer" with 3 significant figures |
+| Panel A: the same two numbers with the cache flipped, and their ratio | `decodeWork({ …, cache: !cache })` | "× fewer" with 3 significant figures, trailing zeros dropped (12×, 750×) |
 | Panel B: bytes per token | `kvBytesPerToken({ layers, kvHeads, headDim, bytesPerElem })`; MLA presets `kvBytesPerTokenMla(…)` | exact bytes and `formatBytes` (decimal) |
 | Panel B: cache per conversation | `kvCacheBytes({ bytesPerToken, tokens: context })` | `formatBytes` (decimal) |
 | Panel B: cache for all conversations | `kvCacheBytes({ bytesPerToken, tokens: context, sequences })` | decimal GB |

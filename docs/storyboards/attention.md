@@ -419,15 +419,15 @@ bullet, "O(L²)"; QK-norm and sinks: 01 §1; sharing and linear hybrids: 01 §2.
 
 The "Claim shown on page" column is the on-page wording. `renderFact` supplies each row's source link
 and a "reported" chip; the raw `attention` string in the data file is not printed. Each row names its
-year from `release_date`.
+year from `release_date` when that date is confirmed; Kimi K3 and MiniMax-M3 have reported dates, so their rows print no year.
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
 | GPT-3 (2020): full multi-head attention, 96 heads per layer, each 128 numbers wide, every head with its own keys and values; 96 layers | `models.gpt-3.attention` (expected value: "MHA, 96 heads × 128 dims, one K/V per head"), `models.gpt-3.layers` = 96, `models.gpt-3.release_date` | 01 §4 worked-numbers table; 01 §1 "Attention" row (untagged background; §13 ruling 3 cites the GPT-3 paper) |
 | gpt-oss-120b (2025): 64 query heads share 8 sets of keys and values, each 64 numbers wide; layers alternate full attention with a 128-token window; a learned sink per head | `models.gpt-oss-120b.attention` (expected: "GQA 64Q/8KV, head_dim 64, alternating full + SWA-128, learned sinks, attention_bias"), `models.gpt-oss-120b.layers` = 36, `.release_date` | 01 §1 "Biases" and "Attention sink" rows [C]; §2 sliding-window bullet [C]; §4 table; §7 table [C] |
 | DeepSeek-V4-Pro (2026): one set of keys and values per layer, 512 numbers wide, shared by all query heads, plus compression and sparsity (`long-context-attention`); Q and K normalized; a learned sink | `models.deepseek-v4-pro.attention` (expected: "1 KV head, head_dim 512; CSA/HCA + SWA-128; QK-norm; learned sink"), `.release_date` | 01 §1 "QK-norm" and "Attention sink" rows [C]; §2 MHA/MQA/GQA paragraph [C]; §7 table [C] |
-| Kimi K3 (2026): 96 heads; only 24 of its 93 layers run this softmax attention, the other 69 are linear-attention layers (`long-context-attention`) | `models.kimi-k3.attention` (expected: "69 KDA + 24 MLA (NoPE), 96 heads"), `models.kimi-k3.layers` = 93, `.release_date` | 01 §2 hybrid bullet [C]; §5 table [C]; §7 table [C] |
-| MiniMax-M3 (2026): 64 query heads, 4 sets of keys and values; from layer 4 on, each query reads only the 16 most relevant blocks of 128 past tokens | `models.minimax-m3.attention` (expected: "GQA 64Q/4KV + MSA block 128 top-16"), `.sparse_from_layer` = 4 (the config's per-layer list counts from 0: its first sparse entry is index 3, the 4th layer), `.sparse_top_blocks`, `.sparse_block`, `.release_date` | 01 §2 MSA bullet [C]; §7 table [C] |
+| Kimi K3: 96 heads; only 24 of its 93 layers run this softmax attention, the other 69 are linear-attention layers (`long-context-attention`) | `models.kimi-k3.attention` (expected: "69 KDA + 24 MLA (NoPE), 96 heads"), `models.kimi-k3.layers` = 93, `.release_date` | 01 §2 hybrid bullet [C]; §5 table [C]; §7 table [C] |
+| MiniMax-M3: 64 query heads, 4 sets of keys and values; from layer 4 on, each query reads only the 16 most relevant blocks of 128 past tokens | `models.minimax-m3.attention` (expected: "GQA 64Q/4KV + MSA block 128 top-16"), `.sparse_from_layer` = 4 (the config's per-layer list counts from 0: its first sparse entry is index 3, the 4th layer), `.sparse_top_blocks`, `.sparse_block`, `.release_date` | 01 §2 MSA bullet [C]; §7 table [C] |
 | Qwen3.8-2.4T-A95B (2026): 64 query heads, 4 sets of keys and values; only 1 layer in 4 is softmax attention, the other 3 are linear-attention layers | `models.qwen3.8.attention` (expected: "3 GDN : 1 attention, 64Q/4KV heads"), `.release_date` | 01 §2 hybrid bullet [C]; §7 table [C] |
 
 Prose beside the table, timeless and therefore not a data fact: "In production kernels the 4 × 4 grid
