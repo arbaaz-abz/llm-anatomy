@@ -248,7 +248,7 @@ optimizer / total GB): stage 0 15 / 15 / 90 / 120 · 1 15 / 15 / 1.41 / 31.41 ·
 732.81 · 2 350 / 5.47 / 32.81 / 388.28 · 3 5.47 / 5.47 / 32.81 / 43.75. Activations per layer / total:
 none 2,868,903,936 / 275.41 GB · selective 855,638,016 / 82.14 GB · full 50,331,648 / 4.83 GB. GPUs (H100 80 /
 H200 141 / B200 180 usable / B300 288): 1T → 200 / 114 / 89 / 56; V4-Pro at 16 B → 320 / 182 / 143 /
-89; at 12 B → 240 / 137 / 107 / 67; GPT-3 → 35 / 20 / 16 / 10. Kimi K2: 6e12 ÷ 256 = 23.4 GB per GPU. Derived: GPT-3 ZeRO-3 +
+89; at 12 B → 240 / 137 / 107 / 67; GPT-3 → 35 / 20 / 16 / 10. Kimi K2: 1.04e12 × 6 B ÷ 256 = 24.4 GB per GPU (24.38 GB; the data's 1.04T parameters). Derived: GPT-3 ZeRO-3 +
 full = 48.58 GB, + selective = 125.89 GB, + none = 319.16 GB; ZeRO-0 + full = 2,804.83 GB; score share
 80 ÷ 114 = 70.2%.
 
@@ -286,7 +286,7 @@ numbers per step (reduce-scatter + all-gather), stage 3 about 3Ψ.
 | ZeRO paper example: 7.5B on 64 GPUs → 120 / 31.4 / 16.6 / 1.9 GB | `models.json/zero-paper-7.5b.total_params` = 7.5e9 *(proposed; a teaching preset, note "ZeRO paper example")* | 03 §3.4 |
 | GPT-3 shape (preset): 175B, 96 blocks, d_model 12,288, 96 heads, 2,048 context | `models.json/gpt-3.total_params`, `.layers`, `.d_model`, `.n_heads`, `.context_length` *(proposed by `decoder-anatomy`; same keys)* | 01 §4 via `decoder-anatomy` |
 | DeepSeek-V3 (2024) stored optimizer moments in BF16; trained with ZeRO-1 only, because 16-way pipeline and 64-way expert parallelism already shrink per-GPU state | `models.json/deepseek-v3.optimizer_state_format` = "BF16", `.zero_stage` = 1 *(proposed; entry proposed by `paged-attention`)* | 03 §3.1, §4.1 |
-| Kimi K2 (2025): 1.04T parameters; BF16 weights + FP32 gradient buffer = 6 B per parameter, about 6 TB over a 256-GPU model-parallel group (about 23 GB per GPU), leaving about 30 GB per GPU for its share of optimizer state, which is sharded across data-parallel ranks. The page labels the 6 B "weights and gradient buffer only, not comparable with 16" | `models.json/kimi-k2.total_params` = 1.04e12, `.resident_bytes_per_param` = 6 *(proposed entry)* | 03 §3.1, §3.3, §4.6 |
+| Kimi K2 (2025): 1.04T parameters; BF16 weights + FP32 gradient buffer = 6 B per parameter, about 6 TB over a 256-GPU model-parallel group (1.04T × 6 B ÷ 256 = 24.4 GB per GPU, `formatBytes`), leaving about 30 GB per GPU for its share of optimizer state, which is sharded across data-parallel ranks. The page labels the 6 B "weights and gradient buffer only, not comparable with 16" | `models.json/kimi-k2.total_params` = 1.04e12, `.resident_bytes_per_param` = 6 *(proposed entry)* | 03 §3.1, §3.3, §4.6 |
 | Muon (Kimi K2/K3, GLM-5, DeepSeek-V4) keeps one momentum buffer instead of Adam's two: about 4 B less per parameter | `models.json/deepseek-v4-pro.optimizer` (existing); `kimi-k3.optimizer` = "Per-Head Muon" *(proposed)* | 03 §3.1; 02 §1.5 |
 | DeepSeek-V4-Pro: 1.6T total, 49B active (3.1%); its size at the 16-byte Adam recipe would be 25.6 TB (a what-if: V4 trained with Muon and FP8/FP4 weights; at Muon's 12 B, 19.2 TB) | `models.json/deepseek-v4-pro.total_params`, `.active_params`, `.optimizer` | 03 §3.3 (MoE caveat); 02 §1.5, §1.7 |
 | Llama 3.1 405B (2024): FSDP sharding optimizer states and gradients, but not re-sharding weights after the forward pass (to avoid a second all-gather) | `models.json/llama-3.1-405b.sharding` *(proposed)* | 03 §4.1 |
@@ -358,8 +358,8 @@ Settled and applied (README lesson 20):
   and `TRAINING_RECIPES` from here.
 - **Capacity uses usable HBM, labeled:** B200 180 GB usable → 1T needs 89 GPUs (brief 03 §3.3's figure),
   V4-Pro's size at 16 B needs 143. Every chip label says "usable" or "nominal".
-- **Kimi K2:** 6 B per parameter = weights + FP32 gradient buffer, about 6 TB over 256 GPUs (about 23 GB
-  each), leaving about 30 GB per GPU for optimizer state.
+- **Kimi K2:** 6 B per parameter = weights + FP32 gradient buffer, about 6 TB over 256 GPUs (24.4 GB
+  each: 1.04T × 6 B ÷ 256), leaving about 30 GB per GPU for optimizer state.
 - **DeepSeek-V4-Pro's 25.6 TB** is the 16-byte what-if, labeled; its own Muon recipe gives 240 H100s.
 - **ZeRO and activations:** the page says "ZeRO's three stages shard state, not activations". ZeRO-R's
   activation partitioning (ZeRO paper §6) is not in the briefs and is not taught here.
@@ -383,5 +383,7 @@ Settled and applied (README lesson 20):
   (confirmed, arXiv 2507.20534) and `models.llama-3.1-405b.release_date` = "2024-07-23" (confirmed) added.
 - X-2 / P3-R16: "Check my work" added (§6), from `zeroPerGpuBytes` and `activationBytesPerLayer`.
 - README lesson 35: the traffic multiplier prints through `formatRatio`.
+- S3-B finding: Kimi K2's per-GPU share is 1.04T × 6 B ÷ 256 = 24.4 GB from the data (was "6e12 ÷ 256 =
+  23.4 GB" and "about 23 GB"), in §8 and §12.
 - Conventions (Plan 3 Review Focus 5): the `gpu` chips cite `b200.hbm_usable_gb` with "usable" and nominal
   `hbm_gb` with "nominal" (`tests/training-conventions.test.js` (c)).
