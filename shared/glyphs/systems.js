@@ -18,9 +18,21 @@ export function kvStack(parent, { x, y, count, tile = 14, highlight = [], label 
   return g;
 }
 
-export function gpu(parent, { x, y, w = 96, h = 72, memFill = 0, label }) {
+const SM_TILES = 12; // the drawn SM grid: 4 × 3 tiles standing for the chip's SMs
+
+function checkLit(litSms) {
+  if (litSms == null) return null;
+  if (!Array.isArray(litSms) || !litSms.every((i) => Number.isInteger(i) && i >= 0 && i < SM_TILES)) throw new RangeError(`glyphs.gpu: litSms must be SM tile indices 0–${SM_TILES - 1}, got ${JSON.stringify(litSms)}`);
+  return new Set(litSms);
+}
+
+// `showMem: false` (S3) drops the memory bar for pages that show no fullness; `litSms` (S3) lights those SM tiles
+// (indices 0–11 of the drawn 4 × 3 grid) and titles the count, e.g. "20 of 132 SMs" drawn as 2 of 12 tiles.
+export function gpu(parent, { x, y, w = 96, h = 72, memFill = 0, label, showMem = true, litSms = null }) {
   const fill = clamp01(memFill);
-  const g = group(parent, 'g-gpu', x, y, { role: 'img', 'aria-label': `${label ?? 'GPU'}: memory ${Math.round(fill * 100)}% full` });
+  const lit = checkLit(litSms);
+  const g = group(parent, `g-gpu${lit ? ' g-gpu--lit' : ''}`, x, y, { role: 'img', 'aria-label': showMem ? `${label ?? 'GPU'}: memory ${Math.round(fill * 100)}% full` : (label ?? 'GPU') });
+  if (lit) svgEl('title', {}, g).textContent = `${label ?? 'GPU'}: SM grid, ${lit.size} of ${SM_TILES} tiles lit`;
   const dieW = Math.round(w * 0.68);
   const dieH = h - 18;
   svgEl('rect', { class: 'g-frame', width: w, height: h, rx: 5 }, g);
@@ -31,7 +43,7 @@ export function gpu(parent, { x, y, w = 96, h = 72, memFill = 0, label }) {
   const ch = (dieH - 22) / rows;
   for (let r = 0; r < rows; r += 1) {
     for (let c = 0; c < cols; c += 1) {
-      svgEl('rect', { class: 'g-sm', x: 8 + c * cw + 1, y: 8 + r * ch + 1, width: cw - 2, height: ch - 2, rx: 1 }, g);
+      svgEl('rect', { class: lit?.has(r * cols + c) ? 'g-sm g-sm--lit' : 'g-sm', x: 8 + c * cw + 1, y: 8 + r * ch + 1, width: cw - 2, height: ch - 2, rx: 1 }, g);
     }
   }
   const hbmX = dieW + 12;
@@ -39,14 +51,19 @@ export function gpu(parent, { x, y, w = 96, h = 72, memFill = 0, label }) {
   for (let i = 0; i < 2; i += 1) {
     svgEl('rect', { class: 'g-hbm', x: hbmX, y: 6 + i * ((dieH - 12) / 2), width: hbmW, height: (dieH - 12) / 2 - 3, rx: 2 }, g);
   }
-  const barY = h - 11;
-  svgEl('rect', { class: 'g-mem-track', x: 6, y: barY, width: w - 12, height: 6, rx: 3 }, g);
-  svgEl('rect', { class: 'g-mem-fill', x: 6, y: barY, width: (w - 12) * fill, height: 6, rx: 3 }, g);
+  if (showMem) {
+    const barY = h - 11;
+    svgEl('rect', { class: 'g-mem-track', x: 6, y: barY, width: w - 12, height: 6, rx: 3 }, g);
+    svgEl('rect', { class: 'g-mem-fill', x: 6, y: barY, width: (w - 12) * fill, height: 6, rx: 3 }, g);
+  }
   if (label) text(g, w / 2, h + 12, label, 'g-label', { 'text-anchor': 'middle' });
   return g;
 }
 
-export function rack(parent, { x, y, gpus = 8, linkWidth = 2, label, cols = 4 }) {
+// `labels` (S3, cluster-topology frame 8): one string per GPU, printed in its tile in place of the SM square
+// ('' keeps the square). Link thickness never encodes an amount (P3-R8): pages keep the default linkWidth.
+export function rack(parent, { x, y, gpus = 8, linkWidth = 2, label, cols = 4, labels = null }) {
+  if (labels != null && !(Array.isArray(labels) && labels.length === gpus && labels.every((t) => typeof t === 'string'))) throw new RangeError(`glyphs.rack: labels must be ${gpus} strings, one per GPU`);
   const tile = 16;
   const gap = 10;
   const rows = Math.ceil(gpus / cols);
@@ -67,7 +84,8 @@ export function rack(parent, { x, y, gpus = 8, linkWidth = 2, label, cols = 4 })
     const gx = gap + c * (tile + gap);
     const gy = gap + r * (tile + gap);
     svgEl('rect', { class: 'g-frame', x: gx, y: gy, width: tile, height: tile, rx: 2 }, g);
-    svgEl('rect', { class: 'g-sm', x: gx + 3, y: gy + 3, width: tile - 6, height: tile - 6, rx: 1 }, g);
+    if (labels?.[i]) text(g, gx + tile / 2, gy + tile / 2, labels[i], 'g-rack-label', { 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    else svgEl('rect', { class: 'g-sm', x: gx + 3, y: gy + 3, width: tile - 6, height: tile - 6, rx: 1 }, g);
   }
   if (label) text(g, w / 2, h + 12, label, 'g-label', { 'text-anchor': 'middle' });
   return g;
