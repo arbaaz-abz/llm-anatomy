@@ -6,14 +6,14 @@ const MINUS = '−';
 const realMinus = (s) => s.replace(/^-/, MINUS);
 
 // Fixed decimals with a real minus, never "−0.000".
-const fixed = (digits) => (v) => {
+export const fixed = (v, digits) => {
   if (v == null || Number.isNaN(v)) return '';
   const s = v.toFixed(digits);
   return /^-0(\.0+)?$/.test(s) ? s.slice(1) : realMinus(s);
 };
-export const fmt1 = fixed(1);
-export const fmt2 = fixed(2);
-export const fmt3 = fixed(3);
+export const fmt1 = (v) => fixed(v, 1);
+export const fmt2 = (v) => fixed(v, 2);
+export const fmt3 = (v) => fixed(v, 3);
 
 // The slider's printed value: signed one decimal ("+0.5", "−0.2", "0").
 export const fmtChange = (v) => (v === 0 ? '0' : `${v > 0 ? '+' : MINUS}${Math.abs(v).toFixed(1)}`);

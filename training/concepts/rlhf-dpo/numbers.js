@@ -40,3 +40,5 @@ export const CLIP = Object.freeze({ moved: clippedSurrogate(RATIO_MOVED, ADVANTA
 export const DPO = Object.freeze(dpoLoss(DPO_DEFAULT));
 
 export const PIPELINE_STAGES = Object.freeze(['pretrain', 'mid-train', 'SFT', 'specialist RL', 'merge', 'polish']);
+// Block widths of training-pipeline's strip (each as wide as its "n label" needs); the row is 570 px.
+export const STAGE_WIDTHS = Object.freeze([96, 100, 64, 128, 76, 76]);
