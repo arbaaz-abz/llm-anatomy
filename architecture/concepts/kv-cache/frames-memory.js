@@ -5,7 +5,7 @@ import { formatBytes } from '@math/core.js';
 import { kvBytesPerToken } from '@math/memory.js';
 import { int, ratioText } from './format.js';
 import {
-  GPT3, LLAMA, TOY_SHAPE, TOY_CONTEXT, HEAD_B_ON, K_ON, V_ON, BYTES_PER_TOKEN, V4_PRO_BYTES, CACHE, AT_STOP, LLAMA_TOKENS, SLIDER_STOP, MAX_ABS,
+  GPT3, TOY_SHAPE, TOY_CONTEXT, HEAD_B_ON, K_ON, V_ON, BYTES_PER_TOKEN, V4_PRO_BYTES, CACHE, AT_STOP, LLAMA_TOKENS, SLIDER_STOP, MAX_ABS,
   gpuShare, GPU_FILL,
 } from './numbers.js';
 import { seg, lerp, ease, arriving, layer, label, textBlock, linkedText, cacheStackAt, handOff, cellText } from './stage.js';
