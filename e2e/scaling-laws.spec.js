@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerLessonContract } from './lesson-helpers.js';
-import { CAPTIONS, CHECK_WORK, TRY_THIS } from '../tests/scaling-laws-expected.js';
+import { CAPTIONS, CHECK_WORK, TRY_THIS, STAGE_TEXT } from '../tests/scaling-laws-expected.js';
 
 const URL = '/training/#scaling-laws';
 const FACT_ROWS = 8; // storyboard §8
@@ -102,5 +102,31 @@ test.describe('scaling-laws toy: spend a compute budget', () => {
     await page.locator('#logN').fill(SLIDER_1T_AT_1E24);
     await expect(readout(page, 'check-work')).toContainText('N = 1.00 × 10¹² parameters (active)');
     await expect(readout(page, 'check-work')).toContainText('= 2.013');
+  });
+});
+
+test.describe('scaling-laws stage: the numbers each frame prints at rest', () => {
+  for (const [k, expected] of STAGE_TEXT.entries()) {
+    test(`frame ${k + 1} prints the storyboard's numbers`, async ({ page }) => {
+      await page.goto(URL);
+      await page.locator('[data-section="animation"] input[type="range"]').fill(String(k));
+      const root = page.locator('[data-section="animation"] .stepper-stage');
+      await expect(root).toHaveAttribute('data-step', String(k));
+      await expect(root).toHaveAttribute('data-progress', '1');
+      const stage = page.locator('[data-section="animation"] .stepper-stage svg');
+      const texts = await stage.locator('text').allTextContents();
+      for (const text of expected) expect(texts, `frame ${k + 1}: "${text}"`).toContain(text);
+    });
+  }
+
+  test('the basis line sits under frame 6 and the definition under frame 8, and no other frame prints one', async ({ page }) => {
+    await page.goto(URL);
+    const below = page.locator('[data-section="animation"] .below-stage');
+    for (const [k, pattern] of [[5, /forward pass only/], [7, /pretraining tokens ÷ active parameters/]]) {
+      await page.locator('[data-section="animation"] input[type="range"]').fill(String(k));
+      await expect(below).toContainText(pattern);
+    }
+    await page.locator('[data-section="animation"] input[type="range"]').fill('8');
+    await expect(below).toHaveText('');
   });
 });
