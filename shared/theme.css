@@ -478,6 +478,12 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .choice-thumb { display: none; position: absolute; top: 2px; bottom: 2px; left: 0; border-radius: 999px; background: var(--surface-2); width: var(--thumb-w); transform: translateX(var(--thumb-x)); transition: transform var(--duration) var(--ease), width var(--duration) var(--ease); }
 .choice-track[data-thumb] .choice-thumb { display: block; }
 .choice-track[data-thumb] .choice-option[aria-pressed="true"], .choice-track[data-thumb] .choice-option[aria-pressed="true"]:hover { background: transparent; }
+/* A disabled option (P3-R12): muted and struck through, no hover; its note sits on its own line under the control. */
+.choice-option:disabled { color: var(--ink-muted); text-decoration: line-through; cursor: not-allowed; }
+.choice-option:disabled:hover { border-color: var(--line); }
+.choice-track .choice-option:disabled:hover { border-color: transparent; background: transparent; }
+.choice-note { flex-basis: 100%; }
+.choice-note-line { display: block; }
 .fact-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink-muted); }
 .fact-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
 .fact-meta { display: flex; gap: var(--space-3); align-items: baseline; justify-content: flex-end; white-space: nowrap; }

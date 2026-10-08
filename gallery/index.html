@@ -147,6 +147,24 @@
       </div>
     </section>
 
+    <section id="choice-demo">
+      <h2>Choice</h2>
+      <div class="demo-grid">
+        <div class="panel">
+          <div id="chip-root"></div>
+          <div id="format-root"></div>
+          <p class="readout">Format in use: <output id="format-readout" aria-live="polite"></output></p>
+        </div>
+        <aside class="notes">
+          <ul>
+            <li>Segmented for a few modes, chips for presets: native buttons with <code>aria-pressed</code>.</li>
+            <li>An option the current preset cannot use is disabled, never hidden, and a note under the control says why.</li>
+            <li>A preset that disables the selected option moves the selection to the first enabled one.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
     <section id="math-demo">
       <h2>Math panel</h2>
       <div class="demo-grid">
