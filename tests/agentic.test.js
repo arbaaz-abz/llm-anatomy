@@ -131,5 +131,5 @@ test('row 4\'s 48 push under each correction: −0.5774, −1.8475, −1.1547, 0
   near(push('none'), -0.5774);
   near(push('full'), -1.8475);
   near(push('tis'), -1.1547);
-  assert.equal(push('icepop'), 0);
+  assert.equal(Math.abs(push('icepop')), 0, 'a masked token pushes nothing (the page prints a negative zero as 0)');
 });
