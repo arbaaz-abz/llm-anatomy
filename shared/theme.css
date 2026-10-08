@@ -35,8 +35,8 @@
   --req-3: #32a67d;
   --req-4: #a4277a;
   /* Categorical parts (shareBar): 1 embedding+positional · 2 attention · 3 MLP+experts · 4 other · 5 head.
-     Validated as an ordered set (adjacent CVD, contrast ≥ 3:1) — change only together, re-validated. */
-  --part-1: #a16207; --part-2: #2a78d6; --part-3: #008300; --part-4: #4a3aa7; --part-5: #c2410c;
+     Validated as an ordered set (adjacent CVD, contrast ≥ 3:1); --part-4 also ΔE ≥ 15 from every track accent — change only together, re-validated. */
+  --part-1: #a16207; --part-2: #2a78d6; --part-3: #008300; --part-4: #703a73; --part-5: #c2410c;
   --part-none: var(--surface-2);
   --carry-activation: var(--accent-arch);
   --carry-gradient: var(--accent-train);
@@ -66,7 +66,7 @@
     --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
     --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --ink-on-sem: #0f1319;
     --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
-    --part-1: #c98500; --part-2: #3987e5; --part-3: #2f9e44; --part-4: #9085e9; --part-5: #e0672e;
+    --part-1: #c98500; --part-2: #3987e5; --part-3: #2f9e44; --part-4: #975985; --part-5: #e0672e;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
   }
 }
@@ -79,7 +79,7 @@
   --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
   --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --ink-on-sem: #0f1319;
   --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
-  --part-1: #c98500; --part-2: #3987e5; --part-3: #2f9e44; --part-4: #9085e9; --part-5: #e0672e;
+  --part-1: #c98500; --part-2: #3987e5; --part-3: #2f9e44; --part-4: #975985; --part-5: #e0672e;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
@@ -311,7 +311,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-share [data-part="3"] { fill: var(--part-3); }
 .g-share [data-part="4"] { fill: var(--part-4); }
 .g-share [data-part="5"] { fill: var(--part-5); }
-.g-share .g-part-none { fill: var(--part-none); stroke: var(--line); } /* "not published": neutral, never hatched */
+.g-share .g-part-none { fill: var(--part-none); stroke: var(--ink-muted); stroke-width: 1; } /* "not published": neutral, never hatched */
 .g-share .g-part-others { fill: var(--ink-muted); } /* "others": the folded tail, redrawn on the zoomed bar */
 .g-share .g-bracket { fill: none; stroke: var(--line); stroke-width: 1; }
 
