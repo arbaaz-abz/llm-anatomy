@@ -12,7 +12,7 @@ const setSlider = (page, id, value) => page.locator(`#${id}`).evaluate((input, v
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }, value);
 const expectOutputs = async (page, { rewards, margin, p, loss, weight }) => {
-  await expect(page.locator('[data-readout="rewards"] .cell')).toHaveText(rewards);
+  await expect(page.locator('[data-readout="rewards"] .g-cell .g-text')).toHaveText(rewards);
   await expect(readout(page, 'margin')).toHaveText(margin);
   await expect(readout(page, 'p-chosen')).toHaveText(p);
   await expect(readout(page, 'loss')).toHaveText(loss);
