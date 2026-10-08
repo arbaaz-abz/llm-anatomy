@@ -9,7 +9,7 @@ import { RACK8, RACK72, tileAt, seg, lerp, ease, label, textBlock, selectGpu, li
 
 const H100 = SYSTEMS.h100;
 const GB200 = SYSTEMS.gb200;
-const TOKEN_CHIP_W = 52; // a 'token' chip is about this wide at the stage's label size
+const CHIP_TEXT = 'cat'; // the course's router-toy token (ROUTER_TOY), short enough not to hide the GPU numbers
 const TOKEN_CHIP_H = 24;
 
 // The point `t` (0 → 1) of the way along a polyline, by length.
@@ -64,7 +64,7 @@ export function drawFrame8(svg, p) {
   linked(svg, 'comm', { x: xs[0], y: switchY, w: xs[3] + RACK8.w - xs[0], h: rackY - switchY + RACK8.h }, (host) => {
     legProgress(path, t).forEach((leg, i) => hop(host, path[i], path[i + 1], 'token', leg));
   });
-  if (t > 0) G.token(svg, { x: head[0] - TOKEN_CHIP_W / 2, y: head[1] - TOKEN_CHIP_H / 2, text: 'token', state: 'active' });
+  if (t > 0) G.token(svg, { x: head[0] - G.tokenWidth(CHIP_TEXT) / 2, y: head[1] - TOKEN_CHIP_H / 2, text: CHIP_TEXT, state: 'active' });
   const shown = seg(p, 0.3, 0.7);
   linkedText(svg, 'link', { x: 12, y: rackY + RACK8.h + 40, str: `hop 1: network, ${int(H100.networkGBps)} GB/s each way, to GPU ${RAIL.gpuIndex} of server ${RAIL.servers}`, opacity: shown });
   linkedText(svg, 'link', { x: 12, y: rackY + RACK8.h + 58, str: `hop 2: NVLink, to the expert on GPU ${RAIL.expertGpuIndex}`, opacity: seg(p, 0.7, 1) });
@@ -118,10 +118,11 @@ export function drawFrame10(svg, p) {
   ], { gap: 18, opacity: shown });
   const late = seg(p, 0.75, 1);
   textBlock(svg, textX, 176, [
-    `expert parallelism on GB200 (${int(GB200.peakTflops)} TFLOPS BF16):`,
-    `needs ${int(need)} GB/s of link`,
+    'expert parallelism on GB200:',
+    `${int(GB200.peakTflops)} TFLOPS BF16, needs ${int(need)} GB/s`,
     `NVLink ${int(GB200.nvlinkGBps)} GB/s each way → ${pct1(inside)}`,
-    `network ${int(GB200.networkGBps)} GB/s (800 Gb/s, reported) → ${pct1(over)}`,
+    `network ${int(GB200.networkGBps)} GB/s each way → ${pct1(over)}`,
+    '(800 Gb/s port, reported)',
     `tensor 16 inside the rack: ${pct1(tp16)}`,
   ], { gap: 18, opacity: late });
 }

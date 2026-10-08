@@ -17,7 +17,7 @@ const output = (name, props = {}) => {
   o.dataset.readout = name;
   return o;
 };
-const line = (label, name) => { const out = output(name); return { out, row: el('p', { className: 'toy-note' }, [`${label}: `, out]) }; };
+const line = (label, name) => { const out = output(name); return { out, row: el('p', { className: 'toy-note' }, [`${label}${label.endsWith('?') ? ' ' : ': '}`, out]) }; };
 
 function tryThisList(data) {
   const items = tryThis(data).map(({ text, insight }) => el('li', {}, [`${text} → `, el('strong', { textContent: `Insight: ${insight}` })]));

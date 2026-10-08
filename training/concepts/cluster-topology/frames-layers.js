@@ -110,8 +110,8 @@ export function drawFrame7(svg, p) {
     wire(svg, r.x + RACK16.w / 2, r.y, leaf.x + leaf.w * (0.3 + 0.4 * i), leaf.y + leaf.h);
   });
   selectGpu(svg, racks[0].x, racks[0].y, 4);
-  label(svg, 296, 124, `${int(META.racksPerPod - racks.length)}`, { cls: '', anchor: 'middle' });
-  label(svg, 296, 140, 'other racks', { anchor: 'middle' });
+  label(svg, 330, 124, `${int(META.racksPerPod - racks.length)}`, { cls: '', anchor: 'middle' });
+  label(svg, 330, 140, 'other racks', { anchor: 'middle' });
   const podsWidth = podPitch * META.pods - (podPitch - podW);
   G.block(svg, { x: 10, y: spineY - 22, w: podsWidth, h: 22, label: `aggregation layer, oversubscribed ${META.oversubscription}`, state: 'idle' });
   for (let i = 0; i < META.pods; i += 1) {
