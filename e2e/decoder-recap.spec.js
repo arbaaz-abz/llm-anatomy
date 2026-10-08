@@ -20,7 +20,7 @@ test.describe('decoder-recap animation: page text under the stage', () => {
     await goTo(page, 4);
     await expect(page.locator('.below-stage')).toContainText(FRAME5_EXACT);
     await goTo(page, 6);
-    await expect(page.locator('.below-stage')).toContainText("This row is Attention, step by step's hero row; that page computes it step by step.");
+    await expect(page.locator('.below-stage')).toContainText('This row is the hero row of Attention, step by step, which computes it step by step.');
     await expect(page.locator('.below-stage')).toContainText('[−0.792, 1.841, 0.396]');
     await goTo(page, 9);
     await expect(page.locator('.below-stage')).toContainText(RESIDUAL_NOTE);

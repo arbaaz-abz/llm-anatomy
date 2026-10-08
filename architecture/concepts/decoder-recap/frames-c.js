@@ -2,7 +2,7 @@
 import * as G from '@shared/glyphs.js';
 import { PANEL, CELL, seg, lerp, layer, note, lines } from './stage.js';
 import { GPT3_FACTS, MODERN_FACTS, KEY_NAMES, QK } from './numbers.js';
-import { int, fixed3 } from './format.js';
+import { int, fixed2 } from './format.js';
 
 const NOTE_X = PANEL.x + 6;
 
@@ -12,7 +12,7 @@ export function panel8(g, p) {
   note(g, NOTE_X, 22, 'softmax over the keys, plus a sink');
   note(g, SINK.x - 8, SINK.y + 25, 'scores', { anchor: 'end' });
   KEY_NAMES.forEach((name, i) => note(g, SINK.x + i * CELL + CELL / 2, SINK.y - 8, name, { anchor: 'middle' }));
-  G.vector(g, { x: SINK.x, y: SINK.y, values: QK.normed(1), cell: CELL, orient: 'row', maxAbs: 2, format: fixed3 });
+  G.vector(g, { x: SINK.x, y: SINK.y, values: QK.normed(1), cell: CELL, orient: 'row', maxAbs: 2, format: fixed2 });
   const arrive = seg(p, 0.2, 0.5);
   const sink = layer(g, arrive);
   G.block(sink, { x: lerp(SINK.fromX, SINK.restX, arrive), y: SINK.y, w: CELL, h: CELL - 3, label: 'sink', state: 'active' });
@@ -21,7 +21,7 @@ export function panel8(g, p) {
   G.flow(flow, { from: [SINK.x + 2 * CELL, SINK.y + CELL + 54], to: [SINK.x + 2 * CELL, SINK.y + CELL + 88], carry: 'activation', progress: seg(p, 0.65, 0.85) });
   G.block(flow, { x: SINK.x, y: SINK.y + CELL + 92, w: 4 * CELL + 8, h: 26, label: 'softmax' });
   lines(layer(g, seg(p, 0.85, 1)), SINK.x, SINK.y + CELL + 142, ['the weights add to 1 over the keys', 'and the sink; the sink takes what', 'no key deserves']);
-  note(layer(g, seg(p, 0.85, 1)), NOTE_X, 300, 'details: long-context-attention');
+  note(layer(g, seg(p, 0.85, 1)), NOTE_X, 300, 'details: Reaching 1M tokens');
 }
 
 // Panel 9: what each kind of attention layer keeps in the cache.

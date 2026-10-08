@@ -92,7 +92,7 @@ export function drawStack(parent, { x, title, from, to = from, t = 1, layers, su
 export const GPT3_PARTS = partsAfter(1);
 
 // ---- frame 9: the right stack grows to four blocks, three of them with a cheaper kind of attention ----
-const HYBRID = Object.freeze({ top: 22, step: 72, h: 64, kinds: ['linear', 'linear', 'linear', 'full'] });
+const HYBRID = Object.freeze({ top: 22, step: 72, h: 64, kinds: ['linear', 'window', 'linear', 'full'] });
 export const hybridAttnRect = (k) => ({ x: RIGHT_X + BOX.x, y: HYBRID.top + k * HYBRID.step + 16, w: BOX.w, h: 22 });
 
 function miniBlock(g, k, relabel) {
@@ -105,8 +105,8 @@ function miniBlock(g, k, relabel) {
     G.svgEl('line', { class: 'g-link', x1: LANE + 7, y1: r.y + r.h / 2, x2: BOX.x, y2: r.y + r.h / 2 }, g);
     G.adder(g, { x: LANE, y: r.y + r.h / 2, r: 7 });
   });
-  mix(g, 'attention', HYBRID.kinds[k], relabel, (p, label) => G.block(p, { x: BOX.x, y: rows[0].y, w: BOX.w, h: rows[0].h, label, state: label === 'linear' ? 'active' : 'idle' }));
-  G.block(g, { x: BOX.x, y: rows[1].y, w: BOX.w, h: rows[1].h, label: 'MLP' });
+  mix(g, 'attention', HYBRID.kinds[k], relabel, (p, label) => G.block(p, { x: BOX.x, y: rows[0].y, w: BOX.w, h: rows[0].h, label, state: label === 'attention' || label === 'full' ? 'idle' : 'active' }));
+  G.block(g, { x: BOX.x, y: rows[1].y, w: BOX.w, h: rows[1].h, label: 'experts', state: 'active' });
 }
 
 // `relabel` runs 0 → 1 as the attention boxes of blocks 1–3 change from "attention" to "linear".

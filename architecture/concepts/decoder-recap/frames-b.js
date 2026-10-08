@@ -82,7 +82,7 @@ export function panel7(g, p) {
   if (ring > 0) {
     const o = layer(g, ring);
     tile(o, { x: Q7.x - 6, y: Q7.y - 6, w: 252, h: CELL + 6 + 28 + Q7.keyCell + 8, state: 'idle' });
-    note(o, Q7.x + 4 * CELL + 8, Q7.y + 56, 'norm');
+    note(o, Q7.x + 242, Q7.y - 10, 'norm', { anchor: 'end' });
   }
   queryRow(g, p);
   keyRows(g);

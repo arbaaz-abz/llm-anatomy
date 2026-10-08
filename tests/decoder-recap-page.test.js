@@ -44,6 +44,8 @@ test('the text under the stage fills from data, prints the storyboard\'s exact l
   assert.match(below(6)[0], /plain scores ÷ 2: \[−0\.5, 1\.5, 0\.25\] · q × 10: \[−5, 15, 2\.5\] → \[0\.000, 1\.000, 0\.000\]/);
   assert.match(below(8)[0], /Qwen3\.8: 3 linear : 1 full · Kimi K3: 69 linear \+ 24 full · gpt-oss: window and full alternate \(1 full : 1 window\) · Qwen3\.5-397B: 15 of 60 full/);
   assert.match(below(2)[0], /2,048 positions/);
+  assert.equal(below(1)[0], 'LayerNorm: [−0.630, 1.386, 0.378, −0.630, −1.638, 1.386, −0.630, 0.378] · RMSNorm: [0, 1.706, 0.853, 0, −0.853, 1.706, 0, 0.853]');
+  assert.equal(below(7)[0], 'normalized scores: [−0.792, 1.841, 0.396], the row the sink joins.');
   assert.match(below(9)[1], new RegExp(RESIDUAL_NOTE.replace(/[()]/g, '\\$&')));
   assert.match(below(5)[0], /^2 × 96 × 96 × 128 × 2 B = 4,718,592 B → 2 × 96 × 8 × 128 × 2 B = 393,216 B\./);
   assert.equal(below(42).length, 0);
@@ -52,6 +54,17 @@ test('the text under the stage fills from data, prints the storyboard\'s exact l
 test('Next lists exactly the lessons that take this one as a prereq (README lesson 1)', () => {
   const dependents = graph.concepts.filter((c) => c.prereqs.includes('decoder-recap')).map((c) => c.slug);
   assert.deepEqual([...LESSON.links.next].sort(), dependents.sort());
+});
+test('stage cells print 2 d.p., the text under the stage 3 d.p. (template rule 7)', () => {
+  assert.deepEqual(N.ROW_NORMS.layer.map(F.norm2), ['−0.63', '1.39', '0.38', '−0.63', '−1.64', '1.39', '−0.63', '0.38']);
+  assert.deepEqual(N.ROW_NORMS.rms.map(F.norm2), ['0', '1.71', '0.85', '0', '−0.85', '1.71', '0', '0.85']);
+  assert.deepEqual(N.QK.normed().map(F.fixed2), ['−0.79', '1.84', '0.40']);
+  assert.deepEqual(N.X_SAT.map(F.plain), ['0', '1', '0.5', '0', '−0.5', '1', '0', '0.5']);
+  assert.equal(F.fixed2(-0.001), '0.00');
+});
+test('the active definition names GPT-3\'s position table (README lesson 16)', () => {
+  assert.match(F.ACTIVE_DEFINITION, /GPT-3's learned position table is a lookup too; it is so small, 0\.01 %, that this course counts it as active\.\)$/);
+  assert.equal(Number((100 * N.GPT3_FACTS.positionTable / N.GPT3_FACTS.total).toFixed(2)), 0.01);
 });
 test('three takeaways, three further links, and every math term has a stage link', () => {
   assert.equal(LESSON.takeaways.length, 3);
@@ -136,7 +149,7 @@ test('toy view: try this 1 (norm, MLP)', () => {
 });
 test('toy view: try this 2 (RoPE, KV heads)', () => {
   const rope = view({ position: 'rope' });
-  assert.deepEqual([rope.parts.find((p) => p.part === 'positional').delta, rope.longest], ['−25,165,824', 'set by training (see the RoPE lesson)']);
+  assert.deepEqual([rope.parts.find((p) => p.part === 'positional').delta, rope.longest], ['−25,165,824', 'set by training']);
   assert.deepEqual([view({ kvHeads: 8 }).cache, view({ kvHeads: 8 }).cacheSub], ['393,216 B', '393 kB (12× less than GPT-3)']);
   assert.deepEqual([view({ kvHeads: 1 }).cache, view({ kvHeads: 1 }).cacheSub], ['49,152 B', '49.2 kB (96× less than GPT-3)']);
 });
@@ -151,7 +164,7 @@ test('toy view: try this 3 (experts)', () => {
 test('the try-this text reads its numbers back from the same functions', () => {
   const [one, two, three] = F.tryThis();
   assert.match(one.prompt, /^Flip norm: total 174,604,259,328 → 174,601,887,744 \(2,371,584 fewer: the β vectors\)\. Flip MLP: the MLP parts go 115,970,015,232 → 115,971,588,096 \(the bias vectors differ; without biases both are 96 × 1,207,959,552\)\.$/);
-  assert.match(two.prompt, /25,165,824 fewer parameters.*cache 4,718,592 → 393,216 B per token \(12× less\).*falls to 147,990,994,944/);
+  assert.match(two.prompt, /25,165,824 fewer parameters.*cache 4,718,592 → 393,216 B per token \(12× less\)\. Turn biases off too, and the total is 147,990,994,944: W_K and W_V shrink\./);
   assert.match(three.prompt, /total 147,990,994,944 → 959,815,311,360; active 147,990,994,944 → 148,066,492,416 \(\+75,497,472: the router\)/);
   assert.match(two.rest, /\[\[kv-cache\]\].*\[\[kv-compression\]\]/);
 });

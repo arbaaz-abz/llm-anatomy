@@ -52,7 +52,7 @@ function buildDom(host, ctx) {
     refs.presets.append(button);
   });
   host.append(
-    refs.presets, el('div', { className: 'toy-controls' }, Object.values(refs.controls)), refs.totals,
+    refs.presets, el('div', { className: 'toy-controls' }, Object.values(refs.controls)), el('div', { className: 'scroll-x' }, [refs.totals]),
     el('p', { className: 'toy-note', textContent: ACTIVE_DEFINITION }), el('div', { className: 'scroll-x' }, [refs.parts]), ...tryThisList(ctx),
   );
   return refs;

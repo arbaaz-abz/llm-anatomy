@@ -65,9 +65,9 @@ const PART_ROWS = Object.freeze([
   ['positional', 'position table'], ['embedding', 'embedding (tied with the unembedding)'],
 ]);
 
-export const ACTIVE_DEFINITION = 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.)';
+export const ACTIVE_DEFINITION = 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.) (GPT-3\'s learned position table is a lookup too; it is so small, 0.01 %, that this course counts it as active.)';
 
-const LONGEST = Object.freeze({ learned: `${int(GPT3.maxPositions)} (table size)`, rope: 'set by training (see the RoPE lesson)' });
+const LONGEST = Object.freeze({ learned: `${int(GPT3.maxPositions)} (table size)`, rope: 'set by training' });
 const ratioText = (n) => String(Number(n.toPrecision(3)));
 
 // Every string the toy prints for one state (pure; the toy only paints it).
@@ -111,7 +111,7 @@ export function tryThis() {
       rest: '',
     },
     {
-      prompt: `Flip position to RoPE: ${int(start.total - rope.total)} fewer parameters and "longest input: set by training". Set KV heads to 8: cache ${int(kvBefore)} → ${int(kvAfter)} B per token (${ratioText(kvBefore / kvAfter)}× less). With the other swaps on, the total falls to ${int(dense.total)} because W_K and W_V shrink.`,
+      prompt: `Flip position to RoPE: ${int(start.total - rope.total)} fewer parameters and "longest input: set by training". Set KV heads to 8: cache ${int(kvBefore)} → ${int(kvAfter)} B per token (${ratioText(kvBefore / kvAfter)}× less). Turn biases off too, and the total is ${int(dense.total)}: W_K and W_V shrink.`,
       insight: `the big 2023–26 changes are about running cost: no position limit, a ${ratioText(kvBefore / kvAfter)}× smaller cache.`,
       rest: ' [[kv-cache]] lets you build this number by hand; [[kv-compression]] shows how the sharing works.',
     },
@@ -128,6 +128,13 @@ export function tryThis() {
 export const fixed3 = (v) => (Number(v.toFixed(3)) === 0 ? '0.000' : `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(3)}`);
 // Normalized rows at 3 d.p., an exact zero as "0" (the zeros RMSNorm keeps at zero).
 export const norm3 = (v) => (v === 0 ? '0' : fixed3(v));
+// Stage cells hold a signed number at 2 d.p. ("−0.63"); the 3 d.p. rows are printed in the text under the stage.
+export const fixed2 = (v) => (Number(v.toFixed(2)) === 0 ? '0.00' : `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}`);
+export const norm2 = (v) => (v === 0 ? '0' : fixed2(v));
+// The input row as the storyboard writes it: 0, 1, 0.5, −0.5.
+export const plain = (v) => (v === 0 ? '0' : `${v < 0 ? '−' : ''}${Math.abs(v)}`);
+// A normalized row as a 3 d.p. list with exact zeros as "0": [0, 1.706, 0.853, …].
+export const listNorm = (values) => `[${values.map(norm3).join(', ')}]`;
 // A short list as the storyboard prints it: [−0.5, 1.5, 0.25]. `digits` fixes the decimals; without it numbers print as they are.
 export const listText = (values, digits) => `[${values.map((v) => (digits == null ? String(Number(v.toFixed(4))) : fixed3Digits(v, digits))).join(', ')}]`.replace(/-/g, '−');
 const fixed3Digits = (v, digits) => (Number(v.toFixed(digits)) === 0 ? (0).toFixed(digits) : v.toFixed(digits));

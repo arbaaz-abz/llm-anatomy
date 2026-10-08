@@ -2,7 +2,7 @@
 import * as G from '@shared/glyphs.js';
 import { PANEL, ROWS_X, CELL, seg, layer, note, lines, linkedRow, typed } from './stage.js';
 import { GPT3_FACTS, MODERN_FACTS, X_SAT, ROW_NORMS } from './numbers.js';
-import { int, norm3 } from './format.js';
+import { int, norm2, plain } from './format.js';
 
 const MAX_ABS = 2;
 const NOTE_X = PANEL.x + 6;
@@ -23,12 +23,12 @@ export function panel2(g, p) {
   note(g, ROWS_X, 22, "why normalize: keeps the row's size steady");
   note(g, ROWS_X, 36, 'as the stack gets deep');
   note(g, ROWS_X, ROW2.input - 8, 'x_sat, the row going in');
-  G.vector(g, { x: ROWS_X, y: ROW2.input, values: X_SAT, cell: CELL, orient: 'row', maxAbs: MAX_ABS });
+  G.vector(g, { x: ROWS_X, y: ROW2.input, values: X_SAT, cell: CELL, orient: 'row', maxAbs: MAX_ABS, format: plain });
   note(g, ROWS_X, ROW2.layer - 8, 'LayerNorm');
-  G.vector(g, { x: ROWS_X, y: ROW2.layer, values: typed(ROW_NORMS.layer, seg(p, 0.2, 0.5)), cell: CELL, orient: 'row', maxAbs: MAX_ABS, format: norm3 });
+  G.vector(g, { x: ROWS_X, y: ROW2.layer, values: typed(ROW_NORMS.layer, seg(p, 0.2, 0.5)), cell: CELL, orient: 'row', maxAbs: MAX_ABS, format: norm2 });
   lines(layer(g, seg(p, 0.45, 0.55)), ROWS_X, ROW2.layer + CELL + 15, [`subtract the mean ${ROW_NORMS.mean},`, `divide by the spread ${ROW_NORMS.spread.toFixed(3)}`]);
   note(g, ROWS_X, ROW2.rms - 8, 'RMSNorm');
-  linkedRow(g, 'rms', { x: ROWS_X, y: ROW2.rms, values: typed(ROW_NORMS.rms, seg(p, 0.5, 0.8)), maxAbs: MAX_ABS, format: norm3 });
+  linkedRow(g, 'rms', { x: ROWS_X, y: ROW2.rms, values: typed(ROW_NORMS.rms, seg(p, 0.5, 0.8)), maxAbs: MAX_ABS, format: norm2 });
   lines(layer(g, seg(p, 0.78, 0.9)), ROWS_X, ROW2.rms + CELL + 15, [`divide by the root mean square ${ROW_NORMS.rootMeanSquare.toFixed(3)};`, 'zeros stay zero']);
 }
 
