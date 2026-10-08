@@ -298,7 +298,10 @@ test('shareBar prints "not published" beside its off-scale segment, inside the f
   await page.goto('/gallery/');
   const share = page.locator('#figures .g-share');
   await expect(share.locator('.g-unknown-label')).toHaveText(['not published']);
-  const [seg, label] = await Promise.all([share.locator('.g-part-none').first(), share.locator('.g-unknown-label').first()].map((l) => l.boundingBox()));
+  await page.evaluate(() => document.fonts.ready);
+  // getBoundingClientRect, not locator.boundingBox(): WebKit's protocol box for SVG text is unreliable.
+  const rect = (l) => l.evaluate((e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  const [seg, label] = await Promise.all([rect(share.locator('.g-part-none').first()), rect(share.locator('.g-unknown-label').first())]);
   expect(label.x).toBeGreaterThanOrEqual(seg.x + seg.width); // beside, to the right
   expect(Math.abs(label.y + label.height / 2 - (seg.y + seg.height / 2))).toBeLessThanOrEqual(3); // on the bar's line
 });
