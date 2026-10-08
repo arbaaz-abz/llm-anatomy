@@ -61,7 +61,7 @@ Two things make this affordable. Every position in a sequence is graded in the s
 8-token sentence is 7 training examples. And the text is chosen with great care: raw crawl is filtered by
 rules and by quality classifiers, near-duplicates are removed, domains like code and math are upsampled,
 and some knowledge and math text is rephrased by other models. The open frontier MoEs reported in 2026 read 25–33
-trillion tokens this way (Kimi K3 did not say; smaller open models such as Olmo 3 read 5–12T). The cost is that this stage is by far the largest in tokens and usually in
+trillion tokens this way (Kimi K3 did not say; smaller open models read far less, Olmo 3 about 5.9T, reported). The cost is that this stage is by far the largest in tokens and usually in
 compute; how to split that compute between model size and tokens is the next page, `scaling-laws`.
 
 ## 4. Visual metaphor
@@ -101,7 +101,7 @@ Per-position targets and probabilities (frames 4–5, toy default), positions 1�
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | A plain text line `The cat sat down on the mat.` above; below it, 8 `token` chips with subscripts 1–8. A plain mark `vocabulary: 163,840 pieces (Kimi K3)`. A plain line under the stage: `Tiktokenizer (go deeper) shows real BPE boundaries on your own text.` | The text line splits at the piece boundaries and each piece drops into a chip; the period becomes its own chip. | A tokenizer cuts text into pieces from a fixed vocabulary: whole common words, fragments of rare ones. Kimi K3's vocabulary has 163,840 pieces. | 8 tokens · vocabularies 128K–200K (2026) · embedding table Kimi K3 `≈ 163,840 × 7,168 ≈ 1.17B` params · visible note: "Bigger vocabularies mean fewer tokens per document but a bigger table." |
+| 1 | A plain text line `The cat sat down on the mat.` above; below it, 8 `token` chips with subscripts 1–8. A plain mark `vocabulary: 163,840 pieces (Kimi K3)`. A plain line under the stage: `Tiktokenizer (go deeper) shows real BPE boundaries on your own text.` | The text line splits at the piece boundaries and each piece drops into a chip; the period becomes its own chip. | A tokenizer cuts text into pieces from a fixed vocabulary: whole common words, fragments of rare ones. Kimi K3's vocabulary has 163,840 pieces. | 8 tokens · vocabularies 129K–201K (DeepSeek-V4 to gpt-oss; printed from `{deepseek-v4-pro.vocab_size|count}–{gpt-oss-120b.vocab_size|count}`, ruling P3-R18) · embedding table Kimi K3 `≈ 163,840 × 7,168 ≈ 1.17B` params · visible note: "Bigger vocabularies mean fewer tokens per document but a bigger table." |
 | 2 | Chips 1–4 lit, 5–8 dim. A `block` "model" over them. Out of position 4 comes a `vector` of 5 printed cells: `on 0.390 · . 0.237 · and 0.087 · the 0.053 · 12 others 0.019 each`. Chip 5 `on` gets a plain label `true next token`. | A `flow` (carry `activation`) runs from chip 4 into the model and out to the probability row; the `on` cell and chip 5 take the selection outline. | At each position the model gives a probability to every possible next token. Here, after "down", the true next token "on" got 0.390. | probabilities from `decoder-anatomy` frame 8 · Σ = 1.000 |
 | 3 | The `on` cell alone, enlarged, with a readout `loss = −ln 0.390 = 0.941`. Beside it two plain reference marks: `if 0.99: 0.010` and `if 0.01: 4.605`. | The readout types in; then the two reference marks fade in. | The grade is the cross-entropy loss: minus the log of the probability given to the true token. Unsure costs a little; confident and wrong costs a lot. | `−ln 0.390 = 0.941` · `−ln 0.99 = 0.010` · `−ln 0.01 = 4.605` |
 | 4 | All 8 chips lit. The 8 × 8 causal mask `heatmap` (future hatched; 16 px cells, nothing printed in it) at the left. Layout check at 580 × 366: chip row on top; heatmap 8 × 17 = 136 px wide beside the 7-cell loss row, 7 × 43 = 301 px; 136 + 16 + 301 = 453 px wide, 24 + 12 + 136 px tall. Under the chips, a 7-cell loss `vector` (positions 1–7, value-colored, printed). | The mask's rows light one after another; each lit row drops one loss cell into the strip under its position. | One pass grades every position at once: the causal mask lets each position see only the past. Eight tokens give seven graded predictions. | losses `2.303 · 1.386 · 1.204 · 0.941 · 0.511 · 0.799 · 0.223` |
@@ -124,7 +124,7 @@ and perplexity, live.
 **Controls**
 | id | Label | Type | Range / values | Default | Presets |
 |---|---|---|---|---|---|
-| `pos` | Which prediction (select a target chip 2–8) | Selection by click, tap or arrow keys | positions 2–8 | 6 (`mat`) | – |
+| `pos` | Which prediction (select a target chip 2–8) | Selection by click, tap or arrow keys: each target chip a focusable `<g role="button" tabindex="0" aria-label="position n: token">`, Enter / Space selects, arrow keys move, visible focus, selection drawn with `G.selectionMark` (ruling P3-R17; this page builds the pattern that `training-pipeline` and `distillation` reuse) | positions 2–8 | 6 (`mat`) | – |
 | `p` | Probability the model gave the selected true token | Slider | 0.01–1.00, step 0.01 | the stand-in for `pos` | chips `confident miss 0.01` · `uniform 1/16` · `certain 1.00` |
 | `allUniform` | Make every position a uniform guess over 16 words | Button | – | – | sets all seven to 0.0625 |
 | reset | Reset | Button | – | – | the stand-ins |
@@ -150,6 +150,16 @@ and perplexity, live.
    16. Now read the reference mark: a model that knows nothing about Kimi K3's vocabulary of 163,840 pieces
    would start near 12.01. → **Insight: perplexity is the effective number of choices.** Training a real
    model is the long walk from about ln(vocabulary size) down toward the loss of the text itself.
+
+**Check my work** (default state; templated from `tokenLoss`, `meanLoss`, `perplexity` for any state: the
+selected position's line first, then the seven losses at 4 decimals; mono, `aria-live="polite"`; this exact
+text appears on the page):
+```text
+selected: mat   −ln 0.45 = 0.7985
+sum   = 2.3026 + 1.3863 + 1.2040 + 0.9410 + 0.5108 + 0.7985 + 0.2231 = 7.3663
+mean  = 7.3663 ÷ 7 = 1.0523 → 1.052
+perplexity = e^1.0523 = 2.864 → 2.86
+```
 
 Lesson-17 check: each insight is read off `tokenLoss`/`meanLoss`/`perplexity` at the stated values (§11
 reproducer). The 16-word "uniform" reference is exact for a 16-word vocabulary; the 163,840 mark is only a
@@ -183,15 +193,15 @@ Color links: `hl-p` → the probability row (frames 2–3) and the loss strip (f
 | DeepSeek-V4-Pro: 33T pretraining tokens | `models.deepseek-v4-pro.pretrain_tokens` (existing, confirmed) | 02 §0, §1.8 |
 | DeepSeek-V4-Flash 32T · MiniMax-M2 29.2T · GLM-5 28.5T (27T base + mid-training) · MiMo-V2-Flash 27T · Nemotron 3 Super 25T | `models.deepseek-v4-flash.pretrain_tokens` = 32e12, `models.minimax-m2.pretrain_tokens` = 29.2e12, `models.glm-5.pretrain_tokens` = 28.5e12, `models.mimo-v2-flash.pretrain_tokens` = 27e12, `models.nemotron-3-super.pretrain_tokens` = 25e12 (proposed, confirmed) | 02 §0, §1.8 |
 | Kimi K3 did not disclose its token count | `models.kimi-k3.pretrain_tokens` = null with note "not disclosed" (proposed, confirmed absent) | 02 §0, §1.8, §8 |
-| Llama 3.1 405B (2024): 15.6T tokens | `models.llama-3.1-405b.pretrain_tokens` (existing, confirmed) | data entry only (source arXiv 2407.21783; not in brief 02) |
+| Llama 3.1 405B (2024): 15.6T tokens | `models.llama-3.1-405b.pretrain_tokens` (existing, confirmed); the year from `models.llama-3.1-405b.release_date` = "2024-07-23" (confirmed, Meta's release post) | data entry only (source arXiv 2407.21783; not in brief 02) |
 | Vocabularies: DeepSeek-V4 129,280 · GLM-5 151,552–154,880 (two columns in its report; shown as a range) · Kimi K3 163,840 · MiniMax-M2 200,064 · gpt-oss ~201K (`o200k_harmony`) | `models.deepseek-v4-pro.vocab_size` = 129280, `models.glm-5.vocab_size` = [151552, 154880], `models.kimi-k3.vocab_size` = 163840, `models.minimax-m2.vocab_size` = 200064, `models.gpt-oss-120b.vocab_size` = 201088 (config-verified) | 02 §1.1 table |
 | Kimi K3 embedding table ≈ 163,840 × 7,168 ≈ 1.17B parameters (the briefs said "160K" and 1.15B; the config says 163,840) | derived from `kimi-k3.vocab_size` × `kimi-k3.d_model` | 02 §1.1; 01 §5 |
 | Multi-token prediction as an auxiliary loss: DeepSeek-V4 (depth 1, weight 0.3, then 0.1 when LR decay starts), GLM-5, MiniMax-M2, Nemotron 3 Super, Kimi K3 | `models.deepseek-v4-pro.mtp_loss` = "depth 1, weight 0.3 → 0.1" (confirmed); the `mtp` flag is true on `glm-5`, `minimax-m2`, `nemotron-3-super` and `kimi-k3` (confirmed) | 02 §1.1 |
 | Kimi K3: four text domains (Web, Code, Math, Knowledge), each filtered by heuristics, classifier quality scoring and dedup; per-domain rates from small-model ablations; knowledge and math rephrased with fidelity checks | `models.kimi-k3.data_pipeline` (confirmed) | 02 §1.2 |
 | MiniMax-M2: model-based quality scoring; code, mathematics and STEM significantly upsampled | `models.minimax-m2.data_pipeline` (confirmed) | 02 §1.2 |
 | DeepSeek-V4: filters batched auto-generated and templated content to avoid model collapse; long-document emphasis; packing with sample-level attention masking | `models.deepseek-v4-pro.data_pipeline` (confirmed) | 02 §1.2 |
-| GLM-5: ~10M issue–PR pairs (~160B unique tokens) for software engineering | `models.glm-5.swe_data_tokens` = 160e9 (confirmed) | 02 §1.2 |
-| Qwen3: 36T tokens over 119 languages; Mistral Large 4: 160+ languages | `models.qwen3.pretrain_tokens` (reported); `models.mistral-large-4.languages` = "160+" (confirmed) | 02 §1.2 |
+| GLM-5: ~10M issue–PR pairs (~160B unique tokens) for software engineering | `models.glm-5.swe_data_tokens` = 160e9, `models.glm-5.swe_issue_pr_pairs` = 10e6 (confirmed) | 02 §1.2 |
+| Qwen3: 36T tokens over 119 languages; Mistral Large 4: 160+ languages | `models.qwen3.pretrain_tokens` (reported); `models.qwen3.languages` = 119 (confirmed, Qwen3 release post); `models.mistral-large-4.languages` = "160+" (confirmed) | 02 §1.2 |
 
 Not on this page, by design: which Nemotron 3 models pretrained in NVFP4 (both Super and Ultra did; no conflict) and all
 precision detail (`gpu-primer`, `training-memory`).
@@ -311,3 +321,11 @@ Applied from `track-review-recipe.md` §2 (change log: `fix-recipe-review.md`):
 - Should: §3 ¶3 scopes 25–33T to the open frontier MoEs reported in 2026, notes Kimi K3 did not say and smaller open models read 5–12T (takeaway 3 matches); frame 4 carries a 580 × 366 layout check with a 16 px heatmap; try-this 2 prints the runner-up (0.237).
 - Nice: frame 1 carries the Tiktokenizer line.
 - Data pass 2026-10-07: Kimi K3 vocabulary 163,840 (was about 160,000), embedding table ≈ 1.17B (was 1.15B), uniform loss 12.007 (was 11.983); DeepSeek-V4 vocabulary 129,280; Llama 3.1 405B id renamed; Nemotron NVFP4 has no conflict.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R18: frame 1 prints the data's vocabulary range "129K–201K" (was "128K–200K"), through `{…|count}`.
+- P3-R17: the `pos` selection is the course's stage-selection pattern (focusable buttons, `G.selectionMark`).
+- P3-R14 (data gaps 9, 10, 12): `qwen3.languages` = 119 and `glm-5.swe_issue_pr_pairs` = 10e6 added; §3's
+  "Olmo 3 read 5–12T" (no source for 12T) becomes "Olmo 3 about 5.9T, reported" (`olmo-3.pretrain_tokens`).
+- X-1: "Llama 3.1 405B (2024)" stays: `llama-3.1-405b.release_date` added (confirmed).
+- X-2 / P3-R16: "Check my work" added (§6), from `tokenLoss`, `meanLoss`, `perplexity`.
