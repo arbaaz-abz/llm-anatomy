@@ -412,7 +412,7 @@ Settled and applied (README lesson 20):
 - X-3: "about 3× GB200 NVL72's 606" → "2.72×" (1,648 ÷ 606), through `formatRatio`.
 - README lesson 35: MTBF, intervals and days print through `formatDuration` (3.09 h → 30.4 min; 13.6 →
   5.51 min; 9.63 min; 74.4 days); the reproducer and signatures keep raw numbers.
-- X-1: "Llama 4 Behemoth (2025)" drops its year (no confirmed release date); "Llama 3.1 405B (2024)" and
+- X-1: the Llama 4 Behemoth row drops its year (no confirmed release date); "Llama 3.1 405B (2024)" and
   "Kimi K2 (2025)" stay with confirmed `release_date` keys added.
 - P3-R14 (data gap 19): `llama-3.1-405b.interruptions_hardware_share` = 0.78 and
   `.interruptions_gpu_share` = 0.587 (confirmed, arXiv 2407.21783) back frame 8's "78% hardware, GPU issues

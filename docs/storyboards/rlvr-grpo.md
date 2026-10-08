@@ -307,7 +307,8 @@ Worked numbers hand-checked: k = 1/2/4 advantages, Σ|A|, per-token pushes under
 - P3-R19: the header carries `Next: agentic-rl` (from `shared/concepts.json`).
 - P3-R5: the pools, slot order and target are `GROUP_TOY` in `math/grpo.js` (§6 seeded data, `buildGroup`
   comment); the ratios stay in the concept module.
-- X-3: "(2.00×)" → "(2×)" (try-this 1, §13); "1.069×" → "1.07×" (math note a, §12). Every ratio prints
+- X-3: the ratio with trailing zeros (2.00) now prints "(2×)" (try-this 1, §13); the four-figure 1.069
+  ratio prints "1.07×" (math note a, §12). Every ratio prints
   through `formatRatio` (3.02×, 2.31×, 2×; README lesson 35).
 - S3 glyph option: the R column uses the `vector` semantic fill (`fill: 'ok' | 'bad'`), frame 2 and §7.
 - P3-R16: no "Check my work" (the token inspector is the check).

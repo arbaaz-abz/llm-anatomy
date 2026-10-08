@@ -390,6 +390,6 @@ Settled and applied (README lesson 20):
 - S3 glyph options: `matrix` `shards` for the per-GPU halves (frames 3–4), `gpu` `showMem: false`,
   `flow` `carry: 'weight'`.
 - P3-R18: §8 prints the data's `deepseek-v4-pro.ep_kernel` string.
-- X-1: "Kimi K3 (2026)" drops its year (`kimi-k3.release_date` is reported); "Llama 3.1 405B (2024)",
+- X-1: the Kimi K3 row drops its year (`kimi-k3.release_date` is reported); "Llama 3.1 405B (2024)",
   "(2024 paper)" and "Kimi K2 (2025)" stay with confirmed `release_date` keys added.
 - X-2 / P3-R16: "Check my work" added (§6), from `pipelineBubble`, `gpuCount`, `zeroPerGpuBytes`.
