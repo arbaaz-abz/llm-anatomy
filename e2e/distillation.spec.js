@@ -9,7 +9,7 @@ registerLessonContract({ name: 'distillation', url: URL, captions: CAPTIONS, fac
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
 const toySvg = (page) => page.locator('[data-section="toy"] svg.toy-stage');
-const sampledCell = (page, i) => toySvg(page).locator(`[data-sampled="${i}"]`);
+const sampledCell = (page, i) => toySvg(page).locator(`.stage-item[data-value="${i}"]`);
 const choose = (page, id, value) => page.locator(`#${id} [data-value="${value}"]`).click();
 const rewardRow = (page) => page.locator('table[data-readout="rewards"] tbody tr');
 
@@ -41,26 +41,29 @@ test.describe('distillation toy: grade the student', () => {
     await expect(readout(page, 'expected-reward')).toHaveText('−0.754');
   });
 
-  test('the sampled student cells are keyboard buttons: Tab, arrows move focus, Enter and Space select', async ({ page }) => {
+  test('the sampled student cells are keyboard buttons: one tab stop, arrows move focus and selection, Enter and Space select', async ({ page }) => {
     const errors = collectConsoleErrors(page);
     for (let i = 0; i < 4; i += 1) {
       await expect(sampledCell(page, i)).toHaveAttribute('role', 'button');
-      await expect(sampledCell(page, i)).toHaveAttribute('tabindex', '0');
+      await expect(sampledCell(page, i)).toHaveAttribute('tabindex', i === 1 ? '0' : '-1');
     }
     await expect(sampledCell(page, 0)).toHaveAttribute('aria-label', 'sampled: 56');
     await sampledCell(page, 1).focus();
     await page.keyboard.press('ArrowRight');
     await expect(sampledCell(page, 2)).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expect(readout(page, 'sampled-reward')).toHaveText('−1.897');
-    await expect(sampledCell(page, 2)).toBeFocused(); // the repaint keeps focus
+    await expect(readout(page, 'sampled-reward')).toHaveText('−1.897'); // selection follows focus
+    await expect(sampledCell(page, 2)).toHaveAttribute('aria-pressed', 'true');
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('ArrowLeft');
     await expect(sampledCell(page, 0)).toBeFocused();
-    await page.keyboard.press('Space');
     await expect(readout(page, 'sampled-reward')).toHaveText('+0.811');
     await page.keyboard.press('ArrowLeft'); // stops at the first cell
     await expect(sampledCell(page, 0)).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(sampledCell(page, 3)).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(readout(page, 'sampled-reward')).toHaveText('−1.609');
+    await expect(sampledCell(page, 3)).toBeFocused(); // the repaint keeps focus
     expect(errors).toEqual([]);
   });
 
@@ -87,7 +90,7 @@ test.describe('distillation toy: grade the student', () => {
   test('the other two methods print their own loss and hide the sampled-token control', async ({ page }) => {
     await choose(page, 'method', 'traces');
     await expect(readout(page, 'trace-loss')).toHaveText('0.916');
-    await expect(sampledCell(page, 1)).toHaveCount(0);
+    await expect(sampledCell(page, 1)).toBeHidden();
     await expect(readout(page, 'check-work')).toHaveText('loss = −ln p_student(56) = −ln 0.40 = 0.916');
     await choose(page, 'method', 'logits');
     await expect(readout(page, 'forward-kl')).toHaveText('0.551');

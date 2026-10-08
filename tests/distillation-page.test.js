@@ -47,6 +47,11 @@ test('dated text prints the data: years come from confirmed dates, counts throug
   assert.match(fillText(lesson.facts.rows[5].claim, data), /^DeepSeek-R1 \(2025\) was fine-tuned on about 800K SFT samples/);
   assert.match(fillText(lesson.facts.rows[6].claim, data), /about 2\.3M reasoning traces/);
   assert.match(lesson.intuition[2], /Kimi K3 uses 9,/);
+  assert.match(lesson.intuition[2], /DeepSeek-V4 uses more than 10 teachers, Kimi K3 uses 9,/);
+  assert.equal(fillText(Object.values(BELOW).flat()[0], data), 'DeepSeek-V4: more than 10 teachers. Kimi K3: 9 experts, 3 domains (general, general agents, coding agents) × 3 effort levels.');
+  const row2 = fillText(lesson.facts.rows[1].claim, data);
+  assert.doesNotMatch(row2, /\(\s*\)/, 'no empty parentheses (distillation-2)');
+  assert.match(fillText(lesson.facts.rows[5].claim, data), /later used to distill small Qwen and Llama models \(background, from the R1 report\)\.$/);
   assert.match(fillText(lesson.facts.rows[4].claim, data), /about an order of magnitude or more\.$/);
   const text = [lesson.hook, ...lesson.intuition, ...lesson.facts.rows.map((r) => fillText(r.claim, data)), ...Object.values(BELOW).flat().map((t) => fillText(t, data))].join(' ');
   assert.deepEqual(text.match(/\b(19|20)\d{2}\b/g)?.sort() ?? [], ['2025', '2025', '2026']);
@@ -61,7 +66,7 @@ test('Next lists exactly the lessons that take this one as a prereq (README less
 test('the math panel names the three hl terms and its note (d) matches the stage\'s KL terms', () => {
   const tex = LESSON.math.blocks.map((b) => b.tex).join('\n');
   ['t', 's', 'r'].forEach((l) => assert.match(tex, new RegExp(`\\\\htmlClass\\{hl-${l}\\}`)));
-  assert.match(LESSON.math.notes[2], /0\.90 ln 2\.25 = 0\.730 · 0\.05 ln 0\.17 = −0\.090 · 0\.03 ln 0\.15 = −0\.057 · 0\.02 ln 0\.20 = −0\.032; sum 0\.551\./);
+  assert.match(LESSON.math.notes[2], /0\.90 ln\(0\.90\/0\.40\) = 0\.730 · 0\.05 ln\(0\.05\/0\.30\) = −0\.090 · 0\.03 ln\(0\.03\/0\.20\) = −0\.057 · 0\.02 ln\(0\.02\/0\.10\) = −0\.032; sum 0\.551\./);
 });
 
 test('stage stand-ins: the loss, the KL and the rewards come from math/lm.js and math/distill.js (frames 2, 3, 5)', () => {
