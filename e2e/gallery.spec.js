@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { collectConsoleErrors } from './helpers.js';
-import { glyphOverflows, startPausedClock, animateTo, MID_MS, END_MS } from './lesson-helpers.js';
+import { glyphOverflows, startPausedClock, animateTo, toggleTop, MID_MS, END_MS } from './lesson-helpers.js';
 
 const stepper = (page) => page.locator('#stepper-root');
 const caption = (page) => page.locator('#stepper-root .stepper-caption');
@@ -307,3 +307,18 @@ test('shareBar prints "not published" beside its off-scale segment, inside the f
   expect(label.x).toBeGreaterThanOrEqual(seg.x + seg.width); // beside, to the right
   expect(Math.abs(label.y + label.height / 2 - (seg.y + seg.height / 2))).toBeLessThanOrEqual(3); // on the bar's line
 });
+
+for (const width of [1280, 400]) {
+  test(`no layout shift during playback at ${width} px: the Play button stays put on every step`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/gallery/');
+    await page.evaluate(() => document.fonts.ready);
+    const tops = [];
+    for (let step = 0; step < 5; step += 1) {
+      await stepper(page).locator('input[type="range"]').fill(String(step));
+      await expect(stepper(page).locator('.stepper-count')).toHaveText(`${step + 1} / 5`);
+      tops.push(await toggleTop(page, '#stepper-root [data-act="toggle"]'));
+    }
+    expect(new Set(tops).size, tops.join(', ')).toBe(1);
+  });
+}
