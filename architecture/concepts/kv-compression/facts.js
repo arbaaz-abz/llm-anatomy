@@ -29,7 +29,7 @@ export function factRows(data) {
     { claim: 'GPT-3 ({gpt-3.release_date|year}): MHA, {gpt-3.n_kv_heads} KV heads × {gpt-3.head_dim}, {gpt-3.kv_bytes_per_token|int} B per token.' },
     { claim: 'Llama-3.1-70B: GQA with {llama-3.1-70b.n_kv_heads} KV heads × {llama-3.1-70b.head_dim}, {llama-3.1-70b.kv_bytes_per_token|int} B per token.' },
     { claim: 'gpt-oss-120b ({gpt-oss-120b.release_date|year}): {gpt-oss-120b.n_heads} query heads share {gpt-oss-120b.n_kv_heads} KV heads, each {gpt-oss-120b.head_dim} wide.' },
-    { claim: 'MiniMax-M3 ({minimax-m3.release_date|year}): {minimax-m3.n_heads} query heads, {minimax-m3.n_kv_heads} KV heads × {minimax-m3.head_dim}, {minimax-m3.kv_bytes_per_token|int} B per token (derived).' },
+    { claim: 'MiniMax-M3: {minimax-m3.n_heads} query heads, {minimax-m3.n_kv_heads} KV heads × {minimax-m3.head_dim}, {minimax-m3.kv_bytes_per_token|int} B per token (derived).' },
     { claim: 'Qwen3.8 ({qwen3.8.release_date|year}): its attention layers use {qwen3.8.n_heads} query heads and {qwen3.8.n_kv_heads} KV heads.' },
     { claim: `DeepSeek-V3 ({deepseek-v3.release_date|year}): MLA, latent {deepseek-v3.mla_kv_rank} + position key {deepseek-v3.mla_rope_dim} per layer: {deepseek-v3.kv_bytes_per_token|int} B per token, ${ratio === null ? DASH : timesText(ratio)} less than MHA at its {deepseek-v3.n_heads} heads.` },
     { claim: 'MLA is also used by Kimi K3 (in its {kimi-k3.full_attention_layers} full-attention layers) and GLM-5.3 (latent {glm-5.3.mla_kv_rank}, query latent {glm-5.3.mla_q_rank}).' },
@@ -54,7 +54,7 @@ export function belowFor(data) {
   const lines = all ? [
     modelLine('GPT-3 ({gpt-3.release_date|year}, MHA)', 'gpt-3', s.gpt3),
     modelLine('Llama-3.1-70B (GQA-{llama-3.1-70b.n_kv_heads})', 'llama-3.1-70b', s.llama),
-    modelLine('MiniMax-M3 ({minimax-m3.release_date|year}, GQA-{minimax-m3.n_kv_heads})', 'minimax-m3', s.minimax),
+    modelLine('MiniMax-M3 (GQA-{minimax-m3.n_kv_heads})', 'minimax-m3', s.minimax),
     modelLine('DeepSeek-V3 ({deepseek-v3.release_date|year}, MLA)', 'deepseek-v3', v3),
     `GPT-3 at ${int(DEFAULT_CONTEXT)} tokens is a what-if at its shape; its own context was {gpt-3.context_length|int}.`,
   ] : [];

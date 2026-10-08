@@ -54,7 +54,7 @@ test('the rows print the storyboard\'s numbers from the data', () => {
   assert.equal(rows[0], 'GPT-3 (2020): MHA, 96 KV heads × 128, 4,718,592 B per token.');
   assert.equal(rows[1], 'Llama-3.1-70B: GQA with 8 KV heads × 128, 327,680 B per token.');
   assert.equal(rows[2], 'gpt-oss-120b (2025): 64 query heads share 8 KV heads, each 64 wide.');
-  assert.equal(rows[3], 'MiniMax-M3 (2026): 64 query heads, 4 KV heads × 128, 122,880 B per token (derived).');
+  assert.equal(rows[3], 'MiniMax-M3: 64 query heads, 4 KV heads × 128, 122,880 B per token (derived).');
   assert.equal(rows[4], 'Qwen3.8 (2026): its attention layers use 64 query heads and 4 KV heads.');
   assert.equal(rows[5], 'DeepSeek-V3 (2024): MLA, latent 512 + position key 64 per layer: 70,272 B per token, 56.9× less than MHA at its 128 heads.');
   assert.equal(rows[6], 'MLA is also used by Kimi K3 (in its 24 full-attention layers) and GLM-5.3 (latent 512, query latent 2,048).');
@@ -90,7 +90,7 @@ test('the page below the stage names the real numbers of frames 3, 6, 8 and 9', 
   const lines = below(8);
   assert.equal(lines[0], 'GPT-3 (2020, MHA): 4,718,592 B per token (4.72 MB); 618 GB at 131,072 tokens.');
   assert.equal(lines[1], 'Llama-3.1-70B (GQA-8): 327,680 B per token (328 kB); 42.9 GB at 131,072 tokens.');
-  assert.equal(lines[2], 'MiniMax-M3 (2026, GQA-4): 122,880 B per token (123 kB); 16.1 GB at 131,072 tokens.');
+  assert.equal(lines[2], 'MiniMax-M3 (GQA-4): 122,880 B per token (123 kB); 16.1 GB at 131,072 tokens.');
   assert.equal(lines[3], 'DeepSeek-V3 (2024, MLA): 70,272 B per token (70.3 kB); 9.21 GB at 131,072 tokens.');
   assert.equal(lines[4], 'GPT-3 at 131,072 tokens is a what-if at its shape; its own context was 2,048.');
   assert.match(lines[5], /^2026 moved on: DeepSeek-V4-Pro keeps one wide KV head and compresses it/);
@@ -178,7 +178,7 @@ test('kvGroups wiring: eight entries, every KV head serves queryHeads ÷ kvHeads
 });
 
 test('format helpers: whole ratios print without .0, weights print 0 and 1 as integers, groups pluralize', () => {
-  assert.deepEqual([timesText(12), timesText(56.89), timesText(6.4), timesText(1)], ['12×', '56.9×', '6.4×', '1×']);
+  assert.deepEqual([timesText(12), timesText(56.89), timesText(6.4), timesText(1), timesText(71.11), timesText(1184), timesText(3.14159), timesText(750)], ['12×', '56.9×', '6.4×', '1×', '71.1×', '1,180×', '3.14×', '750×']);
   assert.deepEqual([weightText(0), weightText(1), weightText(0.6789), weightText(-Infinity), weightText(null), weightText(Number.NaN)], ['0', '1', '0.679', '0', '', '']);
   assert.equal(int(4718592), '4,718,592');
   assert.equal(int(-3), '−3');
@@ -220,7 +220,7 @@ test('the toy opens on the animation\'s first numbers and prints the storyboard\
   assert.deepEqual({ ...INITIAL_STATE }, { model: 'toy', scheme: 'mha', kvHeads: 2, latent: 8, context: 131_072, shareKeys: true });
   const view = toyView(INITIAL_STATE, shapes);
   assert.equal(view.checkWork, CHECK_WORK);
-  assert.deepEqual([view.perLayer, view.bytes, view.ratio, view.cache], ['64', '128 B', '1×', '16.8 MB']);
+  assert.deepEqual([view.perLayer, view.bytes, view.ratio, view.cache], ['64', '128 B', '1× (this is MHA)', '16.8 MB']);
   assert.equal(view.groups, '8 query heads read 8 KV heads: 1 query head per KV head');
   assert.equal(view.whatIf, '');
   assert.deepEqual(view.wiring.groups, [0, 1, 2, 3, 4, 5, 6, 7]);
@@ -269,6 +269,18 @@ test('checkWork pluralizes one head and one layer', () => {
   assert.equal(lines[0], 'numbers per token per layer: 2 (K and V) × 1 KV head × 128 numbers = 256');
   assert.equal(lines[1], 'bytes per token: 256 numbers × 1 layer × 2 bytes = 512 B');
   assert.equal(lines[2], 'compared with MHA at this shape (32,768 numbers per layer): 128× smaller');
+});
+
+test('with scheme MHA the check-work block ends after the bytes line and the readout says it is MHA (kv-compression-3)', () => {
+  const mha = checkWork({ scheme: 'mha', stored: 96, headDim: 128, perLayer: 24_576, layers: 96, bytesPerElem: 2, bytes: 4_718_592, mhaPerLayer: 24_576, ratio: 1 });
+  assert.equal(mha.split('\n').length, 2);
+  assert.doesNotMatch(mha, /compared with MHA/);
+});
+
+test('frame 8\'s baseline line prints 71.1× (X-3), and the V3 fact rows carry no reported year (X-1)', () => {
+  assert.equal(timesText(realHeadBaseline(shapes.v3)), '71.1×');
+  const rows = lessonFor(data).facts.rows.map((r) => r.claim);
+  assert.ok(!rows.some((c) => /minimax-m3\.release_date/.test(c)));
 });
 
 test('nothing here mutates the data or the frozen toy', () => {

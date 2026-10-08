@@ -18,7 +18,7 @@ test.describe('kv-compression toy: share, group or compress', () => {
     const errors = collectConsoleErrors(page);
     await expect(readout(page, 'per-layer')).toHaveText('64');
     await expect(readout(page, 'bytes-per-token')).toHaveText('128 B');
-    await expect(readout(page, 'times-smaller')).toHaveText('1×');
+    await expect(readout(page, 'times-smaller')).toHaveText('1× (this is MHA)');
     await expect(readout(page, 'cache')).toHaveText('16.8 MB');
     await expect(readout(page, 'groups')).toHaveText('8 query heads read 8 KV heads: 1 query head per KV head');
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);

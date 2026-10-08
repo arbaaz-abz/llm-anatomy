@@ -14,7 +14,6 @@ export const CAPTIONS = [
 export const CHECK_WORK = [
   'numbers per token per layer: 2 (K and V) × 8 KV heads × 4 numbers = 64',
   'bytes per token: 64 numbers × 1 layer × 2 bytes = 128 B',
-  'compared with MHA at this shape (64 numbers per layer): 1× smaller',
 ].join('\n');
 
 // The frame-4 pattern, row by row (4 × 4, masked cells print 0): head A, head B reading A's keys, head B with its own keys.

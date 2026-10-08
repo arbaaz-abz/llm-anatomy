@@ -37,7 +37,7 @@ export function drawFrame8(svg, p, { shapes }) {
   label(svg, LINES.x, LINES.y[0] - 22, '— GQA-8 needs more than 8 query heads', { opacity: notes });
   key(svg, LINES.x, LINES.y[0], `MHA ÷ MLA at ${v3.name}'s shape = ${timesText(mlaRatio(real))}`, { opacity: notes });
   label(svg, LINES.x, LINES.y[1], `at ${v3.queryHeads} heads of ${v3.headDim} numbers; the real query/key head is ${v3.qkWidth} wide,`, { opacity: notes });
-  label(svg, LINES.x, LINES.y[2], `which would make the baseline ${Math.round(realHeadBaseline(v3))}×`, { opacity: notes });
+  label(svg, LINES.x, LINES.y[2], `which would make the baseline ${timesText(realHeadBaseline(v3))}`, { opacity: notes });
 }
 
 // One model's column: name, scheme, its four-token stack, bytes per token (all layers), and the cache at the default context.

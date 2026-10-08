@@ -46,8 +46,8 @@ function legs(svg, { leg1 = 0, leg2 = 0, toY = REBUILD.y + REBUILD.h + 3, dot1 =
 
 const rebuildBlocks = (svg, opacity) => heads.forEach((h) => dimBlock(svg, { x: qx(h), y: REBUILD.y, w: Q.w, h: REBUILD.h, label: 'rebuild' }, opacity));
 const posLabels = (svg, opacity) => {
-  label(svg, POS_X, STORE.y - 12, 'position key', { opacity });
-  label(svg, POS_X, NOTE_Y, 'carries position (rope)', { opacity });
+  label(svg, POS_X, NOTE_Y, 'position key', { opacity });
+  label(svg, POS_X, NOTE_Y + 14, 'carries position (see RoPE)', { opacity });
 };
 
 export function drawFrame5(svg, p) {

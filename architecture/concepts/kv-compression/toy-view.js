@@ -70,7 +70,7 @@ export function toyView(state, shapes) {
     perLayer: int(m.perLayer),
     bytes: `${int(m.bytes)} B`,
     bytesSub: m.bytes >= 1000 ? formatBytes(m.bytes) : '',
-    ratio: timesText(m.ratio),
+    ratio: state.scheme === 'mha' ? `${timesText(m.ratio)} (this is MHA)` : timesText(m.ratio),
     cacheLabel: `Cache at ${int(state.context)} tokens`,
     cache: formatBytes(m.cache),
     whatIf: beyond ? `a what-if at this shape; its own context was ${int(shape.contextLength)}` : '',
