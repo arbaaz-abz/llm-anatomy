@@ -283,7 +283,7 @@ numbers per step (reduce-scatter + all-gather), stage 3 about 3Ψ.
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
 | Mixed-precision Adam: 2 + 2 + 12 = 16 B per parameter (ZeRO paper, 2019); 16–18 B is the safe teaching number | none (mechanism; ZeRO paper arXiv 1910.02054) | 03 §3.1 |
-| ZeRO paper example: 7.5B on 64 GPUs → 120 / 31.4 / 16.6 / 1.9 GB | `models.json/zero-paper-7.5b.total_params` = 7.5e9 *(proposed; a teaching preset, note "ZeRO paper example")* | 03 §3.4 |
+| ZeRO paper example: 7.5B on 64 GPUs → 120 / 31.4 / 16.6 / 1.88 GB | `models.json/zero-paper-7.5b.total_params` = 7.5e9 *(proposed; a teaching preset, note "ZeRO paper example")* | 03 §3.4 |
 | GPT-3 shape (preset): 175B, 96 blocks, d_model 12,288, 96 heads, 2,048 context | `models.json/gpt-3.total_params`, `.layers`, `.d_model`, `.n_heads`, `.context_length` *(proposed by `decoder-anatomy`; same keys)* | 01 §4 via `decoder-anatomy` |
 | DeepSeek-V3 (2024) stored optimizer moments in BF16; trained with ZeRO-1 only, because 16-way pipeline and 64-way expert parallelism already shrink per-GPU state | `models.json/deepseek-v3.optimizer_state_format` = "BF16", `.zero_stage` = 1 *(proposed; entry proposed by `paged-attention`)* | 03 §3.1, §4.1 |
 | Kimi K2 (2025): 1.04T parameters; BF16 weights + FP32 gradient buffer = 6 B per parameter, about 6 TB over a 256-GPU model-parallel group (1.04T × 6 B ÷ 256 = 24.4 GB per GPU, `formatBytes`), leaving about 30 GB per GPU for its share of optimizer state, which is sharded across data-parallel ranks. The page labels the 6 B "weights and gradient buffer only, not comparable with 16" | `models.json/kimi-k2.total_params` = 1.04e12, `.resident_bytes_per_param` = 6 *(proposed entry)* | 03 §3.1, §3.3, §4.6 |

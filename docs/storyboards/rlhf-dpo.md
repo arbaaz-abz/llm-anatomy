@@ -226,7 +226,7 @@ All keys are proposed for the data-extension pass (entry ids follow the ids acce
 | GLM-5's general RL mixes rule rewards, outcome reward models and generative reward models, and anchors on human-written responses to avoid style drift | `models.glm-5.general_rl_rewards` = "rule + ORM + GRM; human-written anchors" (confirmed) | 02 §4.1 item 4; §4.5 |
 | Mistral Large 4 verifies with "reward models, unit tests, LLM judges, and static checks" | `models.mistral-large-4.rl_verifiers` (confirmed; Mistral blog) | 02 §4.5, §6 |
 | Olmo 3: SFT → DPO on ~200K "Delta Learning" pairs (chosen from a stronger model, rejected from a weaker one) → RLVR on ~105K prompts | `models.olmo-3.dpo_pairs` = 200000, `.rlvr_prompts` = 105000 (reported) | 02 §4.2 |
-| SmolLM3 used APO, a DPO-family method | `models.smollm3.preference_method` = "APO" (reported) | 02 §4.2 |
+| SmolLM3 used APO, a DPO-family method | `models.smollm3.preference_method` = "APO" (confirmed) | 02 §4.2 |
 | DPO is not listed as a main stage in the DeepSeek-V4, GLM-5, Kimi K3, MiniMax-M2 or MiMo-V2-Flash reports (absent from the reports read, not proof of non-use) | `models.<id>.dpo_stage` = "not listed" for `deepseek-v4-pro`, `glm-5`, `kimi-k3`, `minimax-m2`, `mimo-v2-flash` (confirmed absent) | 02 §4.2; §8 |
 | PPO keeps four models in memory: policy, reference, reward model, critic | mechanics `[BG]` (InstructGPT, arXiv 2203.02155), not a dated fact | 02 §4.1 item 3 |
 
