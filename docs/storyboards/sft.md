@@ -71,7 +71,8 @@ not filtered or masked are learned like right ones.
 Glyphs used (spec §5.1 and the built library): `token` (every token of the transcript as a chip;
 `state: 'active'` = trained, and `hatched` = masked out of the loss; template tags drawn as chips with the
 `dim` state so they read as markup), `block` (base model, SFT model, tool sandbox; `active` vs `dim`),
-`flow` (carry `token` from the model to the call and from the tool back), plain labeled text marks (role
+`flow` (carry `token` from the model to the call and from the tool back), `verdict` (frame 8: the ✓ / ✗
+stamps on candidate traces, ruling P3-R19), plain labeled text marks (role
 labels `user`, `assistant`, `tool` at line starts; readouts `trained 15 of 26`; the per-lab template table).
 
 Layout: the 26 chips wrap into one line per segment group, like a chat transcript (5 lines, the longest
@@ -149,6 +150,14 @@ kind and whether it is trained; nothing is hover-only.
 3. Turn `maskError` on: trained 15 → 10 (38.5%); the five mistake chips stay visible but hatched. →
    **Insight: masking is how you show a mistake without teaching it.** The model still reads `7 × 8 = 54`
    as context and is trained to write `wait , check` and the tool call after it.
+
+**Check my work** (default state; templated from `maskSummary(...).byKind` for any toggle state, listing the
+trained and masked kinds; mono, `aria-live="polite"`; this exact text appears on the page):
+```text
+trained = assistant 10 + error 5 = 15
+masked  = template 2 + user 6 + observation 3 = 11
+share   = 15 ÷ 26 = 57.7%
+```
 
 Lesson-17 check: the three insights follow from the counts and which kinds flip (reproducer); the transcript
 is a stand-in but the masking rules are the documented ones.
@@ -280,3 +289,8 @@ Applied from `track-review-recipe.md` §5 (change log: `fix-recipe-review.md`). 
 - Accepted rulings applied: frame 4 carries a visible line on which tags are masked (`<end>` trained).
 - Nice: the template chips print "(counts unchanged)".
 - Ruling recorded: `sft` does not list `midtraining` (main session, 2026-10-07).
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R19: §4 lists `verdict` (frame 8).
+- X-1: "DeepSeek-R1 (2025)" stays: `models.deepseek-r1.release_date` = "2025-01" (confirmed, arXiv 2501.12948).
+- X-2 / P3-R16: "Check my work" added (§6), from `maskSummary`.
