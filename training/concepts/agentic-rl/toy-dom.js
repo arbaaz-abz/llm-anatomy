@@ -1,9 +1,9 @@
 // agentic-rl toy DOM: the group table with selectable tokens, and the rollout timeline. Both paint from the toy state;
 // the item groups of the table persist across repaints (so focus survives) and are redrawn each time.
 import * as G from '@shared/glyphs.js';
-import { ADVANTAGES, DURATIONS, GROUP_SIZE, REWARDS, ROWS } from './numbers.js';
+import { ADVANTAGES, A_MAX_ABS, DURATIONS, GROUP_SIZE, REWARDS, ROWS } from './numbers.js';
 import { minutes } from './format.js';
-import { CELL, STAGE, TABLE, TIMELINE, chipFill, linked, note, selectChip, timelineBars, timelineX, timelineY, tokenBox, A_MAX_ABS_STAGE } from './stage.js';
+import { CELL, STAGE, TABLE, TIMELINE, chipFill, linked, note, numberCell, selectChip, timelineBars, timelineX, timelineY, tokenBox } from './stage.js';
 import { schedule, tokenAt } from './toy-view.js';
 import { mountStageSelect } from './stage-select.js';
 
@@ -24,14 +24,14 @@ export function mountTable(onSelect, state) {
   const select = mountStageSelect(svg, { items, value: itemValue(state.row, state.pos), onSelect: (value) => onSelect(...parseValue(value)) });
   const paintRows = () => {
     layer.replaceChildren();
-    note(layer, TABLE.rX + CELL / 2, TABLE.y - 10, 'R', { anchor: 'middle' });
-    note(layer, TABLE.aX + CELL / 2, TABLE.y - 10, 'A', { anchor: 'middle' });
+    note(layer, TABLE.rX + CELL / 2, TABLE.y - 6, 'R', { anchor: 'middle' });
+    note(layer, TABLE.aX + CELL / 2, TABLE.y - 6, 'A', { anchor: 'middle' });
     ROWS.forEach((_, row) => {
       const y = TABLE.y + row * TABLE.stride;
       note(layer, TABLE.x, y + CELL / 2 + 4, String(row + 1));
       G.verdict(layer, { x: TABLE.verdictX, y: y + CELL / 2, ok: REWARDS[row] === 1 });
-      G.cell(layer, { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
-      G.cell(linked(layer, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS_STAGE });
+      numberCell(layer, { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
+      numberCell(linked(layer, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
     });
   };
   const paint = (s) => {

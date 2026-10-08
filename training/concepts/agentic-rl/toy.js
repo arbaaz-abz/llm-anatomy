@@ -19,7 +19,7 @@ function mountControls(host, set) {
   host.append(...parts);
   const controls = [
     mountChoice(parts[0], { id: 'correction', label: 'How the trainer treats the mismatch', options: options(CORRECTIONS), value: INITIAL_STATE.correction, variant: 'chips', onChange: (correction) => set({ correction }) }),
-    mountChoice(parts[1], { id: 'precision', label: 'Rollout and trainer number format', options: options(PRECISIONS), value: INITIAL_STATE.precision, onChange: (precision) => set({ precision }) }),
+    mountChoice(parts[1], { id: 'precision', label: 'Rollout and trainer number format', options: options(PRECISIONS), value: INITIAL_STATE.precision, variant: 'chips', onChange: (precision) => set({ precision }) }),
     mountChoice(parts[2], { id: 'lambda', label: 'Update when this share of episodes is done', options: options(LAMBDAS), value: INITIAL_STATE.lambda, variant: 'chips', onChange: (lambda) => set({ lambda }) }),
   ];
   return () => controls.forEach((c) => c.destroy());
@@ -49,7 +49,7 @@ export function mount(host) {
   const unmountControls = mountControls(host, set);
   const table = mountTable((row, pos) => set({ row, pos }), INITIAL_STATE);
   const timeline = mountTimeline();
-  host.append(table.node, timeline.node, note, readouts, ...tryThisList());
+  host.append(el('div', { className: 'scroll-x' }, [table.node]), el('div', { className: 'scroll-x' }, [timeline.node]), note, readouts, ...tryThisList());
   toy = createToyState(INITIAL_STATE, (s) => {
     table.paint(s);
     timeline.paint(s);

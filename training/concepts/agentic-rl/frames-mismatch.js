@@ -1,10 +1,10 @@
 // agentic-rl frames 7–10: the engine/trainer mismatch, the importance-sampling correction (key frame 8), the KL term, the scale.
 import * as G from '@shared/glyphs.js';
-import { ADVANTAGES, AGREE_COUNT, ROWS, TOKEN_COUNT, FOLLOWED } from './numbers.js';
+import { ADVANTAGES, AGREE_COUNT, A_MAX_ABS, ROWS, TOKEN_COUNT, FOLLOWED } from './numbers.js';
 import { fixed2, fixed3, ofTotal, push2, wrapText } from './format.js';
 import { INITIAL_STATE, tokenAt } from './toy-view.js';
 import {
-  CELL, CHIP_H, TABLE, arriving, chipXs, layer, lerp, linked, litBlock, note, readout, seg, selectChip,
+  CELL, CHIP_H, TABLE, arriving, chipXs, layer, lerp, linked, litBlock, note, numberCell, readout, seg, selectChip,
 } from './stage.js';
 
 const row4 = tokenAt(INITIAL_STATE, FOLLOWED.row, FOLLOWED.pos);
@@ -19,7 +19,7 @@ const CENTER = 290;
 
 function probCell(parent, geom, p, opacity) {
   const g = layer(parent, opacity);
-  G.cell(g, { x: geom.x + geom.w / 2 - CELL / 2, y: geom.y + geom.h + 14, size: CELL, v: p, maxAbs: 1, format: fixed3 });
+  numberCell(g, { x: geom.x + geom.w / 2 - CELL / 2, y: geom.y + geom.h + 14, size: CELL, v: p, maxAbs: 1, format: fixed3 });
 }
 
 export function drawFrame7(svg, p) {
@@ -71,8 +71,8 @@ function frame8Rows(svg, p) {
         note(tag, RHO_X, y + CELL / 2 + 4, `ρ = ${fixed2(t.rho)}: ${text}`, { cls: 'g-readout' });
       }
     });
-    G.cell(g, { x: TABLE.rX, y, size: CELL, v: 0, maxAbs: 1, fill: 'bad' });
-    G.cell(linked(g, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: 2.65 });
+    numberCell(g, { x: TABLE.rX, y, size: CELL, v: 0, maxAbs: 1, fill: 'bad' });
+    numberCell(linked(g, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
   });
   const lastY = ROW_Y.first + SHOWN_ROWS.length * ROW_Y.stride;
   note(g, TABLE.x, lastY + 6, '5 other rows: ρ within [½, 2], unmasked', { cls: 'g-readout' });

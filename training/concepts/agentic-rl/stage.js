@@ -28,6 +28,9 @@ export function note(parent, x, y, str, { cls = 'g-label', anchor = 'start' } = 
   return g;
 }
 
+// A bare G.cell has no .glyph ancestor, so theme.css would not size its text (11px); this wraps it in one.
+export const numberCell = (parent, opts) => G.cell(G.svgEl('g', { class: 'glyph' }, parent), opts);
+
 // A group a math term can name: data-link plus an invisible frame for the hover outline (theme.css lists the letters).
 export function linked(parent, letter, { x, y, w, h }) {
   const g = G.svgEl('g', { 'data-link': letter }, parent);
@@ -38,19 +41,18 @@ export function linked(parent, letter, { x, y, w, h }) {
 export const widthOf = (words) => words.map((w) => G.tokenWidth(w));
 export const chipXs = (words, x0, gap = CHIP_GAP) => widthOf(words).map((_, i) => x0 + widthOf(words).slice(0, i).reduce((s, w) => s + w + gap, 0));
 export const chipFill = (advantage) => G.valueColor(advantage, A_MAX_ABS);
-export const A_MAX_ABS_STAGE = A_MAX_ABS;
 
 // The followed token's selection outline, drawn after the chip it marks at the same geometry.
 export const selectChip = (parent, x, y, text) => G.selectionMark(parent, { x, y, w: G.tokenWidth(text), h: CHIP_H });
 
 // ---- the group table (frame 3, the toy): rows of token chips, a verdict, the R and A cells ----
-export const TABLE = Object.freeze({ x: 8, y: 20, stride: 43, chipsX: 24, verdictX: 297, rX: 310, aX: 356 });
+export const TABLE = Object.freeze({ x: 8, y: 22, stride: 43, chipsX: 24, verdictX: 303, rX: 317, aX: 361 });
 const rowTop = (row) => TABLE.y + row * TABLE.stride;
 
 // chip(row, pos) → { fill?, hatched?, state? }; `shown(row)` → { verdict, r, a } opacities (1 when omitted).
 export function groupTable(parent, { chip = () => ({}), shown = () => ({ verdict: 1, r: 1, a: 1 }), selected = FOLLOWED, onChip = null } = {}) {
-  note(parent, TABLE.rX + CELL / 2, TABLE.y - 10, 'R', { anchor: 'middle' });
-  note(parent, TABLE.aX + CELL / 2, TABLE.y - 10, 'A', { anchor: 'middle' });
+  note(parent, TABLE.rX + CELL / 2, TABLE.y - 6, 'R', { anchor: 'middle' });
+  note(parent, TABLE.aX + CELL / 2, TABLE.y - 6, 'A', { anchor: 'middle' });
   ROWS.forEach((tokens, row) => {
     const y = rowTop(row);
     note(parent, TABLE.x, y + CELL / 2 + 4, String(row + 1));
@@ -63,8 +65,8 @@ export function groupTable(parent, { chip = () => ({}), shown = () => ({ verdict
     });
     const s = shown(row);
     if (s.verdict > 0) G.verdict(layer(parent, s.verdict), { x: TABLE.verdictX, y: y + CELL / 2, ok: REWARDS[row] === 1 });
-    if (s.r > 0) G.cell(layer(parent, s.r), { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
-    if (s.a > 0) G.cell(linked(layer(parent, s.a), 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
+    if (s.r > 0) numberCell(layer(parent, s.r), { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
+    if (s.a > 0) numberCell(linked(layer(parent, s.a), 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
   });
 }
 
