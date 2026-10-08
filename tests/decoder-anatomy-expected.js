@@ -13,7 +13,7 @@ export const CAPTIONS = [
 export const CHECK_WORK = [
   "per block",
   "  attention   W_Q, W_K, W_V, W_O        4 × (8 × 8)          =   256",
-  "  MLP         W_in, W_gate [8 × 16], W_out [16 × 8]   3 × 8 × 16   =   384",
+  "  MLP         W_in, W_gate, W_out       3 × (8 × 16)         =   384",
   "  norms       2 × 8                                          =    16",
   "  block                                                      =   656",
   "× 2 blocks                                                   = 1,312",

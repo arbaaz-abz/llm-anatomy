@@ -93,7 +93,7 @@ test.describe('decoder-anatomy toy: where do the parameters live?', () => {
 
   test('the "8, like the animation" chip sets the experts slider, and real presets show the DeepSeek-V3 gap and the Kimi K3 line', async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    await page.locator('[data-experts-chip="8"]').click();
+    await page.locator('#experts-preset [data-value="8"]').click();
     await expect(readout(page, 'total')).toHaveText('4,008');
     await expect(page.locator('#experts')).toHaveValue('3');
     await expect(readout(page, 'kimi-line')).toHaveText('Kimi K3 (2026): 2.35B of 2.78T, 0.08%');

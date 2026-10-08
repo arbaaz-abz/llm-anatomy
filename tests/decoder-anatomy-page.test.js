@@ -6,9 +6,9 @@ import { fillClaim } from '../shared/claims.js';
 import { paramBreakdown, PRESETS } from '../math/params.js';
 import { LESSON, lessonFor } from '../architecture/concepts/decoder-anatomy/content.js';
 import { checkWork, gapLine, signedPct, toyConfig, perBlockLine, barParts } from '../architecture/concepts/decoder-anatomy/format.js';
-import { toyView, kimiLine, v3GapLine, INITIAL_STATE, EXPERTS_EDGE_NOTE } from '../architecture/concepts/decoder-anatomy/toy-view.js';
+import { toyView, kimiLine, v3GapLine, tryThis, INITIAL_STATE, EXPERTS_EDGE_NOTE } from '../architecture/concepts/decoder-anatomy/toy-view.js';
 import { BELOW, factRows, framing } from '../architecture/concepts/decoder-anatomy/facts.js';
-import * as S from '../architecture/concepts/decoder-anatomy/stream.js';
+import * as S from '../architecture/concepts/decoder-anatomy/numbers.js';
 import { CAPTIONS, CHECK_WORK } from './decoder-anatomy-expected.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -62,7 +62,8 @@ test('framing and the derived 2026-norm row are computed from the table\'s entri
   assert.match(framing(data), /the stack is 36–93 blocks deep/);
   const norm = factRows(data)[10];
   assert.equal(norm.derived, true);
-  assert.match(norm.claim, /^2026 norm: about 3–5% of parameters active per token \(the table's entries run 3\.1–5\.4%\)/);
+  assert.equal(norm.claim, '2026 norm: about 3–5% of parameters active per token (the table\'s entries run 3.1–5.4%), down from 9–28% in 2023–25 (Mixtral 8x7B, Dec 2023, was 28%; Qwen3-235B, 2025, 9%).');
+  assert.match(factRows(data)[1].claim, /\{gpt-oss-120b\.total_params\|count5\} total/);
   assert.match(factRows(data)[1].claim, /\(4\.4%\)/);
   assert.match(factRows(data)[3].claim, /\(3\.1%\)/);
   assert.match(factRows(data)[2].claim, /checkpoint is 685B/);
@@ -80,6 +81,8 @@ test('stand-in numbers: the adds, the attention row and the softmax match storyb
   near(S.OTHERS * S.PROB_CELLS[4], 0.233);
   assert.equal(S.E.length, 16);
   assert.deepEqual(S.E.slice(0, 4), S.X);
+  assert.equal(S.PATCH_VEC.length, S.D_MODEL);
+  assert.ok(S.E.every((row) => row.join() !== S.PATCH_VEC.join()), 'the image vector is not a vocabulary row (README lesson 24)');
   assert.ok(S.E.flat().every((v) => Number.isInteger(v * 2) && !Object.is(v, -0)), 'E sits on the half grid, no −0');
   assert.throws(() => S.addRows([1], [1, 2]), RangeError);
 });
@@ -107,7 +110,7 @@ test('toyConfig follows the sliders and rejects off-stop values', () => {
 test('check my work fills the same template for experts and for one block', () => {
   const moe = toyConfig(PRESETS.toy, { layers: 2, dModel: 8, experts: 8 });
   const text = checkWork(moe, paramBreakdown(moe)).split('\n');
-  assert.equal(text[2], '  experts     8 × (W_in, W_gate [8 × 8], W_out [8 × 8])   8 × 3 × 8 × 8   = 1,536');
+  assert.equal(text[2], '  experts     8 × (W_in, W_gate, W_out)   8 × 3 × (8 × 8)    = 1,536');
   assert.equal(text[3], '  router      W_router [8 × 8]          8 × 8                =    64');
   assert.match(text.at(-2), /^total {56}= 4,008$/);
   assert.match(text.at(-1), /^active = total − unused experts − embedding lookup {11}= 1,576$/);
@@ -178,7 +181,11 @@ test('toy view: the experts = 2 stop and the experts slider (try this 3)', () =>
 
 test('the Kimi K3 line and the DeepSeek-V3 gap line read the data', () => {
   assert.equal(kimiLine(data), 'Kimi K3 (2026): 2.35B of 2.78T, 0.08%');
-  assert.match(v3GapLine(data), /checkpoint is 685B because it also ships the 14B multi-token-prediction \(MTP\) module; the paper's 671B/);
+  assert.equal(v3GapLine(data), 'Explain the gap: the Hugging Face checkpoint is 685B because it also ships the 14B multi-token-prediction (MTP) module; the paper\'s 671B is the main model alone. '
+    + 'Active: our 36.6B leaves out the 927M embedding table; counting it gives 37.6B. The published 37B sits between the two, and the paper does not say how it counts, so neither convention matches it exactly.');
+  assert.match(tryThis(data)[2].prompt, /Then tap DeepSeek-V4-Pro: 1\.6T total, 49B active, 3\.1%\.$/);
+  assert.match(tryThis(null)[2].prompt, /— total, — active, —\.$/);
+  tryThis(data).forEach((t) => assert.doesNotMatch(t.prompt, /[{}—]|%ACTIVE%/));
   assert.equal(kimiLine(null), '');
   assert.equal(v3GapLine(null), '');
 });
