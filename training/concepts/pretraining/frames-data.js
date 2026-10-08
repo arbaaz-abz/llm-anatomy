@@ -79,18 +79,18 @@ export function drawFrame7(svg, p) {
   stream(svg, y);
 }
 
-// The mixture's lanes: A starts web, C starts knowledge; code and math take twice as many chips.
+// The mixture's lanes (a new chip slides in along its lane): A starts web, C starts knowledge; code and math take twice as many chips.
 const LANE_DOCS = Object.freeze([['A', 'G', 'H'], ['I', 'J', 'K', 'L', 'M', 'N'], ['O', 'P', 'Q', 'R', 'S', 'T'], ['C', 'U', 'V']]);
 const FAST = Object.freeze([false, true, true, false]);
 const laneChipT = (lane, slot) => (FAST[lane] ? 0.35 + slot * 0.1 : 0.35 + slot * 0.2);
-const MIX = { x: 160, y: at(STAGES.mixture) };
+const SLIDE_IN = 24; // a lane's new chip slides in along its lane (never across the lane labels)
 
 function lanes(parent, p) {
   LANE_DOCS.forEach((labels, lane) => labels.forEach((label, slot) => {
     const first = slot === 0 && (lane === 0 || lane === 3);
     if (first) return; // A and C travel from dedup (drawn by the frame)
     const t = seg(p, laneChipT(lane, slot), laneChipT(lane, slot) + 0.08);
-    if (t > 0) doc(parent, { x: lerp(MIX.x, laneX(slot), t), y: lerp(MIX.y, laneY(lane), t), label, opacity: t });
+    if (t > 0) doc(parent, { x: lerp(laneX(slot) - SLIDE_IN, laneX(slot), t), y: laneY(lane), label, opacity: t });
   }));
 }
 
