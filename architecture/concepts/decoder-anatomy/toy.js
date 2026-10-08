@@ -27,8 +27,8 @@ function tryThisList(data) {
 }
 
 function convention(data, inline) {
-  const mistral = lookupFact(data?.models, 'mistral-large-4', 'active_params')?.value;
-  const labs = mistral ? `Mistral Large 4 quotes ${formatCount(mistral)} routed-active and a higher figure with the embedding counted` : 'their published counts differ by the embedding table';
+  const [mistral, withEmbeddings] = ['active_params', 'active_params_with_embeddings'].map((k) => lookupFact(data?.models, 'mistral-large-4', k)?.value);
+  const labs = mistral && withEmbeddings ? `Mistral Large 4 quotes ${formatCount(mistral)} routed-active and ${formatCount(withEmbeddings)} with embeddings` : 'their published counts differ by the embedding table';
   return el('p', { className: 'toy-note' }, [
     'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.) ',
     positionTableNote(), ' Counting the lookup too gives ',

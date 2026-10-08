@@ -27,6 +27,12 @@ test.describe('decoder-anatomy toy: where do the parameters live?', () => {
     await expect(cell(page, 'norms', 'share')).toHaveText('2.5%');
   });
 
+  test('the active definition footnotes GPT-3\'s position table and quotes Mistral Large 4\'s figure with embeddings', async ({ page }) => {
+    const note = page.locator('[data-section="toy"] .toy-note', { hasText: 'Active = the parameters multiplied' });
+    await expect(note).toContainText('it is so small, 0.01 %, that this course counts it as active.)');
+    await expect(note).toContainText('labs differ: Mistral Large 4 quotes 49B routed-active and 52B with embeddings.');
+  });
+
   test('the share bar folds parts under 18 px into "others" with a zoomed tail (README lesson 19)', async ({ page }) => {
     const bar = page.locator('[data-section="toy"] .g-share').first();
     await expect(bar.locator('.g-seg.g-part-others')).toHaveCount(1); // the bar segment; the legend swatch carries the class too
