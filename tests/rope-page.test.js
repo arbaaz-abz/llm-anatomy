@@ -47,7 +47,7 @@ test('every prose placeholder resolves and nothing printed is "—"', () => {
 test('the dated rows print the data: bases, partial RoPE, YaRN, NoPE and 1M', () => {
   const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
   assert.match(rows[0], /^GPT-3 \(2020\): learned absolute positions, a table of 2,048 rows\.$/);
-  assert.match(rows[1], /DeepSeek-V4-Pro \(2026\) 10,000 \(160,000 for its compressed streams\) · gpt-oss \(2025\) 150,000 · MiniMax-M3 \(2026\) 5,000,000 · GLM-5.3 \(2026\) 8,000,000 · Qwen3.8 \(2026\) 10,000,000\.$/);
+  assert.match(rows[1], /DeepSeek-V4-Pro 10,000 \(160,000 for its compressed streams\) · gpt-oss 150,000 · MiniMax-M3 5,000,000 · GLM-5.3 8,000,000 · Qwen3.8 10,000,000\.$/);
   assert.match(rows[2], /MiniMax-M3 \(2026\) rotates 64 of 128 dimensions \(0\.5\); Qwen3\.5 rotates 25% \(0\.25\)\.$/);
   assert.match(rows[3], /gpt-oss \(2025\) stretched 4,096 → 131,072 tokens \(factor 32\); DeepSeek-V4-Pro uses factor 16\.$/);
   assert.match(rows[4], /Kimi K3's 24 MLA layers \(2026\) use no position encoding; order comes from its 69 linear-attention layers' decay/);
