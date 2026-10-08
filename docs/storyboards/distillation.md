@@ -140,7 +140,7 @@ learns, which token it sampled, and which teacher grades it.
    choices, wrong ones included.** Every token the student might write gets its own signed grade, which is
    what fixes the blind spot of frame 4.
 2. Switch `student` to `close to the math teacher`: every reward shrinks toward 0 (`56` +0.057, `54`
-   −0.337) and the expected reward is −0.013. Then switch to `confident and wrong`: `54` falls to −2.639 and
+   −0.336) and the expected reward is −0.013. Then switch to `confident and wrong`: `54` falls to −2.639 and
    the expected reward to −1.909. → **Insight: the signal is largest where the student is most wrong and
    vanishes as it matches the teacher.** The distillation reward stops pushing once the student matches its
    teacher; going past it needs another signal, such as MiMo-V2-Flash's outcome advantage (§7).
