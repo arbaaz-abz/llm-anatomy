@@ -114,17 +114,27 @@ export function hatchRect(parent, attrs) {
   return svgEl('rect', { ...attrs, fill: hatchFill(parent), class: 'g-hatch' }, parent);
 }
 
+// A masked cell prints "−∞" unless the page's `format` handles −∞ (returns text without "Infinity" or "NaN").
+function maskedText(format) {
+  const out = format?.(-Infinity);
+  return typeof out === 'string' && out !== '' && !/Infinity|NaN/.test(out) ? out : null;
+}
+
 // One value cell. Masked cells (mask === false or v === −∞) are hatched.
-export function cell(parent, { x, y, size, v, maxAbs, masked = false }) {
+// `format` (optional) prints the cell text and its tooltip; without it the text is formatCell(v)
+// and the tooltip the value at 3 d.p.
+export function cell(parent, { x, y, size, v, maxAbs, masked = false, format }) {
   const isMasked = masked || v === -Infinity;
   const g = svgEl('g', { class: `g-cell${isMasked ? ' g-cell--masked' : ''}`, transform: `translate(${x} ${y})`, 'data-level': isMasked ? 0 : valueLevel(v, maxAbs) }, parent);
   const inset = { x: CELL_GAP / 2, y: CELL_GAP / 2, width: size - CELL_GAP, height: size - CELL_GAP, rx: 3 };
   const rect = svgEl('rect', inset, g);
   rect.style.fill = isMasked ? 'var(--surface)' : valueColor(v, maxAbs);
   if (isMasked) hatchRect(g, inset);
+  const maskLabel = isMasked ? maskedText(format) : null;
+  const label = isMasked ? (maskLabel ?? '−∞') : (format ?? formatCell)(v);
   const title = svgEl('title', {}, g);
-  title.textContent = isMasked ? 'masked (−∞)' : Number(v).toFixed(3);
-  if (size >= MIN_CELL_FOR_TEXT) text(g, size / 2, size / 2, isMasked ? '−∞' : formatCell(v), 'g-text');
+  title.textContent = isMasked ? `masked (${maskLabel ?? '−∞'})` : (format ? label : Number(v).toFixed(3));
+  if (size >= MIN_CELL_FOR_TEXT) text(g, size / 2, size / 2, label, 'g-text');
   return g;
 }
 
@@ -139,17 +149,18 @@ export function token(parent, { x, y, text: label, index, state = 'idle', fill, 
   return g;
 }
 
-export function vector(parent, { x, y, values, cell: size = 18, orient = 'col', maxAbs = maxAbsOf(values), label }) {
+export function vector(parent, { x, y, values, cell: size = 18, orient = 'col', maxAbs = maxAbsOf(values), label, format }) {
   const g = group(parent, `g-vector g-vector--${orient}`, x, y);
   if (label) {
     if (orient === 'col') text(g, size / 2, -10, label, 'g-label', { 'text-anchor': 'middle' });
     else text(g, -10, size / 2, label, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
   }
-  values.forEach((v, i) => cell(g, { x: orient === 'row' ? i * size : 0, y: orient === 'col' ? i * size : 0, size, v, maxAbs }));
+  values.forEach((v, i) => cell(g, { x: orient === 'row' ? i * size : 0, y: orient === 'col' ? i * size : 0, size, v, maxAbs, format }));
   return g;
 }
 
-function grid(parent, cls, { x, y, values, mask, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [] }) {
+// `format` (optional): (v) → the printed cell text and tooltip, e.g. (v) => v.toFixed(3) for weights.
+function grid(parent, cls, { x, y, values, mask, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [], format }) {
   const rows = values.length;
   const cols = values[0]?.length ?? 0;
   const g = group(parent, cls, x, y);
@@ -158,7 +169,7 @@ function grid(parent, cls, { x, y, values, mask, cell: size = 18, maxAbs = maxAb
   if (label) text(g, 0, -10 - (colLabels.length ? 14 : 0), `${label} [${rows} × ${cols}]`, 'g-label');
   rowLabels.forEach((r, i) => text(g, -10, i * size + size / 2, r, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' }));
   colLabels.forEach((c, j) => text(g, j * size + size / 2, -8, c, 'g-label', { 'text-anchor': 'middle' }));
-  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false })));
+  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false, format })));
   return g;
 }
 
