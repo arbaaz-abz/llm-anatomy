@@ -22,6 +22,7 @@ test.describe('multimodal stage: the counts on the page text', () => {
     const p = stepperParts(LESSON_STEPPER);
     await page.locator(p.scrub).fill('6');
     await expect(page.locator(p.count)).toHaveText('7 / 10');
+    await expect(page.locator(p.stage)).toHaveAttribute('data-progress', '1');
     const text = await page.locator(`${p.stage} svg`).evaluate((svg) => svg.textContent);
     ['72 × 72 = 5,184 patches', '1,296 tokens', '256 × 256 = 65,536 patches', '16,384 tokens', '64 of these fill a 1M window'].forEach((s) => expect(text).toContain(s));
   });

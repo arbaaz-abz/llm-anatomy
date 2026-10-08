@@ -19,16 +19,17 @@ function buildDom(host) {
   const spec = output('spec');
   const slots = Object.fromEntries(['preset', 'width', 'height', 'patch', 'merge', 'media', 'seconds', 'fps', 'context'].map((name) => [name, el('div')]));
   const videoBox = el('div', { className: 'toy-controls' }, [slots.seconds, slots.fps]);
+  const sizeBox = el('div', { className: 'toy-controls' }, [slots.width, slots.height, slots.patch, slots.merge]);
   const table = el('div', { className: 'toy-tables' });
   const check = el('pre', { className: 'check-work', ariaLive: 'polite' });
   check.dataset.readout = 'check-work';
   host.append(
     slots.preset, el('p', { className: 'toy-note' }, [spec]),
-    el('div', { className: 'toy-controls' }, [slots.width, slots.height, slots.patch, slots.merge, slots.media]), videoBox, slots.context,
+    sizeBox, slots.media, videoBox, slots.context,
     table, el('p', { className: 'toy-note', textContent: 'Counts are exact for the patch grid and the merge; no pooling over time is applied to video.' }),
     el('h4', { textContent: 'Check my work' }), check,
   );
-  return { spec, slots, videoBox, table, check };
+  return { spec, slots, videoBox, sizeBox, table, check };
 }
 
 function tableFor(view) {
@@ -52,7 +53,7 @@ function paint(refs, controls, state, facts) {
   refs.table.replaceChildren(tableFor(view));
   refs.check.textContent = view.checkWork;
   refs.videoBox.hidden = !view.showVideo;
-  ['width', 'height', 'patch', 'merge'].forEach((name) => { refs.slots[name].hidden = !view.showSize; });
+  refs.sizeBox.hidden = !view.showSize;
 }
 
 function mountControls(refs, update, facts) {
