@@ -118,6 +118,17 @@ test.describe('long-context-attention toy: what does each trick read, and what d
     await expect(items.nth(2).locator('strong')).toContainText('Insight: a linear layer trades exact lookup');
   });
 
+  test('the sink row shows only in sink mode and the linear row only in linear mode', async ({ page }) => {
+    await expect(readout(page, 'sink-weights')).toBeHidden();
+    await expect(readout(page, 'linear-output')).toBeHidden();
+    await choose(page, 'pattern', 'sink');
+    await expect(readout(page, 'sink-weights')).toBeVisible();
+    await expect(readout(page, 'linear-output')).toBeHidden();
+    await choose(page, 'pattern', 'linear');
+    await expect(readout(page, 'sink-weights')).toBeHidden();
+    await expect(readout(page, 'linear-output')).toBeVisible();
+  });
+
   test('the linear note follows the gate', async ({ page }) => {
     await choose(page, 'pattern', 'linear');
     await expect(page.locator('[data-section="toy"]')).toContainText('gate 1 keeps every addition');

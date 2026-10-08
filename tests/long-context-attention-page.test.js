@@ -169,4 +169,5 @@ test('no fact row prints a reported release year (X-1): only gpt-oss, DeepSeek-V
   assert.match(rows[4], /^DeepSeek V3\.2's DSA, as GLM-5\.3 uses it:/);
   assert.match(rows[5], /^MiniMax-M3: GQA/);
   assert.match(rows[9], /^Kimi K3: 69/);
+  assert.match(rows[3], /^A learned sink logit per head: gpt-oss-120b, MiMo-V2-Flash and DeepSeek-V4-Pro\.$/);
 });

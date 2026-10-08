@@ -30,13 +30,18 @@ function buildDom(host, data) {
     figure: newFigure(), table: el('div'), sink: numberRowView('sink-weights', 'sink'), linear: numberRowView('linear-output', 'o_sat'),
     realTable: el('div'), cacheTable: el('div'), note: el('p', { className: 'toy-note' }),
   };
+  refs.tableWrap = el('div', { className: 'scroll-x' }, [refs.table]);
+  refs.realWrap = el('div', { className: 'scroll-x' }, [refs.realTable]);
+  refs.cacheWrap = el('div', { className: 'scroll-x' }, [refs.cacheTable]);
+  refs.sinkWrap = el('div', {}, [el('div', { className: 'toy-rows' }, [refs.sink.node])]); // the outer div hides: .toy-rows is a grid, which a hidden attribute would not hide
+  refs.linearWrap = el('div', {}, [el('div', { className: 'toy-rows' }, [refs.linear.node])]);
   refs.sinkNote = el('p', { className: 'toy-note' });
   refs.linearNote = el('p', { className: 'toy-note' });
   const b = Object.fromEntries(Object.entries(refs.boxes).map(([name, box]) => [name, box.outer]));
   host.append(
     refs.pattern, b.window, b.topK, b.merge, b.sinkLogit, b.gate, b.query,
-    el('div', { className: 'scroll-x' }, [refs.figure]), refs.table, refs.sink.node, refs.sinkNote, refs.linear.node, refs.linearNote,
-    el('h4', { textContent: 'At real scale' }), refs.real, b.context, refs.realTable, refs.cacheTable, refs.note,
+    el('div', { className: 'scroll-x' }, [refs.figure]), refs.tableWrap, refs.sinkWrap, refs.sinkNote, refs.linearWrap, refs.linearNote,
+    el('h4', { textContent: 'At real scale' }), refs.real, b.context, refs.realWrap, refs.cacheWrap, refs.note,
     ...tryThisList(data),
   );
   return refs;
@@ -78,7 +83,7 @@ function paint(refs, state, data) {
   const view = toyView(state, data);
   Object.entries(view.controls).forEach(([name, visible]) => { refs.boxes[name].outer.hidden = !visible; });
   const { pattern } = view;
-  refs.table.hidden = !pattern;
+  refs.tableWrap.hidden = !pattern;
   refs.figure.hidden = false;
   if (pattern) {
     drawPattern(refs.figure, pattern);
@@ -87,12 +92,12 @@ function paint(refs, state, data) {
     drawState(refs.figure, view.linear);
     refs.table.replaceChildren();
   }
-  refs.sink.node.hidden = refs.sinkNote.hidden = !view.sink;
+  refs.sinkWrap.hidden = refs.sinkNote.hidden = !view.sink;
   if (view.sink) {
     refs.sink.set(view.sink.values, 'weight', WEIGHT_SCALE, view.sink.label);
     refs.sinkNote.textContent = `${view.sink.sumText}: the sink takes the share the window does not.`;
   }
-  refs.linear.node.hidden = refs.linearNote.hidden = !view.linear;
+  refs.linearWrap.hidden = refs.linearNote.hidden = !view.linear;
   if (view.linear) {
     refs.linear.set(view.linear.output, 'output', STATE_SCALE);
     refs.linearNote.textContent = view.linear.note;
