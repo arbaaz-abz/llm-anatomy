@@ -122,13 +122,19 @@ export function toyView(state, data) {
   return fullView(state.preset, PRESETS[state.preset], data);
 }
 
+// The active definition's footnote on GPT-3's learned position table: a lookup too, but so small the course counts it as active.
+export function positionTableNote() {
+  const b = paramBreakdown(PRESETS.gpt3);
+  return `(GPT-3's learned position table is a lookup too; it is so small, ${sharePct(b.parts.positional, b.total, { decimals: 2 }).toFixed(2)} %, that this course counts it as active.)`;
+}
+
 // Try-this 2's far end: Kimi K3's embedding + unembedding as a share of its total (from data/models.json).
 export function kimiLine(data) {
-  const [vocab, d, total, date] = ['vocab_size', 'd_model', 'total_params', 'release_date'].map((k) => fact(data, 'kimi-k3', k));
+  const [vocab, d, total] = ['vocab_size', 'd_model', 'total_params'].map((k) => fact(data, 'kimi-k3', k));
   if (!vocab || !d || !total) return '';
   const p = partialBreakdown({ known: { embedding: vocab * d, head: vocab * d }, publishedTotal: total });
   const tables = p.parts.embedding + p.parts.head;
-  return `Kimi K3 (${String(date).slice(0, 4)}): ${formatCount(tables)} of ${formatCount(total)}, ${sharePct(tables, total, { decimals: 2 }).toFixed(2)}%`;
+  return `Kimi K3: ${formatCount(tables)} of ${formatCount(total)}, ${sharePct(tables, total, { decimals: 2 }).toFixed(2)}%`;
 }
 
 // The "explain the gap" line under the DeepSeek-V3 chip.

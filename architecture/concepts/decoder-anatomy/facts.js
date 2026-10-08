@@ -82,14 +82,14 @@ export function factRows(data) {
 
 // Page text under the stage, one list per frame: the dated notes (filled from data) and the frame → lesson hand-offs.
 export const BELOW = Object.freeze([
-  ['A patch is {kimi-k3.patch_size} × {kimi-k3.patch_size} pixels in Kimi K3 and MiniMax-M3 ({kimi-k3.release_date|year}); 4 × 4 here.'],
-  ['Kimi K3\'s vision encoder ({kimi-k3.release_date|year}): {kimi-k3.vision_encoder_layers} layers, {kimi-k3.vision_encoder_params|count} parameters, patch {kimi-k3.patch_size}. The image road is opened in [[multimodal]].'],
+  ['A patch is {kimi-k3.patch_size} × {kimi-k3.patch_size} pixels in Kimi K3 and MiniMax-M3; 4 × 4 here.'],
+  ['Kimi K3\'s vision encoder: {kimi-k3.vision_encoder_layers} layers, {kimi-k3.vision_encoder_params|count} parameters, patch {kimi-k3.patch_size}. The image road is opened in [[multimodal]].'],
   ['d_model is the row width: 8 here, {gpt-3.d_model} in GPT-3 ({gpt-3.release_date|year}), {deepseek-v4-pro.d_model} in DeepSeek-V4-Pro and Kimi K3 ({deepseek-v4-pro.release_date|year}).'],
   ['The attention box is opened in [[attention]]; how a row knows its position is [[rope]]. The norm\'s arithmetic is in the math panel below.'],
   ['What changed in each box since GPT-3, and why: [[decoder-recap]].'],
   ['DeepSeek-V4-Pro ({deepseek-v4-pro.release_date|year}): {deepseek-v4-pro.experts_total} routed experts, {deepseek-v4-pro.experts_active} used per token. The router and load balancing: [[moe]].'],
   [
-    'N on a model card: toy 2 · GPT-3 ({gpt-3.release_date|year}) {gpt-3.layers} · gpt-oss-120b ({gpt-oss-120b.release_date|year}) {gpt-oss-120b.layers} · DeepSeek-V4-Pro ({deepseek-v4-pro.release_date|year}) {deepseek-v4-pro.layers} · Kimi K3 ({kimi-k3.release_date|year}) {kimi-k3.layers}',
+    'N on a model card: toy 2 · GPT-3 ({gpt-3.release_date|year}) {gpt-3.layers} · gpt-oss-120b ({gpt-oss-120b.release_date|year}) {gpt-oss-120b.layers} · DeepSeek-V4-Pro ({deepseek-v4-pro.release_date|year}) {deepseek-v4-pro.layers} · Kimi K3 {kimi-k3.layers}',
     'Real stacks mix a few block types: dense and MoE, full and sliding-window or linear attention ([[decoder-recap]], [[long-context-attention]]).',
   ],
   ['How a token is picked from these probabilities (temperature, top-k, top-p): [[sampling]].'],
