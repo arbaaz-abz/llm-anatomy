@@ -9,9 +9,11 @@ import { drawFrame8, drawFrame9, drawFrame10 } from './frames-heads.js';
 const FRAMES = Object.freeze([drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6, drawFrame7, drawFrame8, drawFrame9, drawFrame10]);
 
 export function render(index, progress, stage) {
+  const draw = FRAMES[index];
+  if (!draw) throw new RangeError(`attention: no frame ${index + 1} (there are ${FRAMES.length})`);
   const svg = stage.querySelector('svg') ?? G.svgEl('svg', { width: STAGE.w, height: STAGE.h, viewBox: `0 0 ${STAGE.w} ${STAGE.h}`, role: 'img' }, stage);
-  G.hatchFill(svg); // claim the svg's hatch id first, so frames with and without hatching keep one svg state
   svg.replaceChildren();
+  G.hatchFill(svg); // the hatch pattern first, so every frame's DOM is identical however it was reached
   svg.setAttribute('aria-label', CAPTIONS[index]);
-  FRAMES[index](svg, progress);
+  draw(svg, progress);
 }

@@ -2,7 +2,7 @@
 // timing helpers and the few drawing helpers the frames share. Pure: nothing touches the DOM at import time.
 import * as G from '@shared/glyphs.js';
 import { TOY, attentionHead } from '@math/attention.js';
-import { cellText } from './format.js';
+import { formatFor } from './format.js';
 
 export const STAGE = Object.freeze({ w: 580, h: 366 });
 export const CELL = G.NUMBER_CELL; // numbers the learner reads
@@ -42,7 +42,7 @@ export const W_O = Object.freeze({ x: 460, y: 284, w: 100, h: 40 });
 
 // ---- timing ----
 export const clamp01 = (t) => Math.min(Math.max(t, 0), 1);
-export const phase = (p, from, to) => clamp01((p - from) / (to - from));
+export const seg = (p, from, to) => clamp01((p - from) / (to - from)); // progress p remapped to the sub-phase [from, to]
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
@@ -62,31 +62,28 @@ export function label(svg, x, y, str, { anchor = 'start', cls = 'g-label', opaci
 
 export const select = (svg, x, y, w, h, opacity = 1) => fade(G.selectionMark(svg, { x, y, w, h }), opacity);
 
-// Each cell prints its quantity's own format (format.js cellText); a pending cell (null) is blank,
-// a masked one hatched. `colors` (optional) are the values the fill encodes, on the scale `maxAbs`.
-function relabel(g, values, kind, texts) {
-  [...g.querySelectorAll('.g-cell')].forEach((cellG, i) => {
-    const v = values[i];
-    const text = texts?.[i] ?? (v == null ? '' : cellText(v, kind));
-    const textEl = cellG.querySelector('.g-text');
-    if (textEl) textEl.textContent = text;
-    cellG.querySelector('title').textContent = v == null ? 'not computed yet' : text;
-  });
+// Glyph values: a cell not computed yet is null (blank, neutral fill); −∞ is a masked cell.
+const glyphValues = (values) => values.map((v) => (v == null ? Number.NaN : v));
+
+// A math-linked group: an invisible rect.g-frame the math-panel hover outlines, then the glyph inside it.
+function linked(svg, letter, box) {
+  if (!letter) return svg;
+  const g = G.svgEl('g', { 'data-link': letter }, svg);
+  G.svgEl('rect', { class: 'g-frame', x: box.x - 1, y: box.y - 1, width: box.w + 2, height: box.h + 2, rx: 3, fill: 'none', stroke: 'none' }, g);
   return g;
 }
 
-const glyphValue = (v) => (v == null ? Number.NaN : v);
-
-export function numberRow(svg, { x, y, values, kind, maxAbs, label: name, link, cell = CELL, colors, texts }) {
-  const g = G.vector(svg, { x, y, values: (colors ?? values).map(glyphValue), cell, orient: 'row', maxAbs, label: name });
-  if (link) g.dataset.link = link;
-  return relabel(g, values, kind, texts);
+// One row of NUMBER_CELL numbers; each cell prints its quantity's format (format.js cellText).
+export function numberRow(svg, { x, y, values, kind, maxAbs, label: name, link, cell = CELL }) {
+  const parent = linked(svg, link, { x, y, w: values.length * cell, h: cell });
+  return G.vector(parent, { x, y, values: glyphValues(values), cell, orient: 'row', maxAbs, label: name, format: formatFor(kind) });
 }
 
-export function numberGrid(svg, { x, y, values, kind, maxAbs, mask, label: name, rowLabels, colLabels, link, colors, cell = CELL }) {
-  const g = G.heatmap(svg, { x, y, values: (colors ?? values).map((row) => row.map(glyphValue)), mask, cell, maxAbs, label: name, rowLabels, colLabels });
+// A [4 × 4] grid of numbers. `mask` (true = visible) prints −∞; `hatch` (true = hatched) keeps the printed value.
+export function numberGrid(svg, { x, y, values, kind, maxAbs, mask, hatch, label: name, rowLabels, colLabels, link, cell = CELL }) {
+  const g = G.heatmap(svg, { x, y, values: values.map(glyphValues), mask, hatch, cell, maxAbs, label: name, rowLabels, colLabels, format: formatFor(kind) });
   if (link) g.dataset.link = link;
-  return relabel(g, values.flat(), kind);
+  return g;
 }
 
 // The four token chips; "sat" carries the selection mark wherever it appears.
@@ -95,12 +92,14 @@ export function tokenRow(svg, opacity = 1) {
   select(svg, TOKEN_X[QUERY], TOKEN_Y, G.tokenWidth(TOKENS[QUERY]), 24, opacity);
 }
 
-// Q, K and V of head A at 20 px; `rowsShown` (0..4, fractional) fills rows top to bottom.
-export function qkvGrids(svg, { rowsShown = 4, opacity = 1 } = {}) {
+// Q, K and V of head A at 20 px; the first `rowsShown` rows are filled in (rows fill top to bottom).
+// `hatchV` hatches the V rows whose weight for "sat" is 0 (masked out: they count for nothing, frame 7).
+const V_HATCH = HEAD_A.mask[QUERY].map((visible) => [0, 1, 2, 3].map(() => !visible));
+export function qkvGrids(svg, { rowsShown = 4, opacity = 1, hatchV = false } = {}) {
   const grids = ['q', 'k', 'v'].map((name) => {
-    const g = G.matrix(svg, { x: MAT_X[name], y: MAT_Y, values: QKV[name.toUpperCase()], cell: GRID, maxAbs: SCALE.qkv, label: name.toUpperCase(), rowLabels: name === 'q' ? TOKENS : [] });
+    const values = QKV[name.toUpperCase()].map((row, i) => (i < rowsShown ? row : row.map(() => Number.NaN)));
+    const g = G.matrix(svg, { x: MAT_X[name], y: MAT_Y, values, cell: GRID, maxAbs: SCALE.qkv, label: name.toUpperCase(), rowLabels: name === 'q' ? TOKENS : [], format: formatFor('score'), hatch: hatchV && name === 'v' ? V_HATCH : undefined });
     g.dataset.link = name;
-    [...g.querySelectorAll('.g-cell')].forEach((c, i) => fade(c, clamp01(rowsShown - Math.floor(i / 4))));
     return fade(g, opacity);
   });
   label(svg, MAT_X.q, SHAPE_Y, '[4 tokens × d_head = 4]', { opacity });

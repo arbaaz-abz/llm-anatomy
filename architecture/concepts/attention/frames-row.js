@@ -4,9 +4,12 @@ import * as G from '@shared/glyphs.js';
 import { expansion } from './format.js';
 import {
   CELL, GRID, QUERY, TOKENS, HEAD_A, QKV, SCALE, TOKEN_X, TOKEN_Y, MAT_Y, MAT_X, STRIP_X, STRIP_Y, SIDE_X, NOTE_Y,
-  HEAT, SCORE_ROW, CHIP_X, OUT_ROW, phase, lerp, ease, fade, label, select, numberRow, numberGrid, tokenRow, qkvGrids,
+  HEAT, SCORE_ROW, CHIP_X, OUT_ROW, seg, lerp, ease, fade, label, select, numberRow, numberGrid, tokenRow, qkvGrids,
   wBlock, maskUpTo,
 } from './stage.js';
+
+// Cells type in left to right as t goes 0 → 1 (null = not computed yet); never scaled up from 0.
+export const typeIn = (row, t) => row.map((v, j) => (t * row.length >= j + 1 - 1e-9 ? v : null));
 
 const ROW = HEAD_A.scores[QUERY].map((_, j) => j);
 const VISIBLE = ROW.filter((j) => HEAD_A.mask[QUERY][j]);
@@ -14,10 +17,10 @@ const HEAT_ROW_Y = HEAT.y + QUERY * CELL;
 const STRIP_H = STRIP_Y[2] + CELL - STRIP_Y[0];
 
 // The parts every frame from 1 to 7 keeps: chips, the W block and Q, K, V.
-function base(svg, rowsShown = 4) {
+function base(svg, rowsShown = 4, hatchV = false) {
   tokenRow(svg);
   wBlock(svg);
-  qkvGrids(svg, { rowsShown });
+  qkvGrids(svg, { rowsShown, hatchV });
 }
 
 export function axisLabels(svg, opacity = 1) {
@@ -36,7 +39,7 @@ function scoreGrid(svg, { values, kind, title, mask }) {
 }
 
 export function drawFrame1(svg, p) {
-  base(svg, p * 4);
+  base(svg, Math.floor(p * 4 + 1e-9)); // a row fills in as its token's dot arrives
   if (p >= 1) return;
   const i = Math.min(Math.floor(p * 4), 3);
   const cx = TOKEN_X[i] + G.tokenWidth(TOKENS[i]) / 2;
@@ -66,7 +69,7 @@ const expansionLine = (svg, opacity) => label(svg, MAT_X.q, STRIP_Y[2] + CELL / 
 
 export function drawFrame2(svg, p) {
   base(svg);
-  liftedQuery(svg, ease(phase(p, 0, SWEEP.from)));
+  liftedQuery(svg, ease(seg(p, 0, SWEEP.from)));
   const done = keysDone(p);
   const sweeping = p >= SWEEP.from && done < 4;
   const j = sweeping ? done : CAT;
@@ -78,25 +81,25 @@ export function drawFrame2(svg, p) {
     const t = (p - SWEEP.from - j * SWEEP.span) / SWEEP.span;
     G.flow(svg, { from: [MAT_X.k + 4 * GRID + 3, MAT_Y + j * GRID + GRID / 2], to: [SCORE_ROW.x + j * CELL + CELL / 2, SCORE_ROW.y - 3], carry: 'activation', progress: t });
   }
-  expansionLine(svg, phase(p, 0.84, 1));
+  expansionLine(svg, seg(p, 0.84, 1));
 }
 
 export function drawFrame3(svg, p) {
   base(svg);
-  const leave = 1 - phase(p, 0, 0.3);
+  const leave = 1 - seg(p, 0, 0.3);
   if (leave > 0) {
     liftedQuery(svg, 1, leave);
     keyRow(svg, CAT, leave);
     expansionLine(svg, leave);
   }
-  const dock = ease(phase(p, 0, 0.3));
-  const cols = phase(p, 0.3, 1) * 4;
+  const dock = ease(seg(p, 0, 0.3));
+  const cols = seg(p, 0.3, 1) * 4;
   const values = HEAD_A.scores.map((row, i) => row.map((v, j) => {
     if (i === QUERY) return dock >= 1 ? v : null;
     return cols >= j + 1 - 1e-9 ? v : null;
   }));
   numberGrid(svg, { ...HEAT, values, kind: 'score', maxAbs: SCALE.score, label: 'S = QKᵀ', rowLabels: TOKENS, colLabels: TOKENS, link: 's' });
-  axisLabels(svg, phase(p, 0.3, 1));
+  axisLabels(svg, seg(p, 0.3, 1));
   if (dock >= 1) {
     select(svg, HEAT.x, HEAT_ROW_Y, 4 * CELL, CELL);
     return;
@@ -113,7 +116,7 @@ export function drawFrame4(svg, p) {
   const values = HEAD_A.scores.map((row, i) => row.map((v, j) => lerp(v, HEAD_A.scaled[i][j], t)));
   scoreGrid(svg, { values, kind: 'scaled', title: 'S/√d_head' });
   axisLabels(svg);
-  divideLabel(svg, phase(p, 0, 0.3));
+  divideLabel(svg, seg(p, 0, 0.3));
 }
 
 export function drawFrame5(svg, p) {
@@ -125,7 +128,6 @@ export function drawFrame5(svg, p) {
 }
 
 // ---- frames 6–7: the row strip (scaled, exp, weight), then the weighted sum of the values ----
-const EXP_TEXTS = ROW.map((j) => (VISIBLE.includes(j) ? undefined : '0')); // the masked cell shows 0, hatched
 const shownBy = (t, k) => t * VISIBLE.length >= k + 1 - 1e-9;
 const stripRow = (row, t) => row.map((v, j) => {
   if (!VISIBLE.includes(j)) return -Infinity;
@@ -146,7 +148,8 @@ export function strip(svg, { lift = 1, expT = 1, wT = 1, opacity = 1 }) {
     { y: STRIP_Y[1], values: stripRow(HEAD_A.exps[QUERY], expT), kind: 'exp', maxAbs: SCALE.score },
     { y: STRIP_Y[2], values: stripRow(HEAD_A.weights[QUERY], wT), kind: 'weight', maxAbs: SCALE.weight, link: 'a' },
   ];
-  rows.forEach((r) => fade(numberRow(svg, { x: STRIP_X, ...r, texts: EXP_TEXTS }), lift * opacity));
+  // a masked cell is −∞ on the glyph (hatched); its exp and its weight print 0 (format.js cellText)
+  rows.forEach((r) => fade(numberRow(svg, { x: STRIP_X, ...r }), lift * opacity));
   const weightSum = VISIBLE.reduce((s, j, k) => s + (shownBy(wT, k) ? HEAD_A.weights[QUERY][j] : 0), 0);
   label(svg, SIDE_X, STRIP_Y[1] + CELL / 2, `sum ${HEAD_A.expSums[QUERY].toFixed(3)}`, { opacity: expT >= 1 ? opacity : 0 });
   label(svg, SIDE_X, STRIP_Y[2] + CELL / 2, `Σ = ${weightSum.toFixed(3)}`, { opacity: wT > 0 ? opacity : 0 });
@@ -164,38 +167,32 @@ export function drawFrame6(svg, p) {
   maskedGrid(svg);
   axisLabels(svg);
   divideLabel(svg);
-  strip(svg, { lift: ease(phase(p, 0, 0.2)), expT: phase(p, 0.2, 0.6), wT: phase(p, 0.6, 1) });
+  strip(svg, { lift: ease(seg(p, 0, 0.2)), expT: seg(p, 0.2, 0.6), wT: seg(p, 0.6, 1) });
 }
 
-// Frame 7 pieces that frame 8 fades out: the weight chips beside V and the hatched (masked) V row.
+// Frame 7's weight chips beside V rows 1–3, in the weights row's color (frame 8 fades them out).
 export function valueChips(svg, opacity = 1) {
   VISIBLE.forEach((j) => fade(numberRow(svg, { x: CHIP_X, y: MAT_Y + j * GRID, values: [HEAD_A.weights[QUERY][j]], kind: 'weight', maxAbs: SCALE.weight, cell: GRID }), opacity));
-  ROW.filter((j) => !VISIBLE.includes(j)).forEach((j) => {
-    const g = fade(G.svgEl('g', { class: 'glyph g-excluded' }, svg), opacity);
-    const box = { x: MAT_X.v, y: MAT_Y + j * GRID, width: 4 * GRID, height: GRID, rx: 3 };
-    G.svgEl('rect', box, g).style.fill = 'var(--surface)';
-    G.svgEl('rect', { ...box, class: 'g-hatch', fill: G.hatchFill(svg) }, g);
-  });
 }
 
 export function outputRow(svg, { x = OUT_ROW.x, y = OUT_ROW.y, fill = 1, opacity = 1, labelOpacity = opacity } = {}) {
-  const values = HEAD_A.output[QUERY].map((v) => (fill > 0 ? v * fill : null));
+  const values = typeIn(HEAD_A.output[QUERY], fill);
   fade(numberRow(svg, { x, y, values, kind: 'output', maxAbs: SCALE.out, link: 'o' }), opacity);
   label(svg, x, y - 10, 'o_sat', { opacity: labelOpacity });
   select(svg, x, y, 4 * CELL, CELL, opacity);
 }
 
 export function drawFrame7(svg, p) {
-  base(svg);
+  base(svg, 4, p >= 0.2); // V row 4 hatches as the chips arrive
   maskedGrid(svg);
   axisLabels(svg);
   divideLabel(svg);
   strip(svg, {});
-  if (p < 0.3) G.flow(svg, { from: [STRIP_X + 4 * CELL + 4, STRIP_Y[2] - 4], to: [CHIP_X + GRID / 2, MAT_Y + 4 * GRID + 4], carry: 'activation', progress: phase(p, 0, 0.3) });
-  valueChips(svg, phase(p, 0.1, 0.3));
-  outputRow(svg, { fill: phase(p, 0.6, 1) });
-  const slide = ease(phase(p, 0.3, 0.8));
-  const ghost = 1 - phase(p, 0.7, 0.85);
+  if (p < 0.3) G.flow(svg, { from: [STRIP_X + 4 * CELL + 4, STRIP_Y[2] - 4], to: [CHIP_X + GRID / 2, MAT_Y + 4 * GRID + 4], carry: 'activation', progress: seg(p, 0, 0.3) });
+  valueChips(svg, seg(p, 0.1, 0.3));
+  outputRow(svg, { fill: seg(p, 0.6, 1) });
+  const slide = ease(seg(p, 0.3, 0.8));
+  const ghost = 1 - seg(p, 0.7, 0.85);
   if (slide <= 0 || ghost <= 0) return;
   VISIBLE.forEach((j) => {
     const x = lerp(MAT_X.v, OUT_ROW.x, slide);

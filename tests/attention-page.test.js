@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim } from '../shared/claims.js';
-import { LESSON } from '../architecture/concepts/attention/content.js';
-import { checkWork, fmt2, fmt3, cellText, trimNumber, divisorText, workedRowTex, expansion } from '../architecture/concepts/attention/format.js';
+import { LESSON, lessonFor } from '../architecture/concepts/attention/content.js';
+import { fillText } from '../shared/claims.js';
+import { checkWork, fmt2, fmt3, cellText, trimNumber, divisorText, workedRowTex, expansion, INITIAL_STATE } from '../architecture/concepts/attention/format.js';
 import { CAPTIONS, CHECK_WORK } from './attention-expected.js';
 import { TOY } from '../math/attention.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
-const data = { models: await read('../data/models.json'), hardware: await read('../data/hardware.json') };
+const data = { models: await read('../data/models.json'), hardware: await read('../data/hardware.json'), serving: await read('../data/serving.json'), papers: await read('../data/papers.json') };
 const graph = await read('../shared/concepts.json');
 
 test('the lesson spec is complete', () => assert.deepEqual(validateLessonSpec(LESSON), []));
@@ -86,4 +87,33 @@ test('frame 2\'s expansion line writes out the "cat" dot product exactly as the 
   const { Q, K } = TOY.heads.A;
   assert.equal(expansion(Q[2], K[1], 3), '0·0 + 2·1.5 + 0.5·0 + 0·(−0.5) = 3.0');
   assert.equal(expansion(Q[2], K[3], -0.75), '0·0.5 + 2·(−0.5) + 0.5·0.5 + 0·1 = −0.75');
+});
+
+test('the lesson filled with real data is complete (template rule 1)', () => {
+  const before = JSON.stringify(data);
+  const lesson = lessonFor(data);
+  assert.deepEqual(validateLessonSpec(lesson), []);
+  assert.equal(JSON.stringify(data), before, 'lessonFor never mutates the data');
+});
+
+test('every prose placeholder resolves and no fact or prose prints "—"', () => {
+  const lesson = lessonFor(data);
+  const prose = [lesson.hook, ...lesson.intuition, lesson.intuitionNote, lesson.toy.intro, lesson.facts.framing, ...lesson.facts.prose, ...lesson.takeaways];
+  prose.forEach((text) => assert.deepEqual(fillClaim(text, data).missing, [], text.slice(0, 40)));
+  [...prose, ...lesson.facts.rows.map((r) => r.claim)].forEach((text) => assert.ok(!fillText(text, data).includes('—'), text.slice(0, 40)));
+});
+
+test('rows 4–6 print the storyboard numbers from the data', () => {
+  const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
+  assert.match(rows[3], /only 24 of its 93 layers run this softmax attention, the other 69 are linear-attention layers/);
+  assert.match(rows[4], /from layer 4 on, each query reads only the 16 most relevant blocks of 128 past tokens/);
+  assert.match(rows[5], /only 23 of its 92 layers are softmax attention \(3 linear : 1 full\); the rest are linear-attention layers/);
+});
+
+test('the toy starts where the animation ends', () => {
+  assert.deepEqual({ ...INITIAL_STATE }, { query: 2, divisor: 2, causal: true, head: 'A' });
+});
+
+test('stage cells: a masked exp or weight prints 0, a masked score −∞, a pending cell nothing', () => {
+  assert.deepEqual([cellText(-Infinity, 'exp'), cellText(-Infinity, 'weight'), cellText(-Infinity, 'scaled'), cellText(null, 'output'), cellText(Number.NaN, 'score')], ['0', '0', '−∞', '', '']);
 });

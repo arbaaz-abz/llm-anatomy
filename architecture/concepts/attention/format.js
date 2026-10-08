@@ -2,6 +2,9 @@
 import { TOY, attentionHead } from '@math/attention.js';
 
 const MINUS = '−';
+
+// The toy's starting state, where the animation ends: query "sat", head A, divisor √d_head = 2, mask on.
+export const INITIAL_STATE = Object.freeze({ query: 2, divisor: Math.sqrt(TOY.dHead), causal: true, head: 'A' });
 const realMinus = (s) => s.replace(/^-/, MINUS);
 const isZero = (v) => v === 0; // true for −0 too
 
@@ -26,9 +29,12 @@ const integerOr = (v, text) => (Number.isInteger(v) ? realMinus(String(v)) : tex
 
 // What a stage cell prints, per quantity (each quantity has one format on the stage):
 //   score  exact quarter-grid values ("−0.75", "3")      scaled  exact up to 3 decimals, 2 when 3 would not fit
-//   exp, weight  3 decimals ("0.095"; exact 0 and 1 print as integers)   output  2 decimals, as "Check my work"
+//   exp, weight  3 decimals ("0.095"; exact 0 and 1 print as integers; a masked cell's exp and weight are 0)
+//   output  2 decimals, as "Check my work".   A cell not computed yet (null) prints nothing.
+const ZERO_WHEN_MASKED = new Set(['exp', 'weight']);
 export function cellText(v, kind) {
-  if (v === -Infinity) return `${MINUS}∞`;
+  if (v == null || Number.isNaN(v)) return '';
+  if (v === -Infinity) return ZERO_WHEN_MASKED.has(kind) ? '0' : `${MINUS}∞`;
   switch (kind) {
     case 'score': return trimNumber(v, 2);
     case 'scaled': {
@@ -41,6 +47,9 @@ export function cellText(v, kind) {
     default: throw new RangeError(`cellText: unknown kind "${kind}"`);
   }
 }
+
+// The glyph `format` option for one quantity.
+export const formatFor = (kind) => (v) => cellText(v, kind);
 
 // The divisor slider's printed value: 2 is the model's own choice.
 export const divisorText = (v) => (v === Math.sqrt(TOY.dHead) ? `${v} = √d_head (the model's value)` : String(v));
