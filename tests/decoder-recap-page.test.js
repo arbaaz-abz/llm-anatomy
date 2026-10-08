@@ -34,6 +34,16 @@ test('every facts row resolves against data/models.json and none prints a dash',
   assert.equal(fillClaim(FACT_ROWS[7].claim, data).reported, false);
   assert.equal(fillClaim(FACT_ROWS[0].claim, data).reported, true, 'GPT-3\'s learned positions are a reported fact');
 });
+test('rows that cite a boolean or a config string print a sentence, with the source link', () => {
+  const text = (i) => fillClaim(FACT_ROWS[i].claim, data);
+  assert.equal(text(2).segments.map((s) => s.text).join(''), 'RoPE in most models; Kimi K3\'s 24 MLA layers use no position encoding (NoPE).');
+  assert.equal(text(3).segments.map((s) => s.text).join(''), 'QK-norm in Gemma 3 and Qwen3; DeepSeek-V4-Pro normalizes queries and KV entries too, instead of Kimi\'s QK-Clip.');
+  assert.equal(text(5).segments.map((s) => s.text).join(''), 'A learned sink per head in gpt-oss-120b, MiMo-V2-Flash and DeepSeek-V4-Pro.');
+  [2, 3, 4, 5].forEach((i) => assert.ok(text(i).sources.length >= 1, `row ${i + 1} keeps a source link`));
+  assert.equal(text(5).sources.length, 3);
+  assert.doesNotMatch(FACT_ROWS[1].claim, /deepseek-v3/);
+  assert.equal(FACT_ROWS[1].derived, true);
+});
 test('the text under the stage fills from data, prints the storyboard\'s exact lines, and nothing is missing', () => {
   const lesson = lessonFor(data);
   belowTexts().flat().forEach((t) => assert.deepEqual(fillClaim(t, data).missing, [], t.slice(0, 50)));

@@ -9,14 +9,15 @@ export function framing() {
   return "Every part below is in at least one 2026 frontier model; almost none is in all of them. Sebastian Raschka's architecture gallery compares 100+ models part by part (link below).";
 }
 
+// Booleans and long config strings are cited with |cite: the row keeps the source link and "reported" flag, the learner reads a sentence.
 // The rows of storyboard §8, in order (its last row, "beyond the block", is split in three so each row stays one claim with few sources). Booleans in the data (qk_norm, biases, attention_sink) print as the config key they come from.
 export const FACT_ROWS = Object.freeze([
   { claim: 'GPT-3 ({gpt-3.release_date|year}): pre-norm LayerNorm, {gpt-3.positional} positions ({gpt-3.context_length}), a GELU MLP 4× wide, full multi-head attention ({gpt-3.n_heads} heads, each with its own keys and values), biases and tied embeddings.' },
   { claim: 'Pre-norm RMSNorm in most 2026 models; Gemma normalizes both before and after each half.', derived: true },
-  { claim: 'RoPE in most models; in Kimi K3 the {kimi-k3.full_attention_layers} MLA layers use no position encoding: "{kimi-k3.attention}".' },
-  { claim: 'QK-norm in Gemma 3 and Qwen3; DeepSeek-V4-Pro normalizes queries and KV entries too (qk_norm: {deepseek-v4-pro.qk_norm}), instead of Kimi\'s QK-Clip.' },
-  { claim: 'Biases are mostly gone; gpt-oss-120b keeps its attention biases (biases: {gpt-oss-120b.biases}).' },
-  { claim: 'A learned sink per head: gpt-oss-120b (attention_sink: {gpt-oss-120b.attention_sink}), MiMo-V2-Flash ({mimo-v2-flash.attention_sink}) and DeepSeek-V4-Pro ({deepseek-v4-pro.attention_sink}).' },
+  { claim: 'RoPE in most models; Kimi K3\'s {kimi-k3.full_attention_layers} MLA layers use no position encoding (NoPE){kimi-k3.attention|cite}.' },
+  { claim: 'QK-norm in Gemma 3 and Qwen3; DeepSeek-V4-Pro normalizes queries and KV entries too{deepseek-v4-pro.qk_norm|cite}, instead of Kimi\'s QK-Clip.' },
+  { claim: 'Biases are mostly gone; gpt-oss-120b keeps its attention biases{gpt-oss-120b.biases|cite}.' },
+  { claim: 'A learned sink per head in gpt-oss-120b{gpt-oss-120b.attention_sink|cite}, MiMo-V2-Flash{mimo-v2-flash.attention_sink|cite} and DeepSeek-V4-Pro{deepseek-v4-pro.attention_sink|cite}.' },
   { claim: 'GQA with {gpt-oss-120b.n_kv_heads} KV heads is typical (gpt-oss-120b; Llama 3.1 70B: {llama-3.1-70b.n_kv_heads}); MLA in DeepSeek-V3 (latent rank {deepseek-v3.mla_kv_rank}), Kimi K3 ({kimi-k3.mla_kv_rank}) and GLM-5 ({glm-5.attention_note}).' },
   { claim: 'Hybrid stacks: Qwen3.8 runs {qwen3.8.layer_pattern} (Gated DeltaNet to full attention); Kimi K3 has {kimi-k3.linear_attention_layers} linear and {kimi-k3.full_attention_layers} MLA layers.' },
   { claim: 'Residual redesigns in 2026: {deepseek-v4-pro.residual} in DeepSeek-V4-Pro and {kimi-k3.residual} in Kimi K3.' },
