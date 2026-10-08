@@ -29,6 +29,7 @@
   --sem-memory: #0e8aa8;
   --sem-ok: #1f8f4e;
   --sem-bad: #cf2f4f;
+  --sem-comm: #9268b3; /* communication (laneTimeline comm lanes): plum, clear of compute amber and memory cyan (S3) */
   --ink-on-sem: #ffffff;
   --req-1: #026fd7;
   --req-2: #e46212;
@@ -42,6 +43,7 @@
   --carry-gradient: var(--accent-train);
   --carry-kv: var(--sem-memory);
   --carry-token: var(--ink);
+  --carry-weight: #6e6200; /* weights in motion (flow carry 'weight', S3): olive, clear of the other four carries */
   --focus: var(--accent);
   --shadow: 0 1px 2px rgb(20 26 36 / 0.06), 0 4px 16px rgb(20 26 36 / 0.05);
   --font-display: "Geist", system-ui, sans-serif;
@@ -65,7 +67,8 @@
     --accent-arch: #9a93ff; --accent-train: #ee79b4; --accent-serve: #3cc4ad; --ink-on-accent: #0f1319;
     --val-neg: #7db3fa; --val-zero: #2c3340; --val-pos: #f69a50; --ink-on-val: #0f1319;
     --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
-    --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --ink-on-sem: #0f1319;
+    --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
+    --carry-weight: #a19c55;
     --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
     --part-1: #c98500; --part-2: #0f60fa; --part-3: #32925e; --part-4: #975985; --part-5: #db1f0f;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
@@ -78,7 +81,8 @@
   --accent-arch: #9a93ff; --accent-train: #ee79b4; --accent-serve: #3cc4ad; --ink-on-accent: #0f1319;
   --val-neg: #7db3fa; --val-zero: #2c3340; --val-pos: #f69a50; --ink-on-val: #0f1319;
   --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
-  --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --ink-on-sem: #0f1319;
+  --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
+  --carry-weight: #a19c55;
   --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
   --part-1: #c98500; --part-2: #0f60fa; --part-3: #32925e; --part-4: #975985; --part-5: #db1f0f;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
@@ -258,7 +262,15 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 [data-hl="rms"] [data-link="rms"] .g-frame, [data-hl="glu"] [data-link="glu"] .g-frame, [data-hl="qk"] [data-link="qk"] .g-frame,
 [data-hl="bias"] [data-link="bias"] .g-frame, [data-hl="gate"] [data-link="gate"] .g-frame, [data-hl="tok"] [data-link="tok"] .g-frame,
 [data-hl="merge"] [data-link="merge"] .g-frame, [data-hl="proj"] [data-link="proj"] .g-frame, [data-hl="t"] [data-link="t"] .g-frame,
-[data-hl="act"] [data-link="act"] .g-frame, [data-hl="kv"] [data-link="kv"] .g-frame { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
+[data-hl="act"] [data-link="act"] .g-frame, [data-hl="kv"] [data-link="kv"] .g-frame,
+/* Training storyboards (shared prep S3) */
+[data-hl="n"] [data-link="n"] .g-frame, [data-hl="d"] [data-link="d"] .g-frame, [data-hl="pol"] [data-link="pol"] .g-frame,
+[data-hl="beta"] [data-link="beta"] .g-frame, [data-hl="ref"] [data-link="ref"] .g-frame, [data-hl="r"] [data-link="r"] .g-frame,
+[data-hl="ratio"] [data-link="ratio"] .g-frame, [data-hl="rho"] [data-link="rho"] .g-frame, [data-hl="int"] [data-link="int"] .g-frame,
+[data-hl="ridge"] [data-link="ridge"] .g-frame, [data-hl="peak"] [data-link="peak"] .g-frame, [data-hl="bw"] [data-link="bw"] .g-frame,
+[data-hl="w"] [data-link="w"] .g-frame, [data-hl="g"] [data-link="g"] .g-frame, [data-hl="comm"] [data-link="comm"] .g-frame,
+[data-hl="bubble"] [data-link="bubble"] .g-frame, [data-hl="link"] [data-link="link"] .g-frame, [data-hl="flops"] [data-link="flops"] .g-frame,
+[data-hl="mfu"] [data-link="mfu"] .g-frame, [data-hl="loss"] [data-link="loss"] .g-frame { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
 
 /* ---------- Facts (Task 6 contract) ---------- */
 .fact { font-variant-numeric: tabular-nums; }
@@ -304,6 +316,9 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-gpu .g-hbm { fill: color-mix(in oklab, var(--sem-memory) 45%, var(--surface)); stroke: var(--sem-memory); }
 .g-gpu .g-mem-track { fill: var(--surface-2); stroke: var(--line); }
 .g-gpu .g-mem-fill { fill: var(--sem-memory); }
+.g-gpu--lit .g-sm { fill: color-mix(in oklab, var(--sem-compute) 22%, var(--surface)); } /* litSms: the other tiles step back */
+.g-gpu .g-sm--lit { fill: var(--sem-compute); }
+.g-rack .g-rack-label { fill: var(--ink); font-weight: 600; }
 .g-rack .g-link { stroke: var(--sem-memory); stroke-linecap: round; }
 .g-request .g-prefill { fill: var(--sem-compute); }
 .g-request .g-decode { stroke: var(--sem-memory); stroke-width: 2; stroke-linecap: round; }
@@ -315,6 +330,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-flow--gradient .g-dot { fill: var(--carry-gradient); }
 .g-flow--kv .g-dot { fill: var(--carry-kv); }
 .g-flow--token .g-dot { fill: var(--carry-token); }
+.g-flow--weight .g-dot { fill: var(--carry-weight); }
 .g-verdict--ok circle { fill: var(--sem-ok); }
 .g-verdict--bad circle { fill: var(--sem-bad); }
 .g-verdict path { fill: none; stroke: var(--ink-on-sem); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
@@ -375,6 +391,53 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-bars .g-bar-value { fill: var(--ink); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; } /* halo: the reference line never crosses a digit */
 .g-bars .g-bars-axis { stroke: var(--line); stroke-width: 1; }
 .g-bars .g-bars-ref { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+
+/* ---------- Shared prep S3: Training glyphs and options ---------- */
+/* cell / vector semantic fills (a reward of 1 or 0) and matrix shards (a GPU's columns or rows), never the value scale */
+.g-cell--ok > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--sem-ok) 40%, var(--surface)); }
+.g-cell--bad > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--sem-bad) 40%, var(--surface)); }
+.g-cell--shard[data-gpu="1"] > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--part-2) 45%, var(--surface)); }
+.g-cell--shard[data-gpu="2"] > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--part-1) 45%, var(--surface)); }
+.g-cell--shard[data-gpu="3"] > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--part-3) 45%, var(--surface)); }
+.g-cell--shard[data-gpu="4"] > rect:not(.g-hatch) { fill: color-mix(in oklab, var(--part-5) 45%, var(--surface)); }
+/* laneTimeline (P3-R9): kinds as fills (tints, so the printed ink reads), idle and lost hatched */
+.g-lanes .g-lane-track { fill: var(--surface-2); }
+.g-lanes .g-lane--compute { fill: color-mix(in oklab, var(--sem-compute) 55%, var(--surface)); }
+.g-lanes .g-lane--memory { fill: color-mix(in oklab, var(--sem-memory) 55%, var(--surface)); }
+.g-lanes .g-lane--comm { fill: color-mix(in oklab, var(--sem-comm) 55%, var(--surface)); }
+.g-lanes .g-lane--forward { fill: color-mix(in oklab, var(--carry-activation) 50%, var(--surface)); }
+.g-lanes .g-lane--backward { fill: color-mix(in oklab, var(--carry-gradient) 50%, var(--surface)); }
+.g-lanes .g-lane--lost { fill: color-mix(in oklab, var(--sem-compute) 55%, var(--surface)); }
+.g-lanes .g-lane--idle { fill: var(--surface); }
+.g-lanes .g-lane-text { fill: var(--ink); }
+.g-lanes .g-label.g-lane-text { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; } /* printed beside a short segment, over a hatch */
+.g-lanes .g-lane-tick { stroke: var(--ink); stroke-width: 1.5; }
+.g-lanes .g-bracket, .g-bits .g-bracket { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
+/* curvePlot and roofline (P3-R10): ink axes, faint grid, tone-colored series (never the accent), a dashed labeled reference */
+.g-plot .g-plot-axis { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
+.g-plot .g-plot-grid { stroke: var(--line); stroke-width: 1; }
+.g-plot .g-plot-tick { stroke: var(--ink-muted); stroke-width: 1; }
+.g-plot .g-band { fill: color-mix(in oklab, var(--ink) 9%, var(--surface)); }
+.g-plot .g-series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.g-plot .g-series--muted { stroke-width: 1.5; opacity: 0.5; }
+.g-plot .g-series.g-tone--ink { stroke: var(--ink); }
+.g-plot .g-series.g-tone--compute { stroke: var(--sem-compute); }
+.g-plot .g-series.g-tone--memory { stroke: var(--sem-memory); }
+.g-plot .g-series.g-tone--comm { stroke: var(--sem-comm); }
+.g-plot .g-series.g-tone--ok { stroke: var(--sem-ok); }
+.g-plot .g-series.g-tone--bad { stroke: var(--sem-bad); }
+.g-plot .g-marker { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
+.g-plot .g-plot-ref { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.g-plot .g-series-label, .g-plot .g-marker-label, .g-plot .g-band-label, .g-plot .g-plot-ref-label, .g-plot .g-ridge-label {
+  paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round;
+}
+.g-plot .g-series-label, .g-plot .g-marker-label, .g-plot .g-ridge-label { fill: var(--ink); }
+/* bitLayout: bit cells by role (formats are bit fields, never values) */
+.g-bits .g-bit { stroke: none; }
+.g-bits .g-bit--sign .g-bit { fill: color-mix(in oklab, var(--ink) 30%, var(--surface)); }
+.g-bits .g-bit--exponent .g-bit { fill: color-mix(in oklab, var(--part-2) 50%, var(--surface)); }
+.g-bits .g-bit--mantissa .g-bit { fill: color-mix(in oklab, var(--part-1) 45%, var(--surface)); }
+.g-bits .g-bit--scale .g-bit { fill: color-mix(in oklab, var(--part-4) 45%, var(--surface)); }
 
 /* ---------- Lesson page scaffold (shared/lesson-page.js) ---------- */
 .lesson-hook { font-family: var(--font-display); font-size: var(--fs-l); line-height: 1.35; }
