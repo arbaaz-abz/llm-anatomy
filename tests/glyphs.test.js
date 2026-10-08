@@ -245,6 +245,16 @@ test('barsLayout: 8 bars fit 344 px at NUMBER_CELL pitch, heights on an explicit
   assert.equal(barsLayout({ values: [1, 2], max: 2, h: 10 }).referenceY, null);
 });
 
+test('barsLayout: a value label that would sit on the reference line is lifted clear of it (shared-5)', () => {
+  const reference = { value: 32, label: 'fair share 32' }; // max 96, h 120 → the line at y = 80
+  const { bars, referenceY } = barsLayout({ values: [96, 32, 30, 36, 29, 12], max: 96, h: 120, reference });
+  assert.equal(referenceY, 80);
+  assert.deepEqual(bars.map((b) => b.labelY), [-5, 71, 73.5, 70, 74.75, 100]); // 96, 36 and 12 keep y − 5; the others end 4 px above the line or above their own place
+  const clear = bars.every((b) => b.labelY <= referenceY - 4 || b.labelY - referenceY >= 8);
+  assert.ok(clear, 'no value label baseline lies within 8 px of the reference line, nor below it within the glyph height');
+  assert.equal(barsLayout({ values: [32], max: 96, h: 120 }).bars[0].labelY, 75); // no reference line → y − 5
+});
+
 test('barsLayout: an explicit width sets the pitch; zero is a bar of height 0', () => {
   const { bars, w } = barsLayout({ values: [6, 8, 1, 1, 4], max: 20, h: 100, w: 215 });
   assert.equal(w, 215);
