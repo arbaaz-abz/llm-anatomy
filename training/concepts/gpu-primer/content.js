@@ -4,7 +4,7 @@ import { fillText } from '@shared/claims.js';
 import { render } from './frames.js';
 import { mount } from './toy.js';
 import { CAPTIONS } from './captions.js';
-import { hook, intuition, takeaways, framing, factRows, PROSE, BELOW } from './facts.js';
+import { hook, intuition, takeaways, framing, factRows, BELOW } from './facts.js';
 
 const SLUG = 'gpu-primer';
 
@@ -46,7 +46,7 @@ export function lessonFor(data) {
       mount,
     },
     math: { blocks: MATH_BLOCKS, notes: MATH_NOTES },
-    facts: { framing: framing(), rows: factRows(data), prose: PROSE },
+    facts: { framing: framing(), rows: factRows(data) },
     takeaways: takeaways(data).map(fill),
     links: { next: ['training-memory', 'prefill-decode', 'quantization'], further: FURTHER },
   };

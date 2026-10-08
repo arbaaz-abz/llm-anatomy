@@ -28,20 +28,21 @@ test('the lesson spec is complete, with and without data', () => {
 
 test('captions are the storyboard\'s, verbatim and in order', () => assert.deepEqual(LESSON.animation.steps.map((s) => s.caption), CAPTIONS));
 
-test('11 facts rows; every placeholder resolves; the filled lesson has no dash', () => {
+test('12 facts rows; every placeholder resolves; the filled lesson has no dash', () => {
   const lesson = lessonFor(data);
-  assert.equal(lesson.facts.rows.length, 11);
+  assert.equal(lesson.facts.rows.length, 12);
   lesson.facts.rows.forEach((row, i) => {
     assert.deepEqual(fillClaim(row.claim, data).missing, [], `row ${i + 1}`);
     assert.doesNotMatch(fillText(row.claim, data), /—/, `row ${i + 1}`);
   });
-  const texts = [lesson.hook, ...lesson.intuition, ...lesson.takeaways, lesson.facts.framing, ...lesson.facts.prose, ...BELOW.flatMap((_, i) => lesson.animation.belowFor(i))];
+  const texts = [lesson.hook, ...lesson.intuition, ...lesson.takeaways, lesson.facts.framing, ...BELOW.flatMap((_, i) => lesson.animation.belowFor(i))];
   texts.forEach((t) => assert.doesNotMatch(t, /[{}—]/, t.slice(0, 60)));
   BELOW.flat().forEach((t) => assert.deepEqual(fillClaim(t, data).missing, [], t.slice(0, 60)));
-  assert.match(fillText(lesson.facts.rows[0].claim, data), /^H100 SXM \(2022\): 80 GB HBM3 \(nominal\), 3\.35 TB\/s, 989 TFLOPS BF16, 1,979 FP8 \(2 × BF16\), NVLink 900 GB\/s both directions \(450 each way, .*\); ridge 295\.$/);
+  assert.match(fillText(lesson.facts.rows[0].claim, data), /^H100 SXM \(2022\): 80 GB HBM3 \(nominal\), 3\.35 TB\/s, 989 TFLOPS BF16, 1,979 FP8 \(reported: 2 × BF16\), NVLink 900 GB\/s both directions \(450 each way, .*\); ridge 295\.$/);
   assert.match(fillText(lesson.facts.rows[2].claim, data), /ridge 206:/);
   assert.match(fillText(lesson.facts.rows[7].claim, data), /HBM bandwidth 19\.2–22 TB\/s/);
   assert.match(fillText(lesson.facts.rows[10].claim, data), /a 12B model on 10T tokens in NVFP4 and matched its FP8 loss \(2025\)/);
+  assert.equal(fillText(lesson.facts.rows[11].claim, data), 'FlashAttention (2022) tiles attention so the score matrix stays in on-chip SRAM instead of HBM: the same math, far fewer HBM bytes.');
   assert.match(factRows(null)[0].claim, /ridge —\./, 'without data a derived number prints a dash, never a stale one');
 });
 
@@ -138,7 +139,7 @@ test('toy view: the default state prints the storyboard\'s numbers, each from it
   assert.equal(view({}).conflict, '');
 });
 
-test('the H100 compute time prints 0.543 µs (storyboard §5 frame 7, §6)', { todo: 'shared request: formatDuration keeps 3 s.f. below 1' }, () => {
+test('the H100 compute time prints 0.543 µs (storyboard §5 frame 7, §6)', () => {
   assert.equal(view({}).readouts.computeTime, '0.543 µs');
 });
 

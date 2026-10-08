@@ -25,9 +25,7 @@ export const CHECK_WORK = [
   'crossing  = the token count whose intensity reaches 295.2 = 318.2 tokens',
 ].join('\n');
 
-// The H100 BF16 4-token compute time, through the one duration formatter (README lesson 35). The storyboard prints
-// "0.543 µs"; formatDuration prints "0.54 µs" until the shared fix lands (shared request; the page test pins the
-// storyboard text as a todo test that passes once it does).
+// The H100 BF16 4-token compute time, through the one duration formatter (README lesson 35): "0.543 µs".
 export const COMPUTE_4 = formatDuration((2 * 4 * 8192 * 8192) / 989e12);
 
 // Storyboard §6 "Try this", as the page prints it ("prompt → Insight: … rest"; [[slug]] prints as the lesson title).

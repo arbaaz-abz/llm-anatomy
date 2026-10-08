@@ -10,7 +10,8 @@ import { CHIPS, chipPreset, formatOptions, usableFormat } from './hardware.js';
 import { INITIAL_STATE, TOKEN_STOPS, TOKEN_PRESETS, int } from './format.js';
 import { toyView, FP8_NOTE, SAME_FORMAT_NOTE, RESIDUAL_NOTE } from './toy-view.js';
 import { tryThis } from './try-this.js';
-import { output, readoutTables, paintPlot, paintLanes, mountPresetButtons } from './toy-dom.js';
+import { output, readoutTables, paintPlot, paintLanes } from './toy-dom.js';
+import { mountPresetButtons } from '@shared/ui/preset-buttons.js';
 
 const rich = (text, ctx, props = {}) => appendRich(el('p', { className: 'toy-note', ...props }), text, ctx);
 
@@ -74,7 +75,7 @@ function mountControls(refs, data, toy) {
     onInput: (v) => toy().set({ tokens: v }),
   });
   const presets = mountPresetButtons(refs.presets, {
-    id: 'tokens-preset', label: 'Token presets', values: TOKEN_PRESETS, format: int, onPick: (v) => tokens.set(v),
+    id: 'tokens-preset', label: 'Token presets', options: TOKEN_PRESETS.map((v) => ({ value: v, label: int(v) })), onPick: (v) => tokens.set(v),
   });
   return [chip, fmt, tokens, presets];
 }

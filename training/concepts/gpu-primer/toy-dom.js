@@ -12,27 +12,13 @@ export const output = (name, props = {}) => {
   return o;
 };
 
-// Token presets as action buttons: they move the slider and keep no "selected" state, because the slider can sit between
-// presets (64, 512) and a chip left pressed there would claim a value the toy is not showing. Same markup as mountChoice's
-// chips, minus aria-pressed. → { destroy }
-export function mountPresetButtons(root, { id, label, values, format, onPick }) {
-  const caption = el('span', { id: `${id}-label`, className: 'choice-label', textContent: label });
-  const buttons = values.map((v) => {
-    const b = el('button', { type: 'button', className: 'choice-option', textContent: format(v) });
-    b.dataset.value = String(v);
-    return b;
-  });
-  const onClick = (event) => {
-    const b = event.target.closest('.choice-option');
-    if (b && root.contains(b)) onPick(values[buttons.indexOf(b)]);
-  };
-  root.id = id;
-  root.className = 'choice choice--chips';
-  root.setAttribute('role', 'group');
-  root.setAttribute('aria-labelledby', caption.id);
-  root.replaceChildren(caption, ...buttons);
-  root.addEventListener('click', onClick);
-  return { destroy() { root.removeEventListener('click', onClick); root.replaceChildren(); } };
+const BOUND_CLASS = Object.freeze({ 'memory-bound': 'sem-text--memory', 'compute-bound': 'sem-text--compute' });
+
+// The verdict words keep their text (they carry the meaning); a class only colours them, memory teal and compute amber.
+function colourVerdict(table) {
+  const out = table.querySelector('[data-readout="verdict"]');
+  const parts = out.textContent.split(/(memory-bound|compute-bound)/);
+  out.replaceChildren(...parts.filter(Boolean).map((t) => (BOUND_CLASS[t] ? el('span', { className: BOUND_CLASS[t], textContent: t }) : document.createTextNode(t))));
 }
 
 // Two ruled tables: what the multiply costs, and what the chosen chip makes of it.
@@ -58,6 +44,7 @@ export function readoutTables(r) {
       { label: 'Longer by', cells: [{ value: r.timeRatio.value, sub: r.timeRatio.sub, name: 'time-ratio' }] },
     ],
   });
+  colourVerdict(chip);
   return [multiply, chip];
 }
 

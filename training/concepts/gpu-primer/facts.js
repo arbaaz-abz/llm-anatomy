@@ -56,10 +56,10 @@ export function framing() {
   return `The 2026 hardware table: dense peaks only (vendor sparse figures are ${formatRatio(SPARSE_FACTOR)} and not used), HBM capacities nominal in decimal GB, link speeds with their direction. Each ridge point is that chip\'s dense BF16 peak ÷ its HBM bandwidth, computed from the same entries.`;
 }
 
-// The 11 sourced rows of storyboard §8 (its FlashAttention row is the prose paragraph below: no data entry to cite yet).
+// The 12 sourced rows of storyboard §8.
 export function factRows(data) {
   return [
-    { claim: `H100 SXM ({hw:h100.release_date|year}): {hw:h100.hbm_gb} GB HBM3 (nominal), {hw:h100.hbm_tbps|raw} TB/s, {hw:h100.bf16_dense_tflops} TFLOPS BF16, {hw:h100.fp8_e4m3_dense_tflops} FP8 (2 × BF16), NVLink ${bothWays(data)} GB/s both directions ({hw:h100.nvlink_gb_s_each_way} each way, the convention in [[cluster-topology]]); ridge ${bf16Ridge(data, 'h100')}.` },
+    { claim: `H100 SXM ({hw:h100.release_date|year}): {hw:h100.hbm_gb} GB HBM3 (nominal), {hw:h100.hbm_tbps|raw} TB/s, {hw:h100.bf16_dense_tflops} TFLOPS BF16, {hw:h100.fp8_e4m3_dense_tflops} FP8 (reported: 2 × BF16), NVLink ${bothWays(data)} GB/s both directions ({hw:h100.nvlink_gb_s_each_way} each way, the convention in [[cluster-topology]]); ridge ${bf16Ridge(data, 'h100')}.` },
     { claim: 'An H100 has {hw:h100.sm_count} SMs (streaming multiprocessors).' },
     { claim: `H200: {hw:h200.hbm_gb} GB (nominal), {hw:h200.hbm_tbps|raw} TB/s, the same compute as the H100 ({hw:h200.bf16_dense_tflops} TFLOPS BF16); ridge ${bf16Ridge(data, 'h200')}: the extra bandwidth makes it easier to be compute-bound.` },
     { claim: 'B200 (HGX): {hw:b200.hbm_gb} GB nominal ({hw:b200.hbm_usable_gb} usable), {hw:b200.hbm_tbps|raw} TB/s, {hw:b200.bf16_dense_tflops} / {hw:b200.fp8_e4m3_dense_tflops} / {hw:b200.nvfp4_dense_tflops} TFLOPS BF16 / FP8 / NVFP4.' },
@@ -70,16 +70,13 @@ export function factRows(data) {
     { claim: 'Number formats (sign/exponent/mantissa bits): FP32 {hw:formats.fp32_layout}, BF16 {hw:formats.bf16_layout}, FP16 {hw:formats.fp16_layout}, FP8 E4M3 {hw:formats.fp8_e4m3_layout} or E5M2 {hw:formats.fp8_e5m2_layout}; MXFP4 shares one {hw:formats.mxfp4_scale_bits}-bit power-of-two scale per {hw:formats.mxfp4_block_size} numbers; NVFP4 one {hw:formats.nvfp4_scale_format} scale per {hw:formats.nvfp4_block_size}, plus a per-tensor FP32 scale.' },
     { claim: 'gpt-oss-120b stores its MoE weights as {gpt-oss-120b.weight_format}, so the {gpt-oss-120b.total_params|count} model fits one {hw:h100.hbm_gb} GB GPU (post-training quantization, not native FP4 training).' },
     { claim: 'NVIDIA trained a {nvidia-nvfp4-12b.total_params|count} model on {nvidia-nvfp4-12b.pretrain_tokens|count} tokens in {nvidia-nvfp4-12b.pretrain_precision} and matched its FP8 loss ({nvidia-nvfp4-12b.release_date|year}); Nemotron 3 Super and Ultra were pretrained in {nemotron-3-super.pretrain_precision}{nemotron-3-ultra.pretrain_precision|cite} too.' },
+    { claim: 'FlashAttention ({paper:flashattention-2022.release_date|year}) {paper:flashattention-2022.mechanism}: the same math, far fewer HBM bytes.' },
   ];
 }
 
-export const PROSE = Object.freeze([
-  'FlashAttention tiles attention so the score matrix stays in on-chip SRAM instead of HBM: the same math, far fewer HBM bytes (arXiv 2205.14135).',
-]);
-
 // Page text under the stage, one list per frame: dated notes (filled from data) and frame → lesson hand-offs.
 export const BELOW = Object.freeze([
-  ['H100 SXM ({hw:h100.release_date|year}): {hw:h100.hbm_gb} GB of HBM3, nominal. What fills it during training is [[training-memory]].'],
+  ['H100 SXM ({hw:h100.release_date|year}): {hw:h100.hbm_gb} GB of HBM3, nominal. What fills it during training: see [[training-memory]].'],
   [`Vendor sheets also print "with sparsity" figures, ${formatRatio(SPARSE_FACTOR)} these; every peak on this page is dense.`],
   ['SRAM per SM is a rough figure ({hw:memory-hierarchy.sram_per_sm}, reported); HBM is {hw:h100.hbm_gb} GB on an H100.'],
   ['The multiply followed here is the last one of [[attention]]: four token rows times W_O. That lesson is optional background.'],

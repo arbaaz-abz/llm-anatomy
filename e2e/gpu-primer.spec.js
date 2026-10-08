@@ -5,7 +5,7 @@ import { CAPTIONS, CHECK_WORK, COMPUTE_4, TRY_THIS } from '../tests/gpu-primer-e
 
 const URL = '/training/#gpu-primer';
 
-registerLessonContract({ name: 'gpu-primer', url: URL, captions: CAPTIONS, factRows: 11, returnHash: 'gpu-primer' });
+registerLessonContract({ name: 'gpu-primer', url: URL, captions: CAPTIONS, factRows: 12, returnHash: 'gpu-primer' });
 
 const readout = (page, name) => page.locator(`[data-section="toy"] [data-readout="${name}"]`);
 // The tokens slider snaps to powers of two: index i is 2^i tokens.
@@ -28,6 +28,7 @@ test.describe('gpu-primer toy: where does this multiply sit on the roof?', () =>
       attainable: '13.4 TFLOPS', 'peak-share': '1.35%', 'memory-time': '40.1 µs', 'compute-time': COMPUTE_4, 'time-ratio': '73.9×',
     });
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);
+    await expect(readout(page, 'verdict').locator('.sem-text--memory')).toHaveText('memory-bound');
     await expect(readout(page, 'lanes-width')).toHaveText('lanes share one time axis; full width = 40.1 µs');
     await expect(page.locator('[data-section="toy"] .g-roofline .g-marker')).toHaveCount(2);
     await expect(page.locator('[data-section="toy"] .g-roofline .g-select')).toHaveCount(1);
@@ -47,6 +48,7 @@ test.describe('gpu-primer toy: where does this multiply sit on the roof?', () =>
     await expectReadouts(page, { 'peak-share': '81.61%', verdict: 'memory-bound', intensity: '240.9' });
     await setTokens(page, 512);
     await expectReadouts(page, { 'peak-share': '100.00%', verdict: 'compute-bound', 'tokens-needed': '318.2' });
+    await expect(readout(page, 'verdict').locator('.sem-text--compute')).toHaveText('compute-bound');
     // The token presets are actions, never a selection: none claims to be chosen while the slider sits between them.
     await expect(page.locator('#tokens-preset [aria-pressed]')).toHaveCount(0);
     await page.locator('#tokens-preset [data-value="4096"]').click();
