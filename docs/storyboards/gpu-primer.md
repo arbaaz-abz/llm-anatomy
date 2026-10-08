@@ -100,19 +100,24 @@ New glyphs (built in S3; the APIs below are the built ones):
   draws the same roofline from two numbers. Reused by `prefill-decode` (prefill vs decode dots on the same
   plot); `quantization` and `serving-calculator` import `math/roofline.js` but draw no roofline.
 - `G.laneTimeline(parent, { x, y, w, lanes: [{ label, segments: [{ from, to, kind, label }] }], scale,
-  cap, ticks, gaps, labels })` (ruling P3-R9): horizontal lanes on one shared time axis; `kind` ∈
-  `compute | memory | comm | idle` fills `--sem-compute`, `--sem-memory`, `--sem-comm`, and `idle` is
-  hatched with the `heatmap` mask hatch, meaning "excluded: the resource is waiting or the work doesn't
-  count" (README lesson 24); `forward | backward` fill `--carry-activation` / `--carry-gradient`; `cap: { at,
-  label }` draws a capped lane ending in an arrow; `ticks: [{ t, label }]` marks events such as checkpoint
-  saves; `gaps: [{ from, to, label }]` marks restarts; `labels: false` keeps dense lanes label-free, each
-  segment still with a `<title>`. A segment's label prints inside it only when it is ≥ 36 px wide, otherwise
-  beside it. Why: `request` draws one request's prefill/decode ticks, not several resources sharing a clock.
+  cap, ticks, gaps, labels })` (ruling P3-R9; times in any one unit, `scale` in px per unit, default:
+  the latest end fills the track; `w` includes the lane-label gutter): horizontal lanes on one shared time
+  axis; `kind` ∈ `compute | memory | comm` fills the `--sem-compute`, `--sem-memory`, `--sem-comm` tints;
+  `idle` is hatched with the `heatmap` mask hatch, meaning "excluded: the resource is waiting or the work
+  doesn't count" (README lesson 24); `lost` is the compute tint under that hatch (work that doesn't count);
+  `forward | backward` fill the `--carry-activation` / `--carry-gradient` tints; one global `cap: { at,
+  label }` cuts every lane past `at` and ends it in an arrow with the label; `ticks: [{ t, label }]` mark
+  events such as checkpoint saves; `gaps: [{ from, to, label }]` mark restarts; `labels: false` keeps dense
+  lanes label-free, each segment still with a `<title>` naming lane and kind. A segment's label prints
+  inside it only when it is ≥ 36 px wide and fits, otherwise beside it. Why: `request` draws one request's prefill/decode ticks, not several resources sharing a clock.
   Reused by `parallelism` (pipeline schedule), `scale-reliability` (overlap lanes; checkpoint and
   failure timeline) and possibly `batching`.
-- `bitLayout(parent, { x, y, fields: [{ role: 'sign' | 'exponent' | 'mantissa' | 'scale', bits }],
-  bitW = 14, label, sharedBy })`: a row of bit cells grouped and labeled by role; `sharedBy` draws a
-  bracket "shared by 16 numbers" under a scale field. Why: formats are bit fields, not values; `vector`
+- `G.bitLayout(parent, { x, y, fields: [{ role: 'sign' | 'exponent' | 'mantissa' | 'scale', bits }] |
+  format: <a FORMATS entry>, bitW = 14, label, sharedBy })` (`G.bitFields('1/8/7')` turns a layout string
+  into fields): a row of bit cells grouped by role, field text `S`, `E<n>`, `M<n>`, `scale` under the cells;
+  `sharedBy` draws a bracket "shared by 16 numbers" under the last scale field. BF16 and FP8 E4M3 pass
+  `format: FORMATS.bf16` / `FORMATS.fp8_e4m3`; the collapsed NVFP4 block of frame 10 passes `fields:
+  [...bitFields('1/2/1') × 3, { role: 'scale', bits: 8 }]`, `sharedBy: 16` (280 px at 14 px). Why: formats are bit fields, not values; `vector`
   would color them by value. Reused by `scale-reliability` (FP8 tiles); `quantization` draws its own
   number line (Plan 4).
 
@@ -137,11 +142,11 @@ All numbers from `math/roofline.js` (reproducer in §6). H100 values are `hardwa
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | One large `gpu` glyph, labeled "H100" (`memFill` 0). Its die (SM grid) is labeled "compute"; its HBM stacks are labeled "HBM: high-bandwidth memory". | The die and the HBM stacks fade in one after the other. | A GPU is compute next to stacks of memory called HBM. On an H100, HBM holds 80 GB: the weights and everything else the GPU works on. | 80 GB HBM3 |
-| 2 | The die's SM grid lights (`gpu` `litSms`: every cell lit; its `<title>` prints the count); a label "132 SMs (streaming multiprocessors), each with tensor cores" and a readout "989 trillion ops/s". A `flow` arrow from HBM to the die with the readout "3.35 TB/s". Plain mark: "dense numbers; vendor sparse figures are 2× and not used". | The arrow draws; both readouts type in. | Tensor cores inside the compute grid do matrix multiplies at 989 trillion operations a second. HBM feeds them only 3.35 trillion bytes a second. | 132 SMs · 989 trillion ops/s (BF16, dense; written TFLOPS from frame 4 on) · 3.35 TB/s |
+| 2 | The die's SM grid lights (`gpu` `litSms: [0, …, 11]`: all 12 drawn tiles lit; the page's label prints the real count, "132 SMs"); a label "132 SMs (streaming multiprocessors), each with tensor cores" and a readout "989 trillion ops/s". A `flow` arrow from HBM to the die with the readout "3.35 TB/s". Plain mark: "dense numbers; vendor sparse figures are 2× and not used". | The arrow draws; both readouts type in. | Tensor cores inside the compute grid do matrix multiplies at 989 trillion operations a second. HBM feeds them only 3.35 trillion bytes a second. | 132 SMs · 989 trillion ops/s (BF16, dense; written TFLOPS from frame 4 on) · 3.35 TB/s |
 | 3 | Zoom on one SM: two labeled `block`s, "tensor cores" and "SRAM: hundreds of KB, on chip"; HBM (80 GB, off chip) stays at the edge. | The zoom; the SRAM block lights. | Each SM also has a tiny on-chip memory, SRAM, much faster than HBM. Fast kernels such as FlashAttention keep their working numbers there between steps. | SRAM: hundreds of KB per SM (rough) · HBM: 80 GB |
 | 4 | Back to the full GPU. Left: token chips The, cat, sat (outlined), down beside `matrix` X [4 × 8]; `matrix` W_O [8 × 8]; empty Y [4 × 8]. Two `NUMBER_CELL` readouts: "bytes" and "FLOPs". | X and W_O travel from HBM into the die (`flow` dots), Y travels back; the bytes cell counts 0 → 256 as each matrix moves; then Y's cells fill row by row and the FLOPs cell counts 0 → 512 ("sat"'s row adds 128). | Take attention's last multiply: four tokens times W_O. It moves 256 bytes and does 512 floating-point operations, or FLOPs: 16 for each output number. | bytes (BF16, 2 per number): X 32 + W_O 64 + Y 32 = 128 numbers → 256 · FLOPs: 4 · 8 outputs × (8 multiplies + 8 adds) = 512 · row "sat": 128 |
 | 5 | The two readouts and a third `NUMBER_CELL` "FLOPs per byte". | The third cell types 2. | Arithmetic intensity is FLOPs per byte moved. This multiply does 2 FLOPs for every byte it reads or writes. | 512 ÷ 256 = 2.00 |
-| 6 | `roofline` appears at the right, H100 BF16: sloped roof up to the bend, flat roof after it; the bend is labeled "ridge point 295". The followed dot (outlined) sits at x = 2 on the sloped roof. | The sloped roof draws from the left, the flat roof from the right; they meet; the dot drops onto the roof at x = 2. | Plot speed against intensity and the roof bends once. The bend, the ridge point, is where moving a byte takes as long as 295 FLOPs on an H100. | ridge = 989 ÷ 3.35 = 295.2 FLOPs/byte · dot: intensity 2 → attainable 6.7 TFLOPS (0.68% of peak) |
+| 6 | `roofline` appears at the right, H100 BF16: sloped roof up to the bend, flat roof after it; the bend is labeled "ridge point 295". The followed dot (a `roofline` point with `followed: true`, which draws its own `G.selectionMark`; the page adds none) sits at x = 2 on the sloped roof. | The sloped roof draws from the left, the flat roof from the right; they meet; the dot drops onto the roof at x = 2. | Plot speed against intensity and the roof bends once. The bend, the ridge point, is where moving a byte takes as long as 295 FLOPs on an H100. | ridge = 989 ÷ 3.35 = 295.2 FLOPs/byte · dot: intensity 2 → attainable 6.7 TFLOPS (0.68% of peak) |
 | 7 | The matrices grow to real size: X [4 × 8,192], W [8,192 × 8,192]; the same four chips. Plain mark: "toy size: inputs and outputs are half the bytes; at real size the weights are 99.9%". Below the plot, a `laneTimeline` with two lanes on one axis, printed "full width = 40.1 µs": "memory 40.1 µs" (`--sem-memory`) and "compute 0.543 µs" (`--sem-compute`). The dot moves to x = 4. | The memory lane extends to 40.1 µs; the compute lane stops at 0.54 µs; its idle remainder hatches. | At real size the weights are nearly all the bytes, so four tokens get only 4 FLOPs per byte. This multiply is memory-bound: HBM sets the pace. | FLOPs 536,870,912 · bytes 134,348,800 · intensity 4.00 · memory 40.1 µs vs compute 0.543 µs (73.9×) · attainable 13.4 TFLOPS = 1.35% of peak, tensor cores idle 98.6% of the time |
 | 8 | The token count ticks 4 → 64 → 256 → 4,096 (a plain counter; the chip row is replaced by "4,096 tokens"). The dot slides right along the roof, crosses the bend, and rides the flat roof. Lanes update; their axis label changes to "full width = 556 µs". | Counter and dot move together; at the crossing the lanes swap which is longer. | Each weight read from HBM is used once per token. At 4,096 tokens the multiply does 2,048 FLOPs per byte and is compute-bound: the tensor cores set its pace. | intensity 4 → 63 → 241 → 2,048 · crossing at 318.2 tokens · 4,096 tokens: compute 556 µs vs memory 80.1 µs |
 | 9 | Precision switch on the plot: label "FP8: 1 byte per number, tensor cores 2× faster". The roof's flat part doubles to 1,979 TFLOPS; the bend moves to 591. Two dots (outlined: 4 tokens; plain: 4,096) move right by 2×. Plain mark: "inputs and outputs in the same format as the weights". (The bit layouts are drawn in frame 10, to keep this frame inside the stage.) | The flat roof rises, the bend slides right, both dots slide right; the 4-token lanes halve. | FP8 stores each number in 1 byte and, on an H100, runs the tensor cores twice as fast. Both sides double, so most multiplies just get twice as fast. | ridge 590.7 · 4 tokens: intensity 7.99, memory 20.1 µs · crossing still at 318.3 tokens · H100 FP8 1,979 TFLOPS (reported: 2 × BF16) |
@@ -430,6 +435,9 @@ Settled and applied (README lesson 20):
   `scale-reliability`; `quantization` and `serving-calculator` import `math/roofline.js` only.
 - S3 options: W_O travels as `flow` `carry: 'weight'` (frame 4); the SM grid lights with `gpu` `litSms`
   (frame 2).
+- S3-C final API (reconciled 2026-10-08): `laneTimeline` gains the `lost` kind, `scale` in px per unit and
+  one global `cap`; `bitLayout` takes `fields` or `format`; `litSms` indexes the 12 drawn tiles; a followed
+  `roofline` / `curvePlot` point draws its own `G.selectionMark`.
 - P3-R12: FP4 (and Rubin's BF16 / FP8) is disabled with a visible note, not hidden.
 - X-3: "(74×)" → "(73.9×)"; frame 11's "about 3.5-fold" / "(3.6×)" → "3.56×" in caption and numbers
   (caption 28 words).
