@@ -2,7 +2,7 @@
 import * as G from '@shared/glyphs.js';
 import { mountStepper } from '@shared/ui/stepper.js';
 import { mountSlider } from '@shared/ui/slider.js';
-import { mountMathPanel } from '@shared/ui/math-panel.js';
+import { mountMathPanel, linkMathToStage } from '@shared/ui/math-panel.js';
 import { renderFact } from '@shared/facts.js';
 import { loadJSON } from '@shared/data.js';
 import { matmul, transpose, softmax, causalMask, randomMatrix, formatBytes, formatCount } from '@math/core.js';
@@ -298,12 +298,7 @@ const math = mountMathPanel($('#math-root'), { summary: 'Show me the math', bloc
   { tex: '\\htmlClass{hl-q}{Q} = X\\,W_Q,\\qquad \\htmlClass{hl-k}{K} = X\\,W_K,\\qquad \\htmlClass{hl-v}{V} = X\\,W_V', note: 'X [n × d_model] (4 × 8); W [d_model × d_head] (8 × 4); Q, K, V [n × d_head] (4 × 4).' },
   { tex: '\\htmlClass{hl-a}{A} = \\operatorname{softmax}\\!\\left(\\frac{\\htmlClass{hl-q}{Q}\\,\\htmlClass{hl-k}{K}^{\\top}}{\\sqrt{d_{\\text{head}}}} + M\\right),\\qquad \\htmlClass{hl-o}{O} = \\htmlClass{hl-a}{A}\\,\\htmlClass{hl-v}{V}', note: 'M is 0 where j ≤ i and −∞ where j > i. Worked row: softmax([−0.5, 1.5, 0.25, −∞]) = [0.095, 0.703, 0.202, 0].' },
 ] });
-const stage = stepper.stage;
-const linkFrom = (event) => { const term = event.target.closest?.('[class*="hl-"]'); if (!term) return; stage.dataset.hl = term.className.match(/hl-(\w+)/)?.[1] ?? ''; };
-const unlink = () => { delete stage.dataset.hl; };
-// Hover only: KaTeX's HTML output is aria-hidden (the MathML copy is what AT reads), so nothing in it is made focusable.
-$('#math-root').addEventListener('mouseover', linkFrom);
-$('#math-root').addEventListener('mouseout', unlink);
+linkMathToStage($('#math-root'), stepper.stage);
 
 // ---- fact ----
 const FACT = { entry: 'deepseek-v4-pro', key: 'kv_bytes_per_token' };

@@ -315,6 +315,26 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-share .g-part-others { fill: var(--ink-muted); } /* "others": the folded tail, redrawn on the zoomed bar */
 .g-share .g-bracket { fill: none; stroke: var(--line); stroke-width: 1; }
 
+/* ---------- Lesson page scaffold (shared/lesson-page.js) ---------- */
+.lesson-hook { font-family: var(--font-display); font-size: var(--fs-l); line-height: 1.35; }
+.lesson-section > h3 { margin-top: var(--space-6); }
+.lesson-note, .stand-in, .toy-intro, .math-note { font-size: var(--fs-s); color: var(--ink-muted); }
+.stand-in { margin-top: var(--space-2); }
+.below-stage { margin-top: var(--space-3); }
+.toy { display: grid; gap: var(--space-4); min-width: 0; max-width: 760px; }
+.toy svg { display: block; }
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3) var(--space-4); }
+.readout { display: grid; gap: var(--space-1); font-size: var(--fs-s); }
+.readout output { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--fs-l); }
+.check-work { white-space: pre; overflow-x: auto; max-width: 100%; }
+.choice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.choice-label { font-weight: 500; font-size: var(--fs-s); margin-right: var(--space-2); }
+.choice-option[aria-pressed="true"], .toggle[aria-pressed="true"] { background: color-mix(in oklab, var(--accent) 16%, var(--surface)); border-color: var(--accent); }
+.choice--chips .choice-option { border-radius: 999px; }
+.fact-rows { padding-left: var(--space-4); }
+.fact-row { margin-bottom: var(--space-2); max-width: var(--measure); }
+.fact-missing { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--sem-bad); }
+
 /* ---------- motion ---------- */
 .stepper-caption, .nav-link, button, .concept-card { transition: background-color var(--duration) var(--ease), border-color var(--duration) var(--ease); }
 @media (prefers-reduced-motion: reduce) {

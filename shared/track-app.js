@@ -4,6 +4,7 @@ import { startRouter } from './router.js';
 import { safeStorage, toggleLearned, LEARNED_KEY } from './storage.js';
 import { conceptHref, hubHref, currentTarget } from './links.js';
 import { loadJSON } from './data.js';
+import { el } from './ui/dom.js';
 
 // Chrome, Safari and Firefox word a failed dynamic import differently.
 const isMissingModule = (error) =>
@@ -42,12 +43,6 @@ export function safeUnmount(unmount) {
     console.error('Lesson threw while unmounting', error);
   }
 }
-
-const el = (tag, props = {}, children = []) => {
-  const node = Object.assign(document.createElement(tag), props);
-  node.append(...children);
-  return node;
-};
 
 export async function mountTrack({ root, track }) {
   const [graph, links, models, hardware] = await Promise.all([

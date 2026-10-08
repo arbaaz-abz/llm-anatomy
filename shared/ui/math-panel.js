@@ -32,3 +32,16 @@ export function mountMathPanel(root, { summary = 'Show me the math', blocks }) {
   }
   return { destroy() { root.innerHTML = ''; } };
 }
+
+// Hovering a \htmlClass{hl-x}{…} term outlines the glyph with data-link="x" (theme.css lists the letters).
+// Hover only: KaTeX's HTML output is aria-hidden (the MathML copy is what AT reads). Returns the unlink function.
+export function linkMathToStage(mathHost, stage) {
+  const over = (event) => {
+    const term = event.target.closest?.('[class*="hl-"]');
+    if (term) stage.dataset.hl = term.className.match(/hl-(\w+)/)?.[1] ?? '';
+  };
+  const out = () => { delete stage.dataset.hl; };
+  mathHost.addEventListener('mouseover', over);
+  mathHost.addEventListener('mouseout', out);
+  return () => { mathHost.removeEventListener('mouseover', over); mathHost.removeEventListener('mouseout', out); };
+}
