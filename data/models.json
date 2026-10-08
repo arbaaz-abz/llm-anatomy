@@ -469,6 +469,20 @@
       "id": "kimi-k3",
       "name": "Kimi K3",
       "facts": {
+        "full_attention_layers": {
+          "value": 24,
+          "note": "Report §2.1: each block is 3 KDA layers then 1 Gated MLA layer (3:1), plus one more Gated MLA layer at the end; with 93 layers (report table, #Layers 93) that is 23 × 4 + 1: 24 Gated MLA (softmax) layers (read 2026-10-07).",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "linear_attention_layers": {
+          "value": 69,
+          "note": "Report §2.1: each block is 3 KDA layers then 1 Gated MLA layer (3:1), plus one more Gated MLA layer at the end; with 93 layers (report table, #Layers 93) that is 23 × 4 + 1: 69 KDA (linear-attention) layers (read 2026-10-07).",
+          "source_url": "https://arxiv.org/abs/2607.24653",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
         "total_params": {
           "value": 2780000000000,
           "unit": "params",
@@ -902,6 +916,20 @@
       "id": "qwen3.8",
       "name": "Qwen3.8-2.4T-A95B",
       "facts": {
+        "layer_pattern": {
+          "value": "3 linear : 1 full",
+          "note": "Model card: \"Number of Layers: 92\"; \"Hidden Layout: 23 × (3 × (Gated DeltaNet → MoE) → 1 × (Gated Attention → MoE))\" (read 2026-10-07).",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "full_attention_layers": {
+          "value": 23,
+          "note": "Model card: \"Number of Layers: 92\"; \"Hidden Layout: 23 × (3 × (Gated DeltaNet → MoE) → 1 × (Gated Attention → MoE))\" (read 2026-10-07). 23 gated full-attention layers; the other 69 are Gated DeltaNet.",
+          "source_url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
         "total_params": {
           "value": 2400000000000,
           "unit": "params",
@@ -1001,6 +1029,13 @@
       "id": "minimax-m3",
       "name": "MiniMax-M3",
       "facts": {
+        "sparse_from_layer": {
+          "value": 4,
+          "note": "Counted from 1. Config text_config.sparse_attention_config.sparse_attention_freq is a 60-entry per-layer list indexed from 0: [0, 0, 0, 1, 1, …] (57 ones); the first sparse layer is index 3, the 4th layer. Stored 1-based (read 2026-10-07).",
+          "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
         "total_params": {
           "value": 428000000000,
           "unit": "params",
@@ -1117,7 +1152,7 @@
         },
         "sparse_top_blocks": {
           "value": 16,
-          "note": "Per GQA group; sparse from layer 3.",
+          "note": "Per GQA group; sparse from the 4th layer (sparse_from_layer).",
           "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M3/raw/main/config.json",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
