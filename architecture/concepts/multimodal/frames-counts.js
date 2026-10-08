@@ -60,7 +60,7 @@ export function drawFrame7(svg, p, ctx) {
   note(svg, PANEL.left, PANEL.titleY, `${int(PHONE.width)} × ${int(PHONE.height)} photo`, { opacity: left(0) });
   coarseGrid(svg, PANEL.left, PANEL.gridY, 4, 4, COARSE, left(0));
   paintLines(svg, PANEL.left, PANEL.gridY + 36 + 22, phone.lines, 0, left);
-  const right = (i) => seg(p, 0.7 + 0.05 * i, 0.8 + 0.05 * i);
+  const right = (i) => seg(p, 0.7 + 0.04 * i, 0.8 + 0.04 * i);
   note(svg, PANEL.right, PANEL.titleY, `${int(maxSide)} × ${int(maxSide)}, the largest input`, { opacity: right(-1) });
   coarseGrid(svg, PANEL.right, PANEL.gridY, BIG_GRID, BIG_GRID, COARSE, right(-1));
   const textY = PANEL.gridY + BIG_GRID * COARSE + 20;

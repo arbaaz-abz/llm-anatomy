@@ -22,7 +22,7 @@ const smooth = (t) => { const c = Math.min(Math.max(t, 0), 1); return c * c * (3
 const grey = (x, y) => {
   const edge = smooth((x + 0.9 * y - 9.1) / 1.4 + 0.5); // dark background top-left, light fur bottom-right
   const grain = ((x * 7 + y * 13) % 5) * 0.012; // fixed texture, no randomness
-  return Math.round((0.16 + 0.78 * edge + grain) * 100) / 100;
+  return Math.round((0.16 + 0.56 * edge + grain) * 100) / 100;
 };
 
 // Row-major 16 × 16 greys with patch 6 replaced by the ear crop.

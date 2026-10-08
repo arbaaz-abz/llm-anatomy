@@ -37,7 +37,7 @@ const FRAME4_NOTES = ['16 → 4 vectors of 4 × 8 = 32 numbers', 'merge 2 × 2 d
 const mergedLabel = (parent, x, opacity) => noteLines(parent, x, 14, ['4 merged vectors,', 'each 4 × 8 = 32 numbers'], opacity);
 
 export function drawFrame4(svg, p) {
-  note(svg, S.GRID.x, 26, 'image: 16 × 16 pixels');
+  note(svg, S.GRID.x, 26, 'image: 16 × 16 px');
   patchGrid(svg);
   groupLines(svg, seg(p, 0.1, 0.4));
   const gone = leaving(p);
@@ -96,7 +96,7 @@ const FRAME5_NOTES = ['32 → 8 · 4 image tokens of d_model 8', 'the projector 
 export function drawFrame5(svg, p) {
   const gone = leaving(p);
   if (gone > 0) {
-    note(svg, S.GRID.x, 26, 'image: 16 × 16 pixels', { opacity: gone });
+    note(svg, S.GRID.x, 26, 'image: 16 × 16 px', { opacity: gone });
     patchGrid(svg, { opacity: gone });
     groupLines(svg, 1, gone);
     mergeLabel(svg, gone);

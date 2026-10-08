@@ -40,7 +40,7 @@ function tileLines(svg, drawn, opacity) {
 
 export function drawFrame1(svg, p) {
   const slide = seg(p, 0.4, 0.8);
-  note(svg, GRID.x, 26, 'image: 16 × 16 pixels');
+  note(svg, GRID.x, 26, 'image: 16 × 16 px');
   patchGrid(svg, { gap: slide, numbers: seg(p, 0.7, 0.85) });
   tileLines(svg, seg(p, 0, 0.35), 1 - slide);
   const big = seg(p, 0.8, 1);
@@ -84,7 +84,7 @@ function embedVector(svg, p, slide) {
 
 export function drawFrame2(svg, p) {
   const flat = seg(p, 0.12, 0.4);
-  note(svg, GRID.x, 26, 'image: 16 × 16 pixels', { opacity: 1 });
+  note(svg, GRID.x, 26, 'image: 16 × 16 px', { opacity: 1 });
   patchGrid(svg);
   const ghost = leaving(p) * (1 - flat);
   if (ghost > 0) { note(svg, BIG.x, BIG.y + BIG.size + 14, '16 grey values', { opacity: ghost }); note(svg, BIG.x, BIG.y - 10, 'patch 6, enlarged', { opacity: ghost }); }
@@ -119,7 +119,7 @@ function encoderParts(parent, { enter, rowsRead, text }) {
   G.block(layer(parent, enter), { ...ENC_HEAD, label: 'vision encoder', state: 'active' });
   const values = PATTERN.map((row, i) => (i < rowsRead ? row : row.map(() => Number.NaN)));
   G.heatmap(layer(parent, enter), { x: HEAT.x, y: HEAT.y, values, cell: HEAT.cell, maxAbs: SCALE.pattern, label: 'patch pairs' });
-  noteLines(parent, ENCODER.x + 12, HEAT.y + HEAT_SIDE + 22, ['within one image,', 'every patch sees every patch', '16 × 16 = 256 patch pairs read'], text);
+  noteLines(parent, ENCODER.x + 12, HEAT.y + HEAT_SIDE + 16, ['within one image,', 'every patch sees every patch', '16 × 16 = 256 patch pairs read'], text);
   noteLines(parent, GRID.x, NOTE_Y[0], ['no causal mask: every cell of the pattern is read'], text);
 }
 
@@ -127,7 +127,7 @@ function encoderParts(parent, { enter, rowsRead, text }) {
 export const encoderScene = (parent, opacity) => encoderParts(parent, { enter: opacity, rowsRead: 16, text: opacity });
 
 export function drawFrame3(svg, p) {
-  note(svg, GRID.x, 26, 'image: 16 × 16 pixels');
+  note(svg, GRID.x, 26, 'image: 16 × 16 px');
   patchGrid(svg);
   const gone = leaving(p);
   if (gone > 0) embedScene(svg, gone);
