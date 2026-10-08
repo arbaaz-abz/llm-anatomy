@@ -116,3 +116,51 @@ test('formatBytes prints decimal kB (lowercase k) with three significant figures
   assert.equal(formatBytes(42_949_672_960), '42.9 GB');
   assert.equal(formatBytes(999_600), '1 MB');
 });
+
+// ---- Shared prep S3 (Plan 3, ruling P3-R15): formatRatio and formatDuration ----
+import { formatRatio, formatDuration } from '../math/core.js';
+
+test('formatRatio: 3 significant figures, trailing zeros dropped (X-3)', () => {
+  assert.deepEqual([12, 2, 73.94, 3.556, 56.94, 1180.4, 4.333].map(formatRatio), ['12×', '2×', '73.9×', '3.56×', '56.9×', '1,180×', '4.33×']);
+  assert.throws(() => formatRatio(0.27), RangeError);
+});
+
+test('formatRatio: the X-3 and storyboard cases, 1× allowed, thousands grouped', () => {
+  assert.deepEqual([73.9, 1, 2.897, 2.72, 9, 6, 3.14159, 999.6, 12_345, 1_234_567].map(formatRatio),
+    ['73.9×', '1×', '2.9×', '2.72×', '9×', '6×', '3.14×', '1,000×', '12,300×', '1,230,000×']);
+  assert.equal(formatRatio(40.104 / 0.5428), '73.9×');
+  assert.equal(formatRatio(2 / 0.5625), '3.56×');
+  assert.equal(formatRatio(520 / 120), '4.33×');
+});
+
+test('formatRatio: below 1, non-finite or non-number throws "formatRatio: x must be …"', () => {
+  for (const bad of [0.999, 0, -2, Number.NaN, Infinity, '2', undefined, null]) {
+    assert.throws(() => formatRatio(bad), /^RangeError: formatRatio: x must be a finite number ≥ 1/);
+  }
+});
+
+test('formatDuration: 3 significant figures, unit by magnitude', () => {
+  assert.deepEqual([2.5e-6, 0.0146, 0.12345, 1.25, 75, 5400, 54 * 86400].map(formatDuration),
+    ['2.5 µs', '14.6 ms', '123 ms', '1.25 s', '1.25 min', '1.5 h', '54 days']);
+  assert.throws(() => formatDuration(-1), RangeError);
+});
+
+test('formatDuration: unit edges (µs < 1 ms ≤ ms < 1 s ≤ s < 60 s ≤ min < 60 min ≤ h < 48 h ≤ days)', () => {
+  assert.deepEqual([1e-3, 0.999e-3, 1, 0.9994, 60, 59.9, 3600, 3500, 47 * 3600, 48 * 3600, 1e9].map(formatDuration),
+    ['1 ms', '999 µs', '1 s', '999 ms', '1 min', '59.9 s', '1 h', '58.3 min', '47 h', '2 days', '11,600 days']);
+});
+
+test('formatDuration: rounds first, so a value that rounds up to the next unit prints in it', () => {
+  assert.equal(formatDuration(0.0009996), '1 ms');
+  assert.equal(formatDuration(0.99996), '1 s');
+  assert.equal(formatDuration(59.97), '1 min');
+  assert.equal(formatDuration(3599.9), '1 h');
+  assert.equal(formatDuration(47.99 * 3600), '2 days');
+});
+
+test('formatDuration: zero is "0 s"; negative, non-finite or non-number throws', () => {
+  assert.equal(formatDuration(0), '0 s');
+  for (const bad of [-1e-9, -1, Number.NaN, Infinity, '1', undefined, null]) {
+    assert.throws(() => formatDuration(bad), /^RangeError: formatDuration: seconds must be a finite number ≥ 0/);
+  }
+});

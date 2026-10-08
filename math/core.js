@@ -100,3 +100,37 @@ export function deepFreeze(value) {
     : Object.fromEntries(Object.entries(value).map(([k, v]) => [k, deepFreeze(v)]));
   return Object.freeze(copy);
 }
+
+// ---- Shared prep S3 (Plan 3, ruling P3-R15): one formatter per quantity (README lesson 35) ----
+
+// 3 significant figures, trailing zeros dropped, thousands grouped ("1,180"). x ≥ 1, so at most 2 decimals survive.
+const GROUPED = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, useGrouping: true });
+const groupedThreeSig = (x) => GROUPED.format(Number(x.toPrecision(3)));
+
+const isFiniteNumber = (x) => typeof x === 'number' && Number.isFinite(x);
+
+// "N×" for a ratio (X-3): 12×, 2×, 73.9×, 3.56×, 1,180×. A ratio below 1 is never "N×", so it throws.
+export function formatRatio(x) {
+  if (!isFiniteNumber(x) || x < 1) throw new RangeError(`formatRatio: x must be a finite number ≥ 1, got ${x}`);
+  return `${groupedThreeSig(x)}×`;
+}
+
+// Unit by magnitude: µs < 1 ms ≤ ms < 1 s ≤ s < 60 s ≤ min < 60 min ≤ h < 48 h ≤ days.
+const DURATION_UNITS = [
+  { name: 'µs', seconds: 1e-6, below: 1e-3 },
+  { name: 'ms', seconds: 1e-3, below: 1 },
+  { name: 's', seconds: 1, below: 60 },
+  { name: 'min', seconds: 60, below: 3600 },
+  { name: 'h', seconds: 3600, below: 48 * 3600 },
+  { name: 'days', seconds: 86400, below: Infinity },
+];
+
+// 3 significant figures, trailing zeros dropped: 2.5 µs, 14.6 ms, 1.25 min, 54 days. Rounds first, so
+// 59.97 s prints "1 min", not "60 s". Zero prints "0 s".
+export function formatDuration(seconds) {
+  if (!isFiniteNumber(seconds) || seconds < 0) throw new RangeError(`formatDuration: seconds must be a finite number ≥ 0, got ${seconds}`);
+  if (seconds === 0) return '0 s';
+  const firstUnit = DURATION_UNITS.findIndex((u) => seconds < u.below);
+  const unit = DURATION_UNITS.slice(firstUnit).find((u) => Number((seconds / u.seconds).toPrecision(3)) * u.seconds < u.below);
+  return `${groupedThreeSig(seconds / unit.seconds)} ${unit.name}`;
+}
