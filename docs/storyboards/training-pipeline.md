@@ -69,10 +69,12 @@ sees it is the same decoder), `shareBar` (proposed on `decoder-anatomy`; token b
 segments in the neutral fill, labeled `not published`), plain labeled text marks (the "adds:" line per stage, the stop links,
 the compute-share line, `illustrative`).
 
-`shareBar` usage note for its builder: a segment with `unknown: true` is drawn at a fixed 12% of the bar
-width in the neutral `--line`-tone fill (never hatched: hatch means masked or excluded elsewhere in the
-course), outside the percentage scale, and labeled `not published`; known segments share the rest
-in proportion.
+`shareBar` usage note for its builder (ruling P3-R6): the page passes an unpublished part as
+`{ name, value: null }`; `shareBar` draws it at a fixed width outside the scale (24 px, the built glyph) in
+the neutral `--line`-tone fill (never hatched: hatch means masked or excluded elsewhere in the course),
+labeled `not published`; known segments share the bar in proportion. A bar whose parts are **all**
+unpublished (Kimi K3) draws each part at that fixed width with the label `no published shares` and no
+scale. The printed shares are `budgetShares` shares (of the published total), never shareBar's own.
 
 New glyphs proposed: none.
 
@@ -117,15 +119,15 @@ each in its own units, and its token budget by stage.
 | id | Label | Type | Range / values | Default | Presets |
 |---|---|---|---|---|---|
 | `model` | Whose recipe | Preset chips | `GLM-5` / `DeepSeek-V4` / `Kimi K3` / `Nemotron 3 Super` / `Olmo 3 (reported)` | `GLM-5` | the chips |
-| `stage` | Inspect a stage | Selection: click, tap or arrow keys on a stage block | stages 1–6 | 1 | – |
+| `stage` | Inspect a stage | Selection: click, tap or arrow keys on a stage block (each block a focusable `<g role="button" tabindex="0" aria-label="stage n: name">`, Enter / Space selects, visible focus, selection drawn with `G.selectionMark`: the `pretraining` template's pattern, ruling P3-R17) | stages 1–6 | 1 | – |
 
 **Live outputs** (printed; nothing behind hover)
 | Output | Formula / source | Units / format |
 |---|---|---|
 | Stage strip: lit if the report describes the stage, `dim` with `not described` if not | preset data (§8 keys) | – |
 | Inspector for the selected stage: the published figure in its own unit, and the stop link | preset data | tokens, examples, pairs, prompts, environments or teachers, as published |
-| Token `shareBar` | `budgetShares(parts)` | percent, 1 decimal; neutral fill labeled `not published` |
-| Known tokens total | `budgetShares(parts).knownTotal` | T tokens |
+| Token `shareBar` | `budgetShares(parts)`; unpublished parts passed as `{ value: null }` | `formatShare(share)` (1 decimal); neutral fill labeled `not published`; all unpublished: `no published shares` |
+| Known tokens total | `budgetShares(parts).knownTotal` | `formatCount(knownTotal, { digits: 4 })` + " tokens" ("28.55T tokens"); Kimi K3: "none published" |
 
 Preset contents (from §8; `—` = not described in the brief):
 - GLM-5: pretrain 27T · mid-train 1.55T (4K → 200K) · SFT (rejection sampling, masked errors) · RL
@@ -149,9 +151,19 @@ Preset contents (from §8; `—` = not described in the brief):
    stages are counted in traces, pairs and prompts. → **Insight: tokens are the wrong ruler for
    post-training.** It is reported in examples, environments and compute, because each of its tokens costs
    far more than a pretraining token.
-3. Select `Kimi K3`: the bar holds only neutral `not published` segments, yet every stage is lit. → **Insight: a recipe can be
+3. Select `Kimi K3`: the bar holds only neutral segments labeled `no published shares`, yet every stage is lit. → **Insight: a recipe can be
    fully described without its budget.** Labs often publish the method but not the amounts, which is why
    the course labels unknowns rather than guessing.
+
+**Check my work** (default state, GLM-5; templated from `budgetShares(parts)` for every preset; mono,
+`aria-live="polite"`; this exact text appears on the page):
+```text
+known total = 27T + 1.55T     = 28.55T
+pretrain    = 27T ÷ 28.55T    = 94.6%
+mid-train   = 1.55T ÷ 28.55T  = 5.4%
+post-training: not published, so not in the total
+```
+Kimi K3 prints one line: `nothing published: no shares to compute`.
 
 Lesson-17 check: the token shares are `budgetShares` on published figures only; the toy never estimates an
 unpublished post-training token count, so it cannot make post-training look smaller or larger than it is.
@@ -265,9 +277,9 @@ list above carries the curriculum order.
   `pretraining` per README lesson 1.
 - **`blockStack` in frame 1** depends on `decoder-anatomy`'s glyph proposal; if it is not accepted, frame 1
   uses a single `block` "the decoder".
-- **`shareBar` unknown segments:** ruled (expert review, 2026-10-07): fixed 12% width, outside the scale,
-  neutral fill, labeled `not published`, never hatched; to be recorded in `decoder-anatomy`'s `shareBar` spec
-  at build time.
+- **`shareBar` unknown segments:** ruled (Plan 3, P3-R6): the built glyph's fixed width (24 px), outside the
+  scale, neutral fill, labeled `not published`, never hatched; an all-unknown bar is labeled `no published
+  shares` with no scale.
 - **Illustrative replies** to `What is 7 × 8?` are not model outputs; labeled on screen.
 
 ## 13. Reviewer rulings (expert review, 2026-10-07)
@@ -278,3 +290,11 @@ Applied from `track-review-recipe.md` §1 (change log: `fix-recipe-review.md`):
 - Should: frame 2 "(2026 open frontier MoEs)"; DeepSeek-R1 dated 2025; §3 says why one objective cannot do every stage; §4 notes "stage and checkpoint" are one idea; specialist names `math & code · agents · chat` used track-wide.
 - Nice: frame 1's random reply labeled "(random weights, illustrative)".
 - Data pass 2026-10-07: Nemotron 3 NVFP4 wording updated (both Super and Ultra; no conflict); no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R6: unknown parts are `{ value: null }` at the built fixed width outside the scale (was "12% of the bar
+  width"); Kimi K3's all-unknown bar is labeled `no published shares` (§4, §6, try-this 3, §12).
+- P3-R17: stage blocks are focusable selection buttons drawn with `G.selectionMark` (§6 `stage`).
+- X-2 / P3-R16: "Check my work" added (§6), from `budgetShares`.
+- X-1: "DeepSeek-R1 (2025)" stays: `models.deepseek-r1.release_date` = "2025-01" (confirmed, arXiv 2501.12948).
+- README lesson 35: shares print through `formatShare`, the known total through `formatCount`.
