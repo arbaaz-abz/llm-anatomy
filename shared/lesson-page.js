@@ -7,16 +7,20 @@ import { validateLessonSpec } from './lesson-spec.js';
 import { parseRichText } from './rich-text.js';
 import { fillClaim } from './claims.js';
 
+// A lesson reference reads as its title ("Attention, step by step"); the slug in code type is only the fallback.
+function lessonRef(slug, ctx) {
+  const url = ctx?.href?.(slug);
+  const title = ctx?.title?.(slug);
+  const label = title ? el('span', { textContent: title }) : el('code', { textContent: slug });
+  return url ? el('a', { href: url }, [label]) : label;
+}
+
 // Appends rich text ([[slug]] → lesson link, `x` → code) to `node` and returns it. Never parses HTML.
 export function appendRich(node, text, ctx) {
   for (const seg of parseRichText(text)) {
     if (seg.type === 'text') node.append(seg.text);
     else if (seg.type === 'code') node.append(el('code', { textContent: seg.text }));
-    else {
-      const url = ctx?.href?.(seg.slug);
-      const code = el('code', { textContent: seg.slug });
-      node.append(url ? el('a', { href: url }, [code]) : code);
-    }
+    else node.append(lessonRef(seg.slug, ctx));
   }
   return node;
 }

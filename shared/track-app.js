@@ -59,6 +59,7 @@ export async function mountTrack({ root, track }) {
     const concept = index.get(slug);
     return concept ? conceptHref({ from: track, track: concept.track, slug, target, artifactUrls: links.artifactUrls }) : null;
   };
+  const title = (slug) => index.get(slug)?.title ?? null;
   const importer = (slug) => import(new URL(`concepts/${slug}.js`, document.baseURI).href);
 
   const nav = el('nav', { className: 'app-nav', ariaLabel: `${trackInfo.title} lessons` });
@@ -139,7 +140,7 @@ export async function mountTrack({ root, track }) {
     const container = el('article', { className: 'concept' });
     main.replaceChildren(container);
     if (result.status === 'ok') {
-      const mounted = mountSafely(result.module, container, { concept, data, href });
+      const mounted = mountSafely(result.module, container, { concept, data, href, title });
       if (mounted.status === 'ok') {
         unmount = mounted.unmount;
         container.append(learnedButton(concept.slug));

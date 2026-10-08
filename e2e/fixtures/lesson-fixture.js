@@ -60,7 +60,9 @@ let unmount = null;
 try {
   // loadJSON resolves relative to shared/data.js, so these paths are the same from any page.
   const [models, hardware, serving, papers] = await Promise.all(['models', 'hardware', 'serving', 'papers'].map((f) => loadJSON(`../data/${f}.json`)));
-  const ctx = { concept: { slug: 'fixture', title: 'Lesson fixture', prereqs: ['decoder-anatomy'] }, data: { models, hardware, serving, papers }, href: (slug) => `../../architecture/#${slug}` };
+  const graph = await loadJSON('./concepts.json');
+  const title = (slug) => graph.concepts.find((c) => c.slug === slug)?.title ?? null;
+  const ctx = { concept: { slug: 'fixture', title: 'Lesson fixture', prereqs: ['decoder-anatomy'] }, data: { models, hardware, serving, papers }, href: (slug) => `../../architecture/#${slug}`, title };
   const sync = () => {
     unmount?.();
     unmount = null;

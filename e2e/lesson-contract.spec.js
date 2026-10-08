@@ -29,7 +29,11 @@ test('fixture: sections render in spec §4 order with rich text, stand-in line a
   await page.goto(`${FIXTURE}#fixture`);
   const order = await page.locator('#lesson > [data-section]').evaluateAll((els) => els.map((e) => e.dataset.section));
   expect(order).toEqual(['hook', 'intuition', 'animation', 'toy', 'math', 'facts', 'takeaways', 'links']);
-  await expect(page.locator('[data-section="intuition"] a code')).toHaveText('attention');
+  // Lesson links read as the concept's title (W0-10); the slug in code type is only the no-title fallback.
+  await expect(page.locator('[data-section="intuition"] a')).toHaveText('Attention, step by step');
+  await expect(page.locator('[data-section="intuition"] a code')).toHaveCount(0);
+  await expect(page.locator('[data-section="links"] p a')).toHaveText(['The whole model, end to end', 'Attention, step by step']);
+  await expect(page.locator('[data-section="facts"] p a')).toHaveText('The whole model, end to end');
   await expect(page.locator('.stand-in')).toHaveText('These numbers are hand-picked stand-ins.');
   await page.locator('[data-section="animation"] input[type="range"]').fill('2');
   await expect(page.locator('.below-stage')).toHaveText('Page text under the stage on step 3.');
