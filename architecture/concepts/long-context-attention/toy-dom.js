@@ -4,10 +4,7 @@
 import * as G from '@shared/glyphs.js';
 import { el } from '@shared/ui/dom.js';
 import { cellText, formatFor } from './format.js';
-import {
-  GRID, CELL, RIGHT, STACK, TILE, FOLLOWED_ROW, patternGrid, gridAxes, tileStack, glyphValues, linked, scene,
-} from './stage.js';
-import { TOKENS } from './numbers.js';
+import { STACK, TILE, patternGrid, gridAxes, tileStack, glyphValues, linked, scene } from './stage.js';
 
 // <output class="toy-row" data-readout="name"> with one .cell per value; set(cells, label) repaints it.
 export function numberRowView(name, text) {
@@ -70,4 +67,3 @@ export function drawState(svg, view) {
   });
 }
 
-export { TOKENS, GRID, CELL, RIGHT, FOLLOWED_ROW };
