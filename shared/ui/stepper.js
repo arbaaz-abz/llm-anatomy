@@ -56,9 +56,9 @@ export function mountStepper(root, { steps, render, label = 'Animation', transit
     <div class="stepper-stage"></div>
     <p class="stepper-caption" aria-live="polite"></p>
     <div class="stepper-bar" role="group" aria-label="Animation controls">
-      <button type="button" class="stepper-icon" data-act="prev" aria-label="Previous step">${ICONS.prev}</button>
+      <button type="button" class="icon-button" data-act="prev" aria-label="Previous step">${ICONS.prev}</button>
       <button type="button" class="stepper-play" data-act="toggle">${ICONS.play}<span class="stepper-play-label">Play</span></button>
-      <button type="button" class="stepper-icon" data-act="next" aria-label="Next step">${ICONS.next}</button>
+      <button type="button" class="icon-button" data-act="next" aria-label="Next step">${ICONS.next}</button>
       <input type="range" min="0" max="${steps.length - 1}" step="1" value="0" aria-label="Step">
       <output class="stepper-count" aria-live="off"></output>
       <select aria-label="Speed">${SPEEDS.map((s) => `<option value="${s}"${s === 1 ? ' selected' : ''}>${s}×</option>`).join('')}</select>

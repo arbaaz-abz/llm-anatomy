@@ -6,6 +6,7 @@ import { conceptHref, hubHref, currentTarget } from './links.js';
 import { loadJSON } from './data.js';
 import { el } from './ui/dom.js';
 import { mountThemeToggle } from './ui/theme-toggle.js';
+import { mountNavCollapse } from './ui/nav-collapse.js';
 
 // Chrome, Safari and Firefox word a failed dynamic import differently.
 const isMissingModule = (error) =>
@@ -69,12 +70,17 @@ export async function mountTrack({ root, track }) {
   const menuButton = el('button', { type: 'button', className: 'menu-toggle', textContent: 'Lessons' });
   menuButton.setAttribute('aria-controls', 'lesson-nav');
   menuButton.setAttribute('aria-expanded', 'false');
+  const app = el('div', { className: 'app' });
+  // From 1440 px the lesson list is a sidebar the reader can hide; the state lives on .app so CSS can drop the nav.
+  const navCollapse = mountNavCollapse({ store, onChange: (collapsed) => app.classList.toggle('nav-collapsed', collapsed) });
   const header = el('header', { className: 'app-header' }, [
+    navCollapse,
     home ? el('a', { href: home, textContent: 'LLM Anatomy' }) : el('span', { textContent: 'LLM Anatomy' }),
     el('h1', { textContent: trackInfo.title }),
     el('div', { className: 'app-header-actions' }, [menuButton, mountThemeToggle()]),
   ]);
-  root.replaceChildren(el('div', { className: 'app' }, [header, nav, main]));
+  app.append(header, nav, main);
+  root.replaceChildren(app);
 
   // Below 1440 px the lesson list is a popover; from 1440 px CSS shows it as a quiet list at the left edge.
   const setMenu = (open) => {

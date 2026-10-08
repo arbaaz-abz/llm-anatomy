@@ -87,6 +87,19 @@
           "last_verified": "2026-10-07"
         }
       }
+    },
+    {
+      "id": "llava-2023",
+      "name": "Visual Instruction Tuning (LLaVA; Liu et al., 2023)",
+      "facts": {
+        "year": {
+          "value": 2023,
+          "source_url": "https://arxiv.org/abs/2304.08485",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07",
+          "note": "arXiv 2304.08485 (Apr 2023); the adapter recipe in brief 01 §6: pretrained ViT + small MLP projector + an already-trained LLM."
+        }
+      }
     }
   ]
 }
