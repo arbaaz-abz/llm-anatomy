@@ -159,6 +159,9 @@ function determinismTests({ url, captions, root }) {
   });
 }
 
+// Page-relative top of the Play / Pause button (viewport top plus scroll, so a scroll is not a shift).
+export const toggleTop = (page, selector) => page.locator(selector).evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+
 function layoutTests({ url, captions, root }) {
   test('nothing clips at mid-transition or at rest on any step; every stage svg fits 580 × 366', async ({ page }) => {
     const errors = collectConsoleErrors(page);
@@ -183,6 +186,21 @@ function layoutTests({ url, captions, root }) {
     }
     expect(await glyphOverflows(page, '[data-section="toy"] svg')).toEqual([]);
     expect(errors).toEqual([]);
+  });
+
+  test('no layout shift during playback: the Play button sits at the same height on every step, at 1280 and 400 px', async ({ page }) => {
+    const p = stepperParts(root);
+    for (const width of [1280, 400]) {
+      await page.setViewportSize({ width, height: 860 });
+      await openSettled(page, url, root);
+      const tops = [];
+      for (let k = 0; k < captions.length; k += 1) {
+        await page.locator(p.scrub).fill(String(k));
+        await expect(page.locator(p.count)).toHaveText(`${k + 1} / ${captions.length}`);
+        tops.push(await toggleTop(page, p.toggle));
+      }
+      expect(new Set(tops).size, `${width} px: toggle top per step ${tops.join(', ')}`).toBe(1);
+    }
   });
 
   test('no horizontal page scroll at 400 px with the math panel open', async ({ page }) => {

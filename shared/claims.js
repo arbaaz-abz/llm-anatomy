@@ -15,6 +15,7 @@ export const CLAIM_FORMATS = Object.freeze({
   int: (v) => realMinus(Math.round(v).toLocaleString('en-US')),
   count: (v) => formatCount(v),
   count4: (v) => formatCount(v, { digits: 4 }),
+  count5: (v) => formatCount(v, { digits: 5 }),
   bytes: (v) => formatBytes(v),
   year: (v) => String(v).slice(0, 4),
 });
@@ -55,4 +56,10 @@ export function fillClaim(claim, data) {
   }
   if (last < claim.length) segments.push({ type: 'text', text: claim.slice(last) });
   return { segments, sources, reported, missing };
+}
+
+// Prose with {entry.key|format} placeholders (hook, intuition, belowFor, framing, toy text) as one string.
+// Pure: a missing fact prints "—" (the page test asserts fillClaim(text, data).missing is empty).
+export function fillText(text, data) {
+  return fillClaim(text, data).segments.map((s) => s.text).join('');
 }

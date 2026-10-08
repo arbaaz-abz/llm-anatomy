@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { collectConsoleErrors } from './helpers.js';
-import { glyphOverflows, startPausedClock, animateTo, MID_MS, END_MS } from './lesson-helpers.js';
+import { glyphOverflows, startPausedClock, animateTo, toggleTop, MID_MS, END_MS } from './lesson-helpers.js';
 
 const stepper = (page) => page.locator('#stepper-root');
 const caption = (page) => page.locator('#stepper-root .stepper-caption');
@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(21);
+  await expect(page.locator('#figures figure')).toHaveCount(22);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(21);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(22);
   expect(errors).toEqual([]);
 });
 
@@ -258,12 +258,14 @@ test('KaTeX renders the math panel with hover-linked terms', async ({ page }) =>
   await expect(stage(page)).toHaveAttribute('data-hl', 'k');
 });
 
-test('a draft token is dashed and muted, never hatched (README lesson 24)', async ({ page }) => {
+test('a draft token is dashed and muted, never hatched; dim patches, dim blocks and stack frames are not dashed (README lesson 24)', async ({ page }) => {
   await page.goto('/gallery/');
   const draft = page.locator('#figures .g-token--draft').first();
   expect(await draft.locator('.g-frame').evaluate((r) => getComputedStyle(r).strokeDasharray)).not.toBe('none');
   await expect(draft.locator('.g-hatch')).toHaveCount(0);
   expect(await page.locator('#figures .g-patch--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+  expect(await page.locator('#figures .g-block--dim .g-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+  expect(await page.locator('#figures .g-stack .g-stack-frame').first().evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
 });
 
 test('memBar keeps its exact output (labels, percentages, geometry) through the shareBar refactor', async ({ page }) => {
@@ -305,3 +307,18 @@ test('shareBar prints "not published" beside its off-scale segment, inside the f
   expect(label.x).toBeGreaterThanOrEqual(seg.x + seg.width); // beside, to the right
   expect(Math.abs(label.y + label.height / 2 - (seg.y + seg.height / 2))).toBeLessThanOrEqual(3); // on the bar's line
 });
+
+for (const width of [1280, 400]) {
+  test(`no layout shift during playback at ${width} px: the Play button stays put on every step`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/gallery/');
+    await page.evaluate(() => document.fonts.ready);
+    const tops = [];
+    for (let step = 0; step < 5; step += 1) {
+      await stepper(page).locator('input[type="range"]').fill(String(step));
+      await expect(stepper(page).locator('.stepper-count')).toHaveText(`${step + 1} / 5`);
+      tops.push(await toggleTop(page, '#stepper-root [data-act="toggle"]'));
+    }
+    expect(new Set(tops).size, tops.join(', ')).toBe(1);
+  });
+}

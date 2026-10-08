@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fillClaim, lookupFact, CLAIM_FORMATS } from '../shared/claims.js';
+import { fillClaim, fillText, lookupFact, CLAIM_FORMATS } from '../shared/claims.js';
 
 const fact = (value, extra = {}) => ({ value, source_url: 'https://example.org/a', confidence: 'confirmed', last_verified: '2026-10-07', ...extra });
 const DATA = {
@@ -58,4 +58,28 @@ test('sv: reads serving.json and paper: reads papers.json; models and hw: are un
   assert.deepEqual(r.sources, ['https://example.org/s', 'https://example.org/p', 'https://example.org/a']);
   assert.equal(r.reported, true);
   assert.deepEqual(fillClaim('{sv:deepseek-v3-mtp.acceptance_pct}', DATA).missing, ['sv:deepseek-v3-mtp.acceptance_pct']);
+});
+
+test('fillText returns the filled string, a dash for a missing fact, and never logs', (t) => {
+  const error = t.mock.method(console, 'error', () => {});
+  const warn = t.mock.method(console, 'warn', () => {});
+  assert.equal(fillText('GPT-3 ({gpt-3.release_date|year}) has {gpt-3.layers} layers.', DATA), 'GPT-3 (2020) has 96 layers.');
+  assert.equal(fillText('{gpt-3.nope} and {nobody.layers}', DATA), '— and —');
+  assert.equal(fillText('no placeholders', DATA), 'no placeholders');
+  assert.equal(fillText('{gpt-3.layers}', null), '—');
+  assert.equal(error.mock.callCount() + warn.mock.callCount(), 0);
+});
+
+test('fillText equals the joined fillClaim segments and does not mutate the data', () => {
+  const before = JSON.stringify(DATA);
+  const claim = '{qwen3.8.layers} · {hw:h100.hbm_gb} GB · {glm-5.3.layers}';
+  assert.equal(fillText(claim, DATA), text(fillClaim(claim, DATA)));
+  assert.equal(JSON.stringify(DATA), before);
+  assert.throws(() => fillText(42, DATA), TypeError);
+});
+
+test('count5 prints five significant figures: the gpt-oss card figure 116.83B', () => {
+  const data = { models: { entries: [{ id: 'gpt-oss-120b', facts: { total_params: fact(116.83e9) } }] } };
+  assert.equal(fillText('{gpt-oss-120b.total_params|count5}', data), '116.83B');
+  assert.equal(CLAIM_FORMATS.count5(116.83e9), '116.83B');
 });
