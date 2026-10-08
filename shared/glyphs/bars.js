@@ -8,9 +8,11 @@ const MIN_PCT_WIDTH = 30; // narrower segments print their share in the legend i
 const LEGEND_ROW = 15;
 const UNKNOWN_W = 24; // "not published": a fixed width, off the scale (decoder-anatomy §4)
 const UNKNOWN_GAP = 6;
+const UNKNOWN_LABEL_GAP = 4; // the printed "not published" label sits this far right of the off-scale segment
+const SEGMENT_GAP = 2; // barSegments' default gap between neighbors
 const TAIL_GAP = 40; // main bar top → zoomed tail bar top: room for the printed shares and the bracket
 
-export function barSegments(values, w, gap = 2) {
+export function barSegments(values, w, gap = SEGMENT_GAP) {
   if (!Array.isArray(values) || values.length === 0) throw new RangeError('glyphs.barSegments: values must be a non-empty array');
   if (values.some((n) => typeof n !== 'number' || !Number.isFinite(n) || n < 0)) throw new RangeError(`glyphs.barSegments: values must be finite numbers ≥ 0, got ${values.join(' / ')}`);
   const total = values.reduce((a, b) => a + b, 0);
@@ -51,7 +53,8 @@ export function shareBarLayout(parts, { w = 240, minSegment = 18 } = {}) {
   const known = parts.filter((p) => !p.unknown && p.value > 0);
   if (known.length === 0) throw new RangeError('glyphs.shareBar: at least one known part must be more than 0');
   const knownTotal = sumOf(known);
-  const isNarrow = (p) => (p.value / knownTotal) * w < minSegment;
+  // Judged on the drawn width (after the gap), so a kept segment is never drawn under minSegment.
+  const isNarrow = (p) => (p.value / knownTotal) * w - SEGMENT_GAP < minSegment;
   const folded = known.filter(isNarrow);
   const kept = known.filter((p) => !isNarrow(p));
   const mainParts = folded.length ? [...kept, { name: 'others', value: sumOf(folded), others: true }] : kept;
@@ -76,6 +79,13 @@ function drawBar(g, segs, { y, h, format }) {
     svgEl('title', {}, rect).textContent = `${seg.name}: ${format(seg.share)}`;
     if (seg.width >= MIN_PCT_WIDTH) text(g, seg.x + seg.width / 2, y + h + 13, format(seg.share), 'g-pct', { 'text-anchor': 'middle' });
   });
+}
+
+// Off-scale parts get a printed label beside them (decoder-anatomy §4: "the printed label 'not published'").
+function drawUnknownLabel(g, unknown, { h }) {
+  if (!unknown.length) return;
+  const last = unknown[unknown.length - 1];
+  text(g, last.x + last.width + UNKNOWN_LABEL_GAP, h / 2, unknown.map((p) => p.name).join(' · '), 'g-label g-unknown-label', { 'dominant-baseline': 'central' });
 }
 
 // The bracket joins the "others" segment to the zoomed bar under it, below the main bar's printed shares.
@@ -109,6 +119,7 @@ export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = format
   const spoken = parts.map((p) => `${p.name} ${format(p.value / whole)}`).join(', ');
   const g = group(parent, 'g-share', x, y, { role: 'img', 'aria-label': `${label}: ${spoken}` });
   drawBar(g, [...layout.main, ...layout.unknown], { y: 0, h, format });
+  drawUnknownLabel(g, layout.unknown, { h });
   const tailY = h + TAIL_GAP;
   if (layout.tail.length) {
     drawBracket(g, layout.main.find((s) => s.others), { h, w, tailY });

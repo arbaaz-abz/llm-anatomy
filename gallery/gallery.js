@@ -74,10 +74,12 @@ const FIGURES = [
     G.token(s, { x: 192, y: 8, text: '48', fill: G.valueColor(-0.58, 2.65), hatched: true });
     G.token(s, { x: 236, y: 8, text: '?', state: 'idle' });
   }],
-  ['vector', 'column and row; numbers print in cells of 36 px or more (40 px here), and every cell has its value as a tooltip', 480, 190, (s) => {
-    G.vector(s, { x: 24, y: 24, values: O[2], cell: G.NUMBER_CELL, label: 'o_sat' });
-    G.vector(s, { x: 120, y: 24, values: TOY.Q[2], cell: G.NUMBER_CELL, orient: 'row', label: 'q_sat' });
-    G.vector(s, { x: 120, y: 90, values: X[2], cell: G.NUMBER_CELL, orient: 'row', label: 'x_sat', maxAbs: 1 });
+  ['vector', 'column and row; numbers print in cells of 36 px or more (40 px here), and every cell has its value as a tooltip', 480, 260, (s) => {
+    // Laid out to fit a 400 px screen: the 8-cell row (320 px) takes the full width with its label above it.
+    G.vector(s, { x: 64, y: 24, values: TOY.Q[2], cell: G.NUMBER_CELL, orient: 'row', label: 'q_sat' });
+    G.vector(s, { x: 270, y: 24, values: O[2], cell: G.NUMBER_CELL, label: 'o_sat' });
+    G.svgEl('text', { x: 6, y: 196, class: 'g-label' }, G.svgEl('g', { class: 'glyph' }, s)).textContent = 'x_sat'; // glyph label style
+    G.vector(s, { x: 4, y: 204, values: X[2], cell: G.NUMBER_CELL, orient: 'row', maxAbs: 1 });
   }],
   ['matrix', 'shape label [rows × cols]; row labels by token', 300, 130, (s) => {
     G.matrix(s, { x: 44, y: 30, values: TOY.K, cell: 22, label: 'K', rowLabels: TOKENS, maxAbs: 3 });
@@ -129,7 +131,7 @@ const FIGURES = [
   }],
   ['blockTable', 'logical → physical lookup, optional ref count', 300, 100, (s) => {
     G.blockTable(s, { x: 10, y: 24, title: 'A', rows: [{ logical: 0, physical: 0 }, { logical: 1, physical: 1 }, { logical: 2, physical: 7 }] });
-    G.blockTable(s, { x: 150, y: 24, title: 'D₁ (shared)', rows: [{ logical: 0, physical: 8, ref: 2 }, { logical: 1, physical: 9, ref: 2 }] });
+    G.blockTable(s, { x: 146, y: 24, title: 'D₁ (shared)', rows: [{ logical: 0, physical: 8, ref: 2 }, { logical: 1, physical: 9, ref: 2 }] });
   }],
   ['selectionMark', 'the one selection outline: "the item we follow", in every frame; never an amount', 400, 70, (s) => {
     G.vector(s, { x: 70, y: 14, values: TOY.Q[2], cell: G.NUMBER_CELL, orient: 'row', maxAbs: 3, label: 'q_sat' });
@@ -156,7 +158,7 @@ const FIGURES = [
     G.memBar(s, { x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 });
   }],
   ['shareBar', 'categorical parts: five hues; parts under 18 px fold into "others" and a bracketed zoomed bar; "not published" is neutral, off the scale, never hatched', 360, 210, (s) => {
-    G.shareBar(s, { x: 4, y: 6, w: 300, label: 'toy model', parts: [
+    G.shareBar(s, { x: 4, y: 6, w: 172, label: 'toy model', parts: [
       { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },
       { name: 'other (norms)', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 }, { name: 'not published', value: 60, unknown: true },
     ] });

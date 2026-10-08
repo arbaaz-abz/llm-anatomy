@@ -155,3 +155,12 @@ test('shareBarLayout rejects nameless, duplicate, hue-less and negative parts', 
   assert.throws(() => shareBarLayout([{ name: 'a', value: -1, hue: 1 }]), /value must be a finite number ≥ 0/);
   assert.throws(() => shareBarLayout([{ name: 'a', value: 1, unknown: true }]), /at least one known part/);
 });
+
+test('shareBarLayout folds by drawn width: a part whose ideal is 19 px draws at 17 px after its 2 px gap, so it folds (lesson 19)', () => {
+  const { main, tail } = shareBarLayout([{ name: 'a', value: 19, hue: 1 }, { name: 'b', value: 81, hue: 2 }], { w: 100 });
+  assert.deepEqual(main.map((s) => s.name), ['b', 'others']);
+  assert.deepEqual(tail.map((s) => s.name), ['a']);
+  const kept = shareBarLayout([{ name: 'a', value: 20, hue: 1 }, { name: 'b', value: 80, hue: 2 }], { w: 100 });
+  assert.deepEqual(kept.main.map((s) => s.name), ['a', 'b']);
+  assert.ok(kept.main[0].width >= 18);
+});

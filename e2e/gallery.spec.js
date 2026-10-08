@@ -277,3 +277,28 @@ test('memBar keeps its exact output (labels, percentages, geometry) through the 
   expect(rects.map(([c]) => c)).toEqual(expected.map(([c]) => c));
   rects.forEach(([, x, w], i) => { expect(x).toBeCloseTo(expected[i][1], 3); expect(w).toBeCloseTo(expected[i][2], 3); });
 });
+
+for (const width of [1280, 400]) {
+  test(`every figure fits its card at ${width} px: no svg wider than the card, no card that scrolls`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/gallery/');
+    await page.evaluate(() => document.fonts.ready);
+    const misfits = await page.locator('#figures figure').evaluateAll((figs) => figs.flatMap((fig) => {
+      const card = fig.querySelector('.scroll-x');
+      const svg = fig.querySelector('svg');
+      const name = fig.querySelector('figcaption code, figcaption')?.textContent.trim().slice(0, 30);
+      const svgW = svg.getBoundingClientRect().width;
+      return svgW <= card.clientWidth && card.scrollWidth <= card.clientWidth ? [] : [`${name}: svg ${svgW.toFixed(0)} / scroll ${card.scrollWidth} vs card ${card.clientWidth}`];
+    }));
+    expect(misfits).toEqual([]);
+  });
+}
+
+test('shareBar prints "not published" beside its off-scale segment, inside the figure (decoder-anatomy §4)', async ({ page }) => {
+  await page.goto('/gallery/');
+  const share = page.locator('#figures .g-share');
+  await expect(share.locator('.g-unknown-label')).toHaveText(['not published']);
+  const [seg, label] = await Promise.all([share.locator('.g-part-none').first(), share.locator('.g-unknown-label').first()].map((l) => l.boundingBox()));
+  expect(label.x).toBeGreaterThanOrEqual(seg.x + seg.width); // beside, to the right
+  expect(Math.abs(label.y + label.height / 2 - (seg.y + seg.height / 2))).toBeLessThanOrEqual(3); // on the bar's line
+});
