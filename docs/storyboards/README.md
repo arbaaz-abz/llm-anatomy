@@ -22,6 +22,7 @@ Visual constraints from the built glyph library (gallery review, 2026-10-07):
 - Outlines and accent frames mean **selection or focus only** ("the token we're following"), never a quantity. Encode amounts with fill, opacity, length or a printed number. (User feedback 2026-10-07: a weight drawn as outline thickness read as "selected".)
 - Always mark the query or the item being followed the same way in every frame.
 - Encode each quantity once. If the weights row already shows a weight by color, don't re-mark the rows it applies to; link them with a chip in the same color. (User feedback 2026-10-07.)
+- Ratios "N× smaller / less / fewer" print 3 significant figures, trailing zeros dropped (12×, 56.9×, 1,180×); a ratio below 1 is never written as "N× smaller".
 
 Lessons from the pilot expert review (2026-10-07). These apply to every storyboard:
 1. **Header must match the graph.** `Prereqs:` equals the slug's `prereqs` in `shared/concepts.json`, and every `Next:` slug lists this one as a prereq.
@@ -56,3 +57,5 @@ Lessons from the pilot expert review (2026-10-07). These apply to every storyboa
 30. **§7 worked lines use the printed equation's conventions** — same symbols, signs and order. Two compensating errors that give the right number are still a defect.
 31. **§8 is a source, not a correction.** A misconception is corrected on the stage or in a try-this, never only by a §8 row.
 32. **A `flow` dot must contrast with what it enters.** A dot entering an `active` (accent-filled) block gets a halo or stops at the block's edge.
+33. **Lesson names in text.** On the stage, name a lesson by its title; in page text, use `[[slug]]` only where a title reads naturally ("… in [[x]]", "see [[x]]"), never as a possessive or a bare parenthetical slug.
+34. **Try-this at the end of the toy.** Every page prints its storyboard's try-this list at the end of the toy section (`h4` "Try this" + `ol.try-this`, each item "prompt → Insight: …"), numbers computed, text pinned in the page test.
