@@ -7,7 +7,8 @@ const URL = '/training/#rlvr-grpo';
 registerLessonContract({ name: 'rlvr-grpo', url: URL, captions: CAPTIONS, factRows: 13, returnHash: 'rlvr-grpo' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
-const cell = (page, row, col) => page.locator(`[data-section="toy"] [data-row="${row}"] [data-col="${col}"]`);
+// A cell's printed number is its .g-text (the glyph's <title> repeats it for hover).
+const cell = (page, row, col) => page.locator(`[data-section="toy"] [data-row="${row}"] [data-col="${col}"] .g-text`);
 const chip = (page, row, tok) => page.locator(`[data-section="toy"] [data-row="${row}"] [data-tok="${tok}"]`);
 const hatched = (page) => page.locator('[data-section="toy"] .toy-table .g-token .g-hatch');
 const column = async (page, col) => {

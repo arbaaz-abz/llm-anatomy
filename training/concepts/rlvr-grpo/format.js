@@ -28,7 +28,4 @@ export const fmt4 = (v) => fixed(v, 4);
 export const signed2 = (v) => signed(v, 2);
 export const signed4 = (v) => signed(v, 4);
 
-// A stage cell counting between two real states: integers print bare ("1", "0"); anything else as signed 2 d.p.
-export const cellNumber = (v) => (Number.isInteger(v) ? String(v) : signed2(v));
-
 export const yesNo = (flag) => (flag ? 'yes' : 'no');

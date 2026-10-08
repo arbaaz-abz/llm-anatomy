@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim, fillText } from '../shared/claims.js';
 import { LESSON, lessonFor } from '../training/concepts/rlvr-grpo/content.js';
-import { INITIAL_STATE, fixed, signed, signed2, cellNumber } from '../training/concepts/rlvr-grpo/format.js';
+import { INITIAL_STATE, fixed, signed, signed2 } from '../training/concepts/rlvr-grpo/format.js';
 import { evaluate, divisionEffect, unbiasedStd, answersFor } from '../training/concepts/rlvr-grpo/model.js';
 import { tryThis } from '../training/concepts/rlvr-grpo/try-this.js';
 import { CAPTIONS, TRY_THIS } from './rlvr-grpo-expected.js';
@@ -99,8 +99,8 @@ test('the sum of advantages is zero for every k, and no spread at k = 0 and 8', 
   assert.equal(evaluate({ ...INITIAL_STATE, k: 8 }).totalPush, 0);
 });
 
-test('cell numbers: integers bare, anything else signed with 2 decimals', () => {
-  assert.deepEqual([1, 0, 0.25, -0.5774, 1.7321].map(cellNumber), ['1', '0', '+0.25', '−0.58', '+1.73']);
+test('formatters: real minus, signed values, no negative zero', () => {
+  assert.deepEqual([0.25, -0.5774, 1.7321, -0.00001].map(signed2), ['+0.25', '−0.58', '+1.73', '0.00']);
   assert.equal(fixed(-0.00001, 3), '0.000');
   assert.throws(() => fixed(Number.NaN, 2), RangeError);
 });
@@ -163,3 +163,44 @@ test('inputs are not mutated: the pools, the data and the state', () => {
   assert.equal(JSON.stringify(data), dataBefore);
   assert.deepEqual(state, INITIAL_STATE);
 });
+
+// ---- the toy's view model (every string the toy prints) ----
+import { toyView, epsOptions, clipHigherEps, clampSelection, NO_SIGNAL, STAND_IN } from '../training/concepts/rlvr-grpo/toy-view.js';
+
+test('toy view at the default state: stats, signal, inspector and the per-row strings', () => {
+  const v = toyView(INITIAL_STATE);
+  assert.equal(v.kText, '2 / 8');
+  assert.deepEqual(v.stats, { mean: '0.250', std: '0.433', totalPush: '6.93' });
+  assert.equal(v.signal, '');
+  assert.deepEqual(v.rows.map((r) => r.reward), ['1', '0', '0', '0', '1', '0', '0', '0']);
+  assert.deepEqual(v.rows.map((r) => r.advantage), ['+1.73', '−0.58', '−0.58', '−0.58', '+1.73', '−0.58', '−0.58', '−0.58']);
+  assert.equal(v.rows[3].push, '−0.0722');
+  assert.deepEqual(Object.fromEntries(v.inspector.map((r) => [r.name, r.value])), {
+    'insp-row': '1', 'insp-token': '56', 'insp-adv': '+1.7321', 'insp-weight': '0.0250', 'insp-push': '+0.0433',
+    'insp-sampled': '0.200', 'insp-now': '0.250', 'insp-ratio': '1.250', 'insp-objective': '2.078', 'insp-clipped': 'yes',
+  });
+});
+
+test('toy view with no spread prints the banner and zero advantages; hatch marks exactly the clipped chips', () => {
+  const none = toyView({ ...INITIAL_STATE, k: 0 });
+  assert.equal(none.signal, NO_SIGNAL);
+  assert.deepEqual(none.rows.map((r) => r.advantage), Array(8).fill('0.00'));
+  assert.equal(none.stats.totalPush, '0.00');
+  const hatched = (state) => toyView(state).rows.flatMap((r) => r.chips).filter((c) => c.hatched).length;
+  assert.equal(hatched(INITIAL_STATE), 3);
+  assert.equal(hatched({ ...INITIAL_STATE, epsHigh: 0.28 }), 2);
+});
+
+test('the clip-higher chip reads data/models.json glm-5.rl_clip_eps_high; without data it is the storyboard\'s 0.28', () => {
+  assert.equal(clipHigherEps(data), 0.28);
+  assert.equal(clipHigherEps(null), 0.28);
+  assert.deepEqual(epsOptions(data), [{ value: 0.2, label: 'PPO 0.20' }, { value: 0.28, label: 'clip-higher 0.28' }]);
+});
+
+test('the selection clamps to the answer\'s last token and survives a change of k', () => {
+  const group = evaluate({ ...INITIAL_STATE, k: 0 });
+  assert.deepEqual(clampSelection({ row: 3, token: 7 }, group), { row: 3, token: 0 });
+  assert.equal(toyView({ ...INITIAL_STATE, k: 0, row: 3, token: 7 }).inspector[1].value, '63');
+});
+
+test('the stand-in line is the storyboard\'s', () => assert.equal(STAND_IN, LESSON.animation.standIn));
