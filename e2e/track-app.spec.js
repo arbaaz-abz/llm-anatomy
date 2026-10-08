@@ -37,6 +37,21 @@ test('nav marks the current lesson and back/forward routes work', async ({ page 
   await expect(page.locator('.concept-card')).toHaveCount(9);
 });
 
+test('lesson links still route when an embedding host cancels link navigation', async ({ page }) => {
+  // The claude.ai artifact frame may cancel the default action of link clicks; this host listener runs first.
+  await page.addInitScript(() => {
+    window.addEventListener('click', (event) => { if (event.target.closest?.('a')) event.preventDefault(); }, true);
+  });
+  const errors = collectConsoleErrors(page);
+  await page.goto('/architecture/');
+  await page.locator('.concept-card', { hasText: 'Mixture of Experts' }).click();
+  await expect(page).toHaveURL(/#moe$/);
+  await expect(page.locator('.stepper')).toBeVisible();
+  await page.locator('.pager-link').first().click();
+  await expect(page).not.toHaveURL(/#moe$/);
+  expect(errors).toEqual([]);
+});
+
 test('blocked localStorage does not break the page', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('blocked', 'SecurityError'); } });

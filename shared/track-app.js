@@ -81,6 +81,15 @@ export async function mountTrack({ root, track }) {
   ]);
   app.append(header, nav, main);
   root.replaceChildren(app);
+  // In-page #slug links route by setting the hash here, so they still work when an embedding host (the claude.ai
+  // artifact frame) cancels the default navigation of link clicks. Modified clicks keep the browser's behavior.
+  root.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const hash = link.getAttribute('href');
+    if (window.location.hash !== hash) window.location.hash = hash;
+  });
 
   // Below 1440 px the lesson list is a popover; from 1440 px CSS shows it as a quiet list at the left edge.
   const setMenu = (open) => {
