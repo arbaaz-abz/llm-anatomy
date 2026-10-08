@@ -120,21 +120,33 @@ function maskedText(format) {
   return typeof out === 'string' && out !== '' && !/Infinity|NaN/.test(out) ? out : null;
 }
 
+const SEM_FILLS = new Set(['ok', 'bad']);
+
+function cellClass({ isMasked, hatched, fill, gpu }) {
+  if (isMasked) return 'g-cell g-cell--masked';
+  const tint = gpu != null ? ' g-cell--shard' : fill ? ` g-cell--${fill}` : '';
+  return `g-cell${hatched ? ' g-cell--hatched' : ''}${tint}`;
+}
+
 // One value cell. Masked cells (mask === false or v === −∞) are hatched. A `hatched` cell is a value that
 // counts for nothing (e.g. a masked weight of 0): it keeps its value fill and text, with the hatch over it.
 // `format` (optional) prints the cell text and its tooltip; without it the text is formatCell(v)
-// and the tooltip the value at 3 d.p.
-export function cell(parent, { x, y, size, v, maxAbs, masked = false, hatched = false, format }) {
+// and the tooltip the value at 3 d.p. `fill: 'ok' | 'bad'` (S3) paints a semantic fill (--sem-ok / --sem-bad,
+// e.g. a reward of 1 or 0) instead of the value scale; `gpu` (S3, from matrix shards) tints the cell for its GPU.
+export function cell(parent, { x, y, size, v, maxAbs, masked = false, hatched = false, format, fill = null, gpu = null }) {
+  if (fill != null && !SEM_FILLS.has(fill)) throw new RangeError(`glyphs.cell: fill must be 'ok' or 'bad', got ${fill}`);
   const isMasked = masked || v === -Infinity;
-  const g = svgEl('g', { class: `g-cell${isMasked ? ' g-cell--masked' : hatched ? ' g-cell--hatched' : ''}`, transform: `translate(${x} ${y})`, 'data-level': isMasked ? 0 : valueLevel(v, maxAbs) }, parent);
+  const isPlain = isMasked || fill != null || gpu != null; // no value-scale fill
+  const g = svgEl('g', { class: cellClass({ isMasked, hatched, fill, gpu }), transform: `translate(${x} ${y})`, 'data-level': isPlain ? 0 : valueLevel(v, maxAbs), 'data-gpu': isMasked ? null : gpu }, parent);
   const inset = { x: CELL_GAP / 2, y: CELL_GAP / 2, width: size - CELL_GAP, height: size - CELL_GAP, rx: 3 };
   const rect = svgEl('rect', inset, g);
-  rect.style.fill = isMasked ? 'var(--surface)' : valueColor(v, maxAbs);
+  if (isMasked) rect.style.fill = 'var(--surface)';
+  else if (!isPlain) rect.style.fill = valueColor(v, maxAbs);
   if (isMasked || hatched) hatchRect(g, inset);
   const maskLabel = isMasked ? maskedText(format) : null;
   const label = isMasked ? (maskLabel ?? '−∞') : (format ?? formatCell)(v);
   const title = svgEl('title', {}, g);
-  title.textContent = isMasked ? `masked (${maskLabel ?? '−∞'})` : (format ? label : Number(v).toFixed(3));
+  title.textContent = isMasked ? `masked (${maskLabel ?? '−∞'})` : gpu != null ? `GPU ${gpu}` : (format ? label : Number(v).toFixed(3));
   if (size >= MIN_CELL_FOR_TEXT) text(g, size / 2, size / 2, label, 'g-text');
   return g;
 }
@@ -150,29 +162,44 @@ export function token(parent, { x, y, text: label, index, state = 'idle', fill, 
   return g;
 }
 
-export function vector(parent, { x, y, values, cell: size = 18, orient = 'col', maxAbs = maxAbsOf(values), label, format }) {
+// `fill` (S3, optional): 'ok' | 'bad' for every cell, or one entry per cell (null = the value scale).
+export function vector(parent, { x, y, values, cell: size = 18, orient = 'col', maxAbs = maxAbsOf(values), label, format, fill = null }) {
   const g = group(parent, `g-vector g-vector--${orient}`, x, y);
   if (label) {
     if (orient === 'col') text(g, size / 2, -10, label, 'g-label', { 'text-anchor': 'middle' });
     else text(g, -10, size / 2, label, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
   }
-  values.forEach((v, i) => cell(g, { x: orient === 'row' ? i * size : 0, y: orient === 'col' ? i * size : 0, size, v, maxAbs, format }));
+  const fillAt = (i) => (Array.isArray(fill) ? fill[i] ?? null : fill);
+  values.forEach((v, i) => cell(g, { x: orient === 'row' ? i * size : 0, y: orient === 'col' ? i * size : 0, size, v, maxAbs, format, fill: fillAt(i) }));
   return g;
 }
 
 // `format` (optional): (v) → the printed cell text and tooltip, e.g. (v) => v.toFixed(3) for weights.
 // `mask` (optional, [n × m], true = visible): hidden cells print "−∞". `hatch` (optional, [n × m],
-// true = hatched): the cell is drawn over with the hatch and still prints format(v).
-function grid(parent, cls, { x, y, values, mask, hatch, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [], format }) {
+// true = hatched): the cell is drawn over with the hatch and still prints format(v). `shards` (S3, optional):
+// [{ cols: [from, to] } or { rows: [from, to] }, gpu: 1–4], 1-based and inclusive: those cells take their GPU's tint
+// (parallelism frames 3–4, a matrix cut between GPUs) instead of the value scale.
+function shardMap(shards, rows, cols) {
+  const inRange = (r, n) => Array.isArray(r) && Number.isInteger(r[0]) && Number.isInteger(r[1]) && r[0] >= 1 && r[0] <= r[1] && r[1] <= n;
+  shards.forEach((s) => {
+    const ok = Number.isInteger(s?.gpu) && s.gpu >= 1 && s.gpu <= 4 && (s.cols ? inRange(s.cols, cols) : true) && (s.rows ? inRange(s.rows, rows) : true) && (s.cols || s.rows);
+    if (!ok) throw new RangeError(`glyphs.matrix: a shard needs gpu 1–4 and cols or rows [from, to] inside the ${rows} × ${cols} matrix (1-based, inclusive)`);
+  });
+  const covers = (s, i, j) => (!s.rows || (i + 1 >= s.rows[0] && i + 1 <= s.rows[1])) && (!s.cols || (j + 1 >= s.cols[0] && j + 1 <= s.cols[1]));
+  return (i, j) => shards.find((s) => covers(s, i, j))?.gpu ?? null;
+}
+
+function grid(parent, cls, { x, y, values, mask, hatch, cell: size = 18, maxAbs = maxAbsOf(values), label, rowLabels = [], colLabels = [], format, shards = null }) {
   const rows = values.length;
   const cols = values[0]?.length ?? 0;
+  const gpuAt = shards ? shardMap(shards, rows, cols) : () => null;
   const g = group(parent, cls, x, y);
   const frame = svgEl('rect', { class: 'g-frame', x: -1, y: -1, width: cols * size + 2, height: rows * size + 2, rx: 3 }, g);
   svgEl('title', {}, frame).textContent = `${label ?? ''} [${rows} × ${cols}]`.trim();
   if (label) text(g, 0, -10 - (colLabels.length ? 14 : 0), `${label} [${rows} × ${cols}]`, 'g-label');
   rowLabels.forEach((r, i) => text(g, -10, i * size + size / 2, r, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' }));
   colLabels.forEach((c, j) => text(g, j * size + size / 2, -8, c, 'g-label', { 'text-anchor': 'middle' }));
-  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false, hatched: hatch?.[i]?.[j] === true, format })));
+  values.forEach((row, i) => row.forEach((v, j) => cell(g, { x: j * size, y: i * size, size, v, maxAbs, masked: mask ? !mask[i]?.[j] : false, hatched: hatch?.[i]?.[j] === true, format, gpu: gpuAt(i, j) })));
   return g;
 }
 
@@ -186,7 +213,7 @@ export function block(parent, { x, y, w = 96, h = 40, label = '', state = 'idle'
   return g;
 }
 
-const CARRIES = new Set(['activation', 'gradient', 'kv', 'token']);
+const CARRIES = new Set(['activation', 'gradient', 'kv', 'token', 'weight']); // weight: S3 (gpu-primer, training-memory, parallelism)
 
 export function flow(parent, { from, to, carry = 'activation', progress = 0 }) {
   if (!CARRIES.has(carry)) throw new RangeError(`glyphs.flow: carry must be one of ${[...CARRIES].join(', ')}`);

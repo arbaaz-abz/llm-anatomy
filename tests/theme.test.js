@@ -22,10 +22,12 @@ test('dim blocks and block-stack frames are never dashed (dashed means draft, RE
 
 // S1 ruling S1-R8: the `bars` reference line is a chart guide with its own printed label (moe §4 condition c),
 // not a state of an item, so it is the one dashed line besides the draft token and the free KV slot.
-test('the only dashed strokes are the draft token, the free KV slot and the bars reference line', () => {
+// S3 (P3-R10, P3-R11): curvePlot's refY is drawn exactly like the bars reference line, the same allowed dash.
+test('the only dashed strokes are the draft token, the free KV slot and the bars and curvePlot reference lines', () => {
   const dashed = rules.filter((r) => /stroke-dasharray:\s*\d/.test(r.body)).map((r) => r.selector);
   assert.ok(dashed.length > 0);
-  for (const selector of dashed) assert.match(selector, /draft|g-slot--free|g-bars-ref/, `${selector} draws a dashed stroke`);
+  for (const selector of dashed) assert.match(selector, /draft|g-slot--free|g-bars-ref|g-plot-ref/, `${selector} draws a dashed stroke`);
+  assert.equal(merged('.g-plot .g-plot-ref')['stroke-dasharray'], merged('.g-bars .g-bars-ref')['stroke-dasharray']);
 });
 
 test('toy readout rows: theme classes with the reviewed declarations', () => {
@@ -45,16 +47,21 @@ test('a masked HTML cell is hatched, and its text sits on a solid surface chip s
 import { readdir } from 'node:fs/promises';
 
 const STORYBOARDS = new URL('../docs/storyboards/', import.meta.url);
+// The tracks whose storyboards' math-panel names must all have an outline rule. Plan 4 adds 'serving' here
+// (its nine names, ttft … code, are not in theme.css yet).
+const HL_TRACKS = ['architecture', 'training'];
 
-test('every Architecture storyboard\'s \\htmlClass{hl-…} name outlines its linked glyph (theme data-hl rule)', async () => {
+test('every Architecture and Training storyboard\'s \\htmlClass{hl-…} name outlines its linked glyph (theme data-hl rule)', async () => {
   const files = (await readdir(STORYBOARDS)).filter((f) => f.endsWith('.md'));
   const names = new Set();
+  const trackLine = new RegExp(`^Track: (${HL_TRACKS.join('|')}) `, 'm');
   for (const file of files) {
     const md = await readFile(new URL(file, STORYBOARDS), 'utf8');
-    if (!/^Track: architecture/m.test(md)) continue;
+    if (!trackLine.test(md)) continue;
     for (const m of md.matchAll(/htmlClass\{hl-(\w+)\}/g)) names.add(m[1]);
   }
-  assert.ok(names.size >= 30, `found ${names.size} names`);
+  assert.ok(names.size >= 50, `found ${names.size} names`);
+  for (const name of ['n', 'd', 'pol', 'beta', 'ref', 'r', 'ratio', 'rho', 'int', 'ridge', 'peak', 'bw', 'w', 'g', 'comm', 'bubble', 'link', 'flops', 'mfu', 'loss']) assert.ok(names.has(name), `the Training storyboards name hl-${name}`);
   const linked = rules.filter((r) => /stroke:\s*var\(--accent\)/.test(r.body) && /stroke-width:\s*2\b/.test(r.body)).flatMap((r) => r.selector.split(',').map((s) => s.trim()));
   for (const name of names) assert.ok(linked.includes(`[data-hl="${name}"] [data-link="${name}"] .g-frame`), `hl-${name} has no outline rule`);
 });
@@ -81,4 +88,29 @@ test('.fact-meta stays nowrap above 640 px and wraps at 640 px or less', () => {
   assert.equal(d['flex-wrap'], 'wrap');
   assert.equal(d['white-space'], 'normal');
   assert.equal(d['row-gap'], 'var(--space-1)');
+});
+
+// ---- Shared prep S3: the Training glyph styles ----
+test('laneTimeline kinds: compute, memory, comm on --sem-*, forward and backward on the carries; idle and lost hatched (P3-R9)', () => {
+  const fills = Object.fromEntries(['compute', 'memory', 'comm', 'forward', 'backward', 'lost', 'idle'].map((k) => [k, merged(`.g-lanes .g-lane--${k}`).fill]));
+  assert.match(fills.compute, /var\(--sem-compute\)/);
+  assert.match(fills.memory, /var\(--sem-memory\)/);
+  assert.match(fills.comm, /var\(--sem-comm\)/);
+  assert.match(fills.forward, /var\(--carry-activation\)/);
+  assert.match(fills.backward, /var\(--carry-gradient\)/);
+  assert.equal(fills.lost, fills.compute, 'lost work keeps the compute fill under its hatch');
+  assert.equal(fills.idle, 'var(--surface)');
+});
+
+test('curvePlot: series never use the track accent; muted is lighter, never dashed; markers are ink', () => {
+  const series = rules.filter((r) => /g-series|g-tone--/.test(r.selector));
+  assert.ok(series.length > 0);
+  for (const r of series) assert.doesNotMatch(r.body, /--accent/, `${r.selector} uses the accent`);
+  assert.equal(merged('.g-plot .g-series--muted')['stroke-dasharray'], undefined);
+  assert.equal(merged('.g-plot .g-marker').fill, 'var(--ink)');
+});
+
+test('the new tokens --carry-weight and --sem-comm drive the weight dot and the comm lanes', () => {
+  assert.equal(merged('.g-flow--weight .g-dot').fill, 'var(--carry-weight)');
+  assert.match(merged('.g-lanes .g-lane--comm').fill, /--sem-comm/);
 });

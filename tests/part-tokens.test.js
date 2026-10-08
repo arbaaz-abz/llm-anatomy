@@ -96,3 +96,44 @@ test('--part-4 stays clear of all three track accents in every theme (OKLab ΔE 
 test('the "not published" segment is outlined in --ink-muted (≥ 3:1 in both themes), never a faint --line stroke', () => {
   assert.match(css, /\.g-share \.g-part-none \{ fill: var\(--part-none\); stroke: var\(--ink-muted\); stroke-width: 1; \}/);
 });
+
+// ---- Shared prep S3: --carry-weight (flow carry 'weight') and --sem-comm (laneTimeline comm) ----
+const hexOf = (text, name) => text.match(new RegExp(`--${name}: (#[0-9a-f]{6})`))?.[1] ?? null;
+const RESOLVED = { light: { 'carry-activation': 'accent-arch', 'carry-gradient': 'accent-train', 'carry-kv': 'sem-memory', 'carry-token': 'ink' } };
+const resolve = (b, name, theme) => hexOf(b[theme] ?? '', name) ?? hexOf(b[theme] ?? '', RESOLVED.light[name] ?? name) ?? hexOf(b.light ?? '', name);
+const NEW_TOKEN_MIN_DELTA_E = 10;
+
+test('--carry-weight and --sem-comm are defined in all three theme blocks, the two dark blocks alike', () => {
+  const b = blocks();
+  for (const name of ['carry-weight', 'sem-comm']) {
+    for (const theme of Object.keys(MARKERS)) assert.ok(hexOf(b[theme] ?? '', name), `${theme} defines --${name}`);
+    assert.equal(hexOf(b.osDark ?? '', name), hexOf(b.dark ?? '', name), `--${name}: both dark blocks carry the same value`);
+  }
+});
+
+test('--carry-weight and --sem-comm clear 3:1 against their theme surface (WCAG 1.4.11)', () => {
+  const b = blocks();
+  for (const theme of Object.keys(MARKERS)) {
+    for (const name of ['carry-weight', 'sem-comm']) {
+      const hex = hexOf(b[theme] ?? '', name);
+      assert.ok(contrast(hex, SURFACE[theme]) >= 3, `${theme} --${name} ${hex}: ${contrast(hex, SURFACE[theme]).toFixed(2)}:1`);
+    }
+  }
+});
+
+test('--carry-weight stays distinct from every other carry, --sem-comm from every other semantic color (OKLab ΔE ≥ 10)', () => {
+  const b = blocks();
+  const close = [];
+  const check = (theme, name, others) => {
+    const hex = hexOf(b[theme] ?? '', name);
+    for (const other of others) {
+      const ohex = resolve(b, other, theme);
+      if (deltaE(hex, ohex) < NEW_TOKEN_MIN_DELTA_E) close.push(`${theme} --${name} ${hex} vs --${other} ${ohex}: ΔE ${deltaE(hex, ohex).toFixed(1)}`);
+    }
+  };
+  for (const theme of Object.keys(MARKERS)) {
+    check(theme, 'carry-weight', ['carry-activation', 'carry-gradient', 'carry-kv', 'carry-token', 'sem-compute']);
+    check(theme, 'sem-comm', ['sem-compute', 'sem-memory', 'sem-ok', 'sem-bad', 'accent-arch', 'accent-train', 'accent-serve', 'carry-weight']);
+  }
+  assert.deepEqual(close, []);
+});
