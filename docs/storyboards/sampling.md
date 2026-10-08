@@ -293,7 +293,7 @@ What is baked in, in several 2026 models, is a head that predicts more than one 
 | DeepSeek-V3 (Dec 2024): one MTP module predicts one extra token; the second token is accepted 85–90% of the time, about 1.8× tokens per second (for one user, as the V3 report states it) | `models.deepseek-v3.mtp_depth` = 1 (proposed); `serving.json/deepseek-v3-mtp.acceptance_pct` = [85, 90], `.tps_gain` = 1.8 (proposed by `speculative-decoding` §8; one key for both pages; arXiv 2412.19437) | 04 §4.2 [C via excerpt] |
 | DeepSeek-V4 (2026): MTP depth 1, also used as an auxiliary training loss | `models.deepseek-v4-pro.mtp_depth` = 1 (proposed) | 01 §1, §5 [C] |
 | GLM-5 (2026): shares 3 MTP layers; mean accepted length 2.76 tokens per step in its report | `models.glm-5.mtp_layers` = 3, `.mtp_accept_length` = 2.76 (proposed; same *new* `glm-5` entry as `kv-compression`) | 01 §1, §5 [C] |
-| Kimi K3 (2026): one MTP layer, fine-tuned as an EAGLE-3-style draft | `models.kimi-k3.mtp_depth` = 1 (proposed) | 01 §5 [C] |
+| Kimi K3: one MTP layer, fine-tuned as an EAGLE-3-style draft | `models.kimi-k3.mtp_depth` = 1 (proposed) | 01 §5 [C] |
 | In serving, MTP raised per-user speed by 87% for DeepSeek-R1 on GB300 NVL72 at 128K input / 8K output, with peak throughput kept (LMSYS, Feb 2026) | `serving.json/lmsys-gb300-longctx.mtp_per_user_gain_pct` = 87 (proposed by `speculative-decoding` §8; note names model, hardware, workload) | 04 §4.3 [C] |
 
 Not shown: recommended sampling settings from model cards (not in the briefs).
