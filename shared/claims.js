@@ -56,3 +56,9 @@ export function fillClaim(claim, data) {
   if (last < claim.length) segments.push({ type: 'text', text: claim.slice(last) });
   return { segments, sources, reported, missing };
 }
+
+// Prose with {entry.key|format} placeholders (hook, intuition, belowFor, framing, toy text) as one string.
+// Pure: a missing fact prints "—" (the page test asserts fillClaim(text, data).missing is empty).
+export function fillText(text, data) {
+  return fillClaim(text, data).segments.map((s) => s.text).join('');
+}
