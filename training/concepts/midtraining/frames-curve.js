@@ -6,7 +6,7 @@ import { WARMUP_DRAW, BRANCH, DECAY_START, PLAIN_COSINE_AT } from './numbers.js'
 import { countText } from './facts.js';
 import { ofPeak, sci, trimNumber, percentText } from './format.js';
 import {
-  PLOT, TEXT_Y, TOP_Y, seg, lerp, ease, label, select, linked, rule, outgoing, drawPlot, bandBox, partialCurve,
+  PLOT, TEXT_Y, TOP_Y, seg, lerp, ease, label, note, select, linked, rule, outgoing, drawPlot, bandBox, partialCurve,
 } from './stage.js';
 
 const WARMUP = Object.freeze({ kind: 'wsd', total: 1, warmup: WARMUP_DRAW, decayStart: DECAY_START });
@@ -27,7 +27,7 @@ export function drawFrame1(svg, p, { run }) {
   const { nemotron } = run;
   drawPlot(svg, { series: upto > 0 ? [{ points: partialCurve(WARMUP, upto), label: '' }] : [], bands: [BANDS[0]] });
   label(svg, 4, TOP_Y, `Nemotron 3 Super: warmup over the first ${countText(nemotron.warmupTokens)} of ${countText(nemotron.total)} tokens, to ${sci(nemotron.peak)}`, { opacity: seg(p, 0.5, 0.9) });
-  label(svg, 4, TEXT_Y[0], `The warmup is drawn ${percentText(WARMUP_DRAW * 100)} of the run wide so it shows; Nemotron's real one is ${trimNumber(nemotron.warmupPercent)}% of its run.`, { opacity: seg(p, 0.6, 0.95) });
+  note(svg, 4, TEXT_Y[0], `The warmup is drawn ${percentText(WARMUP_DRAW * 100)} of the run wide so it shows; Nemotron's real one is ${trimNumber(nemotron.warmupPercent)}% of its run.`, { opacity: seg(p, 0.6, 0.95) });
 }
 
 // Frame 2: the cosine curve, and the 60% mark dropping onto it.

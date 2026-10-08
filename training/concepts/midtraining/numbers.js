@@ -3,7 +3,7 @@
 import { deepFreeze } from '@math/core.js';
 import { attentionCostRatio } from '@math/schedule.js';
 
-export const WARMUP_DRAW = 0.05; // stand-in: the warmup is drawn 5% of the run wide so it is visible (Nemotron's real one is 0.8%)
+export const WARMUP_DRAW = 0.1; // stand-in: the warmup is drawn 10% of the run wide so its label fits (Nemotron's real one is 0.8%)
 export const PLAIN_COSINE_AT = Object.freeze([0.25, 0.5, 0.6, 0.75, 1]); // frame 2's printed positions
 export const BRANCH = Object.freeze({ from: 0.6, to: 0.8 }); // frame 3: a branch leaves the plateau at 60% and decays by 80%
 export const DECAY_START = 0.8; // frame 3: the WSD curve's decay starts at 80% of the run

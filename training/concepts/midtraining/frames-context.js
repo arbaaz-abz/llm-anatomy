@@ -20,7 +20,7 @@ function chipRow(svg, run, y, opacity = 1) {
   let x = BAR.x;
   const chips = run.stages.slice(1).map((s) => {
     const text = `${s.name} doc`;
-    const g = fade(G.token(svg, { x, y, text, state: s.name === '200K' ? 'active' : 'idle' }), opacity);
+    const g = fade(G.token(svg, { x, y, text, state: 'idle' }), opacity);
     const box = { x, y, w: G.tokenWidth(text), h: 24 };
     if (s.name === '200K') select(svg, box, opacity);
     x += box.w + CHIP_GAP;
@@ -94,11 +94,11 @@ export function drawFrame8(svg, p, ctx) {
     label(svg, DIAL.xs[i], DIAL.y + DIAL.r + 18, i === 0 ? turnText(DIAL_STAND_IN.turnsAt4K) : turnText(Number(turns[1].toFixed(3))), { anchor: 'middle' });
   });
   select(svg, { x: DIAL.xs[1] - DIAL.r, y: DIAL.y - DIAL.r, w: 2 * DIAL.r, h: 2 * DIAL.r }, seg(p, 0.1, 0.3));
-  label(svg, 290, 200, 'RoPE: rescale (see rope)', { anchor: 'middle', opacity: seg(p, 0.7, 0.9) });
-  label(svg, 290, 220, text.kimiLayers, { anchor: 'middle', opacity: seg(p, 0.75, 0.95) });
-  label(svg, 290, 240, 'pair speed chosen so 200K is ¾ turn', { anchor: 'middle', opacity: seg(p, 0.8, 1) });
-  label(svg, BAR.x, 268, `slowest pair, stand-in speed: ¾ turn × 4K / 200K = ${trimNumber(DIAL_STAND_IN.turnsAt4K)} turn at 4K · ¾ turn at 200K`, { opacity: seg(p, 0.85, 1) });
-  label(svg, BAR.x, 288, 'trained to 4K · extended to 200K (GLM-5) · Kimi K3 256K → 1M in its cooldown', { opacity: seg(p, 0.9, 1) });
+  label(svg, 290, 214, 'RoPE: rescale (see rope)', { anchor: 'middle', opacity: seg(p, 0.7, 0.9) });
+  label(svg, 290, 236, text.kimiLayers, { anchor: 'middle', opacity: seg(p, 0.75, 0.95) });
+  label(svg, 290, 258, 'pair speed chosen so 200K is ¾ turn', { anchor: 'middle', opacity: seg(p, 0.8, 1) });
+  label(svg, BAR.x, 290, `slowest pair, stand-in speed: ¾ turn × 4K / 200K = ${trimNumber(DIAL_STAND_IN.turnsAt4K)} turn at 4K · ¾ turn at 200K`, { opacity: seg(p, 0.85, 1) });
+  label(svg, BAR.x, 312, 'trained to 4K · extended to 200K (GLM-5) · Kimi K3 256K → 1M in its cooldown', { opacity: seg(p, 0.9, 1) });
 }
 
 // Frame 9: the 2026 table of staged context.

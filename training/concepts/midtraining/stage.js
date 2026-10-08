@@ -6,7 +6,7 @@ import { CURVE_SAMPLES } from './numbers.js';
 
 export const STAGE = Object.freeze({ w: 580, h: 366 });
 // Frames 1-5 share one plot, so only what the frame changes moves.
-export const PLOT = Object.freeze({ x: 4, y: 44, w: 572, h: 200 });
+export const PLOT = Object.freeze({ x: 4, y: 44, w: 556, h: 200 });
 export const TEXT_Y = Object.freeze([262, 280, 298, 316, 334]); // the lines under the plot
 export const TOP_Y = 16; // the line above the plot
 
@@ -28,6 +28,13 @@ export function label(svg, x, y, str, { anchor = 'start', cls = 'g-label', opaci
   const t = G.svgEl('text', { x, y, class: cls || null, 'text-anchor': anchor, 'dominant-baseline': 'central' }, g);
   t.textContent = str;
   return fade(g, opacity);
+}
+
+// A plain text line, word-wrapped to `max` characters (one stage line holds about 76 of them); returns the lines drawn.
+export function note(svg, x, y, str, { max = 76, lineHeight = 17, ...rest } = {}) {
+  const lines = wrap(str, max);
+  lines.forEach((line, i) => label(svg, x, y + i * lineHeight, line, rest));
+  return lines.length;
 }
 
 export const select = (svg, box, opacity = 1) => fade(G.selectionMark(svg, box), opacity);
