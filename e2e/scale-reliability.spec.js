@@ -59,6 +59,7 @@ test.describe('scale-reliability toy: plan a training run', () => {
   });
 
   test('the DeepSeek-V3 preset reproduces its record by construction, and says what FP8 does to the percentage', async ({ page }) => {
+    await expect(page.locator('#preset [aria-pressed]')).toHaveCount(0);
     await page.locator('#preset [data-value="deepseek"]').click();
     await expectReadouts(page, { 'gpu-hours': '2.664M', days: '54.2 days', 'useful-hours': '2.589M', loss: '2.8%' });
     await expect(readout(page, 'record')).toHaveText(RECORD_DEEPSEEK);

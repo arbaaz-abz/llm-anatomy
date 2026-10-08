@@ -45,6 +45,7 @@ test('the filled rows print the storyboard\'s numbers', () => {
   const text = (i) => { const f = fillClaim(factRows(data)[i].claim, data); return f.segments.map((s) => s.text).join(''); };
   assert.match(text(0), /^Llama 3\.1 405B \(2024\): 15\.6T tokens, 3\.8 × 10²⁵ FLOPs, up to 16,384 H100s\.$/);
   assert.match(text(2), /MFU while training: 38–43% \(43% with TP8/);
+  assert.match(factRows(data)[2].claim, /\{llama-3\.1-405b\.mfu_bf16\|pct\}%/, 'the MFU band is filled from data, not typed');
   assert.match(text(3), /466 interruptions, 47 planned and 419 unexpected; 78% hardware, GPU issues 58\.7% of the unexpected; effective training time >90%\./);
   assert.match(text(5), /^DeepSeek-V3 \(2024\): 2\.788M H800-hours in all, 2\.664M for pre-training \(180K per trillion tokens on 2,048 GPUs\), priced at \$2 per GPU-hour: \$5\.576M/);
   assert.match(text(9), /1,648 TFLOPS per GPU .* 2\.72× GB200 NVL72's 606/);

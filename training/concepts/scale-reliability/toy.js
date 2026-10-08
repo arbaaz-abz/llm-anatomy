@@ -4,6 +4,7 @@ import * as G from '@shared/glyphs.js';
 import { el } from '@shared/ui/dom.js';
 import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice, mountToggle } from '@shared/ui/choice.js';
+import { mountPresetButtons } from '@shared/ui/preset-buttons.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { readoutTable } from '@shared/ui/readout-table.js';
 import { formatCount, formatDuration } from '@math/core.js';
@@ -97,9 +98,10 @@ function mountControls(refs, data, state) {
     id: 'peak', label: 'Chip and precision', variant: 'chips', value: INITIAL_STATE.chip,
     options: CHIPS.map((c) => ({ value: c.value, label: `${c.label} ${int(peakFor(c.value, data))}` })), onChange: (v) => set({ chip: v }),
   });
-  const preset = mountChoice(refs.presets, {
-    id: 'preset', label: 'Run', variant: 'chips', value: INITIAL_STATE.preset, options: Object.entries(PRESETS).map(([value, p]) => ({ value, label: p.label })),
-    onChange: (value) => {
+  // Action buttons, no pressed state: a slider can move the run away from the preset, and a chip must not claim it is still on it.
+  const preset = mountPresetButtons(refs.presets, {
+    id: 'preset', label: 'Run', options: Object.entries(PRESETS).map(([value, p]) => ({ value, label: p.label })),
+    onPick: (value) => {
       const chosen = PRESETS[value];
       syncing = true;
       sliders.params.set(chosen.params); sliders.tokens.set(chosen.tokens); sliders.gpus.set(chosen.gpus); sliders.mfu.set(chosen.mfu * PERCENT); peak.set(chosen.chip);

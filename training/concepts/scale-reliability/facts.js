@@ -33,7 +33,7 @@ export function factRows(data) {
   return [
     { claim: 'Llama 3.1 405B ({llama-3.1-405b.release_date|year}): {llama-3.1-405b.pretrain_tokens|count} tokens, 3.8 × 10²⁵ FLOPs{llama-3.1-405b.training_flops|cite}, up to {llama-3.1-405b.training_gpus|int} H100s.' },
     { claim: "Llama 3.1 405B's model card: {llama-3.1-405b.training_gpu_hours|count4} H100 GPU-hours, which covers more than the 15.6T-token pre-training." },
-    { claim: 'Llama 3.1 405B BF16 MFU while training: 38{llama-3.1-405b.mfu_bf16|cite}43% (43% with TP8/PP16/DP64 on 8,192 GPUs at 430 TFLOPS; 41% on 16,384 GPUs at 400; 38% in the long-context stage at 380).' },
+    { claim: 'Llama 3.1 405B BF16 MFU while training: {llama-3.1-405b.mfu_bf16|pct}% (43% with TP8/PP16/DP64 on 8,192 GPUs at 430 TFLOPS; 41% on 16,384 GPUs at 400; 38% in the long-context stage at 380).' },
     { claim: `Llama 3.1's 54-day window: ${unexpectedPlusPlanned(data)} interruptions, {llama-3.1-405b.interruptions_planned|int} planned and {llama-3.1-405b.interruptions_54d|int} unexpected; 78% hardware{llama-3.1-405b.interruptions_hardware_share|cite}, GPU issues 58.7% of the unexpected{llama-3.1-405b.interruptions_gpu_share|cite}; effective training time {llama-3.1-405b.effective_time}.` },
     { claim: 'Llama 3.1 405B run: {llama-3.1-405b.reliability_notes}.' },
     { claim: deepseekRow(data) },
