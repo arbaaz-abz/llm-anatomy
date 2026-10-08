@@ -20,10 +20,12 @@ test('dim blocks and block-stack frames are never dashed (dashed means draft, RE
   assert.equal(merged('.g-stack .g-stack-frame')['stroke-dasharray'], 'none');
 });
 
-test('the only dashed strokes are the draft token and the free KV slot', () => {
+// S1 ruling S1-R8: the `bars` reference line is a chart guide with its own printed label (moe §4 condition c),
+// not a state of an item, so it is the one dashed line besides the draft token and the free KV slot.
+test('the only dashed strokes are the draft token, the free KV slot and the bars reference line', () => {
   const dashed = rules.filter((r) => /stroke-dasharray:\s*\d/.test(r.body)).map((r) => r.selector);
   assert.ok(dashed.length > 0);
-  for (const selector of dashed) assert.match(selector, /draft|g-slot--free/, `${selector} draws a dashed stroke`);
+  for (const selector of dashed) assert.match(selector, /draft|g-slot--free|g-bars-ref/, `${selector} draws a dashed stroke`);
 });
 
 test('toy readout rows: theme classes with the reviewed declarations', () => {
@@ -37,4 +39,18 @@ test('toy readout rows: theme classes with the reviewed declarations', () => {
 test('a masked HTML cell is hatched, and its text sits on a solid surface chip so no stripe crosses it', () => {
   assert.equal(merged('.cell--masked').background, 'repeating-linear-gradient(45deg, color-mix(in oklab, var(--ink-muted) 55%, transparent) 0 1px, var(--surface) 1px 8px)');
   assert.deepEqual(merged('.cell--masked .cell-text'), { background: 'var(--surface)', color: 'var(--ink)', padding: '0 3px', 'border-radius': '2px' });
+});
+
+// ---- Shared patch S1: dial and bars styles ----
+test('dial: the hand is ink (never accent or value scale), the seen wedge a pale line fill with no outline (rope §4 b, c)', () => {
+  assert.equal(merged('.g-dial .g-dial-hand').stroke, 'var(--ink)');
+  assert.equal(merged('.g-dial .g-dial-seen').fill, 'var(--line)');
+  assert.equal(merged('.g-dial .g-dial-seen').stroke, 'none');
+  assert.equal(merged('.g-dial .g-dial-ghost')['stroke-dasharray'], undefined);
+});
+
+test('bars: neutral ink-tint fill with no outline; the reference line is dashed (moe §4 b, c)', () => {
+  assert.equal(merged('.g-bars .g-bar').fill, 'color-mix(in oklab, var(--ink) 30%, var(--surface))');
+  assert.equal(merged('.g-bars .g-bar').stroke, 'none');
+  assert.match(merged('.g-bars .g-bars-ref')['stroke-dasharray'], /^\d/);
 });

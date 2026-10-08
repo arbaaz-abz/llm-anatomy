@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(22);
+  await expect(page.locator('#figures figure')).toHaveCount(24);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(22);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(24);
   expect(errors).toEqual([]);
 });
 
@@ -322,3 +322,25 @@ for (const width of [1280, 400]) {
     expect(new Set(tops).size, tops.join(', ')).toBe(1);
   });
 }
+
+test('dial (rope §4) and bars (moe §4) figures: printed magnitude, never-seen label, turns, values and the labeled reference', async ({ page }) => {
+  await page.goto('/gallery/');
+  const dials = page.locator('#figures .g-dial');
+  await expect(dials).toHaveCount(3);
+  await expect(dials.nth(0).locator('.g-label').filter({ hasText: '|·| = 2.00' })).toHaveCount(1);
+  await expect(dials.nth(1).locator('.g-dial-never')).toHaveText('never seen');
+  await expect(dials.nth(0).locator('.g-dial-never')).toHaveCount(0);
+  await expect(dials.nth(2).locator('.g-dial-turns')).toHaveText('2.4 turns');
+  await expect(dials.nth(1).locator('.g-dial-tick title')).toHaveText(['0 rad', 'π/2 rad', 'π rad', '3π/2 rad']);
+  const hand = await dials.nth(0).locator('.g-dial-hand').evaluate((l) => { const cs = getComputedStyle(l); return { stroke: cs.stroke, width: parseFloat(cs.strokeWidth) }; });
+  expect(hand.width).toBeLessThanOrEqual(2);
+  const bar = page.locator('#figures .g-bars');
+  await expect(bar.locator('.g-bar')).toHaveCount(8);
+  await expect(bar.locator('.g-bar-value')).toHaveText(['96', '51', '12', '16', '25', '9', '21', '26']);
+  await expect(bar.locator('.g-bars-ref-label')).toHaveText('fair share 32');
+  expect(await bar.locator('.g-bars-ref').evaluate((l) => getComputedStyle(l).strokeDasharray)).not.toBe('none');
+  await expect(bar).toHaveAttribute('aria-label', /^loads per expert: E1 96, E2 51/);
+  const accent = await page.evaluate(() => { const p = document.createElement('i'); p.style.color = 'var(--accent)'; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; });
+  const accentUses = await page.locator('#figures .g-dial *, #figures .g-bars *').evaluateAll((els, a) => els.filter((e) => { const cs = getComputedStyle(e); return cs.stroke === a || cs.fill === a; }).length, accent);
+  expect(accentUses).toBe(0); // nothing on a dial or a bar uses the track accent (rope §4 c, moe §4 b)
+});

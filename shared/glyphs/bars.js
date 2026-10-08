@@ -1,5 +1,5 @@
 // Stacked bars: shareBar (categorical parts, decoder-anatomy §4) and memBar (paged-attention).
-// One geometry (barSegments) under both, so the two never drift apart.
+// One geometry (barSegments) under both, so the two never drift apart. Plus `bars` (moe §4, S1): side-by-side counts.
 import { svgEl, group, text, hatchRect } from './core.js';
 import { sharePct } from '../../math/memory.js';
 
@@ -150,5 +150,56 @@ export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free }
     if (width > 26) text(g, sx + width / 2, h + 13, pct(values[i]), 'g-pct', { 'text-anchor': 'middle' });
   });
   text(g, 0, h + 28, `useful ${useful} · reserved ${reserved} · free ${free}`, 'g-label');
+  return g;
+}
+
+// ---- bars (moe §4, accepted with conditions a–f; reused by sampling) ----
+const BAR_PITCH = 43; // NUMBER_CELL + 3: eight bars fill 344 px (condition d)
+const BAR_GAP = 3;
+
+function checkBars({ values, max, h, labels, reference, w }) {
+  if (!Array.isArray(values) || values.length === 0) throw new RangeError('glyphs.bars: values must be a non-empty array');
+  if (values.some((v) => typeof v !== 'number' || !Number.isFinite(v) || v < 0)) throw new RangeError(`glyphs.bars: values must be finite numbers ≥ 0, got ${values.join(' / ')}`);
+  if (!(Number.isFinite(max) && max > 0)) throw new RangeError(`glyphs.bars: max must be a finite number > 0 (it holds the scale between frames), got ${max}`);
+  const over = values.find((v) => v > max);
+  if (over !== undefined) throw new RangeError(`glyphs.bars: value ${over} exceeds max ${max}`);
+  if (!(Number.isFinite(h) && h > 0)) throw new RangeError(`glyphs.bars: h must be a finite number > 0, got ${h}`);
+  if (w != null && !(Number.isFinite(w) && w > 0)) throw new RangeError(`glyphs.bars: w must be a finite number > 0, got ${w}`);
+  if (labels != null && (!Array.isArray(labels) || labels.length !== values.length)) throw new RangeError('glyphs.bars: labels must match values one to one');
+  if (reference != null && !(Number.isFinite(reference.value) && reference.value >= 0 && reference.value <= max && typeof reference.label === 'string')) {
+    throw new RangeError('glyphs.bars: reference must be { value ≤ max, label }');
+  }
+}
+
+// Geometry only (pure): bar boxes inside [0, w] × [0, h] (baseline at h) and the reference line's y.
+export function barsLayout({ values, max, h, w = null, labels = null, reference = null }) {
+  checkBars({ values, max, h, labels, reference, w });
+  const width = w ?? values.length * BAR_PITCH;
+  const pitch = width / values.length;
+  const bars = values.map((v, i) => {
+    const height = (v / max) * h;
+    return { x: i * pitch, width: pitch - BAR_GAP, height, y: h - height, value: v };
+  });
+  return { bars, w: width, referenceY: reference ? h - (reference.value / max) * h : null };
+}
+
+// Vertical bars, one per label, each printing its value above it (length plus number); neutral fill, never the
+// accent or the value scale; an optional dashed reference line with its own printed label (ruling S1-R8).
+export function bars(parent, { x, y, w = null, h = 120, values, labels = null, max, reference = null, format = String, label = 'counts' }) {
+  const layout = barsLayout({ values, max, h, w, labels, reference });
+  const names = labels ?? values.map((_, i) => String(i + 1));
+  const spoken = names.map((n, i) => `${n} ${format(values[i])}`).join(', ');
+  const g = group(parent, 'g-bars', x, y, { role: 'img', 'aria-label': `${label}: ${spoken}${reference ? `; ${reference.label}` : ''}` });
+  svgEl('line', { class: 'g-bars-axis', x1: 0, y1: h, x2: layout.w - BAR_GAP, y2: h }, g);
+  layout.bars.forEach((b, i) => {
+    const rect = svgEl('rect', { class: 'g-bar', x: b.x, y: b.y, width: b.width, height: b.height, rx: 2 }, g);
+    svgEl('title', {}, rect).textContent = `${names[i]}: ${format(b.value)}`;
+    text(g, b.x + b.width / 2, b.y - 5, format(b.value), 'g-bar-value', { 'text-anchor': 'middle' });
+    if (labels) text(g, b.x + b.width / 2, h + 14, labels[i], 'g-label', { 'text-anchor': 'middle' });
+  });
+  if (reference) {
+    svgEl('line', { class: 'g-bars-ref', x1: 0, y1: layout.referenceY, x2: layout.w - BAR_GAP, y2: layout.referenceY }, g);
+    text(g, layout.w + 2, layout.referenceY, reference.label, 'g-label g-bars-ref-label', { 'dominant-baseline': 'central' });
+  }
   return g;
 }

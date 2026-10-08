@@ -164,3 +164,100 @@ test('shareBarLayout folds by drawn width: a part whose ideal is 19 px draws at 
   assert.deepEqual(kept.main.map((s) => s.name), ['a', 'b']);
   assert.ok(kept.main[0].width >= 18);
 });
+
+// ---- Shared patch S1: dial (rope §4, conditions a–j) and bars (moe §4, conditions a–f) ----
+import { dialLayout, barsLayout } from '../shared/glyphs.js';
+
+const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+const TURN = 2 * Math.PI;
+
+test('dialLayout: the hand is the pair rotated by angle; length = magnitude, direction = rotation (rope frames 2–3)', () => {
+  // q pair 1 (0, 2) points straight up (SVG y grows downward), full radius when no scale is given.
+  const up = dialLayout({ r: 34, vector: [0, 2] });
+  assert.ok(near(up.hand.x, 0) && near(up.hand.y, -34));
+  assert.equal(up.magnitudeLabel, '|·| = 2.00');
+  // rotated by 3 rad: (−0.282, −1.980) as on the rope page, drawn at r · (x, −y) / |·|
+  const turned = dialLayout({ r: 34, vector: [0, 2], angle: 3 });
+  assert.ok(near(turned.hand.x, 34 * (-2 * Math.sin(3)) / 2) && near(turned.hand.y, -34 * (2 * Math.cos(3)) / 2));
+  assert.equal(dialLayout({ r: 34, vector: [0.5, 0] }).magnitudeLabel, '|·| = 0.50');
+});
+
+test('dialLayout: a shared scale keeps two dials comparable; no vector = unit hand, no magnitude printed (condition g)', () => {
+  const short = dialLayout({ r: 34, vector: [0.5, 0], scale: 2 });
+  assert.ok(near(short.hand.x, 34 * 0.25) && near(short.hand.y, 0));
+  const bare = dialLayout({ r: 20, angle: Math.PI / 2 });
+  assert.ok(near(bare.hand.x, 0) && near(bare.hand.y, -20));
+  assert.equal(bare.magnitudeLabel, null);
+});
+
+test('dialLayout: ticks at 0, ¼, ½, ¾ turn with radians for the tooltip only (condition e)', () => {
+  const { ticks } = dialLayout({ r: 34 });
+  assert.deepEqual(ticks.map((t) => t.title), ['0 rad', 'π/2 rad', 'π rad', '3π/2 rad']);
+  assert.ok(near(ticks[1].x, 0) && near(ticks[1].y, -34));
+});
+
+test('dialLayout: angles past one turn print "2.4 turns"; within a turn nothing prints (condition i)', () => {
+  assert.equal(dialLayout({ r: 34, angle: 2.4 * TURN }).turnsLabel, '2.4 turns');
+  assert.equal(dialLayout({ r: 34, angle: 15 }).turnsLabel, '2.4 turns');
+  assert.equal(dialLayout({ r: 34, angle: 3 }).turnsLabel, null);
+  assert.equal(dialLayout({ r: 34, angle: -15 }).turnsLabel, '−2.4 turns');
+});
+
+test('dialLayout: the seen sector is a filled wedge, a full circle once the pair turned fully (condition b)', () => {
+  const slow = dialLayout({ r: 34, vector: [0.5, 0], seen: [0, 1.5] });
+  assert.equal(slow.seen.full, false);
+  assert.match(slow.seen.path, /^M0 0L34 0A34 34 0 0 0 /);
+  assert.equal(dialLayout({ r: 34, vector: [0, 2], seen: [0, 15] }).seen.full, true);
+  assert.equal(dialLayout({ r: 34 }).seen, null);
+  const big = dialLayout({ r: 34, seen: [0, 4] });
+  assert.match(big.seen.path, /A34 34 0 1 0 /); // more than half a turn: the large-arc flag is set
+});
+
+test('dialLayout: reached draws a ghost hand; "never seen" only when it leaves the seen sector (condition h)', () => {
+  const out = dialLayout({ r: 34, vector: [0.5, 0], seen: [0, 1.5], reached: [0, 6.3] });
+  assert.ok(near(out.ghost.x, 34 * Math.cos(6.3)) && near(out.ghost.y, -34 * Math.sin(6.3)));
+  assert.equal(out.neverSeen, true);
+  assert.equal(dialLayout({ r: 34, vector: [0.5, 0], seen: [0, 1.5], reached: [0, 1.575 - 0.075] }).neverSeen, false);
+  assert.equal(dialLayout({ r: 34, vector: [0, 2], seen: [0, 15], reached: [0, 63] }).neverSeen, false); // full circle: all seen
+  assert.equal(dialLayout({ r: 34 }).ghost, null);
+});
+
+test('dialLayout rejects bad input with RangeError', () => {
+  assert.throws(() => dialLayout({ r: 0 }), /glyphs.dial: r must be a finite number > 0/);
+  assert.throws(() => dialLayout({ r: 34, vector: [1] }), /glyphs.dial: vector must be a pair/);
+  assert.throws(() => dialLayout({ r: 34, angle: Number.NaN }), /glyphs.dial: angle must be finite/);
+  assert.throws(() => dialLayout({ r: 34, seen: [1, 0] }), /glyphs.dial: seen must be \[from, to\]/);
+  assert.throws(() => dialLayout({ r: 34, reached: 3 }), /glyphs.dial: reached must be \[from, to\]/);
+  assert.throws(() => dialLayout({ r: 34, vector: [0, 1], scale: 0 }), /glyphs.dial: scale must be a finite number > 0/);
+});
+
+test('barsLayout: 8 bars fit 344 px at NUMBER_CELL pitch, heights on an explicit max (moe conditions d, e)', () => {
+  const loads = [96, 51, 12, 16, 25, 9, 21, 26];
+  const { bars, w, referenceY } = barsLayout({ values: loads, max: 96, h: 120, reference: { value: 32, label: 'fair share 32' } });
+  assert.equal(w, 344);
+  assert.deepEqual(bars.map((b) => b.x), [0, 43, 86, 129, 172, 215, 258, 301]);
+  assert.ok(bars.every((b) => b.width === 40));
+  assert.equal(bars[0].height, 120);
+  assert.equal(bars[0].y, 0);
+  assert.equal(bars[2].height, 15);
+  assert.equal(referenceY, 80);
+  assert.equal(barsLayout({ values: [32, 35], max: 96, h: 120 }).bars[0].height, 40); // the same max holds between frames
+  assert.equal(barsLayout({ values: [1, 2], max: 2, h: 10 }).referenceY, null);
+});
+
+test('barsLayout: an explicit width sets the pitch; zero is a bar of height 0', () => {
+  const { bars, w } = barsLayout({ values: [6, 8, 1, 1, 4], max: 20, h: 100, w: 215 });
+  assert.equal(w, 215);
+  assert.deepEqual(bars.map((b) => b.x), [0, 43, 86, 129, 172]);
+  assert.equal(barsLayout({ values: [0, 4], max: 4, h: 50 }).bars[0].height, 0);
+});
+
+test('barsLayout rejects empty, negative and over-max values, a missing max and mismatched labels', () => {
+  assert.throws(() => barsLayout({ values: [], max: 1, h: 10 }), /glyphs.bars: values must be a non-empty array/);
+  assert.throws(() => barsLayout({ values: [1, -1], max: 1, h: 10 }), /glyphs.bars: values must be finite numbers ≥ 0/);
+  assert.throws(() => barsLayout({ values: [1, 2], h: 10 }), /glyphs.bars: max must be a finite number > 0/);
+  assert.throws(() => barsLayout({ values: [1, 5], max: 4, h: 10 }), /glyphs.bars: value 5 exceeds max 4/);
+  assert.throws(() => barsLayout({ values: [1, 2], max: 2, h: 10, labels: ['a'] }), /glyphs.bars: labels must match values/);
+  assert.throws(() => barsLayout({ values: [1], max: 2, h: 10, reference: { value: 3, label: 'x' } }), /glyphs.bars: reference must be \{ value ≤ max, label \}/);
+  assert.throws(() => barsLayout({ values: [1], max: 2, h: 0 }), /glyphs.bars: h must be a finite number > 0/);
+});

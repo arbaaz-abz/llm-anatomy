@@ -1,5 +1,5 @@
 // Glyphs accepted with the decoder-anatomy storyboard (§4, §13): the selection mark, image patches,
-// the residual adder and the block stack. Pure DOM builders; nothing runs at import time.
+// the residual adder and the block stack; plus rope's dial (shared patch S1). Pure DOM builders; nothing runs at import time.
 import { svgEl, group, text, block } from './core.js';
 
 const STATES = new Set(['idle', 'active', 'dim']);
@@ -87,5 +87,88 @@ export function blockStack(parent, { x, y, w = 220, count, shown = 2, residual =
     if (row.kind === 'block') drawStackBlock(g, { top: tops[i], w, blockH, index: row.index, label, halves, active, residual });
     else text(g, STACK.inset, tops[i] + STACK.collapseH / 2, countLabel, 'g-label g-collapse', { 'dominant-baseline': 'central' });
   });
+  return g;
+}
+
+// ---- dial (rope §4, accepted with conditions a–j; reused by decoder-recap and midtraining) ----
+const TURN = 2 * Math.PI;
+const TICK_TITLES = ['0 rad', 'π/2 rad', 'π rad', '3π/2 rad'];
+const TICK_INNER = 0.82; // ticks run from 82 % of the radius to the rim
+const num = (v) => String(Number(v.toFixed(3)) || 0); // short SVG coordinates, never "-0"
+const isRange = (v) => Array.isArray(v) && v.length === 2 && finite(...v) && v[1] >= v[0];
+// Screen point at `angle` radians (counter-clockwise from 3 o'clock; SVG y grows downward).
+const polar = (len, angle) => ({ x: len * Math.cos(angle), y: -len * Math.sin(angle) });
+
+function checkDial({ r, vector, angle, seen, reached, scale }) {
+  if (!(Number.isFinite(r) && r > 0)) throw new RangeError(`glyphs.dial: r must be a finite number > 0, got ${r}`);
+  if (vector != null && !(Array.isArray(vector) && vector.length === 2 && finite(...vector))) throw new RangeError(`glyphs.dial: vector must be a pair of finite numbers, got ${JSON.stringify(vector)}`);
+  if (!Number.isFinite(angle)) throw new RangeError(`glyphs.dial: angle must be finite (radians), got ${angle}`);
+  if (seen != null && !isRange(seen)) throw new RangeError(`glyphs.dial: seen must be [from, to] radians with from ≤ to, got ${JSON.stringify(seen)}`);
+  if (reached != null && !isRange(reached)) throw new RangeError(`glyphs.dial: reached must be [from, to] radians with from ≤ to, got ${JSON.stringify(reached)}`);
+  if (scale != null && !(Number.isFinite(scale) && scale > 0)) throw new RangeError(`glyphs.dial: scale must be a finite number > 0, got ${scale}`);
+}
+
+function sectorPath(r, from, to) {
+  const a = polar(r, from);
+  const b = polar(r, to);
+  const large = to - from > Math.PI ? 1 : 0;
+  return `M0 0L${num(a.x)} ${num(a.y)}A${r} ${r} 0 ${large} 0 ${num(b.x)} ${num(b.y)}Z`;
+}
+
+function turnsText(angle) {
+  if (Math.abs(angle) <= TURN) return null;
+  const turns = (Math.abs(angle) / TURN).toFixed(1);
+  return `${angle < 0 ? '−' : ''}${turns} turns`;
+}
+
+// Pure geometry of a dial: the hand (length = |pair| on `scale`, direction = the pair's own direction + angle),
+// the four ticks, the "seen in training" wedge, the ghost hand at the largest angle reached.
+export function dialLayout({ r = 34, vector = null, angle = 0, seen = null, reached = null, scale = null }) {
+  checkDial({ r, vector, angle, seen, reached, scale });
+  const magnitude = vector ? Math.hypot(vector[0], vector[1]) : 1;
+  const base = vector ? Math.atan2(vector[1], vector[0]) : 0;
+  const length = magnitude === 0 ? 0 : (r * magnitude) / (scale ?? magnitude);
+  const full = seen ? seen[1] - seen[0] >= TURN : false;
+  return {
+    r,
+    hand: polar(length, base + angle),
+    magnitudeLabel: vector ? `|·| = ${magnitude.toFixed(2)}` : null,
+    turnsLabel: turnsText(angle),
+    ticks: TICK_TITLES.map((title, i) => ({ ...polar(r, (i * TURN) / 4), inner: polar(r * TICK_INNER, (i * TURN) / 4), title })),
+    seen: seen ? { full, path: full ? null : sectorPath(r, base + seen[0], base + seen[1]) } : null,
+    ghost: reached ? polar(length, base + reached[1]) : null,
+    neverSeen: Boolean(seen && reached && !full && reached[1] > seen[1]),
+  };
+}
+
+function drawDialFace(g, layout) {
+  svgEl('circle', { class: 'g-frame', r: layout.r }, g);
+  if (layout.seen?.full) svgEl('circle', { class: 'g-dial-seen', r: layout.r }, g);
+  else if (layout.seen) svgEl('path', { class: 'g-dial-seen', d: layout.seen.path }, g);
+  layout.ticks.forEach((t) => {
+    const tick = svgEl('line', { class: 'g-dial-tick', x1: num(t.inner.x), y1: num(t.inner.y), x2: num(t.x), y2: num(t.y) }, g);
+    svgEl('title', {}, tick).textContent = t.title;
+  });
+}
+
+// One pair of numbers as a clock hand (rope §4). Hand in --ink; the seen wedge is a pale fill, never an outline;
+// the selection outline is the page's G.selectionMark. Pages interpolate `angle` / `reached` with progress.
+export function dial(parent, { x, y, r = 34, vector = null, angle = 0, seen = null, reached = null, scale = null, label }) {
+  const layout = dialLayout({ r, vector, angle, seen, reached, scale });
+  const spoken = [label, layout.magnitudeLabel, `turned ${angle.toFixed(2)} rad`].filter(Boolean).join(', ');
+  const g = group(parent, 'g-dial', x, y, { role: 'img', 'aria-label': spoken });
+  drawDialFace(g, layout);
+  if (layout.ghost) {
+    svgEl('line', { class: 'g-dial-ghost', x1: 0, y1: 0, x2: num(layout.ghost.x), y2: num(layout.ghost.y) }, g);
+    if (layout.neverSeen) {
+      const at = polar(r + 6, Math.atan2(-layout.ghost.y, layout.ghost.x)); // just outside the rim, on the ghost's line
+      text(g, num(at.x), num(at.y), 'never seen', 'g-label g-dial-never', { 'text-anchor': at.x >= 0 ? 'start' : 'end', 'dominant-baseline': 'central' });
+    }
+  }
+  svgEl('line', { class: 'g-dial-hand', x1: 0, y1: 0, x2: num(layout.hand.x), y2: num(layout.hand.y) }, g);
+  svgEl('circle', { class: 'g-dial-hub', r: 2.5 }, g);
+  if (label) text(g, 0, -r - 8, label, 'g-label', { 'text-anchor': 'middle' });
+  if (layout.magnitudeLabel) text(g, 0, r + 14, layout.magnitudeLabel, 'g-label', { 'text-anchor': 'middle' });
+  if (layout.turnsLabel) text(g, r + 6, 0, layout.turnsLabel, 'g-label g-dial-turns', { 'dominant-baseline': 'central' });
   return g;
 }

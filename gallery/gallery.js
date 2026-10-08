@@ -160,6 +160,14 @@ const FIGURES = [
   ['memBar', 'useful · reserved-empty (hatched) · free, with percentages', 300, 60, (s) => {
     G.memBar(s, { x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 });
   }],
+  ['dial', 'one pair of numbers as a clock hand: length = the pair\'s size (printed), direction = its turn; pale wedge = angles seen in training; ghost hand = the largest angle reached; past one turn prints "turns"', 300, 200, (s) => {
+    G.dial(s, { x: 55, y: 60, vector: [0, 2], angle: 3, scale: 2, seen: [0, 15], label: 'pair 1' }); // rope frames 3 and 8
+    G.dial(s, { x: 165, y: 60, vector: [0.5, 0], angle: 0.3, scale: 2, seen: [0, 1.5], reached: [0, 6.3], label: 'pair 2' });
+    G.dial(s, { x: 55, y: 172, r: 26, angle: 15, label: 'no vector: unit hand' });
+  }],
+  ['bars', 'side-by-side amounts (not parts of a whole): the value printed above each bar, a neutral fill, an explicit max so the scale holds between frames, a dashed reference with its own label', 300, 160, (s) => {
+    G.bars(s, { x: 4, y: 22, w: 200, h: 100, values: [96, 51, 12, 16, 25, 9, 21, 26], labels: ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8'], max: 96, reference: { value: 32, label: 'fair share 32' }, label: 'loads per expert' });
+  }],
   ['shareBar', 'categorical parts: five hues; parts under 18 px fold into "others" and a bracketed zoomed bar; "not published" is neutral, off the scale, never hatched', 360, 210, (s) => {
     G.shareBar(s, { x: 4, y: 6, w: 172, label: 'toy model', parts: [
       { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },

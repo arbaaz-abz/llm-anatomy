@@ -317,6 +317,17 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-share .g-part-none { fill: var(--part-none); stroke: var(--ink-muted); stroke-width: 1; } /* "not published": neutral, never hatched */
 .g-share .g-part-others { fill: var(--ink-muted); } /* "others": the folded tail, redrawn on the zoomed bar */
 .g-share .g-bracket { fill: none; stroke: var(--line); stroke-width: 1; }
+/* dial (rope §4): hand in ink, pale filled "seen" wedge, ghost hand by opacity (never dashed: dashed means draft) */
+.g-dial .g-dial-seen { fill: var(--line); stroke: none; opacity: 0.75; }
+.g-dial .g-dial-tick { stroke: var(--ink-muted); stroke-width: 1; }
+.g-dial .g-dial-hand { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.g-dial .g-dial-ghost { stroke: var(--ink-muted); stroke-width: 2; stroke-linecap: round; opacity: 0.55; }
+.g-dial .g-dial-hub { fill: var(--ink); }
+/* bars (moe §4): an amount in a neutral ink tint, the printed value above each bar, a dashed labeled reference */
+.g-bars .g-bar { fill: color-mix(in oklab, var(--ink) 30%, var(--surface)); stroke: none; }
+.g-bars .g-bar-value { fill: var(--ink); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; } /* halo: the reference line never crosses a digit */
+.g-bars .g-bars-axis { stroke: var(--line); stroke-width: 1; }
+.g-bars .g-bars-ref { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 4 3; }
 
 /* ---------- Lesson page scaffold (shared/lesson-page.js) ---------- */
 .lesson-hook { font-family: var(--font-display); font-size: var(--fs-l); line-height: 1.35; }
