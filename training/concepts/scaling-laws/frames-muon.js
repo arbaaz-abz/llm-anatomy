@@ -32,7 +32,7 @@ export function drawFrame9(svg, p) {
     const values = [lerp(a, norm0[0], norm), lerp(b, norm0[1], norm)];
     stretchVector(svg, values, { format: norm > 0 ? THREE : TWO });
   }
-  label(svg, 16, 168, `÷ √${TWO(FIRST.norm2)} (the update's overall size)`, { opacity: norm });
+  label(svg, 16, 168, `[${TWO(a)}, ${TWO(b)}] ÷ √${TWO(FIRST.norm2)} = [${THREE(norm0[0])}, ${THREE(norm0[1])}] (÷ the update's overall size)`, { opacity: norm });
   ink(svg, 16, 206, 'momentum step: the 10 : 1 stretch stays', { opacity: seg(p, 0.6, 0.9) });
   label(svg, 16, 224, '(AdamW rescales elements, not directions)', { opacity: seg(p, 0.7, 1) });
 }

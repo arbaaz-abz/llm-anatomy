@@ -8,7 +8,7 @@ import { sci, perParam, powerText, lossText, sizeText, tokensText, savingText, i
 import { toyView, SERVED_OPTIONS } from '../training/concepts/scaling-laws/toy-view.js';
 import { tryThis } from '../training/concepts/scaling-laws/try-this.js';
 import { belowFor, SERVE_BASIS_LINE, DEFINITION_LINE } from '../training/concepts/scaling-laws/facts.js';
-import { MODELS, BUDGETS, MUON_SCHEDULE, MUON_COEFFICIENTS, SINGULAR_VALUES, STAGE_BUDGET } from '../training/concepts/scaling-laws/numbers.js';
+import { MODELS, BUDGETS, MUON_SCHEDULE, MUON_COEFFICIENTS, SINGULAR_VALUES, STAGE_BUDGET, FRAME_2_SIZES, CURVE_TABLE_SIZES } from '../training/concepts/scaling-laws/numbers.js';
 import { computeOptimal, isoFlopLoss, inferenceAwareOptimum, lifetimeFlops, tokensPerParam, newtonSchulzSingular } from '../math/scaling.js';
 import { trainingFlops } from '../math/scale.js';
 import { CAPTIONS, CHECK_WORK, TRY_THIS } from './scaling-laws-expected.js';
@@ -145,7 +145,7 @@ test('the plot input holds its domains: every marker and point is inside them', 
 test('the storyboard\'s three try-this prompts print with their numbers from math/scaling.js and a named insight', () => {
   const items = tryThis();
   assert.deepEqual(items, TRY_THIS);
-  assert.deepEqual(items.map(([, insight]) => insight), ['There is a valley.', 'The more a model will be used, the smaller and longer-trained it should be.', 'Compute-optimal scales parameters and tokens together.']);
+  assert.deepEqual(items.map(([, insight]) => insight), ['there is a valley.', 'the more a model will be used, the smaller and longer-trained it should be.', 'compute-optimal scales parameters and tokens together.']);
 });
 
 test('the stage numbers: 6ND for frame 1, tokens per parameter for frame 8, the optimum for frame 5', () => {
@@ -209,4 +209,11 @@ test('pure view code never mutates its inputs or the data', () => {
   lessonFor(data);
   assert.equal(JSON.stringify(data), before);
   assert.deepEqual({ ...state }, { ...INITIAL_STATE, Dinf: 1e13 });
+});
+
+test('review fixes: the middle size of frames 2-3 is the optimum itself, printed as 95.9B everywhere', () => {
+  assert.equal(FRAME_2_SIZES[1], computeOptimal(1e24).N);
+  assert.equal(CURVE_TABLE_SIZES[3], computeOptimal(1e24).N);
+  assert.equal(sizeText(FRAME_2_SIZES[1]), '95.9B');
+  assert.equal(tokensText(isoFlopLoss(1e24, FRAME_2_SIZES[1]).D), '1.74T');
 });

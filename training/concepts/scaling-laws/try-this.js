@@ -31,14 +31,14 @@ export function tryThis() {
   const low = computeOptimal(BUDGETS[0]);
   const high = computeOptimal(BUDGETS[BUDGETS.length - 1]);
   return [
-    [`Predict first: at ${powerText(STAGE_BUDGET)} FLOPs, is a 1T-parameter model better than the compute-optimal ${sizeText(opt.N)} one? Drag **Model size** from ${sizeText(opt.N)} to 1T → loss ${lossText(opt.loss)} → ${lossText(big.loss)}, tokens ${tokensText(opt.D)} → ${tokensText(big.D)}. Drag down to 1B → ${lossText(small.loss)}`,
-      'There is a valley.',
+    [`Predict first: at ${powerText(STAGE_BUDGET)} FLOPs, is a 1T-parameter model better than the compute-optimal ${sizeText(opt.N)} one? Drag **Model size** from ${sizeText(opt.N)} to 1T → loss ${lossText(opt.loss)} → ${lossText(big.loss)}, tokens ${tokensText(opt.D)} → ${tokensText(big.D)}. Drag down to 1B: ${lossText(small.loss)}.`,
+      'there is a valley.',
       ` Too big and the model sees too few tokens; too small and it cannot use them. The bottom sits near ${perParam(opt.tokensPerParam)} tokens per parameter at this budget, the Chinchilla rule of about 20.`],
-    [`Leave **Model size** at the optimum and step **Tokens served** at ${powerText(STAGE_BUDGET)} FLOPs: ${steps.join('; ')}`,
-      'The more a model will be used, the smaller and longer-trained it should be.',
+    [`Leave **Model size** at the optimum and step **Tokens the model will serve** at ${powerText(STAGE_BUDGET)} FLOPs: ${steps.join('; ')}`,
+      'the more a model will be used, the smaller and longer-trained it should be.',
       ' At heavy use the best ratio lands in the hundreds to thousands of tokens per parameter, where 2026 models actually are (frame 8).'],
-    [`Switch **Budget** from ${powerText(BUDGETS[0])} to ${powerText(BUDGETS[BUDGETS.length - 1])} with **Tokens served** at 0: the optimum goes ${sizeText(low.N)} / ${tokensText(low.D)} tokens → ${sizeText(high.N)} / ${tokensText(high.D)}, and the ratio only drifts ${perParam(low.tokensPerParam)} → ${perParam(high.tokensPerParam)}`,
-      'Compute-optimal scales parameters and tokens together.',
+    [`Switch **Training budget** from ${powerText(BUDGETS[0])} to ${powerText(BUDGETS[BUDGETS.length - 1])} with **Tokens the model will serve** at 0: the optimum goes ${sizeText(low.N)} / ${tokensText(low.D)} tokens → ${sizeText(high.N)} / ${tokensText(high.D)}, and the ratio only drifts ${perParam(low.tokensPerParam)} → ${perParam(high.tokensPerParam)}`,
+      'compute-optimal scales parameters and tokens together.',
       ' Ten thousand times the budget buys about a hundred times more of each.'],
   ];
 }

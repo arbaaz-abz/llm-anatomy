@@ -1,13 +1,15 @@
 // scaling-laws hand-authored stand-in constants (storyboard §5, §8). The model rows restate data/models.json; the page test
 // keeps them equal to the data (P3-R13 spirit). Frozen with deepFreeze.
 import { deepFreeze } from '@math/core.js';
+import { computeOptimal } from '@math/scaling.js';
 
 export const STAGE_BUDGET = 1e24; // frames 2-7: FLOPs
 export const BUDGETS = Object.freeze([1e22, 1e23, 1e24, 1e25, 1e26]); // frame 5 and the toy's chips
 export const CHINCHILLA_RULE = 20; // "about 20 tokens per parameter", the 2022 rule of thumb
 export const SERVE_WHAT_IF = 1e14; // frames 6-7: a what-if serving volume (100T tokens), not any model's traffic
-export const FRAME_2_SIZES = Object.freeze([1e9, 96e9, 1e12]); // 1B, 96B, 1T: the three blocks (and frame 3's points)
-export const CURVE_TABLE_SIZES = Object.freeze([1e9, 1e10, 3e10, 96e9, 3e11, 1e12]); // frame 3's loss table
+const OPTIMUM_N = computeOptimal(STAGE_BUDGET).N; // the middle size is the optimum itself, so frames 2-7 print one size (95.9B)
+export const FRAME_2_SIZES = Object.freeze([1e9, OPTIMUM_N, 1e12]); // 1B, the optimum, 1T: the three blocks (and frame 3's points)
+export const CURVE_TABLE_SIZES = Object.freeze([1e9, 1e10, 3e10, OPTIMUM_N, 3e11, 1e12]); // frame 3's loss table
 
 // Frame 1 and frame 8: (id in data/models.json, label, active parameters, total parameters, pretraining tokens).
 export const MODELS = deepFreeze({
