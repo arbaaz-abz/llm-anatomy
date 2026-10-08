@@ -8,7 +8,7 @@ Sources: 02 §0 items 6–8, §3 (loss masking), §4.3, §4.4 (IcePop, DeepSeek-
 
 Running example, continued from `rlvr-grpo`: prompt `7 × 8 = ?`, a group of G = 8, the checker "is the
 last token `56`?", and the default group k = 2 built with `rlvr-grpo`'s pools and slot order
-`[1, 5, 3, 7, 2, 6, 4, 8]`, so rows 1 and 5 are right and the advantages are +1.73 / −0.58 (39 tokens).
+`[1, 5, 3, 7, 2, 6, 4, 8]` (`GROUP_TOY`, imported from `math/grpo.js`, ruling P3-R5), so rows 1 and 5 are right and the advantages are +1.73 / −0.58 (39 tokens).
 Frames 1–3 replay row 1 as a tiny tool-using episode drawn beside the table (the table itself stays
 `rlvr-grpo`'s eight answers, 39 tokens, everywhere on this page); frames 5–8 and the toy reuse the table
 row for row. A visible line under the stage says: "Real agent episodes fix code, run terminals or search
@@ -173,6 +173,9 @@ Selection, not hover: a token is selected by click, tap or arrow keys; default r
 visible **inspector** shows the selected token's row, A, engine p, trainer p, ρ, IS weight, masked yes/no,
 and its push A × weight.
 
+**Check my work:** none (the token inspector is this page's check: it prints every step behind the
+selected token's push; ruling P3-R16).
+
 **Live outputs**
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
@@ -181,7 +184,7 @@ and its push A × weight.
 | IS weight, masked | `isCorrection(ρ, { mode: correction, cap: 2, band: [0.5, 2] })` | 3 decimals; hatch when masked |
 | Push per token (inspector) | `A × weight` | signed, 3 decimals |
 | Masked tokens | count of `masked` over the 39 tokens | `n of 39` |
-| Timeline: iteration length, utilization, carried rows | `rolloutSchedule(durations, { mode, lambda })`, with utilization = busy slot-time ÷ (8 × iteration length), the page's one definition | minutes; percent, 1 decimal; row numbers |
+| Timeline: iteration length, utilization, carried rows | `rolloutSchedule(durations, { mode, lambda })`, with utilization = busy slot-time ÷ (8 × iteration length), the page's one definition | `formatDuration(minutes × 60)` ("16 min", "6 min"); percent, 1 decimal; row numbers |
 
 **Try this** (each leads to a named insight)
 1. Predict first: should the trainer fully trust the ratio? With row 4's `48` selected, step through
@@ -192,7 +195,7 @@ and its push A × weight.
    disagree more than twofold.
 2. Keep `IcePop` and switch `precision` to FP16. Row 4's ρ falls 3.20 → 1.157, row 7's 2.40 → 1.116, row
    6's 0.40 → 0.892, and the readout drops to 0 of 39 masked. → **Insight: part of the mismatch is
-   rounding,** and a finer number format shrinks it before any correction is needed (a reported 2025 fix).
+   rounding,** and a finer number format shrinks it before any correction is needed (a reported fix).
    The rest, such as MoE routing that differs between engine and trainer, needs its own fix (Keep Routing).
 3. Step `lambda` from `all 8` to `6 of 8` to `4 of 8`: utilization 37.5% → 72.9% → 87.5%, while the
    rows that finish under newer weights go from none to rows 4 and 7 to rows 4, 5, 7 and 8. → **Insight:
@@ -239,7 +242,7 @@ All keys are proposed for the data-extension pass unless marked existing; entry 
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| GLM-5: fully async, decoupled rollouts and training (slime); TITO gateway; direct double-sided importance sampling; more than 10K verifiable SWE environments across 9 languages, thousands of Docker terminal tasks, multi-hop search over >2M pages | `models.glm-5.rl_infra` = "async decoupled (slime), TITO, double-sided IS", `.agentic_envs_swe` = ">10,000 (9 languages)" (confirmed) | 02 §4.6 |
+| GLM-5: fully async, decoupled rollouts and training (slime); TITO gateway; direct double-sided importance sampling; more than 10K verifiable SWE environments across 9 languages, thousands of Docker terminal tasks, multi-hop search over >2M pages | `models.glm-5.rl_infra` = "async decoupled (slime), TITO, double-sided IS", `.agentic_envs_swe` = ">10,000 (9 languages)", `.agentic_envs_other` = "thousands of Docker terminal tasks (Harbor format); multi-hop search over a web knowledge graph (>2M pages); slide generation" (confirmed) | 02 §4.6 |
 | GLM-5 masks tokens whose train/infer ratio leaves [1/2, 2] (IcePop); KL term removed | `models.glm-5.rl_mismatch_fix` = "IcePop mask, ρ ∈ [1/2, 2]", `.rl_kl_coeff` = 0 (both proposed by `rlvr-grpo`, confirmed) | 02 §4.4 |
 | DeepSeek-V3.2: weak or zero KL for math with an unbiased KL estimator; off-policy sequence masking; Keep Routing; Keep Sampling Mask; 1,827 environments / 4,417 tasks; post-training above 10% of pretraining compute | `models.deepseek-v3.2.rl_patches` = "weak/zero KL (math), off-policy sequence masking, Keep Routing, Keep Sampling Mask" (confirmed); `.rl_environments` = 1827, `.post_training_compute_share` (proposed by `rlvr-grpo`) | 02 §4.4, §4.3, §4.6 |
 | DeepSeek-V4: preemptible rollout service with a token-level write-ahead log, because regenerating interrupted requests from scratch biases toward short responses; the policy itself is the generative judge | `models.deepseek-v4-pro.rl_infra` = "preemptible rollouts, token-granular WAL", `.reward_model` = "GRM, actor as judge" (confirmed) | 02 §4.6, §4.5 |
@@ -364,3 +367,14 @@ Applied from `track-review-recipe.md` §7 (change log: `fix-recipe-review.md`):
 - Should: `same factor either way: ½ and 2` printed under the linear band (lesson 21); truncated IS "caps the weight (at 2 in this toy)"; "most 2026 open-model reports" in §1, §3, frame 9 and takeaway 3; frame 7 note "most tokens agree within a few percent (34 of 39 here)"; frame 6 numbers say only the part sampled before the cut is off-policy; the FP16 chip itself reads "toy model of rounding only"; §3 ¶4 dated "in 2026".
 - Nice (declined in part): frame 10 prints Kimi K3's actual domains (general, general agents, coding agents) × low / high / max, not the track's illustrative `math & code · agents · chat`, because brief 02 §4.6 names K3's three domains and relabeling them would misstate the report.
 - Data pass 2026-10-07: the MiniMax M2.5 "hundreds of thousands of environments" marketing claim is dropped (no data key, no source); no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R5: the group comes from `GROUP_TOY` (`math/grpo.js`), the same 39 tokens as `rlvr-grpo`; this page's
+  engine/trainer probabilities stay in `training/concepts/agentic-rl.js`.
+- X-1 / P3-R14: try-this 2's "a reported 2025 fix" drops the year (`papers.fp16-mismatch-2025` is reported).
+- P3-R14 (data gap 18): `glm-5.agentic_envs_other` added (Docker terminal tasks, multi-hop search over >2M
+  pages, slide generation; 02 §4.6).
+- README lesson 35: timeline durations through `formatDuration`; "3.2×" through `formatRatio`.
+- P3-R16: no "Check my work" (the token inspector is the check).
+- Open for Plan 4 (P3-R1): frame 5's idle space is a plain `idle` label on the `request` bars; the `request`
+  `idle` option is Serving's (batching) and lands in Plan 4.
