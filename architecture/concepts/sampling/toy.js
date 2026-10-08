@@ -11,7 +11,7 @@ import { view, tryThis, DRAWS, SEED_RANGE } from './toy-view.js';
 const TEMPERATURES = [0.25, 0.5, 0.75, 1, 1.5, 2];
 const TOP_KS = [0, 1, 2, 3, 5, 8]; // 0 = off
 const TOP_PS = [1, 0.95, 0.9, 0.75, 0.7, 0.5]; // 1 = off
-const BARS = Object.freeze({ x: 12, y: 24, h: 120, w: 5 * 43 + 40, labels: ['on', '.', 'and', 'the', '12 others'] });
+const BARS = Object.freeze({ x: 12, y: 24, h: 120, w: 5 * 52, labels: ['on', '.', 'and', 'the', '12 others'] });
 
 const kText = (k) => (k === 0 ? 'off' : `${k} ${k === 1 ? 'token' : 'tokens'}`);
 const pText = (p) => (p === 1 ? 'off' : `${p} of the probability`);
@@ -76,7 +76,7 @@ const keptTable = (v) => readoutTable({
 
 function drawBars(counts) {
   const svg = G.svgEl('svg', { width: BARS.w + 2 * BARS.x, height: BARS.y + BARS.h + 30, viewBox: `0 0 ${BARS.w + 2 * BARS.x} ${BARS.y + BARS.h + 30}`, role: 'img', 'aria-label': `${DRAWS} draws per category` });
-  G.bars(svg, { x: BARS.x, y: BARS.y, h: BARS.h, values: counts, labels: BARS.labels, max: DRAWS, label: `${DRAWS} draws` });
+  G.bars(svg, { x: BARS.x, y: BARS.y, w: BARS.w, h: BARS.h, values: counts, labels: BARS.labels, max: DRAWS, label: `${DRAWS} draws` });
   return svg;
 }
 
