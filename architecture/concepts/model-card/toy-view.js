@@ -2,8 +2,9 @@
 // Fields come from decodeCard (math/card.js), costs from activeShare / routedShare / cachePerToken / cacheForConversation,
 // percentages from sharePct, sizes from formatBytes; nothing here is typed in except the card names.
 import { FIELD_GUIDE, decodeCard, activeShare, routedShare, activeWithEmbeddings, cachePerToken, cacheForConversation } from '@math/card.js';
+import { glossFor, LABS_DIFFER_KEYS } from './glosses.js';
 import {
-  NOT_PUBLISHED, CONTEXT_SHORT, INITIAL_STATE, hbmBytes, int, sharePercent, gpuShareText, cacheTokenText, cacheConversationText, provenanceText, exactTokens,
+  NOT_IN_DATA, CONTEXT_SHORT, INITIAL_STATE, hbmBytes, int, sharePercent, gpuShareText, cacheTokenText, cacheConversationText, provenanceText, exactTokens,
 } from './format.js';
 
 export { INITIAL_STATE };
@@ -41,7 +42,7 @@ function fieldRow(entry, rows, key, cache) {
   const guide = FIELD_GUIDE[key];
   const base = { key, label: guide.label, gloss: guide.gloss, lessons: lessonsOf(key) };
   const row = rows.find((r) => r.key === key);
-  if (!row) return { ...base, value: NOT_PUBLISHED, present: false, tag: '', detail: '', sourceUrl: '' };
+  if (!row) return { ...base, value: NOT_IN_DATA, present: false, tag: '', detail: '', sourceUrl: '' };
   if (key === 'kv_bytes_per_token') {
     return { ...base, value: cacheTokenText(cache), present: true, tag: cache.kind === 'reported' ? 'reported' : '', detail: provenanceText(cache.kind), sourceUrl: row.sourceUrl };
   }
@@ -51,9 +52,12 @@ function fieldRow(entry, rows, key, cache) {
   };
 }
 
-const labsDiffer = (name, rows) => rows
-  .filter((r) => r.note && (r.isRange || r.confidence === 'reported'))
-  .map((r) => ({ label: `${name} · ${r.label}`, text: r.note }));
+// The learner glosses of this card's conflicts and carried-over figures (never the data file's maintainer notes).
+const labsDiffer = (data, id, name, rows) => LABS_DIFFER_KEYS
+  .filter((k) => k.startsWith(`${id}.`))
+  .map((k) => ({ key: k.slice(id.length + 1), text: glossFor(data, id, k.slice(id.length + 1)) }))
+  .filter((n) => n.text !== null)
+  .map((n) => ({ label: `${name} · ${rows.find((r) => r.key === n.key).label}`, text: n.text }));
 
 function costs(entry, cache, tokens, hbm) {
   const conversation = tokens === null ? null : cacheForConversation(entry, tokens);
@@ -63,9 +67,9 @@ function costs(entry, cache, tokens, hbm) {
   const total = entry.facts.total_params?.value;
   const ends = [conversation].flat();
   return {
-    activeShare: share === null ? NOT_PUBLISHED : sharePercent(share),
+    activeShare: share === null ? NOT_IN_DATA : sharePercent(share),
     activeEmbedding: withEmbeddings !== null && Number.isFinite(total) ? sharePercent(withEmbeddings / total) : null,
-    routedShare: routed === null ? NOT_PUBLISHED : sharePercent(routed),
+    routedShare: routed === null ? NOT_IN_DATA : sharePercent(routed),
     cacheToken: cacheTokenText(cache),
     cacheTokenSub: provenanceText(cache.kind),
     cacheConversation: cacheConversationText(conversation),
@@ -78,7 +82,7 @@ function bars(entry) {
   const [total, active] = [entry.facts.total_params?.value, entry.facts.active_params?.value];
   if (!Number.isFinite(total) || !Number.isFinite(active) || active >= total) return null;
   const share = activeShare(entry);
-  return { total, active, formula: `active ÷ total = ${sharePercent(share)}` };
+  return { total, active, formula: `active ÷ total = ${sharePercent(share)}`, line: `active ${sharePercent(share)} · not used ${sharePercent((total - active) / total)}` };
 }
 
 function column(side, id, state, data, hbm) {
@@ -92,8 +96,8 @@ function column(side, id, state, data, hbm) {
     rows: Object.keys(FIELD_GUIDE).map((key) => fieldRow(entry, rows, key, cache)),
     costs: costs(entry, cache, tokens, hbm),
     bars: bars(entry),
-    notes: labsDiffer(name, rows),
-    tokensText: tokens === null ? NOT_PUBLISHED : (Array.isArray(tokens) ? `${tokens.map(int).join('–')} tokens` : `${int(tokens)} tokens`),
+    notes: labsDiffer(data, id, name, rows),
+    tokensText: tokens === null ? NOT_IN_DATA : (Array.isArray(tokens) ? `${tokens.map(int).join('–')} tokens` : `${int(tokens)} tokens`),
   };
 }
 

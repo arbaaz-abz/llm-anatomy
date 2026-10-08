@@ -5,7 +5,7 @@ import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim, fillText } from '../shared/claims.js';
 import { decodeCard, activeShare } from '../math/card.js';
 import { LESSON, lessonFor } from '../architecture/concepts/model-card/content.js';
-import { stageModel } from '../architecture/concepts/model-card/stage-model.js';
+import { stageModel, EXIT_TITLES } from '../architecture/concepts/model-card/stage-model.js';
 import { sceneAt, ENDS, FRAME_COUNT, SCENE_KEYS } from '../architecture/concepts/model-card/scene.js';
 import { typedLayers } from '../architecture/concepts/model-card/frames-diagram.js';
 import { belowFor, factRows } from '../architecture/concepts/model-card/facts.js';
@@ -80,8 +80,10 @@ test('the hook reads the V4-Pro spec line from the data', () => {
 test('belowFor has a list for each frame and none for a frame that does not exist', () => {
   CAPTIONS.forEach((_, i) => assert.ok(belowFor(i, data).length > 0));
   assert.throws(() => belowFor(10, data), RangeError);
-  assert.match(belowFor(5, data).join(' '), /Formula-derived estimate/);
-  assert.match(belowFor(9, data).join(' '), /config\.json.*says 78 layers/);
+  assert.match(belowFor(5, data).join(' '), /An estimate from the config: about 4 kB per token if .* 1 : 1 \(FP8\), about 12 kB if the mix is 3 : 1 \(BF16\)/);
+  assert.match(belowFor(9, data).join(' '), /Its config says 78 layers; the GLM-5 paper says 80\./);
+  assert.match(belowFor(9, data).join(' '), /Mistral's card claims 1M tokens; independent evaluators reportedly measure about 512K\./);
+  assert.match(belowFor(9, data).join(' '), /49B counts the routed experts only; 52B includes the embeddings\./);
 });
 
 // ---- the stage model ----
@@ -115,17 +117,35 @@ test('stage model: the four conflicts of frame 10, with the shares', () => {
   assert.deepEqual([active.low, active.high, active.shares], ['49B', '52B', '4.67% · 4.95% of 1.05T']);
 });
 
+test('frame 9\'s exits name the lessons by title, pinned to shared/concepts.json', () => {
+  const titles = Object.fromEntries(graph.concepts.map((c) => [c.slug, c.title]));
+  assert.deepEqual(stageModel(data).exits.map((e) => e.title), ['Scaling laws', 'Pretraining', 'Picking the next token', 'Quantization']);
+  Object.entries(EXIT_TITLES).forEach(([slug, title]) => assert.equal(title, titles[slug], slug));
+});
+
+test('toy view: every card\'s active share, gpt-oss-120b at 4.39% (5.13B of 116.83B)', () => {
+  const shares = CARDS.map((c) => toyView({ ...INITIAL_STATE, left: c.id, right: 'none' }, data).columns[0].costs.activeShare);
+  assert.deepEqual(shares, ['3.06%', '3.75%', '3.96%', '5.31%', '5.37%', '4.67%', '4.39%']);
+});
+
 test('the conflict source labels agree with the data notes (a reworded note fails here, not on the page)', () => {
   const note = (id, key) => entry(id).facts[key].note;
   assert.match(note('glm-5.3', 'layers'), /config\.json.*says 78 layers.*GLM-5 paper.*says 80/);
   assert.match(note('mistral-large-4', 'context_length'), /model card reportedly claims 1M.*evaluators reportedly measure about 512K/);
   assert.match(note('deepseek-v4-pro', 'kv_bytes_per_token'), /config\.json.*alternating.*about 4 KB\/token.*3:1.*about 12 KB\/token/s);
-  assert.match(note('mistral-large-4', 'active_params'), /Routed-active; 52B including embeddings/);
+  assert.equal(entry('mistral-large-4').facts.active_params_with_embeddings.value, 52e9);
   const [glm, context, cache, active] = stageModel(data).conflicts;
   assert.deepEqual([glm.lowSource, glm.highSource], ['config.json', 'GLM-5 paper']);
   assert.deepEqual([context.lowSource, context.highSource], ['evaluators', 'Mistral card']);
   assert.deepEqual([cache.lowSource, cache.highSource], ['1 : 1 mix (config)', '3 : 1 (blog summaries)']);
   assert.deepEqual([active.lowSource, active.highSource], ['routed', 'with embeddings']);
+});
+
+test('learner text never carries the data file\'s maintainer notes: no URLs, sourcing chatter or binary-looking units', () => {
+  const lesson = lessonFor(data);
+  const texts = [...CAPTIONS.flatMap((_, i) => lesson.animation.belowFor(i)), ...toyView({ ...INITIAL_STATE, left: 'glm-5.3', right: 'mistral-large-4' }, data).columns.flatMap((c) => c.notes.map((n) => n.text)),
+    ...toyView(INITIAL_STATE, data).columns.flatMap((c) => c.notes.map((n) => n.text))];
+  texts.forEach((t) => assert.doesNotMatch(t, /https?:|primary, used here|kingy|on fetch|manual re-read|\bKB\b|\bKiB\b/, t.slice(0, 60)));
 });
 
 // ---- scenes: every frame starts where the last one ended ----
@@ -180,7 +200,7 @@ test('toy view: the default state is V4-Pro against Kimi K3 (try this 1)', () =>
   assert.equal(cost(v, 'left', 'cacheToken'), '4,000–12,000 B ≈ 4–12 kB');
   assert.equal(cost(v, 'left', 'cacheConversation'), '4–12 GB');
   assert.equal(cost(v, 'left', 'gpuShare'), '5.0–15.0%');
-  assert.equal(cost(v, 'right', 'cacheToken'), 'not published');
+  assert.equal(cost(v, 'right', 'cacheToken'), 'not in our data');
   assert.equal(v.columns[0].rows.length, 13);
   assert.equal(v.hbmGb, 80);
 });
@@ -203,18 +223,19 @@ test('toy view: GLM-5.3 against Mistral Large 4 keeps ranges and the labs\' seco
   assert.equal(row('left', 'layers').value, '78–80');
   assert.equal(row('right', 'context_length').value, '512K–1M');
   assert.equal(row('right', 'context_length').detail, '', 'a range has no single exact value');
-  assert.equal(row('right', 'layers').value, 'not published');
+  assert.equal(row('right', 'layers').value, 'not in our data');
   assert.equal(row('left', 'active_params').tag, 'reported');
   assert.equal(row('left', 'layers').tag, '');
   assert.equal(cost(v, 'right', 'activeEmbedding'), '4.95%');
   assert.equal(v.showEmbedding, true);
   assert.equal(view().showEmbedding, false);
   const notes = v.columns.flatMap((c) => c.notes).map((n) => n.text).join(' ');
-  assert.match(notes, /config\.json/);
-  assert.match(notes, /52B including embeddings/);
+  assert.match(notes, /Its config says 78 layers; the GLM-5 paper says 80\./);
+  assert.match(notes, /52B includes the embeddings/);
+  assert.match(notes, /carried over from GLM-5/);
 });
 
-test('toy view: "none" is one column; the own context of a card without one is not published', () => {
+test('toy view: "none" is one column; the own context of a card without one is not in our data', () => {
   assert.equal(view({ right: 'none' }).columns.length, 1);
   assert.equal(tokensFor({ facts: {} }, 'own'), null);
   assert.deepEqual(tokensFor(entry('mistral-large-4'), 'own'), [512000, 1000000]);
@@ -256,12 +277,12 @@ test('format: shares, cache texts and sizes', () => {
   assert.equal(F.int(122_880), '122,880');
   assert.equal(F.int(-5), '−5');
   assert.equal(F.sharePercent(0.0306), '3.06%');
-  assert.equal(F.gpuShareText(null, 80e9), 'not published');
+  assert.equal(F.gpuShareText(null, 80e9), 'not in our data');
   assert.equal(F.gpuShareText(4e9, 80e9), '5.0%');
   assert.equal(F.gpuShareText([4e9, 12e9], 80e9), '5.0–15.0%');
-  assert.equal(F.cacheTokenText({ kind: 'not published' }), 'not published');
+  assert.equal(F.cacheTokenText({ kind: 'not in our data' }), 'not in our data');
   assert.equal(F.cacheTokenText({ kind: 'reported', bytes: 327_680 }), '327,680 B ≈ 328 kB');
-  assert.equal(F.cacheConversationText(null), 'not published');
+  assert.equal(F.cacheConversationText(null), 'not in our data');
   assert.equal(F.cacheConversationText(327_680_000_000), '328 GB');
   assert.equal(F.provenanceText('derived'), 'derived from the config');
   assert.equal(F.provenanceText('unknown'), '');

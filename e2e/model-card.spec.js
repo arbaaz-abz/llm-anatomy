@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { registerLessonContract } from './lesson-helpers.js';
 import { CAPTIONS } from '../tests/model-card-expected.js';
+import { stepperParts, startPausedClock, animateTo, END_MS, MID_MS } from './lesson-helpers.js';
 
 const URL = '/architecture/#model-card';
 
@@ -42,25 +43,26 @@ test.describe('model-card toy: decode a card', () => {
     await expect(out(page, 'right-routed-share')).toHaveText('1.79%');
   });
 
-  test('the active-share bars fold the sliver into "others" and zoom the first 10% (README lesson 19)', async ({ page }) => {
+  test('the active-share bar is one bar over the first 10%: the active slice prints its own share (README lesson 19)', async ({ page }) => {
     const bars = page.locator('[data-section="toy"] .g-share');
     await expect(bars).toHaveCount(2);
     for (const i of [0, 1]) {
-      await expect(bars.nth(i).locator('.g-bracket')).toHaveCount(1);
-      await expect(bars.nth(i).locator('.g-seg.g-part-others')).toHaveCount(1);
+      await expect(bars.nth(i).locator('.g-bracket')).toHaveCount(0);
       await expect(bars.nth(i).locator('.g-hatch')).toHaveCount(0);
     }
-    await expect(bars.first().locator('.g-pct').filter({ hasText: '3.06%' })).toHaveCount(1);
-    await expect(page.locator('[data-section="toy"] .share-zoom-label').first()).toHaveText('zoom on the first 10%');
+    await expect(bars.nth(0).locator('.g-pct')).toHaveText(['3.06%', '6.94%']);
+    await expect(bars.nth(1).locator('.g-pct')).toHaveText(['3.75%', '6.25%']);
+    await expect(page.locator('[data-section="toy"] .toy-bars')).toContainText('active 3.06% · not used 96.94%');
+    await expect(page.locator('[data-section="toy"] .toy-bars-note')).toContainText('the other 90% is not used by this token either');
   });
 
-  test('the cache lines: V4-Pro is a reported range, Kimi K3 publishes nothing to size it from', async ({ page }) => {
+  test('the cache lines: V4-Pro is a reported range, Kimi K3 has nothing in the data to size it from', async ({ page }) => {
     await expect(out(page, 'left-cache-token')).toHaveText('4,000–12,000 B ≈ 4–12 kB');
     await expect(out(page, 'left-cache-conversation')).toHaveText('4–12 GB');
     await expect(out(page, 'left-gpu-share')).toHaveText('5.0–15.0%');
-    await expect(out(page, 'right-cache-token')).toHaveText('not published');
-    await expect(out(page, 'right-cache-conversation')).toHaveText('not published');
-    await expect(out(page, 'right-gpu-share')).toHaveText('not published');
+    await expect(out(page, 'right-cache-token')).toHaveText('not in our data');
+    await expect(out(page, 'right-cache-conversation')).toHaveText('not in our data');
+    await expect(out(page, 'right-gpu-share')).toHaveText('not in our data');
   });
 
   test('try this 2: the attention line, not the context number, decides what a long conversation costs', async ({ page }) => {
@@ -85,12 +87,11 @@ test.describe('model-card toy: decode a card', () => {
     await expect(out(page, 'left-active_params')).toHaveText('40B');
     await expect(out(page, 'right-context_length')).toHaveText('512K–1M');
     await expect(out(page, 'right-active_params')).toHaveText('49B');
-    await expect(out(page, 'right-layers')).toHaveText('not published');
+    await expect(out(page, 'right-layers')).toHaveText('not in our data');
     await expect(out(page, 'right-active-share-embedding')).toHaveText('4.95%');
     const notes = page.locator('[data-section="toy"] .labs-differ');
-    await expect(notes).toContainText('config.json');
-    await expect(notes).toContainText('GLM-5 paper');
-    await expect(notes).toContainText('52B including embeddings');
+    await expect(notes).toContainText('Its config says 78 layers; the GLM-5 paper says 80.');
+    await expect(notes).toContainText('49B counts the routed experts only; 52B includes the embeddings.');
     await expect(page.locator('tr[data-field="layers"] td[data-side="left"] .fact-reported')).toHaveCount(0);
     await expect(page.locator('tr[data-field="active_params"] td[data-side="left"] .fact-reported')).toHaveCount(1);
   });
@@ -102,5 +103,56 @@ test.describe('model-card toy: decode a card', () => {
     await expect(page.locator('[data-section="toy"] .g-share')).toHaveCount(1);
     await pick(page, 'right', 'qwen3.8');
     await expect(out(page, 'right-context_length')).toHaveText('262K');
+  });
+});
+
+// The contract's clip check only asks "inside the svg"; this one asks for breathing room and for each selection box to hold what it marks.
+test.describe('model-card stage: fit', () => {
+  const ROOT = '[data-section="animation"] .stepper';
+  const MARGIN = 6; // user units between any drawn element and the stage edge
+
+  const fit = (page) => page.evaluate((margin) => {
+    const svg = document.querySelector('.stepper-stage svg');
+    const box = svg.getBoundingClientRect();
+    const scale = svg.viewBox.baseVal.width / box.width;
+    const rel = (el) => { const r = el.getBoundingClientRect(); return { l: (r.left - box.left) * scale, t: (r.top - box.top) * scale, r: (r.right - box.left) * scale, b: (r.bottom - box.top) * scale }; };
+    const edge = [...svg.querySelectorAll('.g-token, .g-block, .g-kv, .g-gpu, .g-share, .g-note')].map((el) => ({ el, r: rel(el) }))
+      .filter(({ r }) => r.l < margin || r.t < margin || r.r > svg.viewBox.baseVal.width - margin || r.b > svg.viewBox.baseVal.height - margin)
+      .map(({ el }) => `${el.getAttribute('class')} ${el.textContent.trim().slice(0, 24)}`);
+    const loose = [];
+    for (const sel of svg.querySelectorAll('.g-select')) {
+      const s = rel(sel);
+      for (const el of svg.querySelectorAll('.g-kv, .g-token, .g-block, .g-note')) {
+        const r = rel(el);
+        const overlaps = r.r > s.l && r.l < s.r && r.b > s.t && r.t < s.b;
+        const inside = r.l >= s.l - 1 && r.r <= s.r + 1 && r.t >= s.t - 1 && r.b <= s.b + 1;
+        const opacity = Number(el.closest('g[opacity]')?.getAttribute('opacity') ?? 1);
+        if (overlaps && !inside && opacity === 1 && !el.closest('.g-select')) loose.push(`${el.getAttribute('class')} ${el.textContent.trim().slice(0, 20)}`);
+      }
+    }
+    return { edge, loose };
+  }, MARGIN);
+
+  test('at rest on every step, nothing sits within 6 units of the stage edge, and no selection box cuts through what it marks', async ({ page }) => {
+    await page.goto(URL);
+    await expect(page.locator(stepperParts(ROOT).stage)).toHaveAttribute('data-progress', '1');
+    for (let k = 0; k < CAPTIONS.length; k += 1) {
+      await page.locator(stepperParts(ROOT).scrub).fill(String(k));
+      await expect(page.locator(stepperParts(ROOT).count)).toHaveText(`${k + 1} / ${CAPTIONS.length}`);
+      await expect(page.locator(stepperParts(ROOT).stage)).toHaveAttribute('data-progress', '1');
+      const { edge, loose } = await fit(page);
+      expect(edge, `step ${k + 1}: too close to the edge`).toEqual([]);
+      expect(loose, `step ${k + 1}: cut by a selection box`).toEqual([]);
+    }
+  });
+
+  test('mid-transition too', async ({ page }) => {
+    await startPausedClock(page, URL);
+    for (let k = 0; k < CAPTIONS.length; k += 1) {
+      await animateTo(page, ROOT, k, MID_MS);
+      const { edge } = await fit(page);
+      expect(edge, `step ${k + 1} mid`).toEqual([]);
+      await page.clock.runFor(END_MS - MID_MS);
+    }
   });
 });

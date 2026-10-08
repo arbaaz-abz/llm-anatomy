@@ -3,7 +3,7 @@
 import * as G from '@shared/glyphs.js';
 
 export const STAGE = Object.freeze({ w: 580, h: 366 });
-export const COL = Object.freeze({ x: 8, titleY: 12, y: 20, stride: 27, chipH: 24, extraLabelY: 304, extraY: [310, 337] });
+export const COL = Object.freeze({ x: 8, titleY: 18, y: 26, stride: 26, chipH: 24, extraLabelY: 298, extraY: [309, 335] }); // the last extra chip ends at 359, 7 px inside the 366 stage
 export const STACK = Object.freeze({ x: 236, y: 24, w: 104, h: 212 }); // blockStack: block 1, "⋮ × N", block N
 export const PANEL = Object.freeze({ x: 346, w: 226 }); // the diagram's right panel: experts, KV cache, bars, readouts
 export const LANE = Object.freeze({ x: 236, labelY: 268, y: 276, words: ['The', 'cat', 'sat', 'down'], gap: 6, patchX: 420, patchSize: 24, barY: 314, endX: 572 });

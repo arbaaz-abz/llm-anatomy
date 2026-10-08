@@ -91,12 +91,12 @@ export const activeShare = (entry) => share(entry, 'active_params', 'total_param
 // Routed experts each token runs ÷ routed experts the router chooses from.
 export const routedShare = (entry) => share(entry, 'experts_active', 'experts_total');
 
-// Some labs also quote an active count with the embedding table; the figure is only ever read from the data note
-// ("Routed-active; 52B including embeddings"), never typed on a page.
+// Some labs also quote an active count with the embedding table; the data file holds it as its own figure
+// (mistral-large-4.active_params_with_embeddings). null when the entry has none.
 export function activeWithEmbeddings(entry) {
   requireEntry('activeWithEmbeddings', entry);
-  const found = (entry.facts.active_params?.note ?? '').match(/(\d+(?:\.\d+)?)B including embeddings/);
-  return found ? Number(found[1]) * SUFFIX_SCALE.B : null;
+  const value = valueOf(entry, 'active_params_with_embeddings');
+  return isNumber(value) ? value : null;
 }
 
 const MIX = /^(\d+) full : (\d+) window$/;
@@ -126,7 +126,7 @@ const reportedBytes = (entry) => {
 };
 
 // Cache per token with its provenance: 'derived' from config keys through math/memory.js, 'reported' from the data's
-// own figure, else 'not published'. `fixed` is the window layers' constant part.
+// own figure, else 'not in our data' (absent from the data file; it says nothing about whether the lab publishes it). `fixed` is the window layers' constant part.
 export function cachePerToken(entry) {
   requireEntry('cachePerToken', entry);
   const groups = derivedGroups(entry);
@@ -135,7 +135,7 @@ export function cachePerToken(entry) {
     return fixed > 0 ? { kind: 'derived', bytes: perToken, fixed } : { kind: 'derived', bytes: perToken };
   }
   const bytes = reportedBytes(entry);
-  return bytes === null ? { kind: 'not published' } : { kind: 'reported', bytes };
+  return bytes === null ? { kind: 'not in our data' } : { kind: 'reported', bytes };
 }
 
 function checkTokens(tokens) {
@@ -153,7 +153,7 @@ export function cacheForConversation(entry, tokens) {
   const [fewest, most] = checkTokens(tokens);
   const groups = derivedGroups(entry);
   const perToken = cachePerToken(entry);
-  if (perToken.kind === 'not published') return null;
+  if (perToken.kind === 'not in our data') return null;
   const bytesEnds = Array.isArray(perToken.bytes) ? perToken.bytes : [perToken.bytes, perToken.bytes];
   const [low, high] = groups
     ? [stackKvBytes({ groups, tokens: fewest }).total, stackKvBytes({ groups, tokens: most }).total]

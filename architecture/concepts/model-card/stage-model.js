@@ -8,6 +8,8 @@ import { int, sharePercent, gpuShareText, cacheConversationText, hbmBytes, ZOOM_
 
 export const CARD_ID = 'deepseek-v4-pro';
 export const CARD_NAME = 'DeepSeek-V4-Pro';
+// The stage cannot link, so an exit names its lesson by title (the page test pins these to shared/concepts.json).
+export const EXIT_TITLES = Object.freeze({ 'scaling-laws': 'Scaling laws', pretraining: 'Pretraining', sampling: 'Picking the next token', quantization: 'Quantization' });
 const SCALE_ID = 'llama-3.1-70b'; // frame 6's size comparison: a plain GQA model
 
 const entryOf = (data, id) => data?.models?.entries?.find((e) => e.id === id) ?? null;
@@ -109,7 +111,11 @@ export function stageModel(data) {
     name: CARD_NAME,
     chips: CHIP_KEYS.map((key) => ({ key, label: labels[key] })),
     extras: extras(f),
-    active: { total, active, formula: `${rows.find((r) => r.key === 'active_params').display} ÷ ${rows.find((r) => r.key === 'total_params').display} = ${sharePercent(activeShare(entry))}`, notUsed: total - active, zoom: ZOOM_FRACTION },
+    active: {
+      total, active, notUsed: total - active, zoom: ZOOM_FRACTION, zoomText: `${sharePct(ZOOM_FRACTION, 1, { decimals: 0 })}%`,
+      formula: `${rows.find((r) => r.key === 'active_params').display} ÷ ${rows.find((r) => r.key === 'total_params').display} = ${sharePercent(activeShare(entry))}`,
+      line: `active ${sharePercent(activeShare(entry))} · not used ${sharePercent((total - active) / total)}`,
+    },
     layers: String(f('layers')),
     experts: expertsModel(f),
     kv: kvModel(f),
@@ -124,7 +130,7 @@ export function stageModel(data) {
       { chip: CHIP_KEYS.indexOf('pretrain_tokens'), lesson: FIELD_GUIDE.pretrain_tokens.lesson },
       { extra: 0, lesson: 'sampling' },
       { extra: 1, lesson: 'quantization' },
-    ],
+    ].map((exit) => ({ ...exit, title: EXIT_TITLES[exit.lesson] })),
     conflicts: conflictsModel(data, rows),
   };
 }

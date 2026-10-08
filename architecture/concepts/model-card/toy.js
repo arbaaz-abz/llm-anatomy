@@ -18,7 +18,9 @@ function buildDom(host, data) {
   const items = tryThis(data).map(({ prompt, insight }) => el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` })]));
   host.append(
     el('div', { className: 'toy-controls' }, [refs.left, refs.right, refs.context]),
-    refs.fields, refs.costs, el('h4', { textContent: 'Active share, drawn' }), refs.bars, refs.notes,
+    refs.fields, refs.costs, el('h4', { textContent: 'Active share, drawn' }),
+    el('p', { className: 'toy-note toy-bars-note', textContent: 'Each bar is the first 10% of all of a card\'s parameters, drawn ×10; the other 90% is not used by this token either.' }),
+    refs.bars, refs.notes,
     el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, items),
   );
   return refs;

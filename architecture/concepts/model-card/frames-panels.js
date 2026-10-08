@@ -27,12 +27,12 @@ function expertRow(svg, model, scene) {
 
 // ---- KV cache ----
 
-const KV = Object.freeze({ title: 124, y: 130, tile: 14, step: 16, groups: 2 }); // two merge groups of tiles stand for the stored tokens
+const KV = Object.freeze({ title: 122, y: 130, tile: 14, step: 16, groups: 2, x: 20, boxH: 142 }); // two merge groups of tiles stand for the stored tokens
 
 function kvPanel(svg, model, scene) {
   const { kv } = model;
   const count = KV.groups * kv.merge;
-  const x = P + 12;
+  const x = P + KV.x; // the K and V letters sit 8 px left of the tiles, inside the selection box
   note(svg, P, KV.title, `KV cache: ${kv.heads} head × ${kv.headDim}`);
   G.kvStack(svg, { x, y: KV.y, count, tile: KV.tile });
   const fuse = scene.fuse;
@@ -57,20 +57,24 @@ function kvPanel(svg, model, scene) {
   }
 }
 
-// ---- active share bars ----
+// ---- active share bar ----
 
-function shareBars(svg, model, scene) {
+// One bar over the first 10% of all parameters, drawn x10: the active slice is wide enough to read, and the other 90%
+// is said in words (README lesson 19). The bar's own shares are of that 10%, so its labels are scaled back to the total.
+function shareBars(svg, model) {
   const { active } = model;
   const w = PANEL.w;
-  note(svg, P, 32, active.formula);
-  const parts = [
-    { name: 'active', value: active.active, hue: 1 },
-    { name: 'not used, in the first 10%', value: active.zoom * active.total - active.active, hue: 2 },
-    { name: 'not used, beyond it', value: active.total - active.zoom * active.total, hue: 2 },
-  ];
-  G.shareBar(svg, { x: P, y: 52, w, parts, label: 'active share of the total', minSegment: Math.ceil(active.zoom * w) + 1, format: sharePercent });
-  note(svg, P, 226, 'bottom bar: zoom on the first 10%');
-  note(svg, P, 242, 'work per token follows active');
+  const zoomed = active.zoom * active.total;
+  note(svg, P, 26, active.formula);
+  note(svg, P, 42, active.line);
+  note(svg, P, 62, `The bar is the first ${active.zoomText} of all`);
+  note(svg, P, 76, 'parameters, drawn ×10. The other');
+  note(svg, P, 90, `${100 - Number.parseFloat(active.zoomText)}% is not used either.`);
+  const link = G.svgEl('g', { 'data-link': 'act' }, svg);
+  G.svgEl('rect', { class: 'g-frame', x: P - 2, y: 102, width: w + 4, height: 18, rx: 3, fill: 'none', stroke: 'none' }, link);
+  const parts = [{ name: 'active', value: active.active, hue: 1 }, { name: `not used (in this ${active.zoomText})`, value: zoomed - active.active, hue: 2 }];
+  G.shareBar(link, { x: P, y: 104, w, parts, label: `active share, the first ${active.zoomText} drawn ×10`, tail: 'none', format: (share) => sharePercent(share * active.zoom) });
+  note(svg, P, 196, 'work per token follows active');
 }
 
 // ---- cache readout, GPU ----
@@ -118,6 +122,6 @@ export function drawPanel(svg, model, scene) {
   PANELS.forEach(([key, draw]) => {
     if (scene[key] > 0) draw(layer(svg, scene[key]), model, scene);
   });
-  mark(svg, scene.selKv, { x: P - 4, y: KV.title - 12, w: PANEL.w - 6, h: 128 });
-  mark(svg, scene.selExperts, { x: P - 4, y: 28, w: PANEL.w - 6, h: 78 });
+  mark(svg, scene.selKv, { x: P - 4, y: KV.title - 12, w: PANEL.w + 4, h: KV.boxH });
+  mark(svg, scene.selExperts, { x: P - 4, y: 28, w: PANEL.w + 4, h: 78 });
 }

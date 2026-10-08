@@ -17,7 +17,7 @@ export function drawExits(svg, model, scene) {
   model.exits.forEach((exit) => {
     const { x, y } = exitY(exit, model);
     G.flow(g, { from: [x, y], to: [edge, y], carry: 'token', progress: scene.exits });
-    note(g, edge, y - 6, `→ ${[exit.lesson].flat().join(', ')}`, { anchor: 'end' });
+    note(g, edge, y - 6, `→ ${exit.title}`, { anchor: 'end' });
   });
 }
 
@@ -52,5 +52,5 @@ export function drawConflicts(svg, model, scene) {
   note(g, ROW.x, 20, 'Sources disagree', { cls: 'g-text' });
   model.conflicts.forEach((c, i) => conflictRow(g, c, i, scene));
   const row = Math.min(model.conflicts.length - 1, Math.floor(scene.walk * model.conflicts.length));
-  mark(svg, scene.conf, { x: ROW.x - 4, y: ROW.y + row * ROW.stride - 14, w: ROW.highX + 90 - ROW.x, h: 76 });
+  mark(svg, scene.conf, { x: ROW.x - 4, y: ROW.y + row * ROW.stride - 14, w: ROW.highX + 90 - ROW.x, h: 82 });
 }

@@ -7,9 +7,8 @@ import { readoutTable } from '@shared/ui/readout-table.js';
 import { sharePercent, ZOOM_FRACTION } from './format.js';
 import { note } from './stage.js';
 
-const BAR_W = 300; // wide enough that the sliver folds into "others" and the zoom bar's segments print their shares
+const BAR_W = 300; // wide enough that the active slice (30% of the bar) prints its share
 const BAR_Y = 6;
-const TAIL_OFFSET = 54; // shareBar draws its zoomed tail bar 54 px under the main bar (14 px bar + 40 px gap)
 
 const LONG_VALUE = 28; // a longer value wraps inside its cell instead of widening the table
 const output = (name, text) => {
@@ -60,20 +59,13 @@ export function costsTable(view) {
   return readoutTable({ head: ['Cost', ...view.columns.map((c) => c.name)], caption: 'What the fields cost', name: 'costs', rows });
 }
 
-// One card's active share: the full bar, and a second bar zoomed ten times on the first 10% of the total (README lesson 19).
+// One card's active share: one bar over the first 10% of the total, drawn x10, with the headline in words (README lesson 19).
 function barSvg(column) {
   const { total, active, formula } = column.bars;
   const svg = G.svgEl('svg', { role: 'group', 'aria-label': `${column.name}: ${formula}` });
-  note(svg, 4, 0, `${column.name}: ${formula}`, { cls: 'g-text' });
-  const zoomed = ZOOM_FRACTION * total;
-  const parts = [
-    { name: 'active', value: active, hue: 1 },
-    { name: 'not used, in the first 10%', value: zoomed - active, hue: 2 },
-    { name: 'not used, beyond it', value: total - zoomed, hue: 2 },
-  ];
-  G.shareBar(svg, { x: 4, y: BAR_Y + 12, w: BAR_W, parts, label: `${column.name}: active share of the total`, minSegment: Math.ceil(ZOOM_FRACTION * BAR_W) + 1, format: sharePercent });
-  const label = note(svg, BAR_W + 14, BAR_Y + 12 + TAIL_OFFSET + 11, 'zoom on the first 10%');
-  label.querySelector('text').classList.add('share-zoom-label');
+  note(svg, 4, 0, `${column.name}: ${column.bars.line}`, { cls: 'g-text' });
+  const parts = [{ name: 'active', value: active, hue: 1 }, { name: 'not used (in this 10%)', value: ZOOM_FRACTION * total - active, hue: 2 }];
+  G.shareBar(svg, { x: 4, y: BAR_Y + 12, w: BAR_W, parts, label: `${column.name}: active share, the first 10% drawn ×10`, tail: 'none', format: (share) => sharePercent(share * ZOOM_FRACTION) });
   return svg;
 }
 

@@ -5,7 +5,9 @@ import { formatBytes } from '@math/core.js';
 import { formatByteRange } from '@math/card.js';
 import { lookupFact } from '@shared/claims.js';
 
-export const NOT_PUBLISHED = 'not published';
+// A key missing from data/models.json says nothing about the world, only about our data (spec §7); the data's own
+// "not disclosed" strings print as they are.
+export const NOT_IN_DATA = 'not in our data';
 export const CONTEXT_SHORT = 131_072; // the toy's "ordinary conversation" length, 2^17
 export const ZOOM_FRACTION = 0.1; // the second share bar zooms on the first 10% of the total
 export const INITIAL_STATE = Object.freeze({ left: 'deepseek-v4-pro', right: 'kimi-k3', context: 'own' });
@@ -18,25 +20,25 @@ export const sharePercent = (fraction) => `${sharePct(fraction, 1, { decimals: 2
 
 // Share of one GPU's memory for a byte count or a [low, high] range (one decimal, the unit printed once).
 export function gpuShareText(bytes, hbmBytes) {
-  if (bytes === null) return NOT_PUBLISHED;
+  if (bytes === null) return NOT_IN_DATA;
   const one = (b) => sharePct(b, hbmBytes).toFixed(1);
   return Array.isArray(bytes) ? `${one(bytes[0])}–${one(bytes[1])}%` : `${one(bytes)}%`;
 }
 
 // Cache per token with its exact bytes beside the rounded size (storyboard: "70,272 B ≈ 70.3 kB").
 export function cacheTokenText(cache) {
-  if (cache.kind === 'not published') return NOT_PUBLISHED;
+  if (cache.kind === 'not in our data') return NOT_IN_DATA;
   if (Array.isArray(cache.bytes)) return `${cache.bytes.map(int).join('–')} B ≈ ${formatByteRange(cache.bytes)}`;
   const fixed = cache.fixed ? ` + ${formatBytes(cache.fixed)} fixed` : '';
   return `${int(cache.bytes)} B ≈ ${formatBytes(cache.bytes)}${fixed}`;
 }
 
 export const cacheConversationText = (bytes) => {
-  if (bytes === null) return NOT_PUBLISHED;
+  if (bytes === null) return NOT_IN_DATA;
   return Array.isArray(bytes) ? formatByteRange(bytes) : formatBytes(bytes);
 };
 
-const PROVENANCE = Object.freeze({ derived: 'derived from the config', reported: 'a reported estimate', 'not published': '' });
+const PROVENANCE = Object.freeze({ derived: 'derived from the config', reported: 'a reported estimate', 'not in our data': '' });
 export const provenanceText = (kind) => PROVENANCE[kind] ?? '';
 
 // A single-valued context is also printed exactly: "1,048,576 tokens" under the rounded "1.05M".

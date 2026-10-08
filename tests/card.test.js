@@ -100,7 +100,7 @@ test('activeShare is null for a range or a missing figure', () => {
   assert.equal(activeShare({ ...base, facts: rest }), null);
 });
 
-test('routedShare = experts per token ÷ routed experts: 1.56% and 1.79%, null when not published', () => {
+test('routedShare = experts per token ÷ routed experts: 1.56% and 1.79%, null when not in the data', () => {
   near(routedShare(entry('deepseek-v4-pro')), 0.0156);
   near(routedShare(entry('kimi-k3')), 0.0179);
   near(routedShare(entry('gpt-oss-120b')), 0.0313);
@@ -108,17 +108,17 @@ test('routedShare = experts per token ÷ routed experts: 1.56% and 1.79%, null w
   assert.equal(routedShare(entry('llama-3.1-70b')), null);
 });
 
-test('activeWithEmbeddings reads Mistral\'s 52B from the data note, and nothing else', () => {
+test('activeWithEmbeddings reads Mistral\'s 52B from its own data key, and is null for cards without one', () => {
   assert.equal(activeWithEmbeddings(entry('mistral-large-4')), 52e9);
   near(activeWithEmbeddings(entry('mistral-large-4')) / entry('mistral-large-4').facts.total_params.value, 0.0495);
   CARDS.filter((id) => id !== 'mistral-large-4').forEach((id) => assert.equal(activeWithEmbeddings(entry(id)), null, id));
 });
 
-test('cachePerToken: reported for DeepSeek-V4-Pro (a range), derived for MiniMax-M3 and gpt-oss-120b, not published for the rest', () => {
+test('cachePerToken: reported for DeepSeek-V4-Pro (a range), derived for MiniMax-M3 and gpt-oss-120b, not in our data for the rest', () => {
   assert.deepEqual(cachePerToken(entry('deepseek-v4-pro')), { kind: 'reported', bytes: [4000, 12000] });
   assert.deepEqual(cachePerToken(entry('minimax-m3')), { kind: 'derived', bytes: 122_880 });
   assert.deepEqual(cachePerToken(entry('gpt-oss-120b')), { kind: 'derived', bytes: 36_864, fixed: 4_718_592 });
-  ['kimi-k3', 'glm-5.3', 'qwen3.8', 'mistral-large-4'].forEach((id) => assert.deepEqual(cachePerToken(entry(id)), { kind: 'not published' }, id));
+  ['kimi-k3', 'glm-5.3', 'qwen3.8', 'mistral-large-4'].forEach((id) => assert.deepEqual(cachePerToken(entry(id)), { kind: 'not in our data' }, id));
 });
 
 test('the derived values equal the data file\'s own derivations and the memory module\'s formula', () => {
@@ -137,10 +137,10 @@ test('a plain GQA stack with no window mix derives like kvBytesPerToken; an unkn
   assert.notEqual(cachePerToken(odd).kind, 'derived', '35 layers cannot split 1 full : 1 window');
 });
 
-test('a card with no cache figure and no derivable stack is "not published", even with a reported figure missing', () => {
+test('a card with no cache figure and no derivable stack is "not in our data", even with a reported figure missing', () => {
   const { kv_bytes_per_token: _dropped, ...facts } = entry('minimax-m3').facts;
   const bare = { ...entry('minimax-m3'), facts: { ...facts, attention: { value: 'MLA' } } };
-  assert.deepEqual(cachePerToken(bare), { kind: 'not published' });
+  assert.deepEqual(cachePerToken(bare), { kind: 'not in our data' });
 });
 
 test('cacheForConversation: worked lines from the storyboard (§6)', () => {
