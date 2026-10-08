@@ -8,6 +8,7 @@ import { INITIAL_STATE, fixed, signed, signed2 } from '../training/concepts/rlvr
 import { evaluate, divisionEffect, unbiasedStd, answersFor } from '../training/concepts/rlvr-grpo/model.js';
 import { tryThis } from '../training/concepts/rlvr-grpo/try-this.js';
 import { CAPTIONS, TRY_THIS } from './rlvr-grpo-expected.js';
+import { toyView, epsOptions, clipHigherEps, clampSelection, NO_SIGNAL, STAND_IN } from '../training/concepts/rlvr-grpo/toy-view.js';
 import { GROUP_TOY, buildGroup, groupAdvantages, clippedSurrogate } from '../math/grpo.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -165,8 +166,6 @@ test('inputs are not mutated: the pools, the data and the state', () => {
 });
 
 // ---- the toy's view model (every string the toy prints) ----
-import { toyView, epsOptions, clipHigherEps, clampSelection, NO_SIGNAL, STAND_IN } from '../training/concepts/rlvr-grpo/toy-view.js';
-
 test('toy view at the default state: stats, signal, inspector and the per-row strings', () => {
   const v = toyView(INITIAL_STATE);
   assert.equal(v.kText, '2 / 8');

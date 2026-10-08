@@ -53,7 +53,9 @@ function zoomScene(svg, { ratio, epsHigh, bandHigh, objectiveText, note }) {
   label(svg, cells.now.x, cells.now.y - 14, 'now');
   G.cell(svg, { ...cells.now, size: CELL, v: PI_OLD * ratio, maxAbs: 1, format: probability });
   [`r = ${probability(PI_OLD * ratio)} / ${probability(PI_OLD)} = ${fixed(ratio, 2)}`, `A = ${signed2(A_ROW1)}`, `objective ${objectiveText}`].forEach((text, i) => label(svg, readouts.x, readouts.y + i * 22, text));
-  G.clipLine(svg, { ...line, band: [line.band[0], bandHigh], marker: ratio, label: 'ratio r = now / when sampled' });
+  const linked = G.svgEl('g', { 'data-link': 'ratio' }, svg); // hl-ratio: the marker on the clip line
+  G.svgEl('rect', { class: 'g-frame', x: line.x - 6, y: line.y - 30, width: line.w + 12, height: 56, rx: 3, fill: 'none', stroke: 'none' }, linked);
+  G.clipLine(linked, { ...line, band: [line.band[0], bandHigh], marker: ratio, label: 'ratio r = now / when sampled' });
   if (note) note();
 }
 

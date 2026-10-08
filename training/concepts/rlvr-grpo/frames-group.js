@@ -89,6 +89,7 @@ export function drawFrame4(svg, p) {
 }
 
 // ---- frame 5 (key frame): the advantage flows back onto every token ----
+const FLOW_LANE = 33; // below the chips (rows are 40 px; chips occupy 3–27)
 const PUSH = Object.freeze({ stagger: 0.04, span: 0.6 });
 function chipPassed(p, row, tokens, j) {
   const t = seg(p, row * PUSH.stagger, row * PUSH.stagger + PUSH.span);
@@ -105,11 +106,11 @@ export function drawFrame5(svg, p) {
   label(svg, MARGIN_X, ADVANTAGE_NOTE_Y, 'A = advantage');
   ROWS.forEach((i) => {
     const { tokens } = GROUP.rows[i];
-    chipRow(svg, tokens, i, { fill: (j) => (chipPassed(p, i, tokens, j) ? advantageFill(advantages[i]) : null) });
+    chipRow(svg, tokens, i, { fill: (j) => (chipPassed(p, i, tokens, j) ? advantageFill(advantages[i]) : null), link: 'a' });
   });
   ROWS.forEach((i) => {
     const t = seg(p, i * PUSH.stagger, i * PUSH.stagger + PUSH.span);
-    if (t > 0 && t < 1) G.flow(svg, { from: [A_COL.x, rowY(i) + ROW_H / 2], to: [CHIP_X0 - 4, rowY(i) + ROW_H / 2], carry: 'gradient', progress: t });
+    if (t > 0 && t < 1) G.flow(svg, { from: [A_COL.x, rowY(i) + FLOW_LANE], to: [CHIP_X0 - 4, rowY(i) + FLOW_LANE], carry: 'gradient', progress: t });
   });
   const counts = pushCounts();
   marginLines(svg, [`mean ${fixed(MEAN, 2)}`, `std ${fixed(GROUP.stats.std, 2)}`, `Σ A = ${fixed(advantages.reduce((s, a) => s + a, 0), 2)}`, `Σ|A| = ${fixed(GROUP.totalPush, 2)}`]);
@@ -135,7 +136,7 @@ export function drawFrame6(svg, p) {
   rowIndexes(svg);
   ROWS.forEach((i) => {
     if (!swapped(i)) {
-      chipRow(svg, GROUP.rows[i].tokens, i, { fill: advantageFill(advantages[i]) });
+      chipRow(svg, GROUP.rows[i].tokens, i, { fill: advantageFill(advantages[i]), link: 'a' });
       return;
     }
     chipRow(svg, ALL_RIGHT.rows[i].tokens, i, { fill: hatch > 0 ? ZERO_FILL : null, hatched: hatch > 0.5 });

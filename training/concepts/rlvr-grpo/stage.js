@@ -61,14 +61,15 @@ export function marginLines(svg, lines, { y = 84, step = 18, opacity = 1 } = {})
 // ---- chips ----
 export const advantageFill = (a) => G.valueColor(a, ADV_MAX_ABS);
 export const chipX = (tokens, j) => CHIP_X0 + tokens.slice(0, j).reduce((x, t) => x + G.tokenWidth(t) + CHIP_GAP, 0);
-export const chipY = (row) => rowY(row) + (ROW_H - CHIP_H) / 2;
+export const chipY = (row) => rowY(row) + 3; // chips sit high in the row, leaving a lane below them for frame 5's gradient flow
 
 // One answer's chips on row `row`. shown = how many chips are drawn; fill = a color for every chip, or (j) → color | null;
 // the followed chip carries the selection mark.
-export function chipRow(svg, tokens, row, { shown = tokens.length, fill = null, hatched = false, opacity = 1 } = {}) {
+export function chipRow(svg, tokens, row, { shown = tokens.length, fill = null, hatched = false, opacity = 1, link = null } = {}) {
+  const parent = link ? G.svgEl('g', { 'data-link': link }, svg) : svg; // a linked chip's frame is what the math panel outlines
   tokens.slice(0, shown).forEach((text, j) => {
     const color = typeof fill === 'function' ? fill(j) : fill;
-    fade(G.token(svg, { x: chipX(tokens, j), y: chipY(row), text, fill: color, hatched }), opacity);
+    fade(G.token(parent, { x: chipX(tokens, j), y: chipY(row), text, fill: color, hatched }), opacity);
     if (row === FOLLOWED.row && j === FOLLOWED.token) select(svg, chipX(tokens, j), chipY(row), G.tokenWidth(text), CHIP_H, opacity);
   });
 }
