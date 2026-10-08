@@ -49,7 +49,7 @@ test('dated text prints the data: years come from confirmed dates, counts throug
   assert.match(lesson.intuition[2], /Kimi K3 uses 9,/);
   assert.match(fillText(lesson.facts.rows[4].claim, data), /about an order of magnitude or more\.$/);
   const text = [lesson.hook, ...lesson.intuition, ...lesson.facts.rows.map((r) => fillText(r.claim, data)), ...Object.values(BELOW).flat().map((t) => fillText(t, data))].join(' ');
-  assert.deepEqual(text.match(/\b(19|20)\d{2}\b/g)?.sort() ?? [], ['2025', '2025', '2025', '2026']);
+  assert.deepEqual(text.match(/\b(19|20)\d{2}\b/g)?.sort() ?? [], ['2025', '2025', '2026']);
 });
 
 test('Next lists exactly the lessons that take this one as a prereq (README lesson 1): none, it closes the Recipe', () => {

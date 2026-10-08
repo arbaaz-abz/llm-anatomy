@@ -66,7 +66,7 @@ function paint(refs, view, state) {
   refs.note.hidden = view.teacherNote === '';
   refs.rewards.replaceChildren(readoutTable({
     head: ['Sampled token', 'Reward'], name: 'rewards',
-    rows: view.rewardRows.map((r) => ({ label: r.token, sub: r.sampled ? 'sampled' : '', cells: [{ value: r.value }] })),
+    rows: view.rewardRows.map((r) => ({ label: r.token, cells: [{ value: r.value }] })),
   }));
   paintStage(refs.svg, view.model, { onPolicy });
 }

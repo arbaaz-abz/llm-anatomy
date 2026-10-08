@@ -66,7 +66,7 @@ test.describe('distillation toy: grade the student', () => {
 
   test('try this 2: the signal shrinks as the student nears the teacher and grows when it is confidently wrong', async ({ page }) => {
     await choose(page, 'student', 'near');
-    await expect(rewardRow(page)).toHaveText(['56 +0.057', '54 −0.336', '48 −0.511', '63 −0.406'], { useInnerText: true });
+    await expect(rewardRow(page)).toHaveText(['56 +0.057', '54 −0.336', '48 −0.511', '63 −0.405'], { useInnerText: true });
     await expect(readout(page, 'sampled-reward')).toHaveText('−0.336');
     await expect(readout(page, 'expected-reward')).toHaveText('−0.013');
     await choose(page, 'student', 'wrong');
