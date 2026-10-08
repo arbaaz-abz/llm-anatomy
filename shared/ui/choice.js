@@ -17,13 +17,37 @@ const button = (text, attrs = {}) => {
   return b;
 };
 
+// Segmented mode: the options sit in a pill track with one thumb that slides to the selected option. The thumb is pure
+// decoration: until it has been measured (or if the track has no layout) CSS fills the selected option itself.
+const THUMB_ATTR = 'data-thumb';
+function mountTrack(buttons) {
+  const node = Object.assign(document.createElement('div'), { className: 'choice-track' });
+  node.append(Object.assign(document.createElement('span'), { className: 'choice-thumb' }), ...buttons);
+  let selected = null;
+  const place = (target = selected) => {
+    selected = target;
+    if (!selected || selected.offsetWidth === 0) { node.removeAttribute(THUMB_ATTR); return; }
+    node.style.setProperty('--thumb-x', `${selected.offsetLeft}px`);
+    node.style.setProperty('--thumb-w', `${selected.offsetWidth}px`);
+    node.setAttribute(THUMB_ATTR, '');
+  };
+  // Fonts loading or a resize change the option widths; the observer also fires once the track first gets a layout.
+  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => place()) : null;
+  observer?.observe(node);
+  return { node, place, stop: () => observer?.disconnect() };
+}
+
 // variant: 'segmented' (one of a few modes) or 'chips' (presets). onChange gets the option's value.
 export function mountChoice(root, { id, label, options, value, onChange, variant = 'segmented' }) {
   checkOptions(options, value);
   let current = value;
   const caption = Object.assign(document.createElement('span'), { id: `${id}-label`, className: 'choice-label', textContent: label });
   const buttons = options.map((o) => button(o.label, { class: 'choice-option', 'data-value': String(o.value) }));
-  const paint = () => buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === current)));
+  const track = variant === 'segmented' ? mountTrack(buttons) : null;
+  const paint = () => {
+    buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === current)));
+    track?.place(buttons[options.findIndex((o) => o.value === current)]);
+  };
   const choose = (next, notify) => {
     if (next === current) return;
     checkOptions(options, next);
@@ -39,13 +63,13 @@ export function mountChoice(root, { id, label, options, value, onChange, variant
   root.className = `choice choice--${variant}`;
   root.setAttribute('role', 'group');
   root.setAttribute('aria-labelledby', caption.id);
-  root.replaceChildren(caption, ...buttons);
+  root.replaceChildren(caption, ...(track ? [track.node] : buttons));
   root.addEventListener('click', onClick);
   paint();
   return {
     get value() { return current; },
     set(next) { choose(next, true); },
-    destroy() { root.removeEventListener('click', onClick); root.replaceChildren(); },
+    destroy() { root.removeEventListener('click', onClick); track?.stop(); root.replaceChildren(); },
   };
 }
 
