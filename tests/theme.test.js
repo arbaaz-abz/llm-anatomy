@@ -114,3 +114,36 @@ test('the new tokens --carry-weight and --sem-comm drive the weight dot and the 
   assert.equal(merged('.g-flow--weight .g-dot').fill, 'var(--carry-weight)');
   assert.match(merged('.g-lanes .g-lane--comm').fill, /--sem-comm/);
 });
+
+// ---- Training review shared-3 and shared-5 ----
+const blockOf = (marker) => { const start = css.indexOf(marker); return start < 0 ? '' : css.slice(start, css.indexOf('}', start)); };
+const THEME_BLOCKS = { light: ':root {', osDark: ':root:not([data-theme="light"]) {', dark: ':root[data-theme="dark"] {' };
+const BG = { light: '#f4f5f8', osDark: '#12161d', dark: '#12161d' };
+const lum = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+
+test('verdict text classes use their own ink tokens', () => {
+  assert.deepEqual(merged('.sem-text--memory'), { color: 'var(--sem-memory-ink)' });
+  assert.deepEqual(merged('.sem-text--compute'), { color: 'var(--sem-compute-ink)' });
+});
+
+test('--sem-memory-ink and --sem-compute-ink pass 4.5:1 on --bg in all three theme blocks', () => {
+  for (const [name, marker] of Object.entries(THEME_BLOCKS)) {
+    const text = blockOf(marker);
+    assert.ok(text, `missing ${name} block`);
+    for (const token of ['sem-memory-ink', 'sem-compute-ink']) {
+      const hex = text.match(new RegExp(`--${token}: (#[0-9a-f]{6})`))?.[1];
+      assert.ok(hex, `${name} defines --${token}`);
+      assert.ok(ratio(hex, BG[name]) >= 4.5, `${name} --${token} ${hex}: ${ratio(hex, BG[name]).toFixed(2)}:1`);
+    }
+  }
+});
+
+test('selectable stage items show a pointer and the course focus ring', () => {
+  assert.equal(merged('.stage-item').cursor, 'pointer');
+  assert.equal(merged('.stage-item:focus').outline, 'none');
+  assert.deepEqual(merged('.stage-item:focus-visible'), { outline: '2px solid var(--focus)', 'outline-offset': '2px' });
+});
