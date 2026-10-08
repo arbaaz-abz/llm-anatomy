@@ -86,23 +86,23 @@ last is drawn hatched, the library's "excluded / doesn't count" hatch (README le
 `hatched: true` flag on a `shareBar` part (proposed below). Step
 time is a two-lane `laneTimeline` (compute, communication) in frames 4–5; the failure frames use a
 single-lane `laneTimeline` of the run (ruling P3-R9): `kind: 'compute'` segments, checkpoint saves as
-`ticks: [{ t, label: 'save' }]`, the work since the last save as a hatched `kind: 'idle'` segment labeled
-`lost` (hatch = doesn't count, README lesson 24), and each restart as `gaps: [{ from, to, label: 'restart' }]`
+`ticks: [{ t, label: 'save' }]`, the work since the last save as a `kind: 'lost'` segment (the compute
+tint under the hatch: work that doesn't count, README lesson 24), and each restart as `gaps: [{ from, to, label: 'restart' }]`
 after the failure mark. A failure is a plain labeled
 mark ("✕ failure"), not a glyph. The followed run (Llama 3.1 405B) carries the selection outline on its bar in
 every frame where several runs appear.
 
 Glyphs used (from spec §5.1 and approved proposals): `rack` (frame 8: 16,384 GPUs collapsed to two
-racks + "2,046 others", 8 GPUs each), `gpu` (frame 5: one GPU's SM grid with the S3 option `litSms` lighting 2 of
-its 12 drawn cells, about 15%, for communication; the printed label and the glyph's `<title>` carry the
-real count, 20 of 132), `block` (frame 6: "GEMM in FP8", "accumulate in FP32" as labeled blocks), `matrix`
+racks + "2,046 others", 8 GPUs each), `gpu` (frame 5: one GPU's SM grid with the S3 option `litSms: [10, 11]`
+lighting 2 of its 12 drawn tiles, about 15%, for communication; the glyph's `<title>` says "2 of 12 tiles
+lit" and the page's printed label carries the real count, "20 of 132 SMs"), `block` (frame 6: "GEMM in FP8", "accumulate in FP32" as labeled blocks), `matrix`
 (frame 6: a 4 × 4 grid of tiles standing for 128 × 128 blocks, shape-only), `shareBar`
 (`decoder-anatomy`), `laneTimeline` and `bitLayout` (both built in S3, from `gpu-primer`'s proposals).
 
 New glyphs proposed: none. Glyph option built in S3: `shareBar` parts accept `hatched: true` (the
 `heatmap` mask hatch, meaning excluded, never unknown; unknown parts keep the neutral fill, README lesson
 19); reused by any page whose bar has a part that doesn't count. The lane's saves, lost work and restarts
-use `laneTimeline`'s `ticks`, hatched `idle` segments and `gaps`. Frame 9's lane shows a 90-minute window of the run
+use `laneTimeline`'s `ticks`, `lost` segments and `gaps`; frames 4–5's waiting compute lane is a hatched `idle` segment. Frame 9's lane shows a 90-minute window of the run
 (about six saves), not all 54 days. Frame 10 prints "same scale: 36.97M GPU-h = full width" over its
 two bars (lesson 21).
 
@@ -126,9 +126,9 @@ Numbers from `math/scale.js` (reproducer in §6). H100 BF16 peak 989 TFLOPS, FP8
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | Plain equation card "6 × N × D" with Llama 3.1 405B's numbers dropping in; a small two-part `shareBar` "forward 2 · backward 4" (ruling P3-R19) and the line "why 6: each multiply-add is 2 FLOPs; backward does two matmuls for each forward one". | The factors drop into place; the product types in. | Training costs about 6 FLOPs per parameter per token: 2 in the forward pass, 4 in the backward. For Llama 3.1 405B that matches the paper's own total. | 6 × 405e9 × 15.6e12 = 3.79 × 10²⁵ FLOPs · ignores attention FLOPs, which grow at long context |
-| 2 | The run bar appears with one segment, "at peak: 10.65M GPU-hours", and a labeled tick on the bar's axis where the reported total ends: "model card: 30.84M" (no outline, no dashes: ruling P3-R11). | The segment grows; the tick drops in far to its right. | Divide by the H100's peak and the run needs 10.6 million GPU-hours, 27 days on 16,384 GPUs. Meta's model card reports 30.8 million GPU-hours. | 3.79e25 ÷ (989e12 × 3,600) = 10.65M GPU-h · ÷ 16,384 ÷ 24 = 27.1 days · reported 30.84M = 2.9× |
+| 2 | The run bar appears with one segment, "at peak: 10.65M GPU-hours", and a plain labeled tick mark (page-drawn, 1 px ink) where the reported total ends: "model card: 30.84M" (no outline, no dashes: ruling P3-R11). | The segment grows; the tick drops in far to its right. | Divide by the H100's peak and the run needs 10.6 million GPU-hours, 27 days on 16,384 GPUs. Meta's model card reports 30.8 million GPU-hours. | 3.79e25 ÷ (989e12 × 3,600) = 10.65M GPU-h · ÷ 16,384 ÷ 24 = 27.1 days · reported 30.84M = 2.9× |
 | 3 | The bar splits: "useful (MFU)" and "below peak". A readout "MFU while training: 38–43% (paper) · run-average MFU: 34.5% or more (card; covers more stages than 6ND counts)". | The "below peak" segment grows until the bar reaches 26.6M at 40%. | Model FLOPs utilization, MFU, is the share of peak a run actually delivers. Llama 3.1 ran at 38 to 43% while training, so most of the gap is utilization. | run-average 3.79e25 ÷ (30.84M × 3,600 × 989e12) = 34.5% (a floor) · at 40% while training: 26.62M GPU-h, 67.7 days · 34.5% ÷ 0.90 = 38.4% |
-| 4 | Two-lane `laneTimeline` of one step: compute 100 ms, then communication 40 ms, in sequence; the compute lane idles (hatched) during the communication. Stand-in label. | The communication segment draws after the compute segment; the idle hatch appears. | Exposed communication is time GPUs spend waiting on other GPUs. A step that computes for 100 ms, then waits 40 ms, keeps its tensor cores busy 71% of the time. | stand-in step: 100 + 40 = 140 ms · 100 ÷ 140 = 71% |
+| 4 | Two-lane `laneTimeline` of one step: compute 100 ms, then communication 40 ms, in sequence; the compute lane idles (`kind: 'idle'`, hatched) during the communication. Stand-in label. | The communication segment draws after the compute segment; the idle hatch appears. | Exposed communication is time GPUs spend waiting on other GPUs. A step that computes for 100 ms, then waits 40 ms, keeps its tensor cores busy 71% of the time. | stand-in step: 100 + 40 = 140 ms · 100 ÷ 140 = 71% |
 | 5 | The same lanes, the communication segment sliding under the compute segment. A `gpu` glyph whose SM grid shows a few SMs lit in a different shade, labeled "20 of 132 SMs run communication (DeepSeek-V3)". | The comm segment slides left until it sits under compute; the step shortens to 100 ms. | Overlap hides it: send one layer's gradients while computing the next. DeepSeek-V3 set aside 20 of each GPU's 132 SMs to run communication alongside the math. | overlapped step: max(100, 40) = 100 ms · 20 of 132 SMs (15%) |
 | 6 | `bitLayout` FP8 E4M3 (1/4/3) beside BF16 (1/8/7). A `matrix` of tiles: activations scaled per 1 × 128 tile, weights per 128 × 128 block; one tile holds an outlier and only that tile's scale grows. A `block` "accumulate in FP32" under the GEMM block. | The outlier tile's scale label changes; the other tiles keep theirs; partial sums flow into the FP32 block. | DeepSeek-V3 ran its big matrix multiplies in FP8, with one scale per 128 numbers so an outlier spoils only its own tile. Its loss stayed within 0.25% of BF16. | tiles: 1 × 128 (activations), 128 × 128 (weights) · E4M3 everywhere · partial sums promoted to FP32 · loss error < 0.25% · kept in BF16/FP32: embeddings, output head, gating, norms, attention |
 | 7 | Two runs side by side, each with its achieved TFLOPS per GPU and two percentages: "Llama 4 Behemoth: 390 TFLOPS per GPU (FP8): 39% of BF16 peak · 20% of FP8 peak" and "DeepSeek-V3: 343 TFLOPS per GPU (FP8), run-average: 35% · 17%". Plain mark: "measured against H100 peaks; neither lab gave an MFU". | The two percentages for each run type in, one per denominator. | With FP8, utilization depends on which peak you divide by. Behemoth's 390 TFLOPS per GPU is 39% of an H100's BF16 peak, or 20% of its FP8 peak. | 390 ÷ 989 = 39.4% · 390 ÷ 1,979 = 19.7% · DeepSeek-V3: 6 × 37e9 × 14.8e12 ÷ (2.664M × 3,600) = 343 TFLOPS → 34.6% / 17.3% |
@@ -406,8 +406,10 @@ Settled and applied (README lesson 20):
 - P3-R4: `stepTime` → `trainingStepMs` (§6 signature, reproducer); unqualified "step time" is Serving's.
 - P3-R19: frame 1's two-part bar is a `shareBar`.
 - P3-R11: frame 2's dashed outline is a labeled tick on the bar.
-- P3-R9: frame 9's lane uses `ticks` (saves), hatched `idle` segments labeled `lost`, and `gaps` (restarts).
-- S3 options: `gpu` `litSms` (frame 5), `shareBar` `hatched: true` parts (frames 3, 10).
+- P3-R9 and S3-C's final API: frame 9's lane uses `ticks` (saves), `kind: 'lost'` segments and `gaps`
+  (restarts); frame 4's waiting lane is `kind: 'idle'`.
+- S3 options: `gpu` `litSms` (frame 5; it indexes the 12 drawn tiles, the page prints "20 of 132 SMs"),
+  `shareBar` `hatched: true` parts (frames 3, 10).
 - S3-B: the save / lost work / restart split is `checkpointLossParts`; `bestInterval`'s example reads 0.2270 h.
 - X-3: "about 3× GB200 NVL72's 606" → "2.72×" (1,648 ÷ 606), through `formatRatio`.
 - README lesson 35: MTBF, intervals and days print through `formatDuration` (3.09 h → 30.4 min; 13.6 →
