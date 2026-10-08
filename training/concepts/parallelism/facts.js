@@ -30,5 +30,5 @@ export const BELOW = Object.freeze([
   ['Zero-bubble and DualPipe schedules shrink the bubble itself; their formulas are in the math panel and their sources in the table.'],
   ['Keys, values and the causal mask are from [[attention]].'],
   ['The router and its toy routes are from [[moe]]. The same expert parallelism serves requests in [[disaggregation]].'],
-  ['Llama 3.1 405B ({llama-3.1-405b.release_date|year} paper): {llama-3.1-405b.parallelism}. DeepSeek-V3 ({deepseek-v3.release_date|year}): {deepseek-v3.parallelism}. Where each cut goes on the network: [[cluster-topology]].'],
+  ['Llama 3.1 405B ({llama-3.1-405b.release_date|year} paper): {llama-3.1-405b.parallelism}. DeepSeek-V3 ({deepseek-v3.release_date|year}): {deepseek-v3.parallelism}, {deepseek-v3.training_gpus} H800s. Where each cut goes on the network: [[cluster-topology]].'],
 ]);
