@@ -22,7 +22,7 @@ export const REAL_MODELS = Object.freeze([
 const SHARED_WORDING = Object.freeze({ 'qwen3.8': 'a shared expert', 'gpt-oss-120b': 'no shared expert' });
 const WOBBLE_NOTE = 'Each step routes a fresh batch of 128 tokens, so the number wobbles; the bias keeps it near 1.';
 const ROUTING_NOTE = 'The hand-picked router scores exist only for 8 experts and split 1; with other settings only the counts apply.';
-export const ACTIVE_DEFINITION = 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication.';
+export const ACTIVE_DEFINITION = 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (GPT-3\'s learned position table is a lookup too; it is so small, 0.01 %, that this course counts it as active.)';
 const SWIGLU = 'swiglu';
 const D_MODEL = 8;
 

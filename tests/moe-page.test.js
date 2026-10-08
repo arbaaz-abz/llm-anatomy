@@ -37,7 +37,7 @@ test('the rows print the storyboard numbers from the data', () => {
   assert.match(rows[3], /^GLM-5\.3: 753B \/ 40B \(5\.3%.*\), 256 routed \+ 1 shared, top-8\.$/);
   assert.match(rows[4], /^MiniMax-M3: about 428B \/ 23B \(5\.4%\), 128 routed \+ 1 shared, top-4, first 3 layers dense\.$/);
   assert.match(rows[5], /^gpt-oss-120b \(2025\): 116\.8B \/ 5\.13B \(4\.4%\), 128 experts, top-4, no shared expert\.$/);
-  assert.match(rows[6], /^Mistral Large 4 \(preview, 2026\): 1\.05T total, 49B routed-active/);
+  assert.match(rows[6], /^Mistral Large 4 \(preview, 2026\): 1\.05T total, 49B routed-active \(52B with embeddings\), a/);
   assert.match(rows[7], /^The trend: about 3–5% of parameters active per token in 2026 .*down from 9–28% in 2023–25 \(Mixtral 8x7B, Dec 2023, about 28%; Qwen3-235B, 2025, 9%\)\.$/);
   assert.match(rows[8], /DeepSeek-V4: sqrt-softplus; hash routing in first 3 MoE layers\.$/);
   assert.match(rows[9], /aux-loss-free bias \+ small sequence-level term; Kimi K3: Quantile Balancing instead\.$/);
@@ -68,6 +68,7 @@ test('frame notes print the computed counts and combinations', () => {
   assert.equal(lesson.animation.belowFor(4)[0], 'Whole toy (2 blocks): dense MLP 1,576 total / 1,448 active · 8 experts 4,008 total / 1,576 active · 16 experts 7,208 total / 1,704 active.');
   assert.equal(lesson.animation.belowFor(5)[0], 'DeepSeek-V4-Pro (2026): choosing 6 of 384 routed experts can be done in ≈ 4.3 × 10¹² ways (exactly 4,281,625,192,384).');
   assert.match(lesson.animation.belowFor(6)[0], /Shared experts in 2026: 1 in DeepSeek-V4-Pro, 2 in Kimi K3, 1 in GLM-5\.3, 1 in MiniMax-M3\.$/);
+  assert.equal(lesson.animation.belowFor(0)[0], 'This opens the Mixture-of-Experts branch from frame 6 of [[decoder-anatomy]], with the same toy: 8 experts of hidden 8, top-2.');
   assert.match(lesson.animation.belowFor(2)[0], /^Softmax over the chosen two, as Mixtral and Qwen3 do; DeepSeek normalizes sigmoid scores instead\.$/);
   assert.match(lesson.animation.belowFor(3)[0], /not topics; this page makes no claim about what each expert learns\.$/);
 });
@@ -196,7 +197,7 @@ test('panel B: gamma 0.1 steps 0 and 6, gamma 0 step 9, gamma 0.2 steps 2 and 5'
   assert.match(at(0.1, 0).note, /^Each step routes a fresh batch of 128 tokens, so the number wobbles; the bias keeps it near 1\.$/);
 });
 test('the active definition is the decoder-anatomy sentence, verbatim', () => {
-  assert.equal(view({}).definition, 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication.');
+  assert.equal(view({}).definition, 'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (GPT-3\'s learned position table is a lookup too; it is so small, 0.01 %, that this course counts it as active.)');
 });
 test('try-this text fills DeepSeek-V4-Pro\'s numbers from the data', () => {
   const [one] = tryThis(data);
