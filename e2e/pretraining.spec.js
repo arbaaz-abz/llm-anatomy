@@ -78,7 +78,9 @@ test.describe('pretraining toy: grade a sentence', () => {
 
   test('selectable stage item (P3-R17): Tab reaches the selection, arrows move it, Enter and Space select, focus is visible', async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    await chip(page, 7, 'mat').focus();
+    await slider(page).focus();
+    await page.keyboard.press('Shift+Tab'); // one tab stop for the strip: the selected chip
+    await expect(chip(page, 7, 'mat')).toBeFocused();
     expect(await chip(page, 7, 'mat').evaluate((g) => getComputedStyle(g).outlineStyle)).not.toBe('none');
     await page.keyboard.press('ArrowRight');
     await expect(chip(page, 8, '.')).toBeFocused();
