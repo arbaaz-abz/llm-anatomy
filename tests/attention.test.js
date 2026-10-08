@@ -49,6 +49,9 @@ test('attentionHead, head A: the weights grid, the hero output, the toy try-this
   near(head.output[2], [-0.106, 1.407, 0.106, 0.804]);
   near(head.output, [[1, 0, -1, 0], [0.321, 1.358, -0.321, 0.679], [-0.106, 1.407, 0.106, 0.804], [0.035, 1.212, 0.015, 0.821]]);
   near(head.masked[2], [-0.5, 1.5, 0.25, -Infinity], 1e-12);
+  near(head.exps[2], [0.607, 4.482, 1.284, 0]);
+  near(head.expSums[2], 6.372);
+  near(head.exps[0], [Math.exp(0.5), 0, 0, 0]);
   near(attentionHead(A.Q, A.K, A.V, { causal: false }).weights[2], [0.086, 0.635, 0.182, 0.097]);
   near(attentionHead(A.Q, A.K, A.V, { divisor: 0.5 }).weights[2], [0.000, 0.993, 0.007, 0]);
   near(attentionHead(A.Q, A.K, A.V, { divisor: 8 }).weights[2], [0.259, 0.428, 0.313, 0]);

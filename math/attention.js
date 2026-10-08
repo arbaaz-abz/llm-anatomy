@@ -50,7 +50,10 @@ export function attentionHead(Q, K, V, { causal = true, divisor = Math.sqrt(Q[0]
   const mask = causal ? causalMask(Q.length) : allVisible(Q.length);
   const masked = applyMask(scaled, mask);
   const weights = attentionWeights(masked);
-  return { scores: S, scaled, mask, masked, weights, output: weightedSum(weights, V) };
+  // The un-shifted exp row the storyboard prints ("exp [0.607, 4.482, 1.284, 0] · sum 6.372"); masked cells give exp(−∞) = 0.
+  const exps = masked.map((row) => row.map(Math.exp));
+  const expSums = exps.map((row) => row.reduce((s, x) => s + x, 0));
+  return { scores: S, scaled, mask, masked, exps, expSums, weights, output: weightedSum(weights, V) };
 }
 
 // Several heads over the same tokens; concat row i = every head's output row i, left to right.
