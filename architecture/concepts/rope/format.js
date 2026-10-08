@@ -39,12 +39,11 @@ export function trimNumber(v, digits = 3) {
   return s === '-0' || s === '' ? '0' : realMinus(s);
 }
 
-const STAGE_CELL_CHARS = 5; // a NUMBER_CELL holds five mono characters at the 11 px label size ("−0.87")
-// What a stage cell prints: up to 3 decimals, 2 when 3 would not fit in five characters (the toy prints all three).
+// What a stage cell prints: one format for every grid, 2 decimals with a real minus (a NUMBER_CELL holds five mono
+// characters, "−0.87"); the exact 3-decimal vectors and rows are printed under the stage and in the toy.
 export function cellText(v) {
   if (v == null || Number.isNaN(v)) return '';
-  const three = trimNumber(v, 3);
-  return three.length <= STAGE_CELL_CHARS ? three : trimNumber(v, 2);
+  return fixed(2)(v);
 }
 export const formatCell = (v) => cellText(v);
 

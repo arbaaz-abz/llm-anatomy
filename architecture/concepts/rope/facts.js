@@ -41,9 +41,9 @@ export function factRows(data) {
   return [
     { claim: 'GPT-3 ({gpt-3.release_date|year}): {gpt-3.positional} absolute positions, a table of {gpt-3.context_length|int} rows.' },
     { claim: 'RoPE base θ: DeepSeek-V4-Pro {deepseek-v4-pro.rope_theta|int} ({deepseek-v4-pro.rope_theta_compressed|int} for its compressed streams) · gpt-oss {gpt-oss-120b.rope_theta|int} · MiniMax-M3 {minimax-m3.rope_theta|int} · GLM-5.3 {glm-5.3.rope_theta|int} · Qwen3.8 {qwen3.8.rope_theta|int}.' },
-    { claim: `Partial RoPE: MiniMax-M3 ({minimax-m3.release_date|year}) rotates ${Number.isFinite(rotated) ? rotated : '—'} of {minimax-m3.head_dim} dimensions ({minimax-m3.partial_rotary_factor|raw}); Qwen3.5 rotates ${percent(fact(data, 'qwen3.5-397b', 'partial_rotary_factor'))} ({qwen3.5-397b.partial_rotary_factor|raw}).` },
+    { claim: `Partial RoPE: MiniMax-M3 rotates ${Number.isFinite(rotated) ? rotated : '—'} of {minimax-m3.head_dim} dimensions ({minimax-m3.partial_rotary_factor|raw}); Qwen3.5 rotates ${percent(fact(data, 'qwen3.5-397b', 'partial_rotary_factor'))} ({qwen3.5-397b.partial_rotary_factor|raw}).` },
     { claim: 'YaRN: gpt-oss ({gpt-oss-120b.release_date|year}) stretched {gpt-oss-120b.rope_original_context|int} → {gpt-oss-120b.context_length|int} tokens (factor {gpt-oss-120b.yarn_factor}); DeepSeek-V4-Pro uses factor {deepseek-v4-pro.yarn_factor}.' },
-    { claim: 'NoPE: Kimi K3\'s {kimi-k3.full_attention_layers} MLA layers ({kimi-k3.release_date|year}) use no position encoding; order comes from its {kimi-k3.linear_attention_layers} linear-attention layers\' decay, and it reaches a context of {kimi-k3.context_length|count} tokens without any position-encoding change.' },
+    { claim: 'NoPE: Kimi K3\'s {kimi-k3.full_attention_layers} MLA layers use no position encoding; order comes from its {kimi-k3.linear_attention_layers} linear-attention layers\' decay, and it reaches a context of {kimi-k3.context_length|count} tokens without any position-encoding change.' },
     { claim: 'Most frontier open models list about 1M positions: DeepSeek-V4-Pro {deepseek-v4-pro.context_length|count}, Kimi K3 {kimi-k3.context_length|count}, GLM-5.3 {glm-5.3.context_length|count}, MiniMax-M3 {minimax-m3.context_length|count}.' },
   ];
 }

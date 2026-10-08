@@ -17,13 +17,20 @@ const dot = (a, b) => a.reduce((sum, x, i) => sum + x * b[i], 0);
 const radText = (v) => `${trimNumber(v, 3)} rad`;
 const handText = (angle) => `${trimNumber(angle, 3)} rad · ${degrees(angle)}`;
 
+// "all seen" is honest only when the pair turned fully in training or stays inside; a reach within one token's step past
+// the seen range (position interpolation: 1.575 against 1.5) says so.
+const verdictText = (c, turned) => {
+  if (!c.allSeen) return 'never seen';
+  return !turned && c.reachedMax > c.seenMax ? "all seen (within one token's step)" : 'all seen';
+};
+
 function coverageColumn(c, i, { freqs, base, target }) {
   const turned = base[i] * (TRAINED_LENGTH - 1) >= 2 * Math.PI;
   return {
     wavelength: wavelengthText((2 * Math.PI) / base[i]),
     seen: turned ? `${radText(c.seenMax)} (a full turn)` : radText(c.seenMax),
     reached: radText(c.reachedMax),
-    verdict: c.allSeen ? 'all seen' : 'never seen',
+    verdict: verdictText(c, turned),
     speed: `${trimNumber(freqs[i])} per token`,
     target,
   };

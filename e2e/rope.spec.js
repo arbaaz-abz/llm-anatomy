@@ -75,11 +75,12 @@ test.describe('rope toy: turn the hands', () => {
     await expect(readout(page, 'verdict-2')).toHaveText('never seen');
     await expect(readout(page, 'verdict-1')).toHaveText('all seen');
     await page.locator('#stretch [data-value="pi"]').click();
-    await expect(readout(page, 'verdict-2')).toHaveText('all seen');
+    await expect(readout(page, 'verdict-2')).toHaveText("all seen (within one token's step)");
+    await expect(readout(page, 'verdict-1')).toHaveText('all seen');
     await expect(cells(page, 'offset-row')).toHaveText(['3.000', '2.900', '2.620', '2.176', '1.596', '0.915', '0.175', '−0.578']);
     await page.locator('#stretch [data-value="yarn-simple"]').click();
     await expect(cells(page, 'offset-row')).toHaveText(['3.000', '1.615', '−1.261', '−2.989', '−1.986', '0.820', '2.843', '2.218']);
-    await expect(readout(page, 'verdict-2')).toHaveText('all seen');
+    await expect(readout(page, 'verdict-2')).toHaveText("all seen (within one token's step)");
   });
 });
 

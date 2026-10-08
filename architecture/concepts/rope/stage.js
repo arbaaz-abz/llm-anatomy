@@ -103,7 +103,7 @@ export const pairCenterX = (who, i, gap = 1) => BLOCK_X[who] + i * (PAIR_W + PAI
 // Draws one vector (q or k) at position `pos` (fractional while it turns): its two pairs of cells, the divider `gap`
 // (0 = joined, 1 = open), the names, and the two dials with their speed and angle lines.
 // `parts`: { dials, speed, angle } opacities; `angleAt` the whole position the angle line prints.
-export function pairBlock(svg, { who, pos, gap, name, parts = {}, angleAt = Math.round(pos) }) {
+export function pairBlock(svg, { who, pos, gap, name, parts = {}, angleAt = Math.round(pos), short = false }) {
   const values = rotatePairs(VEC[who], pos, FREQS);
   const x = BLOCK_X[who];
   [0, 1].forEach((i) => numberRow(svg, { x: x + i * (PAIR_W + PAIR_GAP * gap), y: VEC_Y, values: values.slice(2 * i, 2 * i + 2) }));
@@ -114,7 +114,7 @@ export function pairBlock(svg, { who, pos, gap, name, parts = {}, angleAt = Math
     const cx = pairCenterX(who, i);
     if (dials > 0) fade(G.dial(svg, { x: cx, y: DIAL_Y, r: DIAL_R, vector: PAIRS[who][i], angle: pos * FREQS[i], scale: SCALE.vector, label: `pair ${i + 1}` }), dials);
     if (speed > 0) label(svg, cx, TEXT_Y[0], `${trimNumber(FREQS[i])} per token`, { anchor: 'middle', opacity: speed });
-    if (angle > 0) label(svg, cx, TEXT_Y[1], `${angleAt} × ${trimNumber(FREQS[i])} = ${trimNumber(angleAt * FREQS[i])} rad`, { anchor: 'middle', opacity: angle });
+    if (angle > 0) label(svg, cx, TEXT_Y[1], short ? `${trimNumber(angleAt * FREQS[i])} rad` : `${angleAt} × ${trimNumber(FREQS[i])} = ${trimNumber(angleAt * FREQS[i])} rad`, { anchor: 'middle', opacity: angle });
   });
 }
 

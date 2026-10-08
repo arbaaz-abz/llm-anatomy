@@ -10,6 +10,8 @@ import { INITIAL_STATE, SHIFT, toyView, tryThis } from './toy-view.js';
 import { numberRowView, handsView } from './toy-dom.js';
 import { SCALE } from './stage.js';
 
+const scroller = () => el('div', { className: 'scroll-x' }); // a wide table scrolls in its own box at 400 px
+
 const cells = (values, texts, scale) => values.map((v, i) => ({ v, text: texts?.[i] ?? fmt3(v), scale }));
 
 function scoreTable(view) {
@@ -53,7 +55,7 @@ function buildDom(host, data) {
     shift: el('button', { type: 'button', id: 'shift10', className: 'choice-option', textContent: 'same offset, +10' }),
     hands: handsView(), q: numberRowView('q-rotated', 'q_sat, turned'), k: numberRowView('k-rotated', 'key, turned'),
     offsets: numberRowView('offset-row', 'score at offset 0 to 7'),
-    score: el('div'), coverage: el('div'), real: el('div'),
+    score: scroller(), coverage: scroller(), real: scroller(),
     check: el('pre', { className: 'check-work', ariaLive: 'polite' }),
   };
   refs.check.dataset.readout = 'check-work';

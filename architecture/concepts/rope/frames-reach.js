@@ -16,8 +16,8 @@ import { drawFrame5 } from './frames-rotate.js';
 const ROW_TITLE = 'score of q_sat with k_cat, as the two tokens move apart';
 const TRAINED_TITLE = `trained on ${TRAINED_LENGTH} tokens, now reading ${POS.readTo}`;
 const MID = REACH_DIAL.x;
+const GHOST_UNTIL = 0.75;
 const SEEN = [[0, COVERAGE.plain[0].seenMax], [0, COVERAGE.plain[1].seenMax]]; // pair 1 turned fully, pair 2 up to 1.5 rad
-const ghostOf = (i, offset) => [0, FREQS[i] * offset];
 
 // The previous frame's end state, fading out over the first part of this one (a layout change is never a hard cut).
 function outgoing(svg, drawPrevious, opacity) {
@@ -35,7 +35,7 @@ export function drawFrame6(svg, p) {
   const offset = (ROW.n - 1) * t;
   offsetRow(svg, { values: revealed(ROWS.base100, offset), title: ROW_TITLE, opacity: seg(p, 0.1, 0.3) });
   [0, 1].forEach((i) => {
-    reachDial(svg, i, { angle: FREQS[i] * offset, opacity: seg(p, 0.1, 0.3) });
+    reachDial(svg, i, { angle: FREQS[i] * offset, seen: [0, FREQS[i] * offset], opacity: seg(p, 0.1, 0.3) });
     label(svg, MID[i], REACH_TEXT_Y[0], `wavelength ${fmt1(WAVELENGTHS[i])} tokens`, { anchor: 'middle', opacity: seg(p, 0.7, 1) });
   });
   label(svg, BOTTOM_X, BOTTOM_Y[0], 'each hand has turned by offset × speed', { opacity: seg(p, 0.7, 1) });
@@ -58,8 +58,9 @@ export function drawFrame7(svg, p) {
   tokenRow(svg);
   offsetRow(svg, { values: blendRows(ROWS.base100, ROWS.base10000, t), title: ROW_TITLE });
   const offset = ROW.n - 1;
-  reachDial(svg, 0, { angle: FREQS[0] * offset, opacity: 1 - seg(p, 0, 0.3) });
-  reachDial(svg, 1, { angle: lerp(FREQS[1], FREQS_10K[1], t) * offset });
+  const slow = lerp(FREQS[1], FREQS_10K[1], t) * offset;
+  reachDial(svg, 0, { angle: FREQS[0] * offset, seen: [0, FREQS[0] * offset], opacity: 1 - seg(p, 0, 0.3) });
+  reachDial(svg, 1, { angle: slow, seen: [0, slow] });
   label(svg, MID[0], REACH_TEXT_Y[0], `wavelength ${fmt1(WAVELENGTHS[0])} tokens`, { anchor: 'middle', opacity: 1 - seg(p, 0, 0.3) });
   label(svg, MID[1], REACH_TEXT_Y[0], `wavelength ${fmt1(wavelengths([stepped ? FREQS_10K[1] : FREQS[1]])[0])} tokens`, { anchor: 'middle' });
   baseReadout(svg, { stepped, opacity: seg(p, 0.1, 0.4) });
@@ -87,15 +88,18 @@ export function drawFrame8(svg, p) {
   const speeds = [lerp(FREQS[0], PI_FREQS[0], squeeze), lerp(unsqueezed[1], PI_FREQS[1], squeeze)];
   tokenRow(svg);
   offsetRow(svg, { values: blendRows(blendRows(ROWS.base10000, ROWS.base100, back), ROWS.pi, squeeze), title: TRAINED_TITLE });
-  reachDial(svg, 0, { angle: speeds[0] * offset, seen: SEEN[0], reached: [0, unsqueezed[0] * offset], opacity: seg(p, 0, 0.2) });
-  reachDial(svg, 1, { angle: speeds[1] * offset, seen: SEEN[1], reached: [0, unsqueezed[1] * offset] });
+  // The ghost hand (where the hand would point without the squeeze) goes once the squeeze is well under way, so the
+  // rest frame shows only the hand the caption talks about.
+  const ghost = (i) => (p < GHOST_UNTIL ? [0, unsqueezed[i] * offset] : null);
+  reachDial(svg, 0, { angle: speeds[0] * offset, seen: SEEN[0], reached: ghost(0), opacity: seg(p, 0, 0.2) });
+  reachDial(svg, 1, { angle: speeds[1] * offset, seen: SEEN[1], reached: ghost(1) });
   trainedLines(svg);
   speedLines(svg, 0, { from: FREQS, to: PI_FREQS, t: squeeze, opacity: seg(p, 0.15, 0.3) });
   speedLines(svg, 1, { from: FREQS, to: PI_FREQS, t: squeeze, opacity: seg(p, 0.15, 0.3) });
   const reach = (n) => trimNumber(n, n < 10 ? 3 : 1);
   label(svg, BOTTOM_X, BOTTOM_Y[0], `at ${POS.readTo} tokens: pair 2 reaches ${reach(COVERAGE.plain[1].reachedMax)} rad, outside what it saw`, { opacity: seg(p, 0.2, 0.35) * (1 - seg(p, 0.5, 0.6)) });
   label(svg, BOTTOM_X, BOTTOM_Y[0], `position interpolation, ÷ ${STRETCH_FACTOR}: every speed drops to a quarter`, { opacity: seg(p, 0.6, 0.75) });
-  label(svg, BOTTOM_X, BOTTOM_Y[1], `pair 2 reaches ${reach(COVERAGE.pi[1].reachedMax)} rad, inside what it saw (ghost hand: before ÷ ${STRETCH_FACTOR})`, { opacity: seg(p, 0.8, 1) });
+  label(svg, BOTTOM_X, BOTTOM_Y[1], `pair 2 now reaches ${reach(COVERAGE.pi[1].reachedMax)} rad, one token's step past the ${trimNumber(COVERAGE.pi[1].seenMax)} it saw`, { opacity: seg(p, 0.8, 1) });
 }
 
 // Frame 9: YaRN-style squeezes only the slow pair; the fast hand returns to full speed.
@@ -105,8 +109,8 @@ export function drawFrame9(svg, p) {
   tokenRow(svg);
   offsetRow(svg, { values: blendRows(ROWS.pi, ROWS.yarn, v), title: TRAINED_TITLE });
   label(svg, ROW.x + ROW.n * CELL, ROW.y + CELL + 34, 'branch: YaRN-style', { anchor: 'end', opacity: seg(p, 0.05, 0.25) });
-  reachDial(svg, 0, { angle: lerp(PI_FREQS[0], YARN_FREQS[0], v) * offset, seen: SEEN[0], reached: ghostOf(0, offset) });
-  reachDial(svg, 1, { angle: PI_FREQS[1] * offset, seen: SEEN[1], reached: ghostOf(1, offset) });
+  reachDial(svg, 0, { angle: lerp(PI_FREQS[0], YARN_FREQS[0], v) * offset, seen: SEEN[0] });
+  reachDial(svg, 1, { angle: PI_FREQS[1] * offset, seen: SEEN[1] });
   trainedLines(svg);
   speedLines(svg, 0, { from: PI_FREQS, to: YARN_FREQS, t: v });
   label(svg, MID[1], REACH_TEXT_Y[1], speedText(1, PI_FREQS), { anchor: 'middle' });

@@ -133,8 +133,8 @@ export function drawFrame5(svg, p) {
   label(svg, 250, 20, '+10 tokens →', { opacity: seg(p, 0.12, 0.25) });
   label(svg, 250, TAG_Y, `sat at ${POS.q + POS.shift}, cat at ${POS.k + POS.shift}`, { opacity: seg(p, 0.7, 0.85) });
   const shown = settled ? POS.shift : 0;
-  pairBlock(svg, { who: 'q', pos: qPos, gap: 1, name: nameAt('q', qPos), parts: { dials: 1, speed: 1, angle: textOpacity }, angleAt: POS.q + shown });
-  pairBlock(svg, { who: 'k', pos: kPos, gap: 1, name: nameAt('k', kPos), parts: { dials: 1, speed: 1, angle: textOpacity }, angleAt: POS.k + shown });
+  pairBlock(svg, { who: 'q', pos: qPos, gap: 1, name: nameAt('q', qPos), parts: { dials: 1, speed: 1, angle: textOpacity }, angleAt: POS.q + shown, short: true });
+  pairBlock(svg, { who: 'k', pos: kPos, gap: 1, name: nameAt('k', kPos), parts: { dials: 1, speed: 1, angle: textOpacity }, angleAt: POS.k + shown, short: true });
   relativeArcs(svg, { qAngle: qPos, kAngle: kPos, opacity: seg(p, 0, 0.12) });
   label(svg, MID_X, NOTE_Y, SPEED_NOTE, { anchor: 'middle', opacity: 1 - seg(p, 0, 0.12) });
   label(svg, MID_X, NOTE_Y, 'thin line: where the key\'s hand points · arc: the angle between the two hands', { anchor: 'middle', opacity: seg(p, 0.1, 0.25) });

@@ -48,9 +48,9 @@ test('the dated rows print the data: bases, partial RoPE, YaRN, NoPE and 1M', ()
   const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
   assert.match(rows[0], /^GPT-3 \(2020\): learned absolute positions, a table of 2,048 rows\.$/);
   assert.match(rows[1], /DeepSeek-V4-Pro 10,000 \(160,000 for its compressed streams\) · gpt-oss 150,000 · MiniMax-M3 5,000,000 · GLM-5.3 8,000,000 · Qwen3.8 10,000,000\.$/);
-  assert.match(rows[2], /MiniMax-M3 \(2026\) rotates 64 of 128 dimensions \(0\.5\); Qwen3\.5 rotates 25% \(0\.25\)\.$/);
+  assert.match(rows[2], /MiniMax-M3 rotates 64 of 128 dimensions \(0\.5\); Qwen3\.5 rotates 25% \(0\.25\)\.$/);
   assert.match(rows[3], /gpt-oss \(2025\) stretched 4,096 → 131,072 tokens \(factor 32\); DeepSeek-V4-Pro uses factor 16\.$/);
-  assert.match(rows[4], /Kimi K3's 24 MLA layers \(2026\) use no position encoding; order comes from its 69 linear-attention layers' decay/);
+  assert.match(rows[4], /Kimi K3's 24 MLA layers use no position encoding; order comes from its 69 linear-attention layers' decay/);
   assert.match(rows[5], /DeepSeek-V4-Pro 1M, Kimi K3 1\.05M, GLM-5\.3 1\.05M, MiniMax-M3 1\.05M\.$/);
 });
 
@@ -80,8 +80,9 @@ test('"Check my work" for another state: base 10,000, "down" at position 1, sat 
   assert.equal(lines[6], 'score  −0.307 + 0.308 = 0.001   (unrotated −0.750)');
 });
 
-test('stage cells: up to 3 decimals, 2 when 3 would not fit five characters, real minus', () => {
-  assert.deepEqual([0, 2, 0.5, -0.282, -1.98, 0.478, 1.596, -1.298, -3.044, 3].map(cellText), ['0', '2', '0.5', '−0.28', '−1.98', '0.478', '1.596', '−1.3', '−3.04', '3']);
+test('stage cells: one format, 2 decimals, real minus and no negative zero (a signed cell fits five characters)', () => {
+  assert.deepEqual([0, 2, 0.5, -0.282, -1.98, 0.478, 1.596, -1.298, -3.044, 3, -0.001].map(cellText), ['0.00', '2.00', '0.50', '−0.28', '−1.98', '0.48', '1.60', '−1.30', '−3.04', '3.00', '0.00']);
+  assert.ok([0.5, -3.044, -Infinity].every((v) => /Infinity|^.{1,5}$/.test(cellText(v))));
   assert.equal(cellText(null), '');
   assert.equal(cellText(Number.NaN), '');
 });
