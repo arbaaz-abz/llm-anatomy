@@ -1,0 +1,29 @@
+// agentic-rl's prose, verbatim from storyboard §3, §5 (stand-in lines), §7 (panel notes), §9 and §10. Dated numbers are
+// {entry.key|format} placeholders (content.js fills them). Pure, no DOM.
+import { deepFreeze } from '@math/core.js';
+
+export const CONTENT_TEXT = deepFreeze({
+  hook: 'A coding agent works for an hour, makes 200 tool calls, and then the tests pass or fail. How do you train on that, and what breaks when you try?',
+  intuition: [
+    'An agentic episode is a long conversation between the model and a sandbox. The model thinks, writes a tool call, the sandbox runs it (a test suite, a shell command, a web search), and the result comes back as an observation: new tokens in the context that the model did not write. That repeats until the task ends, and then the environment scores the outcome, for example "the failing test now passes". The model\'s own tokens are trained; the observations are masked out, because the model should learn what to do, not to predict what the sandbox will print. When nothing can be tested (a research summary, a slide deck), a generative reward model steps in: a judge model writes a rubric for the task and scores each attempt against it.',
+    'The update itself is the GRPO you already know: a group of episodes per task, each one\'s advantage measured against its siblings. The trouble is time. Episodes in a group can take minutes or hours, and a synchronous trainer waits for the slowest one while the other generators sit idle. So 2026 systems run asynchronously: the trainer updates as soon as enough episodes are done, and the rest finish later under newer weights. Those late tokens are off-policy, sampled by a slightly older model.',
+    'There is a second gap even without staleness. The engine that generates the tokens and the trainer that updates on them are different programs with different kernels, rounding and expert routing, so they disagree about a token\'s probability. Training as if they agreed adds bias, and a few tokens where they disagree badly can dominate an update. The fix is an importance-sampling correction: weight each token by how much likelier the trainer finds it than the engine did, cap that weight (truncated IS), or drop the token when the two differ by more than a factor of two (IcePop, GLM-5). With the clip and these masks already bounding every step, and a checker that is hard to game, most 2026 open-model reports set the KL term to zero or near it, which also frees the reference model\'s memory.',
+    'This is where most RL compute goes in 2026. GLM-5\'s verifiable software-engineering environments number {glm-5.agentic_envs_swe|raw}, DeepSeek-V3.2 synthesized {deepseek-v3.2.rl_environments|int} environments, and Kimi K3 trains {kimi-k3.rl_experts|int} separate experts. The next page, [[distillation]], shows how those experts are merged back into one model.',
+  ],
+  intuitionNote: 'The policy, reward model, reference model and KL term are defined in [[rlhf-dpo]]; the group, advantage, checker, push, ratio r and clip in [[rlvr-grpo]]; loss masking in [[sft]]. Number formats such as BF16 and FP16 are taught in [[gpu-primer]].',
+  standIn: 'Real agent episodes fix code, run terminals or search the web over hundreds of tool calls; this one stays tiny so every token fits on screen. Episode durations, rubric scores and the engine and trainer probabilities are hand-picked stand-ins; the arithmetic on them is exact.',
+  toyIntro: 'The default group from the previous page, with the sampling engine\'s and the trainer\'s probability for every token and the eight episodes on a time axis. Click a token (or use the arrow keys) to inspect it.',
+  mathNotes: [
+    'Shapes: one ρ and one w per policy token (39 in the default group; observation tokens have no term at all, which is the masking of frame 2); A ∈ ℝ^G; ℓ ∈ ℝ^G episode durations. Notes: (a) r (policy change, [[rlvr-grpo]]) and ρ (engine vs trainer) multiply in practice; this page holds r = 1 to isolate ρ. (b) GLM-5\'s agentic RL uses "direct double-sided importance sampling" (a token-level clip on rollout log-probs) and a token-in-token-out gateway so the trainer sees exactly the engine\'s tokens; DeepSeek-V3.2 adds off-policy sequence masking, Keep Routing and Keep Sampling Mask. (c) Precision formats themselves are taught on [[gpu-primer]].',
+    'Hover a highlighted term to outline its glyph on the stage: ρ is the marker on the clip line and the inspector\'s ratio (steps 7 and 8); A is the advantage column and the chip fills (step 3).',
+  ],
+  takeaways: [
+    'An agentic episode alternates the model\'s tokens with sandbox observations; only the model\'s tokens are trained, the reward comes from tests or from a judge model with a rubric, and the update is still GRPO over a group of episodes.',
+    'Long, uneven episodes force asynchronous training, which makes some data off-policy; and the sampling engine and the trainer disagree about token probabilities even with the same weights. Importance-sampling corrections (full, truncated, or IcePop\'s mask) trade a little bias for much less variance.',
+    'Most 2026 open-model reports set the KL term to zero or near it: the clip and IS masks bound each step, checkers are hard to game, and the reference copy leaves memory. The cost: nothing pulls the policy back if a checker has a hole.',
+  ],
+  further: [
+    { title: 'The State of Reinforcement Learning for LLM Reasoning (Sebastian Raschka)', href: 'https://magazine.sebastianraschka.com/p/the-state-of-llm-reasoning-model-training', note: 'the 2025 recipes compared' },
+    { title: 'RLHF Book (Nathan Lambert)', href: 'https://rlhfbook.com/', note: 'the free textbook on the whole family' },
+  ],
+});
