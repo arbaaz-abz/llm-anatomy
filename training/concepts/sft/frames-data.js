@@ -38,8 +38,10 @@ export function drawFrame8(svg, p) {
 
 // ---- frame 9: the key frame, SFT gives RL its cold start ----
 const MODEL_BOX = Object.freeze({ x: 76, y: 244, w: 110, h: 30 });
-const STRIP = Object.freeze({ x: 4, y: 304, w: 92, h: 30, gap: 4 });
-const stageX = (i) => STRIP.x + i * (STRIP.w + STRIP.gap);
+// The strip fills 572 px: the five short labels get 84 px each, "4 specialist RL" the remaining 132.
+const STRIP = Object.freeze({ x: 4, y: 304, w: 84, wRl: 132, h: 30, gap: 4 });
+const stageW = (i) => (i === RL_STAGE ? STRIP.wRl : STRIP.w);
+const stageX = (i) => STRIP.x + i * (STRIP.w + STRIP.gap) + (i > RL_STAGE ? STRIP.wRl - STRIP.w : 0);
 const MASKED = lossMask(SEGMENTS, { maskError: true }).map((trained) => !trained);
 
 export function drawFrame9(svg, p) {
@@ -50,9 +52,9 @@ export function drawFrame9(svg, p) {
   drawChips(scene, CHIPS, { hatchedOf: (chip) => MASKED[chip.flat] });
   G.block(scene, { ...MODEL_BOX, label: 'SFT model', state: 'idle' });
   const lit = seg(p, 0.5, 0.7) > 0.5;
-  STAGES.forEach((label, i) => G.block(scene, { x: stageX(i), y: STRIP.y, w: STRIP.w, h: STRIP.h, label, state: i === RL_STAGE && lit ? 'active' : 'dim' }));
+  STAGES.forEach((label, i) => G.block(scene, { x: stageX(i), y: STRIP.y, w: stageW(i), h: STRIP.h, label, state: i === RL_STAGE && lit ? 'active' : 'dim' }));
   const reach = seg(p, 0.3, 0.6);
-  const target = { x: stageX(RL_STAGE) + STRIP.w / 2, y: STRIP.y - 2 };
+  const target = { x: stageX(RL_STAGE) + STRIP.wRl / 2, y: STRIP.y - 2 };
   if (reach > 0) G.flow(scene, { from: [MODEL_BOX.x + MODEL_BOX.w + 4, MODEL_BOX.y + MODEL_BOX.h / 2 + 4], to: [target.x, target.y], carry: 'token', progress: reach });
   note(scene, MODEL_BOX.x + MODEL_BOX.w + 24, NOTE_Y[0] + 2, 'sometimes right → RL has something to reinforce', { opacity: seg(p, 0.7, 0.9) });
 }

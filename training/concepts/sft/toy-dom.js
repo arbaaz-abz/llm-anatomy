@@ -31,7 +31,7 @@ export function drawTranscript(host, chips, selected, onSelect) {
   G.hatchFill(svg);
   LINES.forEach((line, i) => { if (line.role) note(svg, 4, lineY(i) + CHIP_H / 2, line.role); });
   const nodes = chips.map((chip) => {
-    const g = G.svgEl('g', { role: 'button', tabindex: chip.flat === selected ? '0' : '-1', 'aria-label': label(chip), 'aria-pressed': String(chip.flat === selected), 'data-flat': String(chip.flat), 'data-trained': String(chip.trained), 'data-kind': chip.kind }, svg);
+    const g = G.svgEl('g', { class: 'stage-item', role: 'button', tabindex: chip.flat === selected ? '0' : '-1', 'aria-label': label(chip), 'aria-pressed': String(chip.flat === selected), 'data-flat': String(chip.flat), 'data-trained': String(chip.trained), 'data-kind': chip.kind }, svg);
     G.token(g, { x: chip.x, y: chip.y, text: chip.text, state: chip.kind === 'template' ? 'dim' : 'idle', hatched: !chip.trained });
     if (chip.flat === selected) G.selectionMark(g, { x: chip.x, y: chip.y, w: chip.w, h: CHIP_H });
     g.addEventListener('click', () => onSelect(chip.flat, false));

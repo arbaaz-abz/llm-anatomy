@@ -41,19 +41,22 @@ export const CHECK_WORK_NOTHING_MASKED = [
   'share   = 26 ÷ 26 = 100.0%',
 ].join('\n');
 
-// The three try-this items, in order: { prompt, insight } as the toy prints them.
+// The three try-this items, in order: { prompt, insight, rest } as the toy prints them.
 export const TRY_THIS = Object.freeze([
   {
     prompt: 'Turn off "Mask the prompt and template tags": trained 15 → 23 of 26 (88.5%), and the 6 user tokens plus 2 tags are now targets.',
     insight: 'without the mask, the model is also trained to write the user\'s side, so it spends capacity imitating questions instead of answering them.',
+    rest: '',
   },
   {
     prompt: 'Turn off "Mask the tool\'s reply" (prompt mask back on): trained 15 → 18 of 26 (69.2%), with <obs> 56 </obs> now a target.',
-    insight: 'training on tool outputs teaches the model to predict results it should have waited for. That is how a model learns to invent a tool\'s answer; GLM-5 excludes tool outputs from the loss, and Agentic RL does the same.',
+    insight: 'training on tool outputs teaches the model to predict results it should have waited for.',
+    rest: ' That is how a model learns to invent a tool\'s answer; GLM-5 excludes tool outputs from the loss, and [[agentic-rl]] does the same.',
   },
   {
     prompt: 'Turn on "Mask the mistake in the trace (GLM-5)": trained 15 → 10 of 26 (38.5%); the five mistake chips stay visible but hatched.',
-    insight: 'masking is how you show a mistake without teaching it. The model still reads 7 × 8 = 54 as context and is trained to write wait , check and the tool call after it.',
+    insight: 'masking is how you show a mistake without teaching it.',
+    rest: ' The model still reads 7 × 8 = 54 as context and is trained to write wait , check and the tool call after it.',
   },
 ]);
 

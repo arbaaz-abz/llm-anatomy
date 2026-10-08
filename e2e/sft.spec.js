@@ -23,6 +23,7 @@ test.describe('sft toy: which tokens teach?', () => {
     await expect(readout(page, 'selection')).toHaveText(DEFAULT_READOUTS.selection);
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);
     await expect(page.locator('[data-section="toy"]')).toContainText('Tags are generic stand-ins; each lab\'s template differs.');
+    await expect(page.locator('[data-section="toy"]')).toContainText('Switch the three masks and watch which of the 26 tokens are trained');
     await expect(readout(page, 'kind-assistant')).toHaveText('10/10');
     await expect(readout(page, 'kind-error')).toHaveText('5/5');
     await expect(readout(page, 'kind-observation')).toHaveText('0/3');
@@ -44,6 +45,8 @@ test.describe('sft toy: which tokens teach?', () => {
     await expect(readout(page, 'kind-observation')).toHaveText('3/3');
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK_NO_OBSERVATION_MASK);
     await expect(page.locator('ol.try-this li').nth(1)).toContainText(TRY_THIS[1].prompt);
+    await expect(page.locator('ol.try-this li').nth(1).locator('a')).toHaveCount(1);
+    await expect(page.locator('ol.try-this li').nth(1).locator('strong')).toHaveText(`Insight: ${TRY_THIS[1].insight}`);
   });
 
   test('try this 3: masking the mistake leaves 10 of 26, five chips still visible but hatched', async ({ page }) => {

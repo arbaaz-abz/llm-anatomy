@@ -35,7 +35,7 @@ export function view(state, data) {
   };
 }
 
-// The three "try this" items ({ prompt, insight }), with every number computed from the same functions the toy uses.
+// The three "try this" items ({ prompt, insight, rest }), with every number computed from the same functions the toy uses.
 export function tryThis() {
   const at = (patch) => {
     const s = summaryOf({ ...INITIAL_STATE, ...patch });
@@ -49,14 +49,17 @@ export function tryThis() {
     {
       prompt: `Turn off "Mask the prompt and template tags": trained ${base.trained} → ${noPrompt.trained} of ${noPrompt.total} (${noPrompt.share}), and the ${base.byKind.user.masked} user tokens plus ${base.byKind.template.masked} tags are now targets.`,
       insight: 'without the mask, the model is also trained to write the user\'s side, so it spends capacity imitating questions instead of answering them.',
+      rest: '',
     },
     {
       prompt: `Turn off "Mask the tool's reply" (prompt mask back on): trained ${base.trained} → ${noObs.trained} of ${noObs.total} (${noObs.share}), with <obs> 56 </obs> now a target.`,
-      insight: 'training on tool outputs teaches the model to predict results it should have waited for. That is how a model learns to invent a tool\'s answer; GLM-5 excludes tool outputs from the loss, and Agentic RL does the same.',
+      insight: 'training on tool outputs teaches the model to predict results it should have waited for.',
+      rest: ' That is how a model learns to invent a tool\'s answer; GLM-5 excludes tool outputs from the loss, and [[agentic-rl]] does the same.',
     },
     {
       prompt: `Turn on "Mask the mistake in the trace (GLM-5)": trained ${base.trained} → ${maskErr.trained} of ${maskErr.total} (${maskErr.share}); the five mistake chips stay visible but hatched.`,
-      insight: 'masking is how you show a mistake without teaching it. The model still reads 7 × 8 = 54 as context and is trained to write wait , check and the tool call after it.',
+      insight: 'masking is how you show a mistake without teaching it.',
+      rest: ' The model still reads 7 × 8 = 54 as context and is trained to write wait , check and the tool call after it.',
     },
   ];
 }

@@ -1,5 +1,6 @@
 // "Which tokens teach?" (storyboard §6): one state object, one paint(state); destroy tears everything down.
 import { el } from '@shared/ui/dom.js';
+import { appendRich } from '@shared/lesson-page.js';
 import { mountToggle, mountChoice } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { INITIAL_STATE } from './format.js';
@@ -26,7 +27,7 @@ function mountControls(refs, set) {
   return () => { toggles.forEach((t) => t.destroy()); template.destroy(); };
 }
 
-function readouts(host) {
+function readouts(host, ctx) {
   const named = (tag, props, name) => { const node = el(tag, props); node.dataset.readout = name; return node; };
   const refs = {
     transcript: el('div', { className: 'toy-transcript stepper-stage' }),
@@ -36,7 +37,7 @@ function readouts(host) {
     kinds: el('div', {}),
     check: named('pre', { className: 'check-work', ariaLive: 'polite' }, 'check-work'),
   };
-  const tries = tryThis().map(({ prompt, insight }) => el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` })]));
+  const tries = tryThis().map(({ prompt, insight, rest }) => appendRich(el('li', {}, [`${prompt} → `, el('strong', { textContent: `Insight: ${insight}` })]), rest, ctx));
   host.append(refs.transcript, refs.selection, refs.note, refs.counts, refs.kinds, el('h4', { textContent: 'Check my work' }), refs.check,
     el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, tries));
   return refs;
@@ -46,7 +47,7 @@ export function mount(host, ctx) {
   const controlHost = el('div', { className: 'toy-controls' });
   host.append(controlHost);
   // Transcript and readouts are direct grid items of the toy (no wrapper), so the 580 px scroller and the check box shrink on a phone.
-  const refs = readouts(host);
+  const refs = readouts(host, ctx);
   const controlBoxes = boxes(controlHost);
   let toy = null;
   let refocus = false;

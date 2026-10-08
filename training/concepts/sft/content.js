@@ -11,7 +11,7 @@ export { CAPTIONS };
 
 const SLUG = 'sft';
 
-const HOOK = 'A pretrained model, asked "What is 7 × 8?", might just write another question. How do hundreds of thousands of examples teach it to answer, to think first, and to call tools?';
+const HOOK = 'A pretrained model, asked "What is 7 × 8?", might just write another question. How do a few hundred thousand examples teach it to answer, to think first, and to call tools?';
 
 const INTUITION = Object.freeze([
   'A base model has read trillions of tokens, so it knows a great deal, but it only knows how to continue text. Supervised fine-tuning (SFT) shows it what the next part of a conversation looks like. Every example is wrapped in a chat template: special tokens that mark who is speaking (system, user, assistant, tool), so the model can tell a question it was asked from an answer it should write. Reasoning models add a `<think>` … `</think>` block before the answer. These are ordinary tokens; the model learns to use them because every example does. The knowledge is already in the weights; SFT only has to teach the shape of a conversation, which takes far fewer examples than learning the world did.',
@@ -20,7 +20,7 @@ const INTUITION = Object.freeze([
 ]);
 
 const STAND_IN = 'The template tags here are generic stand-ins; real ones differ per lab (see "In today\'s models" below). The base model\'s continuation in frame 1 is illustrative.';
-const TOY_INTRO = 'Tags are generic stand-ins; each lab\'s template differs.';
+const TOY_INTRO = 'Switch the three masks and watch which of the 26 tokens are trained; select a chip to read its kind.';
 
 const MATH_NOTES = Object.freeze([
   'Shapes: x [T] (T = 26 here); m [T] boolean; the denominator counts the trained tokens. Everything else is the loss of [[pretraining]]; the mask is the only change. Some labs average per example instead of per token; this page uses the token mean. Hover a highlighted term to outline the transcript on the stage.',

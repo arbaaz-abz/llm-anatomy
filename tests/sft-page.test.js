@@ -126,3 +126,9 @@ test('nothing here mutates its inputs', () => {
   view(state, data); checkWork(state); tryThis(); chipsFor(state);
   assert.equal(JSON.stringify(SEGMENTS), before);
 });
+test('fact row 3 does not repeat the word thinking and the strip names stage 4 once', () => {
+  const row3 = fillText(FACT_ROWS[2].claim, data);
+  assert.ok(!/thinking thinking/.test(row3), row3);
+  assert.ok(row3.endsWith('.'));
+  assert.ok(tryThis().every((t) => typeof t.rest === 'string' && !t.insight.includes('\n')));
+});

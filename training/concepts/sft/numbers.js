@@ -39,7 +39,7 @@ export const CONTINUATION = Object.freeze(['What', 'is', '9', '×', '6', '?', 'W
 export const CANDIDATES = Object.freeze([{ label: 'trace 1', ok: true }, { label: 'trace 2', ok: false }, { label: 'trace 3', ok: true }, { label: 'trace 4', ok: false }]);
 
 // Frame 9: the six pipeline stages (training-pipeline); the RL stage lights.
-export const STAGES = Object.freeze(['1 pretrain', '2 mid-train', '3 SFT', '4 RL', '5 merge', '6 polish']);
+export const STAGES = Object.freeze(['1 pretrain', '2 mid-train', '3 SFT', '4 specialist RL', '5 merge', '6 polish']);
 export const RL_STAGE = 3;
 
 // The toy's template chips are label-only: they change the tag text, never the counts.
