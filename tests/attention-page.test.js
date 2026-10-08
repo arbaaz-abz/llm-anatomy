@@ -8,6 +8,7 @@ import { fillText } from '../shared/claims.js';
 import { checkWork, fmt2, fmt3, cellText, trimNumber, divisorText, workedRowTex, expansion, INITIAL_STATE } from '../architecture/concepts/attention/format.js';
 import { CAPTIONS, CHECK_WORK } from './attention-expected.js';
 import { TOY } from '../math/attention.js';
+import { tryThis } from '../architecture/concepts/attention/try-this.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
 const data = { models: await read('../data/models.json'), hardware: await read('../data/hardware.json'), serving: await read('../data/serving.json'), papers: await read('../data/papers.json') };
@@ -116,4 +117,18 @@ test('the toy starts where the animation ends', () => {
 
 test('stage cells: a masked exp or weight prints 0, a masked score −∞, a pending cell nothing', () => {
   assert.deepEqual([cellText(-Infinity, 'exp'), cellText(-Infinity, 'weight'), cellText(-Infinity, 'scaled'), cellText(null, 'output'), cellText(Number.NaN, 'score')], ['0', '0', '−∞', '', '']);
+});
+
+test('the storyboard\'s three try-this prompts print with their numbers from math/attention.js and a named insight', () => {
+  const items = tryThis();
+  assert.equal(items.length, 3);
+  assert.deepEqual(items.map(([, insight]) => insight), [
+    'The mask is the only thing that makes attention causal.',
+    '√d_head is a sharpness dial.',
+    'Same tokens, different pattern: multi-head is several attention patterns at once.',
+  ]);
+  assert.equal(items[0][0], 'Keep query = sat₃ and switch the causal mask **off** → the row becomes [0.086, 0.635, 0.182, 0.097]: 0.097 of the weight now lands on "down", a token that comes *later*, and cat\'s share drops from 0.703 to 0.635 because the row must still sum to 1');
+  assert.equal(items[1][0], 'Mask back on. Drag the divisor to **0.5** → [0.000, 0.993, 0.007, 0]; now to **8** → [0.259, 0.428, 0.313, 0]');
+  assert.equal(items[2][0], 'Divisor back to 2. Set query = down₄ and flip head **A → B** → head A gives [0.114, 0.656, 0.129, 0.101] (most weight on "cat"); head B gives [0.129, 0.146, 0.578, 0.146] (most weight on "sat", the previous token). Choose **both** to see the two heatmaps side by side and the [1 × 8] concat row');
+  assert.match(items[1][2], /see the mono line under the slider/);
 });

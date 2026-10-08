@@ -7,6 +7,7 @@ import { createToyState } from '@shared/ui/toy-state.js';
 import { fmt2, fmt3, checkWork, divisorText, runHead, INITIAL_STATE } from './format.js';
 import { SCALE } from './stage.js';
 import { numberRowView, heatmapView } from './toy-dom.js';
+import { tryThis } from './try-this.js';
 
 const START = INITIAL_STATE; // where the animation ends
 const DIVISORS = [0.5, 1, 2, 4, 8];
@@ -16,6 +17,20 @@ const tokenName = (i) => `${TOY.tokens[i]}${SUBSCRIPTS[i]}`;
 const ROWS = [
   ['scores', 'scores (q·k)'], ['scaled', 'scaled'], ['masked', 'masked'], ['weights', 'weights'], ['output', 'output'],
 ];
+
+// "**bold**" and "*italic*" in the storyboard's wording become <strong> and <em>.
+function emphasis(text) {
+  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).filter(Boolean).map((part) => {
+    if (part.startsWith('**')) return el('strong', { textContent: part.slice(2, -2) });
+    if (part.startsWith('*')) return el('em', { textContent: part.slice(1, -1) });
+    return part;
+  });
+}
+
+function tryThisList() {
+  const items = tryThis().map(([prompt, insight, rest]) => el('li', {}, [...emphasis(prompt), ' → ', el('strong', { textContent: `Insight: ${insight}` }), rest]));
+  return [el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, items)];
+}
 
 function controls(host, set) {
   const parts = ['query', 'divisor', 'causal', 'head'].map(() => el('div'));
@@ -49,7 +64,7 @@ function readouts(host) {
   const rowBox = el('div', { className: 'toy-rows' }, ROWS.map(([name]) => rows[name].node));
   host.append(title, rowBox, weightSum, concatBox, maps,
     el('p', { className: 'toy-intro', textContent: 'exp needs a calculator; everything else is arithmetic, and ±0.001 is rounding, not a mistake.' }),
-    el('h4', { textContent: 'Check my work' }), check);
+    el('h4', { textContent: 'Check my work' }), check, ...tryThisList());
   return { title, rows, weightSum, concat, concatBox, maps, check };
 }
 
