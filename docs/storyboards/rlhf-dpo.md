@@ -172,6 +172,16 @@ them by hand."
    the role the KL term's β plays in RLHF (frame 8), because DPO is derived from that same KL-anchored
    objective (§7).
 
+**Check my work** (default state; templated from `dpoLoss` and `sigmoid` for any state; mono,
+`aria-live="polite"`; this exact text appears on the page):
+```text
+reward A = 0.1 × 0.5    = 0.050
+reward B = 0.1 × (−0.2) = −0.020
+gap      = 0.050 − (−0.020) = 0.070
+loss     = −ln σ(0.070) = −ln 0.517 = 0.659
+weight   = σ(−0.070) = 0.483
+```
+
 Lesson-17 check: all three insights read straight off `dpoLoss` outputs at the stated settings (see
 §11 reproducer); none depends on the stand-in reward scores.
 
@@ -346,3 +356,9 @@ Applied from `track-review-recipe.md` §6 (change log: `fix-recipe-review.md`):
 - Must 1: §3 ¶2's clip definition is direction-aware ("in the direction the update was pushing it"); the objective and takeaway 2 say the clip range "switches a token's update off once it has moved far enough", not "caps each step". Frame 5's caption (A > 0, moving up) is unchanged.
 - Should: the frame 3 answer is now `Air scatters blue light more than red` (correct physics; partial rebuttal: kept the first token `Air` instead of the suggested `Blue light scatters most in air`, so frame 6's candidate cells `Air · The · Rayleigh · Great` still describe this answer's first position); `chosen` / `rejected` printed beside the badges in frames 1 and 10; the hacked row is dimmed in frame 8; try-this 3 prints "3.5 vs 0.7"; §3 ¶3 names the chosen-answer-can-fall cost; the 11-frame ruling is recorded.
 - Nice: frame 2 prints the RM loss 0.201 beside 0.818.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R3: `clippedSurrogate` (frame 5) comes from `math/grpo.js`, built whole in S3 before this page, so the
+  order risk is gone; `klDivergence` from `math/lm.js` (S3).
+- X-2 / P3-R16: "Check my work" added (§6), from `dpoLoss` and `sigmoid`.
+- No data gaps on this page; no year printed.
