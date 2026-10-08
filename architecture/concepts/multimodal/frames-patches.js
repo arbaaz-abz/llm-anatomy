@@ -3,7 +3,7 @@
 import * as G from '@shared/glyphs.js';
 import { PATCHES, FOLLOWED, Z0, Z1, PATTERN, SCALE, GRID_N } from './numbers.js';
 import {
-  GRID, Z, CENTER, ENCODER, SMALL, NOTE_Y, seg, lerp, arriving, leaving, layer, note, noteLines, mark, guide,
+  IMAGE_LABEL_Y, GRID, Z, CENTER, ENCODER, SMALL, NOTE_Y, seg, lerp, arriving, leaving, layer, note, noteLines, mark, guide,
   patchGrid, patchX, patchY, zMatrix,
 } from './stage.js';
 
@@ -40,7 +40,7 @@ function tileLines(svg, drawn, opacity) {
 
 export function drawFrame1(svg, p) {
   const slide = seg(p, 0.4, 0.8);
-  note(svg, GRID.x, 26, 'image: 16 × 16 px');
+  note(svg, GRID.x, IMAGE_LABEL_Y, 'image: 16 × 16 px');
   patchGrid(svg, { gap: slide, numbers: seg(p, 0.7, 0.85) });
   tileLines(svg, seg(p, 0, 0.35), 1 - slide);
   const big = seg(p, 0.8, 1);
@@ -84,7 +84,7 @@ function embedVector(svg, p, slide) {
 
 export function drawFrame2(svg, p) {
   const flat = seg(p, 0.12, 0.4);
-  note(svg, GRID.x, 26, 'image: 16 × 16 px', { opacity: 1 });
+  note(svg, GRID.x, IMAGE_LABEL_Y, 'image: 16 × 16 px', { opacity: 1 });
   patchGrid(svg);
   const ghost = leaving(p) * (1 - flat);
   if (ghost > 0) { note(svg, BIG.x, BIG.y + BIG.size + 14, '16 grey values', { opacity: ghost }); note(svg, BIG.x, BIG.y - 10, 'patch 6, enlarged', { opacity: ghost }); }
@@ -127,7 +127,7 @@ function encoderParts(parent, { enter, rowsRead, text }) {
 export const encoderScene = (parent, opacity) => encoderParts(parent, { enter: opacity, rowsRead: 16, text: opacity });
 
 export function drawFrame3(svg, p) {
-  note(svg, GRID.x, 26, 'image: 16 × 16 px');
+  note(svg, GRID.x, IMAGE_LABEL_Y, 'image: 16 × 16 px');
   patchGrid(svg);
   const gone = leaving(p);
   if (gone > 0) embedScene(svg, gone);

@@ -4,7 +4,7 @@ import { Z1, MERGED, IMAGE_TOKENS, SEQ_PATTERN, SEQ_VISIBLE, SEQUENCE, TOKEN_WOR
 import * as S from './stage.js';
 import { encoderScene } from './frames-patches.js';
 
-const { Z, ROW, SMALL, NOTE_Y, seg, lerp, arriving, leaving, layer, note, noteLines, mark, linked, patchGrid, groupLines, zMatrix } = S;
+const { IMAGE_LABEL_Y, Z, ROW, SMALL, NOTE_Y, seg, lerp, arriving, leaving, layer, note, noteLines, mark, linked, patchGrid, groupLines, zMatrix } = S;
 
 const MERGED_ROW_PAD = (SMALL - S.MERGED.cell) / 2; // merged rows sit centered on their sequence row
 const mergedY = (g) => S.rowY(g) + MERGED_ROW_PAD;
@@ -37,7 +37,7 @@ const FRAME4_NOTES = ['16 → 4 vectors of 4 × 8 = 32 numbers', 'merge 2 × 2 d
 const mergedLabel = (parent, x, opacity) => noteLines(parent, x, 14, ['4 merged vectors,', 'each 4 × 8 = 32 numbers'], opacity);
 
 export function drawFrame4(svg, p) {
-  note(svg, S.GRID.x, 26, 'image: 16 × 16 px');
+  note(svg, S.GRID.x, IMAGE_LABEL_Y, 'image: 16 × 16 px');
   patchGrid(svg);
   groupLines(svg, seg(p, 0.1, 0.4));
   const gone = leaving(p);
@@ -96,7 +96,7 @@ const FRAME5_NOTES = ['32 → 8 · 4 image tokens of d_model 8', 'the projector 
 export function drawFrame5(svg, p) {
   const gone = leaving(p);
   if (gone > 0) {
-    note(svg, S.GRID.x, 26, 'image: 16 × 16 px', { opacity: gone });
+    note(svg, S.GRID.x, IMAGE_LABEL_Y, 'image: 16 × 16 px', { opacity: gone });
     patchGrid(svg, { opacity: gone });
     groupLines(svg, 1, gone);
     mergeLabel(svg, gone);

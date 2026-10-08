@@ -16,7 +16,7 @@ export const arriving = (p) => seg(p, 0, HANDOFF);
 export const leaving = (p) => 1 - seg(p, 0, HANDOFF);
 
 // ---- layout ----
-export const GRID = Object.freeze({ x: 16, y: 40, size: 24, gapX: 8, gapY: 12 }); // the 4 × 4 patch grid, frames 1–5
+export const GRID = Object.freeze({ x: 16, y: 40, size: 24, gapX: 8, gapY: 20 }); // the 4 × 4 patch grid, frames 1–5
 export const Z = Object.freeze({ x: 408, y: 44, cell: 16 }); // the 16 × 8 patch vectors, frames 2–4
 export const CENTER = Object.freeze({ x: 152, w: 176 }); // the patch-embedding block, frame 2
 export const ENCODER = Object.freeze({ x: 152, w: 232 }); // the vision encoder column, frame 3
@@ -26,6 +26,7 @@ export const MERGED_LEFT = 14; // frame 5: merged vectors slide here
 export const PROJECTOR = Object.freeze({ x: 232, w: 132, y: ROW.y0 }); // frame 5
 export const STREAM_X = 392; // the sequence column, frames 5–6
 export const NOTE_Y = Object.freeze([330, 348]);
+export const IMAGE_LABEL_Y = 16; // "image: 16 × 16 px" sits above the patch numbers
 
 export const rowY = (i) => ROW.y0 + i * ROW.stride; // top of sequence row i
 export const mergedX = (slot) => MERGED.rightX - 4 * MERGED.slotW + slot * MERGED.slotW;
@@ -78,7 +79,7 @@ export function patchGrid(parent, { gap = 1, numbers = 1, opacity = 1 } = {}) {
   PATCHES.forEach((pixels, i) => {
     const [row, col] = [Math.floor(i / GRID_N), i % GRID_N];
     G.patch(g, { x: patchX(col, gap), y: patchY(row, gap), pixels, state: 'idle', size: GRID.size });
-    note(g, patchX(col, gap) + GRID.size, patchY(row, gap) + GRID.size + 9, String(i + 1), { anchor: 'end', cls: 'g-sub', opacity: numbers });
+    note(g, patchX(col, gap), patchY(row, gap) - 8, String(i + 1), { cls: 'g-sub', opacity: numbers }); // above its own patch, never in the gap below
   });
   mark(g, patchX(FOLLOWED % GRID_N, gap), patchY(Math.floor(FOLLOWED / GRID_N), gap), GRID.size, GRID.size);
   return g;
@@ -87,7 +88,7 @@ export function patchGrid(parent, { gap = 1, numbers = 1, opacity = 1 } = {}) {
 // Cross lines between the four 2 × 2 groups of the separated grid (frame 4), drawn to `t` of their length.
 export function groupLines(parent, t, opacity = 1) {
   const midX = patchX(2) - GRID.gapX / 2;
-  const midY = patchY(2) - GRID.gapY / 2;
+  const midY = patchY(1) + GRID.size + 4; // under row 2's patches, clear of the numbers above row 3
   const [left, right] = [patchX(0), patchX(3) + GRID.size];
   const [top, bottom] = [patchY(0), patchY(3) + GRID.size];
   guide(parent, midX, top, midX, lerp(top, bottom, t), 0.5 * opacity);

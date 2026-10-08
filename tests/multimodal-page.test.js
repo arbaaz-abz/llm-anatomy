@@ -42,19 +42,26 @@ test('7 facts rows; every placeholder in rows and prose resolves, and nothing pr
 
 test('the rows print the storyboard\'s numbers from the data; the omitted DeepSeek width and layer count of the projector are not typed', () => {
   const rows = lesson.facts.rows.map((r) => fillText(r.claim, data));
-  assert.match(rows[0], /Kimi K3 \(2026\).*401M parameters, 27 layers, patch 14.*merges 2 × 2; images up to 3,584 × 3,584 pixels/);
-  assert.match(rows[1], /MiniMax-M3 \(2026\).*ViT of 32 layers, width 1,280, patch 14; images up to 2,016 × 2,016 pixels/);
+  assert.match(rows[0], /^Kimi K3: native multimodal.*401M parameters, 27 layers, patch 14.*merges 2 × 2; images up to 3,584 × 3,584 pixels/);
+  assert.match(rows[1], /^MiniMax-M3: native multimodal.*ViT of 32 layers, width 1,280, patch 14; images up to 2,016 × 2,016 pixels/);
   assert.match(rows[2], /a 1\.6B-parameter vision encoder/);
   assert.match(rows[3], /32 layers, merges 3 × 3, a small MLP projector/);
   assert.ok(!/1,?024|2-layer/.test(rows[3]));
   assert.match(rows[4], /DeepSeek-V4-Pro \(text;.*GLM-5\.3 \(text\), gpt-oss-120b \(text\) and Qwen3\.8 \(text;/);
   assert.match(rows[6], /factorized spatial-temporal attention \+ temporal pooling/);
-  assert.equal(lesson.facts.rows[5].derived, true, 'the LLaVA row has no data entry');
+  assert.match(rows[5], /^The adapter recipe, LLaVA \(2023\): /);
+  assert.equal(lesson.facts.rows[5].derived, undefined, 'the LLaVA row cites its paper entry, so it carries a source link');
+  assert.match(rows[3], /^DeepSeek-V4\.1-Flash: the first/);
+  assert.match(rows[6], /^Video in Kimi K3: /);
 });
 
-test('reported rows: Mistral\'s encoder and DeepSeek-V4.1-Flash carry the reported chip; so do rows that cite a reported release date', () => {
+test('reported chips: only Mistral\'s encoder and DeepSeek-V4.1-Flash; no row prints a reported release year (X-1)', () => {
   const reported = lesson.facts.rows.map((r) => fillClaim(r.claim, data).reported);
-  assert.deepEqual(reported, [true, true, true, true, false, false, true]); // Kimi K3 and MiniMax-M3 release dates are reported in the data
+  assert.deepEqual(reported, [false, false, true, true, false, false, false]);
+  lesson.facts.rows.forEach((r) => assert.ok(!/(kimi-k3|minimax-m3|deepseek-v4\.1-flash)\.release_date/.test(r.claim), r.claim.slice(0, 40)));
+  assert.ok(fillClaim(lesson.facts.rows[5].claim, data).sources.includes('https://arxiv.org/abs/2304.08485'));
+  assert.match(fillText(lesson.animation.belowFor(9)[0], data), /LLaVA-style \(2023\)/);
+  assert.equal(fillText(lesson.animation.belowFor(4)[0], data), 'The projector is a small MLP in Kimi K3 and, reportedly, in DeepSeek-ViT.');
   assert.equal(fillClaim('{mistral-large-4.vision_encoder_params|count}', data).reported, true);
   assert.equal(fillClaim('{deepseek-v4.1-flash.vision_merge}', data).reported, true);
   assert.equal(fillClaim('{kimi-k3.vision_encoder_params|count} {kimi-k3.max_image_side}', data).reported, false);
