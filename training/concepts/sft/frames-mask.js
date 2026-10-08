@@ -25,7 +25,6 @@ export function drawFrame4(svg, p) {
   transcript(svg, hatchedOf, { stateOf: toolDim });
   const label = seg(p, 0.6, 0.75);
   note(svg, rightEnd(0) + 10, lineY(0) + CHIP_H / 2, 'context only', { opacity: label });
-  note(svg, rightEnd(1) + 10, lineY(1) + CHIP_H / 2, 'context only', { opacity: label });
   note(svg, 76, NOTE_Y[0], 'opening role tags are masked; the assistant\'s own <end> is trained', { opacity: seg(p, 0.75, 0.9) });
   const s = maskSummary(SEGMENTS, { maskObservation: false });
   note(svg, 76, NOTE_Y[1], `masked ${s.byKind.template.masked + s.byKind.user.masked} (template ${s.byKind.template.masked}, user ${s.byKind.user.masked})`, { opacity: seg(p, 0.85, 1) });
