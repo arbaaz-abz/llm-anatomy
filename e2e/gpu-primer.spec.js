@@ -47,7 +47,10 @@ test.describe('gpu-primer toy: where does this multiply sit on the roof?', () =>
     await expectReadouts(page, { 'peak-share': '81.61%', verdict: 'memory-bound', intensity: '240.9' });
     await setTokens(page, 512);
     await expectReadouts(page, { 'peak-share': '100.00%', verdict: 'compute-bound', 'tokens-needed': '318.2' });
+    // The token presets are actions, never a selection: none claims to be chosen while the slider sits between them.
+    await expect(page.locator('#tokens-preset [aria-pressed]')).toHaveCount(0);
     await page.locator('#tokens-preset [data-value="4096"]').click();
+    await expect(page.locator('#tokens')).toHaveValue(String(TOKEN_INDEX[4096]));
     await expectReadouts(page, { intensity: '2,048.0', 'compute-time': '556 µs', 'memory-time': '80.1 µs', 'time-ratio': '6.94×' });
     await expect(readout(page, 'lanes-width')).toHaveText('lanes share one time axis; full width = 556 µs');
   });

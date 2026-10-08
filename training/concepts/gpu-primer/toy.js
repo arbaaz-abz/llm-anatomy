@@ -10,7 +10,7 @@ import { CHIPS, chipPreset, formatOptions, usableFormat } from './hardware.js';
 import { INITIAL_STATE, TOKEN_STOPS, TOKEN_PRESETS, int } from './format.js';
 import { toyView, FP8_NOTE, SAME_FORMAT_NOTE, RESIDUAL_NOTE } from './toy-view.js';
 import { tryThis } from './try-this.js';
-import { output, readoutTables, paintPlot, paintLanes } from './toy-dom.js';
+import { output, readoutTables, paintPlot, paintLanes, mountPresetButtons } from './toy-dom.js';
 
 const rich = (text, ctx, props = {}) => appendRich(el('p', { className: 'toy-note', ...props }), text, ctx);
 
@@ -27,7 +27,7 @@ function buildDom(host, data, ctx) {
   pre.dataset.readout = 'check-work';
   const refs = {
     chip: el('div'), fmt: el('div'), tokens: el('div'), presets: el('div'),
-    tables: el('div', { className: 'toy-tables' }),
+    tables: el('div', { className: 'toy-readouts' }), // stacked: Rubin's two-ended values need the full width
     plotTitle: output('plot-title', { className: 'choice-label' }),
     plot: G.svgEl('svg', { role: 'img' }), lanes: G.svgEl('svg', { role: 'img', 'aria-label': 'memory and compute time on one axis' }),
     conflict: output('conflict'), lanesWidth: output('lanes-width'), check: pre,
@@ -69,14 +69,12 @@ function mountControls(refs, data, toy) {
       fmt.update(formatOptions(preset));
     },
   });
-  let presets = null;
   const tokens = mountSlider(refs.tokens, {
     id: 'tokens', label: 'Tokens sharing each weight read', values: TOKEN_STOPS, value: INITIAL_STATE.tokens, unit: 'tokens', format: int,
-    onInput: (v) => { toy().set({ tokens: v }); if (TOKEN_PRESETS.includes(v)) presets?.set(v); },
+    onInput: (v) => toy().set({ tokens: v }),
   });
-  presets = mountChoice(refs.presets, {
-    id: 'tokens-preset', label: 'Token presets', variant: 'chips', value: INITIAL_STATE.tokens,
-    options: TOKEN_PRESETS.map((v) => ({ value: v, label: int(v) })), onChange: (v) => tokens.set(v),
+  const presets = mountPresetButtons(refs.presets, {
+    id: 'tokens-preset', label: 'Token presets', values: TOKEN_PRESETS, format: int, onPick: (v) => tokens.set(v),
   });
   return [chip, fmt, tokens, presets];
 }

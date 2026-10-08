@@ -40,8 +40,8 @@ export function drawFrame1(svg, p) {
 function frame2Marks(svg, t) {
   if (t <= 0) return;
   const g = layer(svg, t);
-  note(g, GPU_BIG.x, 18, `${H100_SMS} SMs (streaming multiprocessors), each with tensor cores`);
-  note(g, GPU_BIG.x, 34, `${int(H100.peak.bf16)} trillion ops/s (BF16, dense)`, { cls: '' });
+  note(g, GPU_BIG.x, 14, `${H100_SMS} SMs (streaming multiprocessors), each with tensor cores`);
+  note(g, GPU_BIG.x, 30, `${int(H100.peak.bf16)} trillion ops/s (BF16, dense)`, { cls: '' });
   note(g, RIGHT, 172, 'HBM → SMs:');
   note(g, RIGHT, 188, `${H100.bandwidths[0]} TB/s`, { cls: '' });
   note(g, GPU_BIG.x, 300, `dense numbers; vendor sparse figures are ${formatRatio(SPARSE_FACTOR)} and not used`);
@@ -59,12 +59,13 @@ export function drawFrame2(svg, p) {
 
 const lerpBox = (a, b, t) => ({ x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), w: lerp(a.w, b.w, t), h: lerp(a.h, b.h, t) });
 
-function zoomPanel(svg, t, sram) {
+// The zoom frame grows from one SM tile to the panel (t); its blocks fade in only once it has landed (inside), so they never
+// overhang a frame still growing.
+function zoomPanel(svg, t, inside, sram) {
   const P = gpuParts(GPU_BIG);
   const box = lerpBox(P.tile, GPU_BIG, t);
   const g = G.svgEl('g', { class: 'glyph g-zoom' }, svg);
   G.svgEl('rect', { class: 'g-frame', x: box.x, y: box.y, width: box.w, height: box.h, rx: 4 }, g);
-  const inside = seg(t, 0.7, 1);
   if (inside <= 0) return;
   const b = layer(svg, inside);
   note(b, GPU_BIG.x + 8, GPU_BIG.y + 20, 'one SM (streaming multiprocessor)');
@@ -90,7 +91,7 @@ export function drawFrame3(svg, p) {
     hbmFlow(g, GPU_BIG, { progress: 1 });
     frame2Marks(g, 1);
   }
-  zoomPanel(svg, seg(p, 0.1, 0.6), p >= 0.75);
+  zoomPanel(svg, seg(p, 0.1, 0.5), seg(p, 0.5, 0.65), p >= 0.75);
   frame3Marks(svg, seg(p, 0.5, 0.75));
 }
 
@@ -172,7 +173,7 @@ export function drawFrame4(svg, p) {
   const out = leaving(p);
   if (out > 0) {
     const g = layer(svg, out);
-    zoomPanel(g, 1, true);
+    zoomPanel(g, 1, 1, true);
     frame3Marks(g, 1);
   }
   const g = layer(svg, arriving(p));

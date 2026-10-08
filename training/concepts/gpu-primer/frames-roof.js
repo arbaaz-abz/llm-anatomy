@@ -130,11 +130,12 @@ export function drawFrame8(svg, p) {
   }
   const c = counter(p);
   const now = realCost(c.m, BF16.peakTflops, BW);
-  const shownCost = realCost(STOPS[c.shown], BF16.peakTflops, BW);
   frame8Left(layer(svg, arriving(p)), c);
-  roof(svg, { ...BF16, points: [{ intensity: now.intensity, label: tokensLabel(STOPS[c.shown]), followed: true }] });
-  laneNote(svg, Math.max(shownCost.time.memoryS, shownCost.time.computeS) * 1e6);
-  lanes(svg, { time: now.time, labels: c.m === STOPS[c.shown] });
+  // The plot and lanes show the tweened count itself (its dot label, lane lengths and full width all agree);
+  // the counter at the left prints only the stops.
+  roof(svg, { ...BF16, points: [{ intensity: now.intensity, label: tokensLabel(Math.round(c.m)), followed: true }] });
+  laneNote(svg, Math.max(now.time.memoryS, now.time.computeS) * 1e6);
+  lanes(svg, { time: now.time, labels: STOPS.includes(c.m) });
 }
 
 const ROOF9_BF16 = Object.freeze({ ...BF16, points: [{ intensity: REAL4.intensity, label: tokensLabel(N4), followed: true }, { intensity: REAL4096.intensity, label: tokensLabel(4096) }] });
@@ -144,7 +145,7 @@ const blendTime = (a, b, t) => ({ memoryS: lerp(a.memoryS, b.memoryS, t), comput
 function frame9Left(svg) {
   lines(svg, LEFT, 16, [`FP8: ${FP8_B} byte per number,`, `tensor cores ${formatRatio(FP8.peakTflops / BF16.peakTflops)} faster`]);
   lines(svg, LEFT, 64, [
-    `ridge ${int(RIDGE)} → ${int(ridgePoint(FP8))}`,
+    `ridge ${fixed1(RIDGE)} → ${fixed1(ridgePoint(FP8))}`,
     `${tokensLabel(N4)}: intensity ${REAL4.intensity.toFixed(2)} → ${REAL4_FP8.intensity.toFixed(2)}`,
     `memory ${formatDuration(REAL4.time.memoryS)} → ${formatDuration(REAL4_FP8.time.memoryS)}`,
     `crossing ${fixed1(CROSS)} → ${fixed1(CROSS_FP8)} tokens`,
