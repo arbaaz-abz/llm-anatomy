@@ -104,12 +104,14 @@ part being swapped this frame.
 | 2 | The left stack slides off. Row "sat" twice at `NUMBER_CELL`: "LayerNorm" (subtract the mean 0.3125, divide by the spread 0.496) and "RMSNorm" (divide by the root mean square 0.586). The right block's norm boxes relabel "RMSNorm". Plain label "why normalize: keeps the row's size steady as the stack gets deep". | The two rows type in; the zeros in the RMSNorm row stay zero while the LayerNorm row shifts them. | RMSNorm skips subtracting the mean and just rescales the row. It is cheaper and trains as well, so most 2026 models use it. | x = [0, 1, 0.5, 0, −0.5, 1, 0, 0.5] · LayerNorm: [−0.630, 1.386, 0.378, −0.630, −1.638, 1.386, −0.630, 0.378] · RMSNorm: [0, 1.706, 0.853, 0, −0.853, 1.706, 0, 0.853] |
 | 3 | The left stack slides back. The "+ learned position table" box on the input fades out; a small `dial` appears on the q and k arrows inside the right attention box. "why: depends on distance, no 2,048 limit". | The table box fades; the dial turns once. | The position table is gone. RoPE turns each query and key by its position inside attention, so scores depend on distance and no table can run out. | GPT-3's table: 2,048 × 12,288 = 25,165,824 parameters, and nothing for position 2,049 · RoPE: 0 parameters (`rope`) |
 | 4 | The right MLP box opens: GELU's two matrices "W_in [d × 4d], W_out [4d × d]" become SwiGLU's three "W_in, W_gate [d × 8/3 d], W_out"; a small "×" gate symbol joins the two branches. Parameter readout under each. | The box widens into two branches that multiply, then narrows. | The MLP gains a gate: one branch decides how much of the other passes through. It uses three matrices, so the hidden width shrinks to keep the size the same. | GPT-3 width: GELU 2 × 12,288 × 49,152 = 1,207,959,552 · SwiGLU 3 × 12,288 × 32,768 = 1,207,959,552 (no biases) |
-| 5 | The right MLP box splits into a router and a row of small expert boxes (two lit). Label "most layers in 2026 models"; beside the readout the label "illustrative: not a real model". | The box splits; two experts light. | In most 2026 models the MLP becomes a Mixture of Experts. The model stores far more than each token uses (`moe`). | GPT-3's shape, 64 experts of hidden 4,096, top-8: 960B stored, 148B active, the dense version's 148B plus the router (exact text below) |
+| 5 | The right MLP box splits into a router and a grid of 64 small expert tiles, 8 lit (top-8). Label "most layers in 2026 models"; beside the readout the label "illustrative: not a real model". | The box splits; eight experts light. | In most 2026 models the MLP becomes a Mixture of Experts. The model stores far more than each token uses. | GPT-3's shape, 64 experts of hidden 4,096, top-8: 960B stored, 148B active, the dense version's 148B plus the router (exact text below) |
 | 6 | The right attention box: 96 KV tiles collapse to 8 (`kvStack`s), each shared by 12 query heads; readout "cache per token 4,718,592 B → 393,216 B (4.72 MB → 393 kB)". Label "or a small latent (MLA)". | The 96 small stacks merge in twelves into 8. | Query heads now share their keys and values, or rebuild them from a small latent. GPT-3's shape with 8 shared sets stores 12 times less per token. | 2 × 96 × 96 × 128 × 2 B = 4,718,592 B → 2 × 96 × 8 × 128 × 2 B = 393,216 B (`kv-compression`) |
 | 7 | Inside the right attention box: q_sat and the keys The, cat, sat. Row 1 "plain": weights [0.095, 0.703, 0.202]. Row 2 "q grew 10×": [0.000, 1.000, 0.000]. Row 3 "with QK-norm": [0.055, 0.765, 0.180], and the same when q is 10× larger. Visible line under the stage: "This row is `attention`'s hero row; that page computes it step by step." | The q vector inflates; row 2 snaps to one-hot; then a "norm" ring wraps q and k and row 3 settles and stays put as q inflates again. | QK-norm normalizes queries and keys before the dot product. However large they grow during training, the scores stay in a fixed range, so softmax stays soft. | plain scores ÷ 2: [−0.5, 1.5, 0.25] · q × 10: [−5, 15, 2.5] → [0.000, 1.000, 0.000] · normalized (rms q 1.031; k 0.612, 0.791, 0.612): [−0.792, 1.841, 0.396] → [0.055, 0.765, 0.180], unchanged at q × 10 |
 | 8 | Inside the right attention box, an extra cell "sink" joins the softmax, labeled "a learned 'nothing here' score per head"; link chip `long-context-attention`. | The sink cell slides in beside the weights. | Some models add a learned sink score per head, so softmax can put its weight on "nothing". It matters most in window layers. | gpt-oss, MiMo-V2, DeepSeek-V4 use one per head · numbers and the window story: `long-context-attention` |
 | 9 | The right stack grows to four blocks: three with attention relabeled "linear" or "window", one "full". Page text: "Qwen3.8: 3 linear : 1 full · Kimi K3: 69 linear + 24 full · gpt-oss: window and full alternate". | Blocks stack up; three of four attention boxes relabel. | Attention layers are no longer all alike. Many 2026 stacks mix full attention with window or linear layers that keep far less memory. | only full layers grow a cache · Qwen3.5-397B: 15 of 60 full · (`long-context-attention`) |
 | 10 | **Key frame.** Both stacks at full size, side by side, every swapped box in the `active` state, the GPT-3 labels on the left. Page text under the stage: the "beyond the block" table and the visible residual note. | The swapped boxes pulse once in order 2 → 9. | Same wiring, new parts: RMSNorm, rotated positions, a gated MLP or experts, shared keys and values, and stabilized softmax. Most swaps cut what a token costs to run. | GPT-3 175B, 4.72 MB per token → same shape with every swap: 960B stored, 148B active, 393 kB per token, no position limit |
+
+Stage cells print the norm rows and frame 7's scores at 2 d.p. (−0.63 … ; −0.79, 1.84, 0.40); the 3 d.p. values above are printed in the page text under the stage.
 
 Frame 5's "Numbers shown", exactly: "GPT-3's shape with SwiGLU, no biases, 8 KV heads, then 64 experts of
 hidden 4,096 (an eighth of 32,768), top-8: total 959,815,311,360 (960B), active 148,066,492,416 (148B) vs
@@ -129,7 +131,7 @@ work."
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end state.
 The right stack keeps its position from frame 1 to frame 10; the left stack is off-stage only in frame 2.
 
-Caption word counts (README lesson 2; ≤ 30 words, ≤ 2 sentences, no operators): 20 · 23 · 27 · 30 · 21 ·
+Caption word counts (README lesson 2; ≤ 30 words, ≤ 2 sentences, no operators): 20 · 23 · 27 · 30 · 20 ·
 27 · 26 · 23 · 23 · 28.
 
 Absolutes checked (README lesson 7): "most 2026 models use it" (frame 2; Gemma normalizes before and after,
@@ -173,11 +175,11 @@ to GPT-3's shape (96 blocks, d_model 12,288, 96 query heads × 128, vocabulary 5
    96 × 1,207,959,552). → **Insight: RMSNorm and SwiGLU change how the numbers flow, not how many there are;
    they won on stability and quality per FLOP, not size.**
 2. Flip **position** to RoPE: 25,165,824 fewer parameters and "longest input: set by training". Set **KV
-   heads** to 8: cache 4,718,592 → 393,216 B per token (12× less), and total drops to 147,990,994,944
-   because W_K and W_V shrink. → **Insight: the big 2023–26 changes are about running cost: no position
+   heads** to 8: cache 4,718,592 → 393,216 B per token (12× less). Turn biases off too, and the total is
+   147,990,994,944 because W_K and W_V shrink. → **Insight: the big 2023–26 changes are about running cost: no position
    limit, a 12× smaller cache.** `kv-cache` lets you build this number by hand; `kv-compression` shows how
    the sharing works.
-3. Turn **experts** on: total 147,990,994,944 → 959,815,311,360; active 147,990,994,944 → 148,066,492,416
+3. With every other swap on, turn **experts** on: total 147,990,994,944 → 959,815,311,360; active 147,990,994,944 → 148,066,492,416
    (+75,497,472: the router). Tap **2026-style**, then **GPT-3 (2020)**, and read the parts table. →
    **Insight: experts multiply what is stored, not what each token uses, and every other swap kept the block's
    shape.**
@@ -277,7 +279,9 @@ them. Sebastian Raschka's architecture gallery compares 100+ models part by part
 | GQA with 8 KV heads typical; MLA in DeepSeek, Kimi, GLM | `models.*.n_kv_heads`, `.mla_kv_rank` (proposed, `kv-compression` §12) | 01 §1 "Attention" row, §2 [C] |
 | Hybrid stacks: Qwen3.8 3 Gated DeltaNet : 1 full; Kimi K3 69 linear + 24 MLA | `models.qwen3.8.attention`, `models.kimi-k3.attention` (existing, confirmed) | 01 §2 [C] |
 | Residual redesigns in 2026: mHC (DeepSeek-V4), Attention Residuals (Kimi K3) | `models.deepseek-v4-pro.residual` = "mHC", `models.kimi-k3.residual` = "Attention Residuals" (proposed) | 01 §1 "Residual stream" row [C] |
-| Beyond the block: MTP heads (V3/V4 depth 1, K3 1 layer, GLM-5 shares 3); Muon (V4, Kimi, GLM-5); FP8 training and FP4 experts (V4), MXFP4 (gpt-oss, K3) | `models.deepseek-v4-pro.optimizer` = "Muon" (existing, confirmed); `.mtp_depth` (in data); `.pretrain_precision` = "FP8; FP4 experts (QAT)" | 01 §1 "Decoding", "Optimizer", "Precision" rows [C] |
+| Multi-token prediction heads: V3/V4 depth 1, K3 1 layer, GLM-5 shares 3 | `models.deepseek-v4-pro.mtp_depth` (in data) | 01 §1 "Decoding" row [C] |
+| Muon optimizer (V4, Kimi, GLM-5) | `models.deepseek-v4-pro.optimizer` = "Muon" (existing, confirmed) | 01 §1 "Optimizer" row [C] |
+| Precision: FP8 training and FP4 experts (V4), MXFP4 (gpt-oss, K3) | `models.deepseek-v4-pro.pretrain_precision` = "FP8; FP4 experts (QAT)" | 01 §1 "Precision" row [C] |
 
 ## 9. Takeaways
 1. The 2026 block has GPT-3's wiring: normalize, attend, add; normalize, MLP, add. Almost every box was
