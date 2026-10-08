@@ -2416,6 +2416,64 @@
       }
     },
     {
+      "id": "mixtral-8x7b",
+      "name": "Mixtral 8x7B",
+      "facts": {
+        "total_params": {
+          "value": 46700000000,
+          "unit": "params",
+          "note": "Mistral release post (2023-12-11): \"Mixtral has 46.7B total parameters\". The paper (arXiv 2401.04088) rounds to 47B (read 2026-10-07).",
+          "source_url": "https://mistral.ai/news/mixtral-of-experts",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 12900000000,
+          "unit": "params",
+          "note": "Mistral release post: \"only uses 12.9B parameters per token\". The paper (arXiv 2401.04088) rounds to 13B active (read 2026-10-07).",
+          "source_url": "https://mistral.ai/news/mixtral-of-experts",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2023-12",
+          "note": "Month only: release post dated December 11, 2023; the paper was submitted 2024-01-08 (read 2026-10-07).",
+          "source_url": "https://mistral.ai/news/mixtral-of-experts",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
+      "id": "qwen3-235b-a22b",
+      "name": "Qwen3-235B-A22B",
+      "facts": {
+        "total_params": {
+          "value": 235000000000,
+          "unit": "params",
+          "note": "Qwen3 technical report §2 and Table 3: \"a total of 235B parameters with 22B activated ones\" (read 2026-10-07).",
+          "source_url": "https://arxiv.org/abs/2505.09388",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "active_params": {
+          "value": 22000000000,
+          "unit": "params",
+          "note": "Qwen3 technical report §2 and Table 3: 22B activated parameters (read 2026-10-07).",
+          "source_url": "https://arxiv.org/abs/2505.09388",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2025-04",
+          "note": "Month only: Qwen3 release post dated April 29, 2025; the report (arXiv 2505.09388) was submitted 2025-05-14 (read 2026-10-07).",
+          "source_url": "https://qwenlm.github.io/blog/qwen3/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        }
+      }
+    },
+    {
       "id": "qwen3",
       "name": "Qwen3 (series)",
       "facts": {
