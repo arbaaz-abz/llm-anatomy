@@ -37,7 +37,7 @@ export const RECIPES = deepFreeze({
       'pretraining tokens: {kimi-k3.pretrain_tokens}',
       'long-context cooldown: {kimi-k3.context_stages}',
       'cold start: {kimi-k3.sft_data}',
-      '{kimi-k3.rl_experts} specialists: 3 domains × 3 effort levels',
+      '{kimi-k3.rl_experts} specialists: {kimi-k3.rl_expert_grid}',
       '{kimi-k3.opd}',
       'FP4-aware training from SFT on: {kimi-k3.post_training_qat}',
     ],

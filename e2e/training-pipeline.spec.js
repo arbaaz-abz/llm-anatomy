@@ -8,7 +8,7 @@ const URL = '/training/#training-pipeline';
 registerLessonContract({ name: 'training-pipeline', url: URL, captions: CAPTIONS, factRows: 10, returnHash: 'training-pipeline' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
-const stage = (page, n) => page.locator(`[data-section="toy"] g[role="button"][data-stage="${n}"]`);
+const stage = (page, n) => page.locator(`[data-section="toy"] g.stage-item[data-value="${n}"]`);
 const model = (page, value) => page.locator(`#model [data-value="${value}"]`);
 const barText = (page) => page.locator('[data-section="toy"] .g-share').first();
 
@@ -21,7 +21,8 @@ test.describe('training-pipeline toy: read a recipe', () => {
     await expect(readout(page, 'known-total')).toHaveText('28.55T tokens');
     await expect(readout(page, 'inspector')).toHaveText('Stage 1, pretraining: 27T tokens of base pretraining at 4K context');
     await expect(stage(page, 1)).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('[data-section="toy"] g[role="button"]')).toHaveCount(6);
+    await expect(page.locator('[data-section="toy"] g.stage-item[role="button"]')).toHaveCount(6);
+    await expect(page.locator('[data-section="toy"] table.readout-table')).toHaveCount(1);
     await expect(barText(page).locator('.g-pct').first()).toHaveText('94.6%');
     expect(errors).toEqual([]);
   });

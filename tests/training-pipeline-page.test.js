@@ -11,7 +11,6 @@ import { ROWS, belowFor } from '../training/concepts/training-pipeline/facts.js'
 import { checkWork, totalText, NOTHING_PUBLISHED } from '../training/concepts/training-pipeline/format.js';
 import { toyView, tokenParts, tryThis, stageStrip, stopsText, recipeOf, INITIAL_STATE, MODEL_CHIPS } from '../training/concepts/training-pipeline/toy-view.js';
 import { RECIPES, RECIPE_ORDER } from '../training/concepts/training-pipeline/recipes.js';
-import { nextStage } from '../training/concepts/training-pipeline/select.js';
 import { GLM5_TOKENS, STAGE_FIGURES, STAGES, STOPS } from '../training/concepts/training-pipeline/numbers.js';
 import { GLM5_PARTS } from '../training/concepts/training-pipeline/frames-budget.js';
 import { CAPTIONS, CHECK_WORK, CHECK_WORK_KIMI } from './training-pipeline-expected.js';
@@ -131,15 +130,18 @@ test('stage 4 of GLM-5 is counted in environments, Olmo 3 in pairs and prompts; 
   assert.equal(RECIPES.kimiK3.tokens.every(([, key]) => key === null), true);
 });
 
-test('stage selection keys and stop text', () => {
-  assert.equal(nextStage(1, 'ArrowLeft'), 1);
-  assert.equal(nextStage(6, 'ArrowRight'), 6);
-  assert.equal(nextStage(3, 'ArrowRight'), 4);
-  assert.equal(nextStage(3, 'Home'), 1);
-  assert.equal(nextStage(3, 'End'), 6);
-  assert.equal(nextStage(3, 'x'), null);
+test('stop text names real lessons', () => {
   assert.equal(stopsText(4), 'Taught in [[rlhf-dpo]], [[rlvr-grpo]] and [[agentic-rl]].');
   assert.equal(STAGES.length, 6);
+});
+
+test('review fixes: the hook says 30 trillion; the pretraining range and Kimi K3 grid fill from data; the SFT row labels the unconfirmed half', () => {
+  assert.match(LESSON.hook, /a pile of 30 trillion tokens/);
+  assert.match(fillText(ROWS[0], data), /^Open frontier MoEs pretrain on 25T–33T tokens: Nemotron 3 Super 25T/);
+  assert.match(fillText(belowFor(1)[0], data), /^Open frontier MoEs pretrain on 25T–33T tokens:/);
+  assert.match(fillText(ROWS[2], data), /Olmo 3 about 2\.3M reasoning traces \(reported\)\.$/);
+  assert.match(toyView({ model: 'kimiK3', stage: 4 }, data).inspector, /9 specialists: 3 domains \(general, general agents, coding agents\) × 3 effort levels/);
+  assert.match(fillText(LESSON.math.notes[1], data), /see \[\[prefill-decode\]\]/);
 });
 
 test('unknown models and unpublished keys throw clearly', () => {

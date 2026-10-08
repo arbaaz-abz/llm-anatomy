@@ -10,9 +10,9 @@ export const FRAMING = 'This page is the course\'s synthesis of the 2026 open re
   + 'Labs describe their own stages in their own units, so the rows give each figure as published.';
 
 export const ROWS = Object.freeze([
-  'Open frontier MoEs pretrain on 25–33 trillion tokens: Nemotron 3 Super {nemotron-3-super.pretrain_tokens|count}, GLM-5 {glm-5.pretrain_tokens|count}, DeepSeek-V4-Pro {deepseek-v4-pro.pretrain_tokens|count}.',
+  'Open frontier MoEs pretrain on {nemotron-3-super.pretrain_tokens|count}–{deepseek-v4-pro.pretrain_tokens|count} tokens: Nemotron 3 Super {nemotron-3-super.pretrain_tokens|count}, GLM-5 {glm-5.pretrain_tokens|count}, DeepSeek-V4-Pro {deepseek-v4-pro.pretrain_tokens|count}.',
   'GLM-5 pretrains on {glm-5.base_tokens|count} tokens at 4K context, then {glm-5.midtrain_tokens|count} of mid-training that stretches it: {glm-5.context_stages}.',
-  'SFT sizes: DeepSeek-R1 ({deepseek-r1.release_date|year}) about {deepseek-r1.sft_samples|count} examples; Olmo 3 about {olmo-3.sft_traces|count} reasoning traces.',
+  'SFT sizes: DeepSeek-R1 ({deepseek-r1.release_date|year}) about {deepseek-r1.sft_samples|count} examples; Olmo 3 about {olmo-3.sft_traces|count} reasoning traces (reported).',
   'Specialist RL: Kimi K3 trains {kimi-k3.rl_experts} specialists; GLM-5 reports software-engineering environments: {glm-5.agentic_envs_swe}.',
   'Merging: DeepSeek-V4-Pro, {deepseek-v4-pro.opd}; Kimi K3, {kimi-k3.opd}; GLM-5, {glm-5.opd}.',
   'Nemotron 3 Super: RLVR over {nemotron-3-super.rl_environments} environments, a separate SWE-RL stage{nemotron-3-super.swe_rl_stage|cite}, then a separate RLHF stage with a judge model{nemotron-3-super.rlhf_stage|cite}.',
@@ -31,7 +31,7 @@ export const midTrainShare = () => formatShare(shares().parts[1].share);
 export function belowFor(index) {
   const notes = [
     [],
-    ['Open frontier MoEs pretrain on 25–33 trillion tokens: Nemotron 3 Super {nemotron-3-super.pretrain_tokens|count}, GLM-5 {glm-5.pretrain_tokens|count}, DeepSeek-V4-Pro {deepseek-v4-pro.pretrain_tokens|count}. Taught in [[pretraining]] and [[scaling-laws]].'],
+    ['Open frontier MoEs pretrain on {nemotron-3-super.pretrain_tokens|count}–{deepseek-v4-pro.pretrain_tokens|count} tokens: Nemotron 3 Super {nemotron-3-super.pretrain_tokens|count}, GLM-5 {glm-5.pretrain_tokens|count}, DeepSeek-V4-Pro {deepseek-v4-pro.pretrain_tokens|count}. Taught in [[pretraining]] and [[scaling-laws]].'],
     ['GLM-5: {glm-5.midtrain_tokens|count} tokens of mid-training, context 4K to 200K. Taught in [[midtraining]].'],
     ['DeepSeek-R1 ({deepseek-r1.release_date|year}): about {deepseek-r1.sft_samples|count} examples. Olmo 3: about {olmo-3.sft_traces|count} traces (reported). Taught in [[sft]].'],
     ['Kimi K3: {kimi-k3.rl_experts} specialists. GLM-5 software environments: {glm-5.agentic_envs_swe}. Taught in [[rlhf-dpo]], [[rlvr-grpo]] and [[agentic-rl]].'],

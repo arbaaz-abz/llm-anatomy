@@ -8,7 +8,7 @@ import { FRAMING, ROWS, belowFor, knownTotalText, pretrainShare } from './facts.
 
 const SLUG = 'training-pipeline';
 
-const HOOK = 'What happens between a pile of tens of trillions of tokens and a model that thinks before it answers, calls tools, and holds a conversation?';
+const HOOK = 'What happens between a pile of 30 trillion tokens and a model that thinks before it answers, calls tools, and holds a conversation?';
 
 const intuition = () => Object.freeze([
   'The canonical 2026 pipeline has six stages, each starting from the weights the last one left (smaller pipelines skip some; the toy shows which). Each stage needs data the one before could not use: text teaches knowledge but not conversation, conversations teach format but not which answer is right, and only a checker can teach that. Pretraining reads tens of trillions of tokens and learns to predict the next one; the result knows a great deal but only continues text. Mid-training is the end of that run, on the best data and with a longer context window. Supervised fine-tuning shows it worked conversations, so it learns to answer in turns and to reason between think tags.',
@@ -26,7 +26,7 @@ const MATH_BLOCKS = Object.freeze([
 
 const MATH_NOTES = Object.freeze([
   'Shares are of the published total only; an unpublished stage is shown in the neutral fill, never estimated.',
-  'Why an RL token costs more than a pretraining token: it is first generated one token at a time (decode, see the prefill-vs-decode lesson), then scored by a checker, sandbox or judge, and only then trained on. No formula is given because the ratio depends on the run.',
+  'Why an RL token costs more than a pretraining token: it is first generated one token at a time (decode, see [[prefill-decode]]), then scored by a checker, sandbox or judge, and only then trained on. No formula is given because the ratio depends on the run.',
 ]);
 
 const TAKEAWAYS = Object.freeze([
