@@ -13,6 +13,7 @@ const ROWS = Array.from({ length: GROUP_SIZE }, (_, i) => i);
 // The verifier footnote under the checker block, wrapped to the right margin's width.
 const FOOTNOTE = Object.freeze(['Real checkers parse a', 'boxed answer and compare', 'it symbolically; this', 'one reads the last token.']);
 const ADVANTAGE_NOTE_Y = 36;
+const SHORT_POLICY_W = 72;
 const ZERO_FILL = advantageFill(0);
 const MEAN = GROUP.stats.mean; // 0.25
 const rewards = GROUP.rewards;
@@ -20,12 +21,14 @@ const advantages = GROUP.advantages;
 const centered = rewards.map((r) => r - MEAN); // R − mean: +0.75 on rows 1 and 5, −0.25 on the others
 const countOf = (p) => Math.floor(p * GROUP_SIZE + 1e-9);
 
-function policy(svg, state = 'active', opacity = 1) {
-  fade(G.block(svg, { ...HEADER_BLOCK, label: 'policy: the model being trained', state }), opacity);
+// Frame 1 introduces the policy with its long label; from frame 2 on a short pill keeps clear of the checker block.
+function policy(svg, state = 'active', opacity = 1, short = false) {
+  const block = short ? { ...HEADER_BLOCK, w: SHORT_POLICY_W, label: 'policy' } : { ...HEADER_BLOCK, label: 'policy: the model being trained' };
+  fade(G.block(svg, { ...block, state }), opacity);
 }
 
 function checker(svg, state = 'active', opacity = 1) {
-  fade(G.block(svg, { x: MARGIN_X - 4, y: 3, w: 164, h: 24, label: 'checker: last token = 56?', state }), opacity);
+  fade(G.block(svg, { x: MARGIN_X, y: 3, w: 160, h: 24, label: 'checker: last token = 56?', state }), opacity);
 }
 
 const verdicts = (svg, count, group = GROUP) => ROWS.slice(0, count).forEach((i) => G.verdict(svg, { x: VERDICT_X, y: rowY(i) + ROW_H / 2, ok: group.rewards[i] === 1 }));
@@ -49,7 +52,7 @@ export function drawFrame1(svg, p) {
 // ---- frame 2: the checker scores each answer ----
 export function drawFrame2(svg, p) {
   promptChips(svg);
-  policy(svg, 'idle');
+  policy(svg, 'idle', 1, true);
   const scored = Math.min(Math.ceil(p * GROUP_SIZE - 1e-9), GROUP_SIZE);
   checker(svg, 'active', ease(seg(p, 0, 0.12)));
   FOOTNOTE.forEach((line, i) => label(svg, MARGIN_X - 2, 44 + i * 16, line, { opacity: ease(seg(p, 0, 0.12)) }));
@@ -64,7 +67,7 @@ const BASELINE_AT = 0.2; // the checker and policy have faded; the mean rule sli
 export function drawFrame3(svg, p) {
   const gone = 1 - ease(seg(p, 0, BASELINE_AT));
   promptChips(svg);
-  if (gone > 0) { policy(svg, 'idle', gone); checker(svg, 'active', gone); }
+  if (gone > 0) { policy(svg, 'idle', gone, true); checker(svg, 'active', gone); }
   rowIndexes(svg);
   ROWS.forEach((i) => chipRow(svg, GROUP.rows[i].tokens, i));
   verdicts(svg, GROUP_SIZE);

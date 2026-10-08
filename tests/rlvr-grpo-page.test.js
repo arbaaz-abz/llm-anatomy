@@ -9,6 +9,7 @@ import { evaluate, divisionEffect, unbiasedStd, answersFor } from '../training/c
 import { tryThis } from '../training/concepts/rlvr-grpo/try-this.js';
 import { CAPTIONS, TRY_THIS } from './rlvr-grpo-expected.js';
 import { toyView, epsOptions, clipHigherEps, clampSelection, NO_SIGNAL, STAND_IN } from '../training/concepts/rlvr-grpo/toy-view.js';
+import { ruleY, TOP, COL_BOTTOM, rowY } from '../training/concepts/rlvr-grpo/stage.js';
 import { GROUP_TOY, buildGroup, groupAdvantages, clippedSurrogate } from '../math/grpo.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -203,3 +204,16 @@ test('the selection clamps to the answer\'s last token and survives a change of 
 });
 
 test('the stand-in line is the storyboard\'s', () => assert.equal(STAND_IN, LESSON.animation.standIn));
+
+test('try-this prompts use the toy\'s visible labels and the insights are lower case', () => {
+  const joined = tryThis().map(([prompt]) => prompt).join(' ');
+  ['Right answers out of 8', 'Divide by the group\'s std', 'Loss aggregation'].forEach((label) => assert.ok(joined.includes(label), label));
+  assert.ok(!/Slide k |norm off|Flip agg/.test(joined));
+  tryThis().forEach(([, insight]) => assert.match(insight, /^[a-z]/));
+});
+
+test('the mean rule puts 1.0 above row 1 and 0 above the column bottom, so it never strikes row 1', () => {
+  assert.equal(ruleY(1), TOP - 4);
+  assert.equal(ruleY(0), COL_BOTTOM - 8);
+  assert.ok(ruleY(1) < rowY(0));
+});

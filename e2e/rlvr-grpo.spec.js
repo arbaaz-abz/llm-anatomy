@@ -69,6 +69,12 @@ test.describe('rlvr-grpo toy: grade a group', () => {
     await expect(readout(page, 'total-push')).toHaveText('4.00');
   });
 
+  test('every token chip is a selectable stage item (pointer and focus ring)', async ({ page }) => {
+    const items = page.locator('[data-section="toy"] g.stage-item[role="button"]');
+    await expect(items).toHaveCount(39);
+    await expect(items.first()).toHaveCSS('cursor', 'pointer');
+  });
+
   test('the k chips set the slider', async ({ page }) => {
     await page.locator('#k-preset [data-value="4"]').click();
     await expect(page.locator('#k')).toHaveValue('4');

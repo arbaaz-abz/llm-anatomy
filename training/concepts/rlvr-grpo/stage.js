@@ -100,12 +100,14 @@ export function column(svg, { origin, values, header, fills = null, opacity = 1,
 export const rewardFills = (rewards, shown = rewards.length) => rewards.map((r, i) => (i < shown ? (r === 1 ? 'ok' : 'bad') : null));
 
 // The mean rule across the R and A columns: a horizontal line at the group mean on a 0 → 1 scale up the column.
-export const ruleY = (value) => COL_BOTTOM - 8 - value * 300;
+// 1.0 sits in the gap above row 1 (4 px over its top edge), 0 sits 8 px over the column bottom.
+export const ruleY = (value) => COL_BOTTOM - 8 - value * (COL_BOTTOM - 8 - (TOP - 4));
+const MEAN_LABEL_MIN_Y = TOP + 12;
 export function meanRule(svg, value, text, opacity = 1) {
   const g = G.svgEl('g', { class: 'glyph g-note' }, svg);
   const line = G.svgEl('line', { x1: RULE_X.from, x2: RULE_X.to, y1: ruleY(value), y2: ruleY(value), class: 'g-rule' }, g);
   line.style.stroke = 'var(--ink)';
   line.style.strokeWidth = '2';
   fade(g, opacity);
-  label(svg, RULE_X.to + 8, ruleY(value), text, { opacity });
+  label(svg, RULE_X.to + 8, Math.max(ruleY(value), MEAN_LABEL_MIN_Y), text, { opacity }); // a rule near the top keeps its label clear of "A = advantage"
 }

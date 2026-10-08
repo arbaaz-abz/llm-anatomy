@@ -25,7 +25,7 @@ function pushTrySecond() {
   return `With k = 2, select the 48 in row 4 (7 × 8 = 48 , so 48, ${row({}, long).tokens.length} tokens) and then the 63 in row 6 (${row({}, short).tokens.length} token). `
     + `Under sample aggregation the inspector shows a push per token of ${signed4(perToken({}, long))} for row 4 and ${signed4(perToken({}, short))} for row 6: both wrong, `
     + `but the long answer is punished ${formatRatio(perToken({}, short) / perToken({}, long))} less per token, and both rows print the same push per answer, ${signed4(row({}, long).pushPerAnswer)}. `
-    + `Flip agg to token: every token now pays ${signed4(perToken(token, long))}, so the long wrong answer's push per answer becomes ${signed4(row(token, long).pushPerAnswer)} and the short one's ${signed4(row(token, short).pushPerAnswer)}.`;
+    + `Flip "Loss aggregation" to token: every token now pays ${signed4(perToken(token, long))}, so the long wrong answer's push per answer becomes ${signed4(row(token, long).pushPerAnswer)} and the short one's ${signed4(row(token, short).pushPerAnswer)}.`;
 }
 
 function clipTryThird() {
@@ -39,18 +39,18 @@ function clipTryThird() {
 
 export function tryThis() {
   return [
-    [`Predict first: if 4 of 8 answers are right instead of 2, does 7 × 8 = 56 get a bigger or smaller push? Slide k 2 → 4 → 8. A for a right answer goes ${rightAdvantages([2, 4, 8])}; Σ|A| goes ${totals([2, 4, 8])}. `
+    [`Predict first: if 4 of 8 answers are right instead of 2, does 7 × 8 = 56 get a bigger or smaller push? Slide "Right answers out of 8" 2 → 4 → 8. A for a right answer goes ${rightAdvantages([2, 4, 8])}; Σ|A| goes ${totals([2, 4, 8])}. `
       + `Now slide to 1: ${signed2(lone.rows[0].advantage)} for the lone right answer, ${signed2(lone.rows[1].advantage)} for each of the seven wrong ones; and to 0: all zeros, the same banner as at 8. `
-      + `Then switch norm off and repeat: ${rightAdvantages([2, 4, 8], { norm: false })}, and the lone right answer gets only ${signed4(loneOff.rows[0].advantage).replace(/0$/, '')}.`,
-    'Advantages are relative, not absolute.',
+      + `Then turn "Divide by the group's std" off and repeat: ${rightAdvantages([2, 4, 8], { norm: false })}, and the lone right answer gets only ${signed4(loneOff.rows[0].advantage).replace(/0$/, '')}.`,
+    'advantages are relative, not absolute.',
     ` The rarer the outcome inside its group, the bigger its push; dividing by the std amplifies that unevenly. Compare Σ|A| with and without the division: ${[1, 2, 4].map(effect).join(', ')}. `
       + 'The total push still peaks at k = 4, but the division boosts near-impossible and near-solved prompts the most (the difficulty bias), which is Dr.GRPO\'s argument for dropping it, as DeepSeek-V3.2 does. '
       + 'A group with no spread teaches nothing, which is why dynamic sampling throws it away and why GLM-5 keeps only prompts its previous model solves rarely but can solve (see the facts below).'],
     [pushTrySecond(),
-      'Sample-level averaging shields long wrong answers (and dilutes long right ones); token-level loss charges every token the same.',
+      'sample-level averaging shields long wrong answers (and dilutes long right ones); token-level loss charges every token the same.',
       ' That is DAPO\'s token-level loss, part of the 2026 consensus recipe; Olmo 3 reports it (see the facts below).'],
     [clipTryThird(),
-      'Clipping switches a token\'s gradient off, it does not shrink it, and clip-higher widens only the upward side',
+      'clipping switches a token\'s gradient off, it does not shrink it, and clip-higher widens only the upward side',
       ' so a good token that was improbable when sampled can keep gaining probability (no entropy collapse), while the lower bound still stops collapse the other way.'],
   ];
 }

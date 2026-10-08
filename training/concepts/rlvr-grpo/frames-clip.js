@@ -27,8 +27,12 @@ export function drawFrame7(svg, p) {
   G.block(svg, { ...right.reference, ...block, label: 'reference', state: 'active' });
   G.block(svg, { ...right.reward, ...block, label: 'reward model', state });
   G.block(svg, { ...right.critic, ...block, label: 'critic', state });
-  label(svg, right.reward.x, 204, 'replaced by the checker', { opacity: swap });
-  label(svg, right.critic.x, 204, 'replaced by the group mean', { opacity: swap });
+  // Each replacement note is centred under its block on two lines, so the two never run together.
+  [[right.reward, 'the checker'], [right.critic, 'the group mean']].forEach(([at, by]) => {
+    const centre = at.x + block.w / 2;
+    label(svg, centre, 204, 'replaced by', { anchor: 'middle', opacity: swap });
+    label(svg, centre, 220, by, { anchor: 'middle', opacity: swap });
+  });
   label(svg, 24, 290, 'PPO: 4 models in memory');
   label(svg, 24, 312, 'GRPO + RLVR: 1 (+ reference only if a KL term is kept)', { opacity: ease(seg(p, 0.4, 0.8)) });
 }

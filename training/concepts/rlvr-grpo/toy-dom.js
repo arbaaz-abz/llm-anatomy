@@ -26,7 +26,7 @@ const text = (parent, x, y, str, { anchor = 'start', cls = 'g-label' } = {}) => 
 
 function chipButton(svg, view, { row, token, x, y, selected }) {
   const chip = view.rows[row].chips[token];
-  const button = G.svgEl('g', { role: 'button', tabindex: selected ? 0 : -1, 'data-tok': token + 1, 'aria-label': `row ${row + 1}, token ${token + 1}: ${chip.text}`, 'aria-pressed': String(selected) }, svg);
+  const button = G.svgEl('g', { class: 'stage-item', role: 'button', tabindex: selected ? 0 : -1, 'data-tok': token + 1, 'aria-label': `row ${row + 1}, token ${token + 1}: ${chip.text}`, 'aria-pressed': String(selected) }, svg);
   G.token(button, { x, y, text: chip.text, fill: chip.fill, hatched: chip.hatched });
   return button;
 }

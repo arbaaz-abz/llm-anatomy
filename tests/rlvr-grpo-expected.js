@@ -16,18 +16,18 @@ export const CAPTIONS = [
 // The toy's try-this list (README lesson 34): [prompt, insight, rest]; the page prints "prompt → Insight: insight" + rest.
 export const TRY_THIS = [
   [
-    'Predict first: if 4 of 8 answers are right instead of 2, does 7 × 8 = 56 get a bigger or smaller push? Slide k 2 → 4 → 8. A for a right answer goes +1.73 → +1.00 → 0.00; Σ|A| goes 6.93 → 8.00 → 0.00. Now slide to 1: +2.65 for the lone right answer, −0.38 for each of the seven wrong ones; and to 0: all zeros, the same banner as at 8. Then switch norm off and repeat: +0.75 → +0.50 → 0.00, and the lone right answer gets only +0.875.',
-    'Advantages are relative, not absolute.',
+    'Predict first: if 4 of 8 answers are right instead of 2, does 7 × 8 = 56 get a bigger or smaller push? Slide "Right answers out of 8" 2 → 4 → 8. A for a right answer goes +1.73 → +1.00 → 0.00; Σ|A| goes 6.93 → 8.00 → 0.00. Now slide to 1: +2.65 for the lone right answer, −0.38 for each of the seven wrong ones; and to 0: all zeros, the same banner as at 8. Then turn "Divide by the group\'s std" off and repeat: +0.75 → +0.50 → 0.00, and the lone right answer gets only +0.875.',
+    'advantages are relative, not absolute.',
     ' The rarer the outcome inside its group, the bigger its push; dividing by the std amplifies that unevenly. Compare Σ|A| with and without the division: 5.29 vs 1.75 at k = 1 (3.02×), 6.93 vs 3.00 at k = 2 (2.31×), 8.00 vs 4.00 at k = 4 (2×). The total push still peaks at k = 4, but the division boosts near-impossible and near-solved prompts the most (the difficulty bias), which is Dr.GRPO\'s argument for dropping it, as DeepSeek-V3.2 does. A group with no spread teaches nothing, which is why dynamic sampling throws it away and why GLM-5 keeps only prompts its previous model solves rarely but can solve (see the facts below).',
   ],
   [
-    'With k = 2, select the 48 in row 4 (7 × 8 = 48 , so 48, 8 tokens) and then the 63 in row 6 (1 token). Under sample aggregation the inspector shows a push per token of −0.0090 for row 4 and −0.0722 for row 6: both wrong, but the long answer is punished 8× less per token, and both rows print the same push per answer, −0.0722. Flip agg to token: every token now pays −0.0148, so the long wrong answer\'s push per answer becomes −0.1184 and the short one\'s −0.0148.',
-    'Sample-level averaging shields long wrong answers (and dilutes long right ones); token-level loss charges every token the same.',
+    'With k = 2, select the 48 in row 4 (7 × 8 = 48 , so 48, 8 tokens) and then the 63 in row 6 (1 token). Under sample aggregation the inspector shows a push per token of −0.0090 for row 4 and −0.0722 for row 6: both wrong, but the long answer is punished 8× less per token, and both rows print the same push per answer, −0.0722. Flip "Loss aggregation" to token: every token now pays −0.0148, so the long wrong answer\'s push per answer becomes −0.1184 and the short one\'s −0.0148.',
+    'sample-level averaging shields long wrong answers (and dilutes long right ones); token-level loss charges every token the same.',
     ' That is DAPO\'s token-level loss, part of the 2026 consensus recipe; Olmo 3 reports it (see the facts below).',
   ],
   [
     'With k = 2 and ε_high = 0.20, three chips are hatched: 56 in row 1 (r = 1.25), 56 in row 5 (r = 1.35), and the first 48 in row 4 (r = 0.75). Select row 1\'s 56: objective 2.078, clipped. Press the clip-higher 0.28 chip: row 1\'s 56 loses its hatch (objective 2.165, gradient on); row 5\'s 56 stays hatched (1.35 > 1.28); row 4\'s 48 stays hatched (0.75 < 0.8, the lower bound did not move).',
-    'Clipping switches a token\'s gradient off, it does not shrink it, and clip-higher widens only the upward side',
+    'clipping switches a token\'s gradient off, it does not shrink it, and clip-higher widens only the upward side',
     ' so a good token that was improbable when sampled can keep gaining probability (no entropy collapse), while the lower bound still stops collapse the other way.',
   ],
 ];
