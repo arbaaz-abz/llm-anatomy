@@ -81,17 +81,16 @@ optimizer blocks in frames 9–10), `vector` (`NUMBER_CELL` cells: the two singu
 printed), `cell` (single printed readouts), plain labeled text marks (formulas in "numbers shown", the
 tokens-per-parameter table in frame 8, the definition line).
 
-Glyph reused from a parallel proposal: **`curvePlot`**, proposed on `prefill-decode` (Serving):
-`curvePlot(parent, { x, y, w, h, xAxis: { label, log, ticks }, yAxis: { label, log, ticks }, series: [{
-points, label, style }], markers: [{ x, y, label, followed }] })`. This page and `midtraining` need one
-extension, proposed here: **`bands: [{ from, to, label }]`**, shaded x-ranges drawn under the series (the
-warmup / stable / decay phases of a learning-rate schedule; a "same loss" guide line is a one-point-wide
-band or a plain labeled rule). No library glyph draws a continuous function (`vector` and `heatmap` are
-discrete cells, `clipLine` is one number line). Every point a learner must read is also printed as text
-(the marker label or a readout), so the curve itself is never load-bearing. A marker with `followed: true`
-carries the selection accent.
+Shared glyph (built in S3, ruling P3-R10): **`curvePlot`**, `G.curvePlot(parent, { x, y, w, h, xAxis: {
+label, log, ticks }, yAxis: { label, log, ticks }, series: [{ points, label, style: 'solid' | 'muted' }],
+markers: [{ x, y, label, followed }], bands: [{ from, to, label }], refY: { value, label } | null })`.
+`bands` are shaded x-ranges under the series (midtraining's warmup / stable / decay). The "same loss 1.960"
+guide in frame 7 and the toy is `refY: { value: 1.960, label: 'same loss' }`, drawn like the `bars`
+reference line (dashed, labeled: the one dashed chart guide). No dashed series. Every point a learner must
+read is also printed as text (the marker label or a readout), so the curve itself is never load-bearing. A
+marker with `followed: true` carries the selection accent.
 
-New glyphs proposed: none beyond the `bands` option on `curvePlot`.
+New glyphs proposed: none.
 
 Stand-ins (visible line under the stage, frames 6–7 and the toy): "The loss values come from a published
 fit (Epoch AI's 2024 re-estimate of Chinchilla). Serving volumes are what-ifs, not any model's real
@@ -120,7 +119,7 @@ Thread order: 1–5 the compute split; 6–8 over-training; 9–10 the optimizer
 | 4 | Same `curvePlot`; the marker settles at the minimum with label `96B · 1.74T tokens · 18 per param`. A plain note: `2020 (Kaplan): mostly bigger · 2022 (Chinchilla): about 20 tokens per parameter`. | The marker slides along the curve to the bottom. | The bottom of the valley is the compute-optimal split: about 20 tokens per parameter, the 2022 Chinchilla rule. Earlier 2020 laws had favored bigger models. | `N* = 9.59 × 10¹⁰`, `D* = 1.74 × 10¹²`, `18.1 tokens/param`, loss `1.960` |
 | 5 | A plain table of the optimum at four budgets. | Rows type in. | Bigger budgets move the optimum along both axes together: model and data grow at about the same rate, and the ratio stays near 20. | `10²² → 9.0B, 184B tokens (20.4)` · `10²⁴ → 96B, 1.74T (18.1)` · `10²⁶ → 1.0T, 16.4T (16.1)` |
 | 6 | A second readout row under the curve: `serving: 2 FLOPs per active parameter per token`, with the visible basis line `training counts the full step (forward + backward) per token; serving counts the forward pass only`, and a chip `served: 100T tokens` (what-if). Two stacked readouts for the compute-optimal model: `train 1.0 × 10²⁴` + `serve 1.9 × 10²⁵` = `lifetime 2.0 × 10²⁵`. | The serve readout counts up and dwarfs the train readout. | Serving costs about two operations per parameter for every token generated. For a popular model, serving can dwarf training. | compute-optimal 96B serving 100T tokens: `2 × 9.59e10 × 1e14 = 1.92 × 10²⁵` · lifetime `2.02 × 10²⁵` |
-| 7 | **Key frame.** Same curve and loss line `1.960`. A second marker (selection style) at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. Layout check at 580 × 366: `curvePlot` 360 × 240 at the left; the two lifetime readouts and the saving in a 200 px column at its right; the caption below. If the build finds it tight, the readouts move under the stage (the toy repeats them). | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
+| 7 | **Key frame.** Same curve and the loss reference line `1.960` (`refY`, labeled `same loss`). A second marker (selection style) at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. Layout check at 580 × 366: `curvePlot` 360 × 240 at the left; the two lifetime readouts and the saving in a 200 px column at its right; the caption below. If the build finds it tight, the readouts move under the stage (the toy repeats them). | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
 | 8 | A plain table `tokens per active parameter`: `Chinchilla rule 20 · Llama 3.1 405B (2024) 39 · DeepSeek-V4-Pro 673 · Nemotron 3 Super 2,083 · DeepSeek-V4-Flash 2,462`, with a dim second column `per total parameter: 39 (dense: same number) · 21 · 208 · 113`. Definition line visible. | Rows type in; the second column fades in last. | 2026 open models train at hundreds to thousands of tokens per active parameter, far past Chinchilla. Counted per total parameter, the gap is much smaller. | `33T / 49B = 673` · `25T / 12B = 2,083` · `32T / 13B = 2,462` · `15.6T / 405B = 39` · per total: `33T / 1.6T = 21` · `25T / 120B = 208` · `32T / 284B = 113` |
 | 9 | Optimizer thread. A `block` "update for one weight matrix" with a two-cell `vector` `[3.00, 0.30]` labeled `stretch per direction (singular values)`; after normalizing, `[0.995, 0.100]`. A plain mark: `momentum step: the 10 : 1 stretch stays (AdamW rescales elements, not directions)`. | The two cells fill; then both scale down together to their normalized values. | A weight update stretches some directions far more than others; the stretch factors are its singular values. Here one direction is ten times stronger than the other. | `[3.0, 0.3] / √9.09 = [0.995, 0.100]` |
 | 10 | Same `vector`, labeled `Muon: Newton–Schulz iterations`. A step counter `0 → 10`. | The two cells step through the iterations: the small one jumps up, both oscillate near 1, and the last two DeepSeek steps settle them at 1.0000. | Muon repeats a cheap polynomial step that pulls every singular value toward one, so every direction moves equally. DeepSeek-V4's last two steps settle them on one to four decimals. | Muon coefficients (3.4445, −4.7750, 2.0315): after 1 step `[0.705, 0.338]`, 2 `[1.109, 0.989]`, 8 `[1.092, 1.103]` (between 0.70 and 1.11 throughout) · then (2, −1.5, 0.5) twice: `[1.007, 1.009]`, `[1.0000, 1.0000]` (exactly 1.000027 and 1.000047) |
@@ -170,6 +169,17 @@ carry the same tag.
    the ratio only drifts 20.4 → 16.1. → **Insight: compute-optimal scales parameters and tokens together.**
    Ten thousand times the budget buys about a hundred times more of each.
 
+**Check my work** (default state: `C` = 10²⁴, `logN` at the compute-optimal size; templated from
+`isoFlopLoss(C, N)` and `CHINCHILLA_FIT` for any state; mono, `aria-live="polite"`; this exact text appears
+on the page):
+```text
+N = 9.59 × 10¹⁰ parameters (active)
+D = 10²⁴ ÷ (6 × 9.59 × 10¹⁰) = 1.74 × 10¹² tokens
+tokens per parameter = D ÷ N = 18.1
+loss = 1.8172 + 482.01 ÷ N^0.3478 + 2085.43 ÷ D^0.3658
+     = 1.8172 + 0.07305 + 0.06946 = 1.960
+```
+
 Lesson-17 check: try-this 2's over-training shift is visible across the chip range (18 → 27 → 89 → 495 →
 3,005 tokens per parameter); with `Dinf = 0` the cheapest model equals the compute-optimal one (18.1, saving
 0), so the toy cannot show over-training where it should not exist.
@@ -209,7 +219,7 @@ AdamW is kept for the embedding, the output head and norm weights. Color links: 
 | DeepSeek-V4-Flash: 13B active / 284B total, 32T tokens (2,462 per active) | `models.deepseek-v4-flash.active_params` = 13e9, `.total_params` = 284e9, `.pretrain_tokens` = 32e12 (proposed, confirmed) | 02 §1.3, §1.8 |
 | Nemotron 3 Super: 12B active / 120B total, 25T tokens (2,083 per active) | `models.nemotron-3-super.active_params` = 12e9, `.total_params` = 120e9, `.pretrain_tokens` (proposed by `pretraining`) (confirmed) | 02 §1.3, §1.8 |
 | Llama 3.1 405B (2024): dense, 15.6T tokens (39 per parameter) | `models.llama-3.1-405b.total_params`, `.pretrain_tokens` (existing, confirmed) | data entry only (source arXiv 2407.21783; not in brief 02) |
-| Olmo 3: ~5.9T tokens for 7B and 32B dense (185–840 per parameter) | `models.olmo-3.pretrain_tokens` = 5.9e12 (reported) | 02 §1.3, §1.8 |
+| Olmo 3: ~5.9T tokens for 7B and 32B dense (184–843 per parameter, `tokensPerParam` on the data, ruling P3-R19) | `models.olmo-3.pretrain_tokens` = 5.9e12 (reported); `models.olmo-3.total_params_small` = 7e9, `.total_params_large` = 32e9 (confirmed, arXiv 2512.13961 abstract) | 02 §1.3, §1.8 |
 | Kimi K3 ran its own scaling-law studies (batch size, LR, tokens per parameter, shape) and claims about 2.5× scaling efficiency over K2 from architecture, data and recipe together | `models.kimi-k3.scaling_efficiency_vs_k2` = 2.5 (confirmed) | 02 §1.3 |
 | Muon (or a variant) in DeepSeek-V4 (with AdamW for embedding, head and norms), GLM-5 ("Muon Split"), Kimi K3 ("Per-Head Muon"); AdamW in MiMo-V2-Flash and Nemotron 3 Super | `models.deepseek-v4-pro.optimizer` (existing, confirmed); `models.glm-5.optimizer` = "Muon Split", `models.kimi-k3.optimizer` = "Per-Head Muon", `models.mimo-v2-flash.optimizer` = "AdamW", `models.nemotron-3-super.optimizer` = "AdamW" (proposed, confirmed) | 02 §0 item 2, §1.5 |
 | DeepSeek-V4's Newton–Schulz schedule: 8 steps (3.4445, −4.7750, 2.0315) then 2 steps (2, −1.5, 0.5) | `models.deepseek-v4-pro.muon_ns_schedule` (proposed, confirmed) | 02 §1.5 |
@@ -355,3 +365,13 @@ Applied from `track-review-recipe.md` §3 (change log: `fix-recipe-review.md`):
 - Should: frame 9's mark describes the momentum step and what AdamW does; "2 FLOPs per active parameter" in misconception 2, frame 6 and takeaway 2; frame 3 dated "(2022)"; frame 7 carries a 580 × 366 layout check; the stand-in line covers frame 2's block widths; the reviewer's re-verification is in the header.
 - Nice: frame 8's Llama row says "(dense: same number)".
 - Data pass 2026-10-07: Llama 3.1 405B cited as `llama-3.1-405b` (was the old `llama-3-405b` id); no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R10: `curvePlot` named with its built API; the "same loss 1.960" line is `refY` (§4, frame 7).
+- P3-R19 / P3-R14 (data gap 11): Olmo 3's range is computed with `tokensPerParam` from the data, 184–843
+  (was "185–840"); `olmo-3.total_params_small` / `.total_params_large` added.
+- P3-R13: `CHINCHILLA_FIT` carries an equality test against `papers.chinchilla-refit-2024` in
+  `tests/scaling.test.js` (the builder's module test).
+- X-1: "Llama 3.1 405B (2024)" stays: `llama-3.1-405b.release_date` added (confirmed).
+- X-2 / P3-R16: "Check my work" added (§6), from `isoFlopLoss` and the fit.
+- README lesson 35: the Kimi K3 "2.5×" prints through `formatRatio`.
