@@ -126,12 +126,11 @@ Small marks (README lesson 15): the pair-dot readouts, the "was 3.0" gray number
 frame 5 and the "never seen" label in frame 8 are plain text labels.
 
 ## 5. Animation script
-Hero: query "sat" (position 3) against key "cat" (position 2), head A. Angles in radians, 3 d.p. for
-products.
+Hero: query "sat" (position 3) against key "cat" (position 2), head A. Angles in radians. Stage cells print 2 d.p. (one format per row); the exact 3 d.p. vectors and rows are printed in the page text under the stage and in the toy.
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Four chips; the `attention` score row for "sat" [−1.0, 3.0, 0.5, masked]. A ghost copy of "cat" slides to position 9 (labeled "what if 'cat' were here?"); the "cat" score stays 3.0. | "cat" slides right and back; the score cell does not change. | So far attention cannot see order: "sat" scores "cat" 3.0 whether "cat" is next to it or far away. Only the mask knows anything about position. | q_sat · k_cat = 3.0 at any position · q_sat = [0, 2, 0.5, 0] · k_cat = [0, 1.5, 0, −0.5] |
+| 1 | Four chips; the `attention` score row for "sat" [−1.0, 3.0, 0.5, masked]. A ghost copy of "cat" slides to position 9 (labeled "what if 'cat' were here?"); the "cat" score stays 3.0. | "cat" slides to position 9 and stays there; the score cell does not change. | So far attention cannot see order: "sat" scores "cat" 3.0 whether "cat" is next to it or far away. Only the mask knows anything about position. | q_sat · k_cat = 3.0 at any position · q_sat = [0, 2, 0.5, 0] · k_cat = [0, 1.5, 0, −0.5] |
 | 2 | q_sat's vector gets a divider into two pairs; each pair becomes a `dial` hand: pair 1 (0, 2) points straight up, length 2; pair 2 (0.5, 0) points right, length 0.5. Same for k_cat beside it. | The vector splits; each pair flies down into its dial and becomes a hand. | RoPE cuts each query and key into pairs of numbers and treats each pair as a clock hand. Four numbers make two hands. | q pairs (0, 2) and (0.5, 0) · k pairs (0, 1.5) and (0, −0.5) · lengths 2, 0.5, 1.5, 0.5 |
 | 3 | The query's dials turn: pair 1 by 3 radians (172°), pair 2 by 0.3 (17°). A plain label "speed: 1 per token" and "0.1 per token". | Both hands sweep to their new angles; the vector cells above retype. | Each hand turns by the token's position times its own speed. "sat" is token 3, so the fast hand turns 3 radians and the slow one 0.3. | q at 3: [−0.282, −1.980, 0.478, 0.148] · pair 1: 3 × 1 = 3 rad · pair 2: 3 × 0.1 = 0.3 rad |
 | 4 | The key's dials turn by 2 and 0.2 (cat is token 2). Then a `flow` carries both into the readout: pair 1 dot, pair 2 dot, sum; the old 3.0 shown in gray beside it. | The key's hands sweep; the two pair dots type in, then the sum. | The score is still a dot product, now of the turned vectors. Each pair adds its own part, so the score drops from 3.0 to 1.596. | k at 2: [−1.364, −0.624, 0.099, −0.490] · pair dots 1.621 + (−0.025) = 1.596 · was 3.0 |
@@ -183,9 +182,11 @@ is printed above the controls.
 | Seen vs reached angle per pair | `angleCoverage(freqs, { trainedLength: 16, length: target })` | "seen up to 1.5 rad · reaches 6.3 rad · never seen" |
 | Real-head readout | `wavelengths(ropeFrequencies(128, base)).at(-1)` for the preset bases in §8 | tokens, `formatCount` |
 
+**Check my work** (current state): pair 1 q (0, 2) turned qPos × θ₁ → …, pair 2 …, score = pair 1 + pair 2 (unrotated q·k in brackets); the default text is `tests/rope-expected.js` CHECK_WORK.
+
 **Try this** (each leads to a named insight)
 1. Key **cat**, positions 3 and 2: score 1.596. Tap **same offset, +10**: 13 and 12, still 1.596. Now set
-   the key position to 1 (offset 2): −1.298. → **Insight: RoPE scores depend on how far apart two tokens
+   the query back to 3 and the key to 1 (offset 2): −1.298. → **Insight: RoPE scores depend on how far apart two tokens
    are, never on where they are.**
 2. Watch the offset row at base **100**: [3, 1.596, −1.298, −3.044, …]. Switch to **10,000**: [3, 1.618,
    −1.253, −2.977, …]; the slow hand nearly freezes (0.01 per token, a turn every 628 tokens), the fast one

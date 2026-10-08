@@ -81,7 +81,7 @@ terms; that is the point of a capstone. **Terms assumed from prereqs:** everythi
 card stacks above the diagram.
 
 Glyphs used (from spec §5.1 and the accepted `decoder-anatomy` proposals): token (field chips), blockStack,
-block, kvStack, patch, flow (from chip to part, carry `token`), `shareBar` (frame 2: active vs total, with a zoomed second bar for the first 10%, README lesson 19).
+block, kvStack, patch, flow (from chip to part, carry `token`), `shareBar` (frame 2: active vs total on a ×10 bar over the first 10 % of the total, README lesson 19).
 New glyphs proposed: none. Small marks (README lesson 15): "→ lesson" lines, the "reported" chip (the
 library's `renderFact` chip), range labels ("78–80") and every gloss are plain text.
 
@@ -95,7 +95,7 @@ Every number is the data file's value (§8) or computed from it by an earlier pa
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | The DeepSeek-V4-Pro card as 10 field chips on the left; the decoder diagram on the right, all parts `idle`. | The chips type in top to bottom. | A model card lists a model's shape in numbers. Each field below points at one part of the decoder you have already taken apart. | DeepSeek-V4-Pro (preview Apr 24, 2026) · 1.6T total · 49B active · 61 layers · 384 + 1 experts, top-6 · 1 KV head × 512, compressed + window 128 · 1M context · text · Muon · 33T tokens · MIT |
-| 2 | Chips "1.6T total" and "49B active" lit; a `shareBar` "active 3.1% / not used by this token 96.9%" with the 3.1% sliver bracketed, and under it a second `shareBar` zoomed ×10 (0–10% of the total, labeled "zoom on the first 10%") where "49B active" is 104 px wide with its percentage printed; the expert row lights. "→ `decoder-anatomy`, `moe`". | The bar fills; the expert row flickers to show 6 lit. | Total counts every expert; active counts what one token runs. This model stores 1.6 trillion parameters and uses 49 billion per token, about 3%. | 49B ÷ 1.6T = 3.06% · per-token work follows the 49B |
+| 2 | Chips "1.6T total" and "49B active" lit; a ×10 `shareBar` over the first 10 % of the total, active 3.06 % (104 px) vs not used, with the line 'the other 90 % is not used by this token either'; the expert row lights. "→ `decoder-anatomy`, `moe`". | The bar fills; the expert row flickers to show 6 lit. | Total counts every expert; active counts what one token runs. This model stores 1.6 trillion parameters and uses 49 billion per token, about 3%. | 49B ÷ 1.6T = 3.06% · per-token work follows the 49B |
 | 3 | Chip "61 layers" lit; the `blockStack` reads "× 61". "→ `decoder-anatomy`". | The stack's count label types 61. | "Layers" on a card counts blocks: each one is attention plus an MLP or experts, added onto the stream. Here there are 61. | 61 blocks |
 | 4 | Chip "384 + 1 experts, top-6" lit; the expert row shows 384 small boxes collapsed to "384", one "shared" box, 6 lit. "→ `moe`". | Six routed boxes and the shared box light. | Each token's router picks 6 of 384 small experts, plus one shared expert that every token uses. | 6 ÷ 384 = 1.56% of routed experts per token · expert hidden 3,072 · 384 × 3,072-wide experts per MoE layer |
 | 5 | Chip "1 KV head × 512, compressed + window 128" lit; the attention half opens: one wide `kvStack`, a "merge 4 / merge 128" label, a 128-token window. "→ `kv-compression`, `long-context-attention`". | The kvStack tiles fuse in fours (CSA) and in 128s (HCA) on alternating layers; a window band appears. | The attention line says how much each token stores: one shared 512-wide key/value set, merged across tokens, plus a short window. | 1 KV head, 512 wide · CSA: merge 4, read top 1,024 · HCA: merge 128 · window 128 on every compressed layer |
@@ -130,10 +130,10 @@ one-line gloss and the lesson link)
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
 | Field rows | `decodeCard(entry)` from `math/card.js` with `FIELD_GUIDE` | text; ranges as "78–80" |
-| Active share (one definition, README lesson 16: published active ÷ published total; ranges or missing → "—") | `activeShare(entry)` | % (2 d.p.), drawn as a full `shareBar` plus a ×10 zoom bar of the first 10% (README lesson 19) |
+| Active share (one definition, README lesson 16: published active ÷ published total; ranges or missing → "—") | `activeShare(entry)` | % (2 d.p.), drawn as a ×10 `shareBar` over the first 10 % of the total (README lesson 19) |
 | GPU share of one conversation's cache | `sharePct(bytes, 80e9)` from `math/memory.js`, both ends of a range | % (1 d.p.) |
 | Routed experts used per token | `experts_active / experts_total` | %; "—" when not published |
-| Cache per token | `cachePerToken(entry)`: `'derived'` from config keys via `math/memory.js` (`kvBytesPerToken`, `kvBytesPerTokenMla`, `stackKvBytes`), `'reported'` from `kv_bytes_per_token` when the data marks it reported, else `'not published'` | exact bytes and `formatBytes` (decimal); a range for reported ranges |
+| Cache per token | `cachePerToken(entry)`: `'derived'` when the config keys give it (plain GQA, or a full : window mix) via `math/memory.js` (`kvBytesPerToken`, `kvBytesPerTokenMla`, `stackKvBytes`), else `'reported'` from `kv_bytes_per_token`, else `'not in our data'` | exact bytes and `formatBytes` (decimal); a range for reported ranges |
 | Cache for one conversation | `kvCacheBytes({ bytesPerToken, tokens })` (or `stackKvBytes(...).total`) with tokens = the context control | decimal GB; range when either input is a range |
 | "Labs differ" notes | the entry's `note` strings (e.g. Mistral's 52B) | text |
 
@@ -142,8 +142,8 @@ one-line gloss and the lesson link)
    token 1.56% vs 1.79% (lower than active share, because shared experts, attention and the head run for every
    token too). → **Insight: compare active parameters for per-token cost and total for memory; the
    bigger total is not the bigger bill per token.**
-2. **DeepSeek-V4-Pro** vs **MiniMax-M3**, own context (1,000,000 each): cache per conversation about 4–12 GB
-   (reported estimate) vs 123 GB (derived: 60 layers × 4 KV heads × 128 × 2 × 2 B = 122,880 B per token).
+2. **DeepSeek-V4-Pro** vs **MiniMax-M3**, own context (1,000,000 for V4-Pro, 1,048,576 for MiniMax-M3): about 4–12 GB
+   (reported estimate) vs 129 GB (123 GB at exactly one million tokens; derived: 60 layers × 4 KV heads × 128 × 2 × 2 B = 122,880 B per token).
    Switch to **gpt-oss-120b**: 36,864 B per token + 4.7 MB fixed, 4.84 GB at its 131,072. → **Insight: the
    attention line, not the context number, decides what a long conversation costs.**
 3. **GLM-5.3** vs **Mistral Large 4**: layers "78–80" (config vs paper), context "512K–1M" (claimed vs
@@ -182,14 +182,14 @@ decodeCard(entry) → [{ key, label, gloss, lesson, value, display, confidence, 
 // Published active ÷ published total; null if either is missing or a range.
 activeShare(entry) → number | null
 //   deepseek-v4-pro → 0.0306 · kimi-k3 → 0.0375 · qwen3.8 → 0.0396 · glm-5.3 → 0.0531 · minimax-m3 → 0.0537
-//   mistral-large-4 → 0.0467 · gpt-oss-120b → 0.0437
+//   mistral-large-4 → 0.0467 · gpt-oss-120b → 0.0439
 
 // Cache per token with its provenance.
-cachePerToken(entry) → { kind: 'derived' | 'reported' | 'not published', bytes?: number | [number, number], fixed?: number }
+cachePerToken(entry) → { kind: 'derived' | 'reported' | 'not in our data', bytes?: number | [number, number], fixed?: number }
 //   minimax-m3 (config keys n_kv_heads 4, head_dim 128, layers 60) → { kind: 'derived', bytes: 122_880 }
 //   gpt-oss-120b (stack: 18 full + 18 window-128 layers, 8 KV × 64) → { kind: 'derived', bytes: 36_864, fixed: 4_718_592 }
 //   deepseek-v4-pro → { kind: 'reported', bytes: [4000, 12000] }
-//   kimi-k3, glm-5.3, qwen3.8, mistral-large-4 → { kind: 'not published' }
+//   kimi-k3, glm-5.3, qwen3.8, mistral-large-4 → { kind: 'not in our data' }
 ```
 Worked cache per conversation (from `kvCacheBytes` / `stackKvBytes`, `math/memory.js`): MiniMax-M3 122,880 ×
 1,000,000 = 122,880,000,000 B (123 GB) · DeepSeek-V4-Pro [4,000, 12,000] × 1,000,000 = 4.0–12.0 GB ·
@@ -199,7 +199,7 @@ gpt-oss-120b 36,864 × 131,072 + 4,718,592 = 4,836,556,800 B (4.84 GB) · Llama-
 Tests to write first: every FIELD_GUIDE lesson slug exists in `shared/concepts.json` (or is null);
 `decodeCard` keeps both ends of every range value in `data/models.json` and never averages them (spec §7: the
 conflicts stay open; README lesson 16); `activeShare` returns null for ranges; `cachePerToken` returns
-`'reported'` exactly when the data entry's `kv_bytes_per_token` is `reported`; the `'derived'` values equal
+`'reported'` only where the config keys give no derivation and `kv_bytes_per_token` is in the data; the `'derived'` values equal
 `kv-cache`'s and `long-context-attention`'s worked examples; inputs not mutated (frozen data).
 
 **Reproducer** (run from the repo root on 2026-10-07 against the shipped `math/core.js` and
