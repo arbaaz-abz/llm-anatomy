@@ -27,6 +27,7 @@
   --cell-ink-8: var(--ink); --cell-ink-9: var(--ink-on-val); --cell-ink-10: var(--ink-on-val);
   --sem-compute: #b07a0a;
   --sem-memory: #0e8aa8;
+  --sem-compute-ink: #8a5800; --sem-memory-ink: #0b6a82; /* text-weight versions of compute / memory: 4.5:1 on --bg */
   --sem-ok: #1f8f4e;
   --sem-bad: #cf2f4f;
   --sem-comm: #9268b3; /* communication (laneTimeline comm lanes): plum, clear of compute amber and memory cyan (S3) */
@@ -67,7 +68,7 @@
     --accent-arch: #9a93ff; --accent-train: #ee79b4; --accent-serve: #3cc4ad; --ink-on-accent: #0f1319;
     --val-neg: #7db3fa; --val-zero: #2c3340; --val-pos: #f69a50; --ink-on-val: #0f1319;
     --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
-    --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
+    --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-compute-ink: #f0b955; --sem-memory-ink: #5cc4e6; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
     --carry-weight: #a19c55;
     --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
     --part-1: #c98500; --part-2: #0f60fa; --part-3: #32925e; --part-4: #975985; --part-5: #db1f0f;
@@ -81,7 +82,7 @@
   --accent-arch: #9a93ff; --accent-train: #ee79b4; --accent-serve: #3cc4ad; --ink-on-accent: #0f1319;
   --val-neg: #7db3fa; --val-zero: #2c3340; --val-pos: #f69a50; --ink-on-val: #0f1319;
   --cell-ink-6: var(--ink-on-val); --cell-ink-7: var(--ink-on-val); --cell-ink-8: var(--ink-on-val);
-  --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
+  --sem-compute: #e2a63d; --sem-memory: #45b5d9; --sem-compute-ink: #f0b955; --sem-memory-ink: #5cc4e6; --sem-ok: #3fbf78; --sem-bad: #f0617a; --sem-comm: #d0a3ea; --ink-on-sem: #0f1319;
   --carry-weight: #a19c55;
   --req-1: #3792fd; --req-2: #e86518; --req-3: #36a980; --req-4: #bf56b9;
   --part-1: #c98500; --part-2: #0f60fa; --part-3: #32925e; --part-4: #975985; --part-5: #db1f0f;
@@ -132,6 +133,11 @@ table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: var(--space-1) var(--space-3); border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
 .scroll-x { overflow-x: auto; max-width: 100%; }
+.sem-text--memory { color: var(--sem-memory-ink); }
+.sem-text--compute { color: var(--sem-compute-ink); }
+.stage-item { cursor: pointer; }
+.stage-item:focus { outline: none; }
+.stage-item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .chip {
   display: inline-block; padding: 0 var(--space-2); border-radius: 999px; border: 1px solid var(--line);
   font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.8; white-space: nowrap;
