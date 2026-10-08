@@ -14,7 +14,7 @@ import { MAX_LOAD } from './numbers.js';
 
 const BALANCE_BARS = Object.freeze({ x: 4, y: 20, w: 344, h: 130 });
 const FAIR_SHARE = (BATCH.tokens * BATCH.k) / BATCH.experts;
-const SPLIT_OPTIONS = Object.freeze(TOY_LIMITS.split.map((v) => ({ value: v, label: `${v} (hidden ${8 / v})` })));
+const SPLIT_OPTIONS = Object.freeze(TOY_LIMITS.split.map((v) => ({ value: v, label: String(v) })));
 const REAL_OPTIONS = Object.freeze([{ value: 'toy', label: 'toy' }, ...REAL_MODELS]);
 const EXPERT_NAMES = Object.freeze(Array.from({ length: BATCH.experts }, (_, e) => expertName(e)));
 
@@ -114,7 +114,7 @@ function buildDom(host, ctx) {
   refs.splitControls = el('div', { className: 'toy-controls' }, [refs.split, refs.shared]);
   refs.toyControls = el('div', { className: 'toy-controls' }, [refs.routed, refs.splitControls]);
   refs.toyBox = el('div', {}, [refs.totals, refs.perBlock, note(refs.edge), note(refs.routingNote)]);
-  refs.routingBox = el('div', {}, [scroll(refs.routingSvg), refs.routingTable]);
+  refs.routingBox = el('div', { className: 'scroll-x' }, [refs.routingSvg, refs.routingTable]);
   refs.definition = note();
   host.append(
     el('h4', { textContent: 'Panel A: count the parameters' }), refs.real, refs.toyControls, note(refs.spec),
@@ -161,7 +161,7 @@ function mountControls(refs, set) {
   return [
     mountChoice(refs.real, { id: 'real', label: 'Compare a real model', variant: 'chips', value: INITIAL_STATE.real, options: REAL_OPTIONS, onChange: (v) => set({ real: v }) }),
     mountSlider(refs.routed, { id: 'routed', label: 'Routed experts', values: TOY_LIMITS.routed, value: INITIAL_STATE.routed, format: (v) => (v === 0 ? '0 (dense MLP)' : `${v} experts`), onInput: (v) => set({ routed: v }) }),
-    mountChoice(refs.split, { id: 'split', label: 'Split each expert into', value: INITIAL_STATE.split, options: SPLIT_OPTIONS, onChange: (v) => set({ split: v }) }),
+    mountChoice(refs.split, { id: 'split', label: 'Split each expert into (hidden 8, 4, 2)', value: INITIAL_STATE.split, options: SPLIT_OPTIONS, onChange: (v) => set({ split: v }) }),
     mountToggle(refs.shared, { id: 'shared', label: 'Shared expert', value: INITIAL_STATE.shared, onChange: (on) => set({ shared: on }) }),
     mountSlider(refs.gamma, { id: 'gamma', label: 'Balancing step', values: TOY_LIMITS.gamma, value: INITIAL_STATE.gamma, format: (v) => (v === 0 ? '0 (off)' : String(v)), onInput: (v) => set({ gamma: v }) }),
     mountSlider(refs.step, { id: 'step', label: 'Batch', min: TOY_LIMITS.step[0], max: TOY_LIMITS.step[1], step: 1, value: INITIAL_STATE.step, format: (v) => `step ${v}`, onInput: (v) => set({ step: v }) }),
