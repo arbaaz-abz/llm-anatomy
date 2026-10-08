@@ -14,7 +14,7 @@ const MATH_BLOCKS = Object.freeze([
   { tex: tex`\text{positions computed: } \underbrace{\textstyle\sum_{t=P}^{P+G-1} t}_{\text{no cache}} \quad\text{vs}\quad \underbrace{P + (G-1)}_{\text{cache}}, \qquad \text{worked: } 4+5+6+7 = 22 \ \text{vs}\ 4 + 3 = 7` },
   { tex: tex`\htmlClass{hl-bytes}{\text{bytes per token}} = 2 \cdot L \cdot n_{kv} \cdot d_{\text{head}} \cdot b, \qquad \text{worked (GPT-3): } 2 \cdot 96 \cdot 96 \cdot 128 \cdot 2 = 4{,}718{,}592\ \text{B}` },
   { tex: tex`\text{cache} = \htmlClass{hl-bytes}{\text{bytes per token}} \times \text{tokens} \times \text{conversations}, \qquad \text{worked: } 327{,}680 \times 131{,}072 = 42.9\ \text{GB}` },
-  { tex: tex`\text{latent attention (kv-compression): } \text{bytes per token} = L\,(d_c + d_{\text{rope}})\,b, \qquad 61 \cdot 576 \cdot 2 = 70{,}272\ \text{B}` },
+  { tex: tex`\text{latent attention (see MQA, GQA, MLA): } \text{bytes per token} = L\,(d_c + d_{\text{rope}})\,b, \qquad 61 \cdot 576 \cdot 2 = 70{,}272\ \text{B}` },
 ]);
 
 const MATH_NOTES = Object.freeze([

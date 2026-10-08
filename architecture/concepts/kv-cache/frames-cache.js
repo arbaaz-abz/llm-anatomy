@@ -3,7 +3,7 @@
 import * as G from '@shared/glyphs.js';
 import { decodeWork } from '@math/memory.js';
 import { int } from './format.js';
-import { REPLY, PROMPT_LEN, passTotals } from './numbers.js';
+import { REPLY, PROMPT_LEN, ON_ROW, passTotals } from './numbers.js';
 import {
   GRID, MAT_Y, LANE, BRANCH, RIGHT, NOTE_Y, W_BLOCK, TOKEN_Y, HANDOFF,
   seg, ease, arriving, leaving, layer, label, textBlock, promptChips, onChip, wBlock, chipFlows, chipCenters,
@@ -44,7 +44,7 @@ export function drawFrame2(svg, p) {
   for (let i = 0; i < Math.min(solid, 4); i += 1) label(svg, LANE.x + 2, ROW_CENTER(i), '= same as before');
   if (p >= FILLS_ROW_5[0]) strips(svg, { fill: seg(p, FILLS_ROW_5[0], FILLS_ROW_5[1]) });
   if (p >= REFILL.from) counter(svg, RIGHT.y, 'positions computed', solid, 'this step');
-  blankNote(svg);
+  blankNote(svg, 1 - seg(p, 0.8, 1));
 }
 
 // ---- frame 3: with a cache, only the new token is computed and the rest is read ----
@@ -175,7 +175,8 @@ export function drawFrame5(svg, p) {
     decodeText(svg, lose);
   }
   label(svg, BRANCH.x, BRANCH.y, 'Over a four-token reply', { cls: '', opacity: arriving(p) });
-  cacheStack(svg, { count: p < HANDOFF ? 5 : stored, highlight: p < HANDOFF ? [4] : (stored > 0 ? [stored - 1] : []) });
+  const count = p < HANDOFF ? 5 : stored;
+  cacheStack(svg, { count, highlight: count > ON_ROW ? [ON_ROW] : [] }); // the followed token keeps its mark: tile 5, "on"
   table(svg, done, seg(p, 0, HANDOFF));
   const pass = Math.min(done + 1, PASSES);
   label(svg, RIGHT.x, RIGHT.y + 66, `pass ${pass} of ${PASSES} (${pass === 1 ? 'prefill' : 'decode'})`, { opacity: arriving(p) });

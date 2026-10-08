@@ -23,7 +23,7 @@ export const GPUS = Object.freeze([
   { id: 'b300', key: 'b300', label: 'B300, 288 GB (reported)' },
 ]);
 export const V4_ESTIMATE_NOTE = 'formula-derived estimate; the layer mix is uncertain';
-export const LATENT_NOTE = 'DeepSeek-V3 stores one latent per token instead of separate keys and values: how that works is in kv-compression.';
+export const LATENT_NOTE = 'DeepSeek-V3 stores one latent per token instead of separate keys and values: how that works is in the MQA, GQA, MLA lesson.';
 
 export function fact(data, id, key) {
   const found = lookupFact(data?.models, id, key);
@@ -153,7 +153,7 @@ export function tryThis(data) {
     {
       text: `Panel B, tokens 131,072: tap GPT-3, Llama-3.1-70B, then DeepSeek-V3: ${formatBytes(bytesPerTokenOf(gpt3.shape))}, ${formatBytes(bytesPerTokenOf(llama.shape))}, then ${formatBytes(bytesPerTokenOf(v3.shape))} per token (${gpt3.cacheOne.value}, ${llama.cacheOne.value}, then ${v3.cacheOne.value} per conversation). GPT-3 could never hold 131,072 tokens; its ${gpt3.cacheOne.value} is its cache per token scaled to Llama's context, and the what-if label says so. Now tap GPT-3, then the toy chip (it keeps GPT-3's shape, now editable) and set KV heads from 96 to 8: ${formatBytes(bytesPerTokenOf(gpt3.shape))} becomes ${formatBytes(bytesPerTokenOf(eightKv.shape))}.`,
       insight: 'the formula multiplies KV heads, not query heads, so storing fewer key/value sets is the biggest lever.',
-      rest: ' How models do that without losing quality is [[kv-compression]].',
+      rest: ' How models do that without losing quality: [[kv-compression]].',
     },
   ];
 }

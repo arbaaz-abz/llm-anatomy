@@ -43,7 +43,7 @@ export function intuition(data) {
   ];
 }
 
-export const FRAMING = 'Every model in this table keeps a KV cache; what changed between 2020 and 2026 is how many bytes each token costs. The 2026 models get there with fewer key/value sets ([[kv-compression]]), a compressed latent ([[kv-compression]]), and windows, compression or fixed-size states in some layers ([[long-context-attention]]).';
+export const FRAMING = 'Every model in this table keeps a KV cache; what changed between 2020 and 2026 is how many bytes each token costs. The 2026 models get there with fewer key/value sets or a compressed latent ([[kv-compression]]), and with windows, compression or fixed-size states in some layers ([[long-context-attention]]).';
 
 // The 6 rows of storyboard §8, in order. Rows keep their placeholders (source link, "reported" chip); computed figures are literal.
 export function factRows(data) {
@@ -71,7 +71,7 @@ export const BELOW = Object.freeze([
   [],
   ['Layers with a window or a fixed-size state store less: [[long-context-attention]].'],
   ['The GPT-3 paper ({gpt-3.release_date|year}) gives these sizes; the cache is stored at 2 bytes per number.'],
-  ['Two conversations do not fit even before the weights, which [[prefill-decode]] adds.'],
+  ['Two conversations do not fit even before the weights; [[prefill-decode]] adds those.'],
   [
     'Per token, with the year of each model: GPT-3 ({gpt-3.release_date|year}) {gpt-3.kv_bytes_per_token|int} B; Llama-3.1-70B {llama-3.1-70b.kv_bytes_per_token|int} B; DeepSeek-V3 ({deepseek-v3.release_date|year}) {deepseek-v3.kv_bytes_per_token|int} B; DeepSeek-V4-Pro ({deepseek-v4-pro.release_date|year}) {deepseek-v4-pro.kv_bytes_per_token|int} B, a reported estimate.',
     '1,048,576 (2²⁰) is a slider stop; each model\'s own context comes from its data entry.',

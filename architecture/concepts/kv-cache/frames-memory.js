@@ -96,7 +96,7 @@ function gpuScene(parent, p, opacity = 1) {
   label(g, GPU_X.two, 202, `${int(CACHE.llamaTwo)} B`, { opacity: second });
   const spill = seg(p, 0.88, 0.98);
   label(g, GPU_X.two, 232, 'does not fit', { cls: '', opacity: spill });
-  textBlock(g, GPU_X.two, 250, ['(before the weights, which', 'prefill-decode adds)'], { opacity: spill });
+  textBlock(g, GPU_X.two, 250, ['(before the weights; see', 'Prefill vs decode)'], { opacity: spill });
 }
 
 export function drawFrame8(svg, p) {

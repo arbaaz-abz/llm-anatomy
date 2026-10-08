@@ -184,6 +184,15 @@ test('the try-this text prints the storyboard\'s numbers, computed from the same
   assert.match(tryThis(data)[2].rest, /\[\[kv-compression\]\]/);
 });
 
+test('lessons are named in running text, never as a bare slug or a possessive (cross-lesson X-4)', () => {
+  const lesson = lessonFor(data);
+  assert.match(lesson.facts.framing, /fewer key\/value sets or a compressed latent \(\[\[kv-compression\]\]\), and with windows/);
+  assert.deepEqual(lesson.animation.belowFor(7), ['Two conversations do not fit even before the weights; [[prefill-decode]] adds those.']);
+  assert.equal(tryThis(data)[2].rest, ' How models do that without losing quality: [[kv-compression]].');
+  assert.doesNotMatch(view({ model: 'v3' }).formulaNote, /kv-compression/);
+  assert.doesNotMatch(lesson.math.blocks.map((b) => b.tex).join(' '), /kv-compression/);
+});
+
 test('slider stops, chips and missing data', () => {
   assert.deepEqual(MODEL_CHIPS.map((c) => c.value), ['toy', 'gpt3', 'llama', 'v3', 'v4pro']);
   assert.deepEqual(SLIDER_VALUES.context, [2048, 8192, 32_768, 131_072, 262_144, 1_048_576]);
