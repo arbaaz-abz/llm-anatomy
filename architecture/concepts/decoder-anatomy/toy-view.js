@@ -22,7 +22,8 @@ export const PART_LABELS = Object.freeze({
 
 export const INITIAL_STATE = Object.freeze({ preset: 'toy', layers: 2, dModel: 8, experts: 0 });
 export const EXPERTS_EDGE_NOTE = '2 of 2 experts used: this is a dense MLP with a router';
-const REAL_CHECK_NOTE = 'The line-by-line count is for the toy preset. Real presets use the same formulas, plus the biases, learned positions and latent projections their configs list.';
+// Line breaks are part of the text: the box keeps its lines (white-space: pre) so it never wraps mid-sum.
+const REAL_CHECK_NOTE = ['The line-by-line count is for the toy preset.', 'Real presets use the same formulas, plus', 'the biases, learned positions and latent', 'projections their configs list.'].join('\n');
 
 const fact = (data, id, key) => lookupFact(data?.models, id, key)?.value ?? null;
 const pctText = (part, whole) => `${sharePct(part, whole).toFixed(1)}%`;
