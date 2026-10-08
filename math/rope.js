@@ -8,9 +8,11 @@ const METHODS = Object.freeze(['none', 'pi', 'yarn-simple']);
 const isCount = (n) => Number.isInteger(n) && n > 0;
 const dot = (a, b) => a.reduce((sum, x, i) => sum + x * b[i], 0);
 
-function checkFreqs(fn, freqs) {
-  if (!Array.isArray(freqs) || freqs.length === 0 || !freqs.every((f) => Number.isFinite(f) && f > 0)) {
-    throw new RangeError(`${fn}: freqs must be a non-empty list of finite numbers > 0`);
+// A speed of 0 is a pair that does not rotate (partial RoPE, NoPE); only wavelengths and the stretch need speeds > 0.
+function checkFreqs(fn, freqs, { allowZero = false } = {}) {
+  const floor = allowZero ? (f) => f >= 0 : (f) => f > 0;
+  if (!Array.isArray(freqs) || freqs.length === 0 || !freqs.every((f) => Number.isFinite(f) && floor(f))) {
+    throw new RangeError(`${fn}: freqs must be a non-empty list of finite numbers ${allowZero ? '>= 0' : '> 0'}`);
   }
 }
 
@@ -33,7 +35,7 @@ export function ropeFrequencies(dHead, base) {
 
 // Rotate each pair (x, y) by pos · freq: (x cos a − y sin a, x sin a + y cos a).
 export function rotatePairs(vec, pos, freqs) {
-  checkFreqs('rotatePairs', freqs);
+  checkFreqs('rotatePairs', freqs, { allowZero: true });
   checkVector('rotatePairs', vec, freqs);
   checkPosition('rotatePairs', 'pos', pos);
   return freqs.flatMap((freq, i) => {
@@ -54,7 +56,7 @@ export function ropeScore(q, k, { qPos, kPos, base, freqs = ropeFrequencies(q.le
 
 // Score at each offset: the query sits at offset + 1, the key at 1 (positions are 1-based on screen).
 export function scoreByOffset(q, k, { freqs, offsets }) {
-  checkFreqs('scoreByOffset', freqs);
+  checkFreqs('scoreByOffset', freqs, { allowZero: true });
   if (!Array.isArray(offsets) || !offsets.every((o) => Number.isInteger(o) && o >= 0)) {
     throw new RangeError('scoreByOffset: offsets must be non-negative integers');
   }

@@ -132,6 +132,13 @@ test('ropeScore: the frame 5 row at +10: [-1.353, 1.596, 0.5] (base 100) and [-1
   near(row(10_000), [-1.397, 1.618, 0.5], 'base 10,000');
 });
 
+test('partial RoPE and NoPE: a speed of 0 leaves a pair unrotated (frame 10)', () => {
+  near([ropeScore(Q_SAT, K_CAT, { qPos: 3, kPos: 2, freqs: [0, 0] }).score], [3], 'NoPE');
+  const partial = ropeScore(Q_SAT, K_CAT, { qPos: 3, kPos: 2, freqs: [1, 0] });
+  near(partial.pairs, [1.621, 0], 'partial pairs');
+  assert.throws(() => rotatePairs(Q_SAT, 3, [1, -0.1]), RangeError);
+});
+
 // ---- scoreByOffset ----
 
 test('scoreByOffset: base 100 and base 10,000 rows (frames 6 and 7)', () => {
