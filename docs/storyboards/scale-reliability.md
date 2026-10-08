@@ -55,7 +55,7 @@ checkpointing costs (frames 8–10, try-this 2–3), and price a run (frame 11).
 
 ## 3. Hook and intuition (final wording)
 **Hook:** Llama 3.1 405B needed 3.8 × 10²⁵ FLOPs, which 16,384 H100s at full speed would finish in 27
-days. Why did it take three times as many GPU-hours as that?
+days. Why did it take nearly three times as many GPU-hours as that?
 
 Start with the arithmetic. Training costs about 6 FLOPs per parameter per token: 2 in the forward pass
 and 4 in the backward pass. That rule ignores attention's own FLOPs, which matter at long context, but
@@ -134,7 +134,7 @@ Numbers from `math/scale.js` (reproducer in §6). H100 BF16 peak 989 TFLOPS, FP8
 | 7 | Two runs side by side, each with its achieved TFLOPS per GPU and two percentages: "Llama 4 Behemoth: 390 TFLOPS per GPU (FP8): 39% of BF16 peak · 20% of FP8 peak" and "DeepSeek-V3: 343 TFLOPS per GPU (FP8), run-average: 35% · 17%". Plain mark: "measured against H100 peaks; neither lab gave an MFU". | The two percentages for each run type in, one per denominator. | With FP8, utilization depends on which peak you divide by. Behemoth's 390 TFLOPS per GPU is 39% of an H100's BF16 peak, or 20% of its FP8 peak. | 390 ÷ 989 = 39.4% · 390 ÷ 1,979 = 19.7% · DeepSeek-V3: 6 × 37e9 × 14.8e12 ÷ (2.664M × 3,600) = 343 TFLOPS → 34.6% / 17.3% |
 | 8 | Two `rack`s + "2,046 others" (16,384 GPUs). "✕ failure" marks appear on random GPUs along a 54-day timeline: 419 of them, drawn as ticks. Readout "one every 3.09 h". | Ticks accumulate along the timeline; the readout counts. | Llama 3.1's 16,384 GPUs hit 419 unexpected interruptions in 54 days, one every 3.1 hours. The cluster's mean time between failures, MTBF, is one GPU's divided by the GPU count. | 54 × 24 ÷ 419 = 3.09 h · × 16,384 = 50,677 h per GPU (5.8 years) · 78% hardware, GPU issues 58.7% |
 | 9 | Single-lane `laneTimeline` of a 90-minute window of the run: compute segments separated by `save` ticks every 13.6 min; a "✕ failure" mark; the work since the last save turns hatched (`lost`), then a `restart` gap. Stand-in label. | The run plays; at the failure the lost segment hatches and the restart gap opens. | Here the run saves a checkpoint every few minutes. A failure loses the work since the last save plus the restart; saving too often loses time to the saves. | save 30 s, restart 3 min (stand-ins) · best interval 13.6 min · loss 9.0% (save 3.7% + lost work 3.7% + restarts 1.6%) · Llama 3.1 reported >90% effective |
-| 10 | The run bar for 16,384 GPUs (outlined) beside one for 100,000 GPUs, labeled "same scale: 36.97M GPU-h = full width": "useful 26.62M" the same; "lost to failures" (hatched) 2.62M vs 10.35M GPU-h. | The second bar's lost segment grows; the days readouts type in. | With 100,000 of the same GPUs, failures come every 30 minutes and checkpointing loses 28% of the run. Faster saves and restarts now matter as much as faster chips. | MTBF 3.09 h → 30.4 min · best interval 13.6 → 5.51 min · loss 9.0% → 28.0% · 74.4 → 15.4 days · 29.24M → 36.97M GPU-h |
+| 10 | The run bar for 16,384 GPUs (outlined) beside one for 100,000 GPUs, labeled "same scale: 36.97M GPU-h = full width": "useful 26.62M" the same; "lost to failures" (hatched) 2.619M vs 10.35M GPU-h. | The second bar's lost segment grows; the days readouts type in. | With 100,000 of the same GPUs, failures come every 30 minutes and checkpointing loses 28% of the run. Faster saves and restarts now matter as much as faster chips. | MTBF 3.09 h → 30.4 min · best interval 13.6 → 5.51 min · loss 9.0% → 28.0% · 74.4 → 15.4 days · 29.24M → 36.97M GPU-h |
 | 11 | A plain line: "DeepSeek-V3: 2.788M H800-hours × $2 = $5.576M (DeepSeek's own price assumption; excludes research and ablations)". | The product types in. | The bill is GPU-hours times the price of an hour. DeepSeek priced V3's 2.79 million H800-hours at $2 each: $5.6 million, for the final run alone. | 2.788e6 × 2 = $5.576M · pre-training 2.664M H800-h = 180K per trillion tokens · 54.2 days on 2,048 GPUs |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
@@ -167,11 +167,11 @@ Llama 3.1's 419 interruptions and includes non-GPU causes."
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
 | Training FLOPs | `trainingFlops({ params, tokens })` | scientific, 3 s.f. |
-| Useful GPU-hours, at the MFU while training | `gpuHoursAt({ flops, peakTflops, mfu })` | M GPU-h, 2 decimals |
+| Useful GPU-hours, at the MFU while training | `gpuHoursAt({ flops, peakTflops, mfu })` | M GPU-h, 4 significant figures (`formatCount` digits 4) |
 | Cluster MTBF | `clusterMtbfHours({ perGpuMtbfHours, gpus })` | `formatDuration` ("3.09 h", "30.4 min") |
 | Best interval (when "best") | `bestInterval({ saveH, mtbfH })` | `formatDuration` ("13.6 min", "5.51 min") |
 | **Lost to checkpointing and failures** | `checkpointLossParts({ intervalH, saveH, restartH, mtbfH })` → `{ save, lostWork, restart, total }` (`checkpointLoss` is its `.total`) | %, 1 decimal |
-| **GPU-hours, days, cost** | `runPlan(...)` → `gpuHours`, `days`, `cost`, `valid` | M GPU-h · days through `formatDuration` ("74.4 days") · $M (1 decimal); when `valid` is false the readouts are replaced by "outside the formula's range: interval plus restart exceed half the cluster MTBF" |
+| **GPU-hours, days, cost** | `runPlan(...)` → `gpuHours`, `days`, `cost`, `valid` | M GPU-h, 4 significant figures (`formatCount` digits 4) · days through `formatDuration` ("74.4 days") · $M (1 decimal); when `valid` is false the readouts are replaced by "outside the formula's range: interval plus restart exceed half the cluster MTBF" |
 | Run-average MFU | `mfuFrom({ flops, gpuHours: runPlan(...).gpuHours, peakTflops })` = while-training × (1 − loss) | %, 1 decimal |
 | Run bar | useful / below peak / lost | `shareBar` |
 | Check against the record | Llama preset: reported 30.84M GPU-h (the card covers more stages than 6ND counts); DeepSeek preset: "reproduces 2.664M by construction (MFU while training set from the record)": useful 2.589M + failure tax 2.8% = 2.664M | text |
@@ -341,7 +341,7 @@ characters; `/` = hatched "lost to failures".
 Training at 10,000 GPUs           10 / 11  [<] [Play] [>]
  same scale: 36.97M GPU-h = full width
 (16,384 GPUs)  MTBF 3.09 h   checkpoint every 13.6 min
- [useful 26.62M GPU-h        |/lost 2.62/]   9.0%  74.4 days
+ [useful 26.62M GPU-h        |/lost 2.619M/]   9.0%  74.4 days
  100,000 GPUs  MTBF 30.4 min checkpoint every 5.51 min
  [useful 26.62M GPU-h        |////lost 10.35M////] 28.0%  15.4 days
  save 30 s, restart 3 min (stand-ins)
