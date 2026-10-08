@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim } from '../shared/claims.js';
 import { LESSON } from '../architecture/concepts/attention/content.js';
-import { checkWork, fmt2, fmt3, cellText, trimNumber, divisorText, workedRowTex } from '../architecture/concepts/attention/format.js';
+import { checkWork, fmt2, fmt3, cellText, trimNumber, divisorText, workedRowTex, expansion } from '../architecture/concepts/attention/format.js';
 import { CAPTIONS, CHECK_WORK } from './attention-expected.js';
 import { TOY } from '../math/attention.js';
 
@@ -80,4 +80,10 @@ test('format.js never mutates the frozen TOY it reads', () => {
   const before = JSON.stringify(TOY);
   checkWork({ ...DEFAULT, causal: false });
   assert.equal(JSON.stringify(TOY), before);
+});
+
+test('frame 2\'s expansion line writes out the "cat" dot product exactly as the storyboard does', () => {
+  const { Q, K } = TOY.heads.A;
+  assert.equal(expansion(Q[2], K[1], 3), '0·0 + 2·1.5 + 0.5·0 + 0·(−0.5) = 3.0');
+  assert.equal(expansion(Q[2], K[3], -0.75), '0·0.5 + 2·(−0.5) + 0.5·0.5 + 0·1 = −0.75');
 });

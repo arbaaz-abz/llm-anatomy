@@ -34,8 +34,7 @@ const HEAT_SVG = { w: HEAT_POS.x + 4 * CELL + 6, h: HEAT_POS.y + 4 * CELL + 6 };
 // One weight heatmap per shown head (numbers printed at NUMBER_CELL), the followed query outlined.
 export function heatmapView({ name, weights, mask, query }) {
   const svg = G.svgEl('svg', { width: HEAT_SVG.w, height: HEAT_SVG.h, viewBox: `0 0 ${HEAT_SVG.w} ${HEAT_SVG.h}`, role: 'img', 'aria-label': `Head ${name} attention weights; rows are queries, columns are keys` });
-  const values = weights.map((row, i) => row.map((v, j) => (mask[i][j] ? v : -Infinity)));
-  numberGrid(svg, { ...HEAT_POS, values, kind: 'weight', maxAbs: 1, mask, label: `head ${name}: weights`, rowLabels: TOKENS, colLabels: TOKENS });
+  numberGrid(svg, { ...HEAT_POS, values: weights, kind: 'weight', maxAbs: 1, mask, label: `head ${name}: weights`, rowLabels: TOKENS, colLabels: TOKENS });
   select(svg, HEAT_POS.x, HEAT_POS.y + query * CELL, 4 * CELL, CELL);
   return svg;
 }

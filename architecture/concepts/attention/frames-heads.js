@@ -11,9 +11,9 @@ const CONCAT_SAT = multiHead([TOY.heads.A, TOY.heads.B]).concat[QUERY];
 const ROW_ONE_NOTE = 'row 1 sees one key, so its weight is 1.0 whatever its score';
 const NOTE_POS = { x: HEAT.x + 4 * CELL, y: 272 };
 const BLOCK = { left: 46, top: 38, w: 218, h: O_ROW_Y + CELL + 6 - HEADS_Y + 38 }; // a head block: its heatmap and "sat" row
-const maskOut = (r) => r.weights.map((row, i) => row.map((v, j) => (r.mask[i][j] ? v : -Infinity)));
-const WEIGHTS_A = maskOut(HEAD_A);
-const WEIGHTS_B = maskOut(HEAD_B);
+// A masked cell's weight is exactly 0: printed "0" and hatched (excluded), never "−∞" (storyboard frame 8).
+const WEIGHTS_A = HEAD_A.weights;
+const WEIGHTS_B = HEAD_B.weights;
 
 function oGrid(svg, { rowFill, satShown, opacity = 1 }) {
   const values = HEAD_A.output.map((row, i) => row.map((v) => {
@@ -31,7 +31,7 @@ function weightGrid(svg, p) {
   const tRest = ease(phase(p, 0.3, 1));
   const t = (i) => (i === QUERY ? tRow3 : tRest);
   const cellOf = (scaledToo) => (i, j) => {
-    if (!HEAD_A.mask[i][j]) return -Infinity;
+    if (!HEAD_A.mask[i][j]) return t(i) < 1 ? -Infinity : 0;
     const from = scaledToo ? HEAD_A.scaled[i][j] / SCALE.score : HEAD_A.scaled[i][j];
     return lerp(from, HEAD_A.weights[i][j], t(i));
   };
