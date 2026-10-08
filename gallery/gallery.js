@@ -3,6 +3,7 @@ import * as G from '@shared/glyphs.js';
 import { mountStepper } from '@shared/ui/stepper.js';
 import { mountThemeToggle } from '@shared/ui/theme-toggle.js';
 import { mountSlider } from '@shared/ui/slider.js';
+import { mountChoice } from '@shared/ui/choice.js';
 import { mountMathPanel, linkMathToStage } from '@shared/ui/math-panel.js';
 import { renderFact } from '@shared/facts.js';
 import { loadJSON } from '@shared/data.js';
@@ -373,6 +374,16 @@ const kvOut = $('#kv-readout');
 const showKv = (tokens) => { kvOut.value = formatBytes(tokens * BYTES_PER_TOKEN); };
 mountSlider($('#slider-root'), { id: 'ctx', label: 'Context length', values: CONTEXTS, value: 131072, unit: 'tokens', format: formatCount, onInput: showKv });
 showKv(131072);
+
+// ---- choice demo: a disabled option with its note (P3-R12), re-disabled when the preset changes ----
+const FORMATS = [['bf16', 'BF16'], ['fp8', 'FP8'], ['fp4', 'FP4']];
+const NO_FIGURE = { H100: { fp4: 'no FP4 figure in data' }, Rubin: { bf16: 'no settled BF16/FP8 figure', fp8: 'no settled BF16/FP8 figure' } };
+const formatOptions = (chip) => FORMATS.map(([value, label]) => (NO_FIGURE[chip][value] ? { value, label, disabled: true, note: NO_FIGURE[chip][value] } : { value, label }));
+const showFormat = (value) => { $('#format-readout').value = FORMATS.find(([v]) => v === value)[1]; };
+const formatChoice = mountChoice($('#format-root'), { id: 'demo-format', label: 'Number format', options: formatOptions('H100'), value: 'bf16', onChange: showFormat });
+mountChoice($('#chip-root'), { id: 'demo-chip', label: 'Chip', variant: 'chips', value: 'H100', options: Object.keys(NO_FIGURE).map((c) => ({ value: c, label: c })),
+  onChange: (chip) => formatChoice.update(formatOptions(chip)) });
+showFormat('bf16');
 
 // ---- math panel ----
 const math = mountMathPanel($('#math-root'), { summary: 'Show me the math', blocks: [

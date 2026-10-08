@@ -366,3 +366,67 @@ for (const scheme of ['light', 'dark']) {
     await expect(page.locator('#figures .g-gpu--lit title')).toHaveText('20 of 132 SMs: comm: SM grid, 2 of 12 tiles lit');
   });
 }
+
+// ---- Shared patch S3.5: a disabled choice option with its visible note (P3-R12) ----
+const fmtOption = (page, value) => page.locator(`#demo-format .choice-option[data-value="${value}"]`);
+const fmtNote = (page) => page.locator('#demo-format [data-choice-note]');
+
+test('choice: a disabled option is a disabled button with a visible note, and clicks and Tab skip it', async ({ page }) => {
+  await page.goto('/gallery/');
+  const fp4 = fmtOption(page, 'fp4');
+  await expect(fp4).toBeDisabled();
+  await expect(fp4).toHaveAttribute('aria-disabled', 'true');
+  await expect(fp4).toHaveAttribute('aria-describedby', 'demo-format-note');
+  await expect(fmtNote(page)).toBeVisible();
+  await expect(fmtNote(page)).toHaveClass(/toy-note/);
+  await expect(fmtNote(page).locator('.choice-note-line')).toHaveText(['FP4: no FP4 figure in data']);
+  await expect(fmtOption(page, 'bf16')).not.toHaveAttribute('disabled');
+  await fp4.evaluate((b) => b.click()); // a disabled button fires no click
+  await expect(fp4).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#format-readout')).toHaveText('BF16');
+  await fmtOption(page, 'fp8').focus();
+  await page.keyboard.press('Tab');
+  await expect(fp4).not.toBeFocused();
+});
+
+test('choice: update() re-disables options per preset; a disabled selection moves to the first enabled option and fires onChange', async ({ page }) => {
+  await page.goto('/gallery/');
+  await page.locator('#demo-chip .choice-option[data-value="Rubin"]').click();
+  await expect(fmtOption(page, 'fp4')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#format-readout')).toHaveText('FP4');
+  await expect(fmtOption(page, 'bf16')).toBeDisabled();
+  await expect(fmtOption(page, 'fp8')).toBeDisabled();
+  await expect(fmtOption(page, 'fp4')).toBeEnabled();
+  await expect(fmtNote(page).locator('.choice-note-line')).toHaveText(['BF16, FP8: no settled BF16/FP8 figure']);
+  await page.locator('#demo-chip .choice-option[data-value="H100"]').click();
+  await expect(fmtOption(page, 'bf16')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#format-readout')).toHaveText('BF16');
+  await expect(fmtNote(page).locator('.choice-note-line')).toHaveText(['FP4: no FP4 figure in data']);
+});
+
+test('choice: set() of a disabled value throws; with no disabled option there is no note and no disabled attribute', async ({ page }) => {
+  await page.goto('/gallery/');
+  const out = await page.evaluate(async () => {
+    const { mountChoice } = await import('/shared/ui/choice.js');
+    const host = document.body.appendChild(document.createElement('div'));
+    const changes = [];
+    const opts = [{ value: 'a', label: 'A' }, { value: 'b', label: 'B', note: 'kept until disabled' }, { value: 'c', label: 'C' }];
+    const c = mountChoice(host, { id: 'probe', label: 'Probe', options: opts, value: 'a', onChange: (v) => changes.push(v) });
+    const plain = { note: host.querySelectorAll('[data-choice-note]').length, disabled: host.querySelectorAll('[disabled], [aria-disabled], [aria-describedby]').length };
+    c.update(opts.map((o) => (o.value === 'a' ? { ...o, disabled: true, note: 'off here' } : o)));
+    const moved = { value: c.value, changes: [...changes], lines: [...host.querySelectorAll('.choice-note-line')].map((l) => l.textContent) };
+    const err = (f) => { try { f(); return null; } catch (e) { return `${e.name}: ${e.message}`; } };
+    const setOff = err(() => c.set('a'));
+    const reorder = err(() => c.update([...opts].reverse()));
+    c.update(opts);
+    const cleared = { note: host.querySelectorAll('[data-choice-note]').length, disabled: host.querySelectorAll('[disabled]').length, value: c.value };
+    c.destroy();
+    host.remove();
+    return { plain, moved, setOff, reorder, cleared };
+  });
+  expect(out.plain).toEqual({ note: 0, disabled: 0 });
+  expect(out.moved).toEqual({ value: 'b', changes: ['b'], lines: ['A: off here'] });
+  expect(out.setOff).toBe('RangeError: choice: value a is disabled (off here)');
+  expect(out.reorder).toMatch(/^RangeError: choice: update\(\) takes the same option values and labels/);
+  expect(out.cleared).toEqual({ note: 0, disabled: 0, value: 'b' });
+});

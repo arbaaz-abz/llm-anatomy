@@ -125,17 +125,17 @@ function drawBracket(g, others, { h, w, tailY, tailLabel }) {
   if (tailLabel) text(g, others.x - 4, h + 13, tailLabel, 'g-label g-tail-label', { 'text-anchor': 'end' });
 }
 
-function legendText(p, { printed, whole, format, tailNames, tailShares, basisNote }) {
+function legendText(p, { printed, whole, format, tailFormat, tailNames, tailShares, basisNote }) {
   if (p.value === null) return `${p.name} · ${NOT_PUBLISHED}`;
   if (printed.has(p.name)) return p.name;
-  if (tailNames.has(p.name) && basisNote) return `${p.name} · ${format(tailShares.get(p.name))}${basisNote}`;
-  return `${p.name} · ${format(p.value / whole)}`;
+  if (!tailNames.has(p.name)) return `${p.name} · ${format(p.value / whole)}`;
+  return basisNote ? `${p.name} · ${tailFormat(tailShares.get(p.name))}${basisNote}` : `${p.name} · ${tailFormat(p.value / whole)}`;
 }
 
-function legendRows(parts, layout, format, { tailBasis, tailLabel }) {
+function legendRows(parts, layout, { format, tailFormat, tailBasis, tailLabel }) {
   const printed = new Set([...layout.main, ...layout.tail].filter((s) => s.width >= MIN_PCT_WIDTH).map((s) => s.name));
   const basisNote = tailBasis === 'tail' ? ` of ${tailLabel ?? 'the others'}` : '';
-  const ctx = { printed, whole: sumOf(parts), format, tailNames: new Set(layout.tail.map((s) => s.name)), tailShares: new Map(layout.tail.map((s) => [s.name, s.share])), basisNote };
+  const ctx = { printed, whole: sumOf(parts), format, tailFormat, tailNames: new Set(layout.tail.map((s) => s.name)), tailShares: new Map(layout.tail.map((s) => [s.name, s.share])), basisNote };
   const rows = parts.map((p) => ({ ...p, text: legendText(p, ctx) }));
   const others = layout.main.find((s) => s.others);
   const othersText = basisNote ? `others: zoomed below, shares${basisNote}` : 'others: zoomed in the bar below';
@@ -156,8 +156,9 @@ const spokenShare = (p, whole, format) => (p.value === null ? NOT_PUBLISHED : fo
 // Categorical stacked bar: segment length plus a printed share (under the segment, or in the legend when narrow).
 // Parts: { name, value, hue } · { name, value: null } (not published, neutral, off the scale) · hatched: true
 // (excluded / doesn't count, README lesson 24). tailBasis 'tail' + tailLabel: the zoomed bar's shares are of the
-// tail, and the bracket and legend say so (P3-R7).
-export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = formatShare, label = 'shares', minSegment = 18, tail = 'zoom', tailBasis = 'whole', tailLabel = null }) {
+// tail, and the bracket and legend say so (P3-R7). tailFormat (default: format) prints the zoomed bar's shares, in the
+// bar, its tooltips and the legend (S3.5, midtraining frame 6: main "94.57%", tail "64.5%").
+export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = formatShare, tailFormat = format, label = 'shares', minSegment = 18, tail = 'zoom', tailBasis = 'whole', tailLabel = null }) {
   if (tail !== 'zoom' && tail !== 'none') throw new RangeError(`glyphs.shareBar: tail must be "zoom" or "none", got ${tail}`);
   const layout = shareBarLayout(parts, { w, minSegment: tail === 'zoom' ? minSegment : 0, tailBasis });
   const whole = sumOf(parts);
@@ -169,9 +170,9 @@ export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = format
   if (layout.tail.length) {
     const basisNote = tailBasis === 'tail' ? ` of ${tailLabel ?? 'the others'}` : '';
     drawBracket(g, layout.main.find((s) => s.others), { h, w, tailY, tailLabel });
-    drawBar(g, layout.tail, { y: tailY, h, format, basisNote });
+    drawBar(g, layout.tail, { y: tailY, h, format: tailFormat, basisNote });
   }
-  drawLegend(g, legendRows(parts, layout, format, { tailBasis, tailLabel }), { y: (layout.tail.length ? tailY : 0) + h + 32 });
+  drawLegend(g, legendRows(parts, layout, { format, tailFormat, tailBasis, tailLabel }), { y: (layout.tail.length ? tailY : 0) + h + 32 });
   return g;
 }
 
