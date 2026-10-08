@@ -122,10 +122,11 @@ export function tileStack(parent, { veils, label: title = 'stored in this layer'
 export const visibleTiles = (veils) => veils.filter((v) => v < 1).length;
 
 // The three counters of the followed token (the legend "reads" = compute, "stored" = memory).
-export function counters(parent, { reads, stored, cells, readsNote = '', cellsNote = '', opacity = 1 }) {
-  label(parent, RIGHT, COUNTER_Y[0], `reads (compute): ${reads} entries${readsNote}`, { opacity });
+export function counters(parent, { reads, stored, cells, notes = [], opacity = 1 }) {
+  label(parent, RIGHT, COUNTER_Y[0], `reads (compute): ${reads} entries`, { opacity });
   label(parent, RIGHT, COUNTER_Y[1], `stored (memory): ${stored} entries`, { opacity });
-  label(parent, RIGHT, COUNTER_Y[2], `cells read, all rows: ${cells}${cellsNote}`, { opacity });
+  label(parent, RIGHT, COUNTER_Y[2], `cells read, all rows: ${cells}`, { opacity });
+  lines(parent, RIGHT, COUNTER_Y[2] + NOTE_STEP + 4, notes, opacity);
 }
 
 // One row of NUMBER_CELL numbers; each cell prints its quantity's format (format.js cellText).

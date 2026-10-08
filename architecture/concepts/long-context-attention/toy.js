@@ -12,9 +12,10 @@ import { numberRowView, newFigure, drawPattern, drawState } from './toy-dom.js';
 const WEIGHT_SCALE = 1;
 const STATE_SCALE = 6;
 
-// A slider lives in a plain wrapper, because .slider is a grid and a hidden attribute would not hide it.
+// A slider mounts into `inner`; `outer` is what gets hidden, because .slider is a grid and a hidden attribute on it would not hide it.
 function sliderBox() {
-  return el('div');
+  const inner = el('div');
+  return { outer: el('div', {}, [inner]), inner };
 }
 
 function buildDom(host) {
@@ -26,7 +27,7 @@ function buildDom(host) {
   };
   refs.sinkNote = el('p', { className: 'toy-note' });
   refs.linearNote = el('p', { className: 'toy-note', textContent: 'The state has 16 numbers however long the text; the gate halves it before each new token.' });
-  const b = refs.boxes;
+  const b = Object.fromEntries(Object.entries(refs.boxes).map(([name, box]) => [name, box.outer]));
   host.append(
     refs.pattern, b.window, b.topK, b.merge, b.sinkLogit, b.gate, b.query,
     el('div', { className: 'scroll-x' }, [refs.figure]), refs.table, refs.sink.node, refs.sinkNote, refs.linear.node, refs.linearNote,
@@ -36,7 +37,7 @@ function buildDom(host) {
 }
 
 function mountControls(refs, set, data) {
-  const b = refs.boxes;
+  const b = Object.fromEntries(Object.entries(refs.boxes).map(([name, box]) => [name, box.inner]));
   const sliders = [
     mountSlider(b.window, { id: 'window', label: 'Window', values: [2, 4, 8], value: INITIAL_STATE.window, unit: 'tokens', onInput: (v) => set({ window: v }) }),
     mountSlider(b.topK, { id: 'topK', label: 'Top-k (sparse, compressed)', values: [1, 2, 4, 8], value: INITIAL_STATE.topK, onInput: (v) => set({ topK: v }) }),
@@ -69,7 +70,7 @@ const realTables = (real) => ({
 
 function paint(refs, state, data) {
   const view = toyView(state, data);
-  Object.entries(view.controls).forEach(([name, visible]) => { refs.boxes[name].hidden = !visible; });
+  Object.entries(view.controls).forEach(([name, visible]) => { refs.boxes[name].outer.hidden = !visible; });
   const { pattern } = view;
   refs.table.hidden = !pattern;
   refs.figure.hidden = false;

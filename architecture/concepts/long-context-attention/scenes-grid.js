@@ -29,6 +29,8 @@ export function gridView(parent, { mask, rows = TOKENS, veils = NO_VEIL, stats =
   return holder;
 }
 
+export { COMPRESSED_NOTES };
+
 export const END = Object.freeze({
   1: { mask: PATTERNS.full.mask, veils: NO_VEIL },
   2: { mask: PATTERNS.window.mask, veils: leavingVeils(1) },
@@ -113,6 +115,7 @@ export function groupBrackets(parent, opacity = 1) {
   return holder;
 }
 
+const COMPRESSED_NOTES = Object.freeze(['reads: 1 merged entry + 4 window', 'cells: token cells covered']);
 const COMPRESSED_STATS = Object.freeze({ reads: PATTERNS.compressed.readsPerRow[FOLLOWED_ROW], stored: PATTERNS.compressed.stored, cells: PATTERNS.compressed.cellsRead });
 
 // Frame 7's end state: compressed pattern, merged stacks, brackets, counters (also frame 8's fade-out).
@@ -123,6 +126,6 @@ export function compressedScene(parent, opacity = 1) {
   patternGrid(holder, { mask: PATTERNS.compressed.mask });
   groupBrackets(holder);
   compressedStacks(holder);
-  counters(holder, { ...COMPRESSED_STATS, readsNote: ' (1 merged + 4)', cellsNote: ' token cells' });
+  counters(holder, { ...COMPRESSED_STATS, notes: COMPRESSED_NOTES });
   return holder;
 }

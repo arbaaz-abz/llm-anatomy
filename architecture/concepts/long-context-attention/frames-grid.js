@@ -5,7 +5,7 @@ import {
   PATTERNS, RIGHT, FOLLOWED_ROW, countMask, seg, ease, morph, lines, scene, chip, gridAxes, patternGrid, tileStack, counters,
 } from './stage.js';
 import {
-  END, gridView, row16, leavingVeils, returningVeils, dimVeils, sinkBlock, indexerBlock, compressedStacks, groupBrackets,
+  END, gridView, row16, leavingVeils, returningVeils, dimVeils, sinkBlock, indexerBlock, compressedStacks, groupBrackets, COMPRESSED_NOTES,
 } from './scenes-grid.js';
 import { sixLayers } from './scenes-layers.js';
 
@@ -55,7 +55,7 @@ export function drawFrame6(svg, p) {
   gridView(svg, { ...END[5], veils: dimVeils(ease(seg(p, 0.35, 0.8))) });
   indexerBlock(svg, { fill: 1, picks: 1 });
   lines(svg, RIGHT, PROMPT_Y, ['Did the cache shrink?'], 1 - seg(p, 0.25, 0.35));
-  lines(svg, RIGHT, PROMPT_Y, ['stored: 16, the indexer needs them all'], seg(p, 0.75, 0.9));
+  lines(svg, RIGHT, PROMPT_Y, ['stored: 16.', 'The indexer needs them all.'], seg(p, 0.75, 0.9));
 }
 
 // ---- frame 7: merging every 4 tokens ----
@@ -69,10 +69,10 @@ export function drawFrame7(svg, p) {
   if (merged < 1) tileStack(holder, { veils: dimVeils(1), opacity: 1 - merged });
   if (merged > 0) compressedStacks(holder, merged);
   groupBrackets(holder, seg(p, 0.5, 0.7));
-  const compressed = { reads: PATTERNS.compressed.readsPerRow[FOLLOWED_ROW], stored: PATTERNS.compressed.stored, cells: PATTERNS.compressed.cellsRead, readsNote: ' (1 merged + 4)', cellsNote: ' token cells' };
+  const compressed = { reads: PATTERNS.compressed.readsPerRow[FOLLOWED_ROW], stored: PATTERNS.compressed.stored, cells: PATTERNS.compressed.cellsRead, notes: COMPRESSED_NOTES };
   counters(holder, p >= 0.6 ? compressed : { reads: row16(SPARSE), stored: TOKENS, cells: countMask(SPARSE) });
   if (out > 0) {
     indexerBlock(svg, { fill: 1, picks: 1, opacity: out });
-    lines(svg, RIGHT, PROMPT_Y, ['stored: 16, the indexer needs them all'], out);
+    lines(svg, RIGHT, PROMPT_Y, ['stored: 16.', 'The indexer needs them all.'], out);
   }
 }
