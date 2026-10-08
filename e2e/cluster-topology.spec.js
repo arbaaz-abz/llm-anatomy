@@ -52,9 +52,10 @@ test.describe('cluster-topology toy: put a cut on a link', () => {
   test('try this 1: tensor 8 inside 27.8%, network 250.4%; 16 runs over the network (536.6%); NVL72 35.2% and 75.4%', async ({ page }) => {
     await pick(page, 'where', 'network');
     await expect(readout(page, 'ratio')).toHaveText('250.4%');
-    await expect(page.locator('[data-section="toy"] .g-lane-cap')).toHaveText('continues: 250%');
+    await expect(page.locator('[data-section="toy"] .g-lane-cap')).toHaveCount(0);
     await stop(page, 'degree', TENSOR[16]);
     await expect(readout(page, 'ratio')).toHaveText('536.6%');
+    await expect(page.locator('[data-section="toy"] .g-lane-cap')).toHaveText('continues: 537%');
     await pick(page, 'system', 'gb200');
     await stop(page, 'degree', TENSOR[8]);
     await pick(page, 'where', 'inside');
@@ -68,7 +69,7 @@ test.describe('cluster-topology toy: put a cut on a link', () => {
     await expect(page.locator('#where [data-choice-note]')).toHaveCount(0);
     await stop(page, 'degree', TENSOR[16]);
     await expect(inside).toBeDisabled();
-    await expect(page.locator('#where [data-choice-note]')).toHaveText('inside the NVLink domain: this cut no longer fits in one NVLink domain');
+    await expect(page.locator('#where [data-choice-note]')).toHaveText('inside: this cut no longer fits in one NVLink domain');
     await expect(page.locator('#where [data-value="network"]')).toHaveAttribute('aria-pressed', 'true');
     await pick(page, 'system', 'gb200');
     await expect(inside).toBeEnabled();
