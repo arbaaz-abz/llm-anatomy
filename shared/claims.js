@@ -20,6 +20,7 @@ export const CLAIM_FORMATS = Object.freeze({
   bytes: (v) => formatBytes(v),
   year: (v) => String(v).slice(0, 4),
   cite: () => '',
+  pct: (v) => String(Number((v * 100).toFixed(1))),
 });
 
 export function lookupFact(dataset, entryId, key) {
@@ -28,6 +29,7 @@ export function lookupFact(dataset, entryId, key) {
 }
 
 function formatValue(value, formatName) {
+  if (formatName === 'cite') return '';
   const name = formatName ?? (typeof value === 'number' || Array.isArray(value) ? 'int' : 'raw');
   const format = CLAIM_FORMATS[name];
   if (!format) throw new RangeError(`fillClaim: unknown format "${name}" (use ${Object.keys(CLAIM_FORMATS).join(', ')})`);
