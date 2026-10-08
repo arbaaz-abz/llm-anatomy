@@ -212,3 +212,58 @@ export function laneTimeline(parent, { x, y, w = 568, lanes, scale = null, cap =
   });
   return g;
 }
+
+// ---- bitLayout (gpu-primer §4): a number format as bit cells grouped and labeled by role ----
+const ROLES = ['sign', 'exponent', 'mantissa', 'scale'];
+const failBits = (msg) => { throw new RangeError(`glyphs.bitLayout: ${msg}`); };
+const fieldText = ({ role, bits }) => ({ sign: 'S', exponent: `E${bits}`, mantissa: `M${bits}`, scale: 'scale' })[role];
+
+// '1/8/7' (a FORMATS entry's layout) → sign, exponent and mantissa fields.
+export function bitFields(layout) {
+  const parts = String(layout).split('/').map(Number);
+  if (parts.length !== 3 || !parts.every((n) => Number.isInteger(n) && n >= 0) || parts[0] !== 1) failBits(`layout must read "sign/exponent/mantissa" with a 1-bit sign, got "${layout}"`);
+  return parts.map((bits, i) => ({ role: ROLES[i], bits })).filter((f) => f.bits > 0);
+}
+
+// Geometry only (pure): one cell per bit at `bitW` px; per field its x, width and printed text (S, E8, M7, scale);
+// with `sharedBy`, the bracket under the last scale field.
+export function bitLayoutLayout({ fields = null, format = null, bitW = 14, sharedBy = null }) {
+  if (!fields && !format) failBits('pass fields or format (a FORMATS entry)');
+  const list = fields ?? bitFields(format.layout);
+  if (!(isNum(bitW) && bitW > 0)) failBits(`bitW must be a finite number > 0, got ${bitW}`);
+  list.forEach((f) => {
+    if (!ROLES.includes(f.role)) failBits(`role must be one of ${ROLES.join(', ')}, got ${f.role}`);
+    if (!(Number.isInteger(f.bits) && f.bits >= 1)) failBits(`bits must be an integer ≥ 1, got ${f.bits}`);
+  });
+  const starts = list.map((_, i) => list.slice(0, i).reduce((s, f) => s + f.bits, 0));
+  const placed = list.map((f, i) => ({ role: f.role, bits: f.bits, x: starts[i] * bitW, width: f.bits * bitW, text: fieldText(f) }));
+  const scale = placed.filter((f) => f.role === 'scale').at(-1);
+  if (sharedBy != null && !scale) failBits('sharedBy needs a scale field');
+  return {
+    bitW, fields: placed,
+    width: placed.reduce((s, f) => s + f.width, 0),
+    cells: placed.flatMap((f) => Array.from({ length: f.bits }, (_, b) => ({ x: f.x + b * bitW, role: f.role }))),
+    bracket: sharedBy != null ? { x0: scale.x, x1: scale.x + scale.width, text: `shared by ${sharedBy} numbers` } : null,
+  };
+}
+
+// A row of bit cells colored by role (never by value: formats are bit fields, not numbers), each field labeled
+// under its cells; `label` (e.g. "BF16") at the left; `sharedBy` draws the "shared by N numbers" bracket.
+export function bitLayout(parent, { x, y, fields = null, format = null, bitW = 14, label, sharedBy = null }) {
+  const L = bitLayoutLayout({ fields, format, bitW, sharedBy });
+  const spoken = L.fields.map((f) => `${f.role} ${f.bits}`).join(', ');
+  const g = group(parent, 'g-bits', x, y, { role: 'img', 'aria-label': `${label ? `${label}: ` : ''}${spoken}${L.bracket ? `; ${L.bracket.text}` : ''}` });
+  if (label) text(g, -8, bitW / 2, label, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
+  L.fields.forEach((f) => {
+    const field = svgEl('g', { class: `g-bit-field g-bit--${f.role}` }, g);
+    svgEl('title', {}, field).textContent = `${f.role}: ${f.bits} bit${f.bits === 1 ? '' : 's'}`;
+    L.cells.filter((c) => c.x >= f.x && c.x < f.x + f.width).forEach((c) => svgEl('rect', { class: 'g-bit', x: c.x + 0.5, y: 0.5, width: bitW - 1, height: bitW - 1, rx: 1.5 }, field));
+    text(g, f.x + f.width / 2, bitW + 11, f.text, 'g-label g-bit-text', { 'text-anchor': 'middle' });
+  });
+  if (L.bracket) {
+    const b = bitW + 16;
+    svgEl('path', { class: 'g-bracket', d: `M${L.bracket.x0} ${b}v4H${L.bracket.x1}v-4` }, g);
+    text(g, (L.bracket.x0 + L.bracket.x1) / 2, b + 16, L.bracket.text, 'g-label', { 'text-anchor': 'middle' });
+  }
+  return g;
+}

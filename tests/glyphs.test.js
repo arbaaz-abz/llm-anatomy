@@ -454,3 +454,53 @@ test('laneTimelineLayout rejects unknown kinds, reversed segments, a lane past t
   assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 0, to: 1, kind: 'compute' }]), scale: 100, ticks: [{ t: 5 }] }), /glyphs.laneTimeline: tick t must lie on the track/);
   assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 0, to: 1, kind: 'compute' }]), scale: -1 }), /glyphs.laneTimeline: scale must be a finite number > 0/);
 });
+
+// ---- bitLayout (gpu-primer §4 L110–113) ----
+import { bitLayoutLayout, bitFields } from '../shared/glyphs.js';
+
+// The storyboard's FORMATS entries (gpu-primer §8), the shape math/roofline.js exports.
+const STORYBOARD_FORMATS = {
+  fp32: { bits: 32, layout: '1/8/23' }, bf16: { bits: 16, layout: '1/8/7' }, fp16: { bits: 16, layout: '1/5/10' },
+  fp8_e4m3: { bits: 8, layout: '1/4/3' }, fp8_e5m2: { bits: 8, layout: '1/5/2' },
+  mxfp4: { bits: 4, layout: '1/2/1', blockSize: 32, scaleBits: 8 }, nvfp4: { bits: 4, layout: '1/2/1', blockSize: 16, scaleBits: 8 },
+};
+const widthsOf = (format) => bitLayoutLayout({ format }).fields.map((f) => [f.role, f.width]);
+
+test('bitLayoutLayout: sign / exponent / mantissa widths per FORMATS key, 14 px a bit (gpu-primer frame 10)', () => {
+  assert.deepEqual(widthsOf(STORYBOARD_FORMATS.bf16), [['sign', 14], ['exponent', 112], ['mantissa', 98]]);
+  assert.deepEqual(widthsOf(STORYBOARD_FORMATS.fp8_e4m3), [['sign', 14], ['exponent', 56], ['mantissa', 42]]);
+  assert.deepEqual(widthsOf(STORYBOARD_FORMATS.nvfp4), [['sign', 14], ['exponent', 28], ['mantissa', 14]]);
+  for (const [key, format] of Object.entries(STORYBOARD_FORMATS)) {
+    const L = bitLayoutLayout({ format });
+    assert.equal(L.width, format.bits * 14, key);
+    assert.equal(L.cells.length, format.bits, key);
+  }
+  assert.equal(bitLayoutLayout({ format: STORYBOARD_FORMATS.bf16 }).width, 224); // "16 cells × 14 px = 224 px"
+  assert.deepEqual(bitLayoutLayout({ format: STORYBOARD_FORMATS.fp8_e4m3 }).fields.map((f) => f.text), ['S', 'E4', 'M3']);
+});
+
+const ROOFLINE = await import('../math/roofline.js').catch(() => null);
+test('bitLayoutLayout: every key of math/roofline.js FORMATS draws its own bit count', { skip: ROOFLINE ? false : 'math/roofline.js lands with stream S3-B' }, () => {
+  for (const [key, format] of Object.entries(ROOFLINE.FORMATS)) {
+    const L = bitLayoutLayout({ format });
+    assert.equal(L.cells.length, format.bits, key);
+    assert.equal(L.fields.reduce((s, f) => s + f.bits, 0), format.bits, key);
+  }
+});
+
+test('bitLayoutLayout: an explicit field list and a shared scale with its bracket (NVFP4 block)', () => {
+  const numbers = [...bitFields('1/2/1'), ...bitFields('1/2/1'), ...bitFields('1/2/1')];
+  const L = bitLayoutLayout({ fields: [...numbers, { role: 'scale', bits: 8 }], sharedBy: 16 });
+  assert.equal(L.width, 280); // "3 × 4 + 8 = 20 bit cells × 14 px = 280 px"
+  assert.deepEqual(L.bracket, { x0: 168, x1: 280, text: 'shared by 16 numbers' });
+  assert.equal(L.fields.at(-1).text, 'scale');
+  assert.equal(bitLayoutLayout({ fields: [{ role: 'sign', bits: 1 }], bitW: 10 }).width, 10);
+});
+
+test('bitLayoutLayout rejects unknown roles, bad bit counts, a sharedBy with no scale field and a bad layout string', () => {
+  assert.throws(() => bitLayoutLayout({ fields: [{ role: 'fraction', bits: 3 }] }), /glyphs.bitLayout: role must be one of sign, exponent, mantissa, scale/);
+  assert.throws(() => bitLayoutLayout({ fields: [{ role: 'sign', bits: 0 }] }), /glyphs.bitLayout: bits must be an integer ≥ 1/);
+  assert.throws(() => bitLayoutLayout({ fields: [{ role: 'sign', bits: 1 }], sharedBy: 16 }), /glyphs.bitLayout: sharedBy needs a scale field/);
+  assert.throws(() => bitLayoutLayout({ format: { layout: '1/8' } }), /glyphs.bitLayout: layout must read "sign\/exponent\/mantissa"/);
+  assert.throws(() => bitLayoutLayout({}), /glyphs.bitLayout: pass fields or format/);
+});
