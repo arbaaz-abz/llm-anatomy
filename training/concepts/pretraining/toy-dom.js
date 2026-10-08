@@ -1,9 +1,9 @@
 // pretraining toy's SVG strip: the eight chips (targets 2–8 value-colored by their loss and selectable), the p printed
-// under each, and a NUMBER_CELL loss row. The selection pattern (stage-select.js) keeps one <g> per target across repaints.
+// under each, and a NUMBER_CELL loss row. The selection pattern (shared/ui/stage-select.js) keeps one <g> per target across repaints.
 import * as G from '@shared/glyphs.js';
 import { TOKENS, LOSS_MAX_ABS } from './numbers.js';
 import { formatLoss } from './format.js';
-import { mountStageSelect } from './stage-select.js';
+import { mountStageSelect } from '@shared/ui/stage-select.js';
 
 const CELL = G.NUMBER_CELL;
 const SLOT = 45; // one token's column, chip above, loss cell below (the strip is 368 px: it fits a 400 px screen)

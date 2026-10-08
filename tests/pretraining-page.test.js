@@ -13,7 +13,6 @@ import {
 } from '../training/concepts/pretraining/format.js';
 import { toyView, tryThis } from '../training/concepts/pretraining/toy-view.js';
 import { factRows, FRAMING, tokenRange, stageText, BELOW } from '../training/concepts/pretraining/facts.js';
-import { keyStep } from '../training/concepts/pretraining/stage-select.js';
 import { CAPTIONS, CHECK_WORK, DEFAULT_LOSSES, TRY_THIS } from './pretraining-expected.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -59,9 +58,10 @@ test('12 facts rows, every placeholder resolves against data/*.json, nothing unf
   assert.match(text(4), /DeepSeek-V4 129,280 · GLM-5 151,552–154,880 .* · Kimi K3 163,840 · MiniMax-M2 200,064 · gpt-oss ~201K/);
   assert.match(text(5), /163,840 × 7,168 ≈ 1\.17B parameters/);
   assert.match(text(10), /about 10M issue–PR pairs \(about 160B unique tokens\)/);
-  assert.match(text(11), /Qwen3: 36T tokens over 119 languages; Mistral Large 4: 160\+ languages/);
+  assert.match(text(11), /Qwen3: 36T tokens \(reported\) over 119 languages; Mistral Large 4: 160\+ languages/);
   assert.equal(fillClaim(rows[11].claim, data).reported, true, 'Qwen3\'s token count is reported');
   assert.equal(fillClaim(rows[0].claim, data).reported, false);
+  assert.match(rows[11].claim, /\(reported\) over/, 'the row says which half is reported');
 });
 
 test('dated prose fills from data: hook, intuition, framing, notes, math notes, takeaways, stage text', () => {
@@ -200,13 +200,3 @@ test('state transitions: select, slide, presets, all uniform, reset; inputs neve
   assert.ok(Object.isFrozen(INITIAL_STATE) && Object.isFrozen(INITIAL_STATE.probs));
 });
 
-test('stage selection keys (P3-R17): arrows move one, Home / End jump, the ends hold, other keys do nothing', () => {
-  assert.equal(keyStep('ArrowRight', 2, 7), 3);
-  assert.equal(keyStep('ArrowDown', 2, 7), 3);
-  assert.equal(keyStep('ArrowLeft', 2, 7), 1);
-  assert.equal(keyStep('ArrowUp', 0, 7), 0);
-  assert.equal(keyStep('ArrowRight', 6, 7), 6);
-  assert.equal(keyStep('Home', 4, 7), 0);
-  assert.equal(keyStep('End', 1, 7), 6);
-  assert.equal(keyStep('a', 3, 7), null);
-});

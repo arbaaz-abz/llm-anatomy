@@ -43,7 +43,7 @@ export function factRows(data) {
     { claim: 'MiniMax-M2: {minimax-m2.data_pipeline}.' },
     { claim: 'DeepSeek-V4: {deepseek-v4-pro.data_pipeline}.' },
     { claim: 'GLM-5: about {glm-5.swe_issue_pr_pairs|count} issue–PR pairs (about {glm-5.swe_data_tokens|count} unique tokens) for software engineering.' },
-    { claim: 'Qwen3: {qwen3.pretrain_tokens|count} tokens over {qwen3.languages} languages; Mistral Large 4: {mistral-large-4.languages} languages.' },
+    { claim: 'Qwen3: {qwen3.pretrain_tokens|count} tokens (reported) over {qwen3.languages} languages; Mistral Large 4: {mistral-large-4.languages} languages.' },
   ];
 }
 

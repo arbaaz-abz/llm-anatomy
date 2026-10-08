@@ -66,6 +66,8 @@ test.describe('pretraining toy: grade a sentence', () => {
 
   test('preset chips set the selected probability: confident miss, uniform 1/16, certain', async ({ page }) => {
     const preset = (name) => page.locator('[data-section="toy"] button', { hasText: name });
+    await expect(page.locator('[data-section="toy"] #set-p button[aria-pressed]')).toHaveCount(0);
+    await expect(page.locator('[data-section="toy"] g.stage-item')).toHaveCount(7);
     await preset('confident miss 0.01').click();
     await expect(readout(page, 'selected-loss')).toHaveText('4.605');
     await preset('uniform 1/16').click();

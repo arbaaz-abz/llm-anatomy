@@ -2,6 +2,7 @@
 // comes from toyView (toy-view.js), so the page shows exactly what the tests check.
 import { el } from '@shared/ui/dom.js';
 import { mountSlider } from '@shared/ui/slider.js';
+import { mountPresetButtons } from '@shared/ui/preset-buttons.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { readoutTable } from '@shared/ui/readout-table.js';
 import { appendRich } from '@shared/lesson-page.js';
@@ -19,17 +20,6 @@ function tryThisList(data, ctx) {
     return li;
   });
   return [el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, items)];
-}
-
-// Action buttons (they set values; they are not modes, so no pressed state): plain buttons styled as chips.
-function buttonGroup(caption, specs) {
-  const buttons = specs.map(({ text, onClick }) => {
-    const b = el('button', { type: 'button', className: 'choice-option', textContent: text });
-    b.addEventListener('click', onClick);
-    return [b, onClick];
-  });
-  const node = el('div', { className: 'choice choice--chips', role: 'group' }, [el('span', { className: 'choice-label', textContent: caption }), ...buttons.map(([b]) => b)]);
-  return { node, destroy: () => buttons.forEach(([b, fn]) => b.removeEventListener('click', fn)) };
 }
 
 function readouts(view) {
@@ -73,13 +63,13 @@ function mountControls(refs, { get, set }) {
     format: (v) => formatProb(onGrid(p()) === v ? p() : v),
     onInput: (v) => { if (!syncing) set((s) => setProb(s, v)); },
   });
-  const presets = buttonGroup('Set it to', PRESETS.map(({ label, p: value }) => ({ text: label, onClick: () => set((s) => setProb(s, value)) })));
-  const all = buttonGroup('Every position', [
-    { text: 'uniform guess over 16', onClick: () => set(allUniform) },
-    { text: 'Reset', onClick: () => set(resetProbs) },
-  ]);
-  refs.presets.replaceChildren(presets.node);
-  refs.all.replaceChildren(all.node);
+  const presets = mountPresetButtons(refs.presets, {
+    id: 'set-p', label: 'Set it to', options: PRESETS.map(({ label, p: value }) => ({ value, label })), onPick: (value) => set((s) => setProb(s, value)),
+  });
+  const all = mountPresetButtons(refs.all, {
+    id: 'every-position', label: 'Every position', options: [{ value: 'uniform', label: 'uniform guess over 16' }, { value: 'reset', label: 'Reset' }],
+    onPick: (value) => set(value === 'uniform' ? allUniform : resetProbs),
+  });
   const sync = () => {
     syncing = true;
     slider.set(onGrid(p()));
