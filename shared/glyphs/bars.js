@@ -156,6 +156,9 @@ export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free }
 // ---- bars (moe §4, accepted with conditions a–f; reused by sampling) ----
 const BAR_PITCH = 43; // NUMBER_CELL + 3: eight bars fill 344 px (condition d)
 const BAR_GAP = 3;
+const VALUE_LABEL_RISE = 5; // a value label's baseline sits this far above its bar
+const REFERENCE_CLEARANCE = 8; // a label baseline closer than this to the reference line is moved clear of it
+const LABEL_LIFT = 4; // a moved label's baseline sits this far above the line (or above its old place if the line is lower)
 
 function checkBars({ values, max, h, labels, reference, w }) {
   if (!Array.isArray(values) || values.length === 0) throw new RangeError('glyphs.bars: values must be a non-empty array');
@@ -171,16 +174,21 @@ function checkBars({ values, max, h, labels, reference, w }) {
   }
 }
 
-// Geometry only (pure): bar boxes inside [0, w] × [0, h] (baseline at h) and the reference line's y.
+// Geometry only (pure): bar boxes inside [0, w] × [0, h] (baseline at h), each with its value label's baseline
+// `labelY` (lifted above the dashed reference line when it would sit on it), and the reference line's y.
 export function barsLayout({ values, max, h, w = null, labels = null, reference = null }) {
   checkBars({ values, max, h, labels, reference, w });
   const width = w ?? values.length * BAR_PITCH;
   const pitch = width / values.length;
+  const referenceY = reference ? h - (reference.value / max) * h : null;
   const bars = values.map((v, i) => {
     const height = (v / max) * h;
-    return { x: i * pitch, width: pitch - BAR_GAP, height, y: h - height, value: v };
+    const y = h - height;
+    const labelY = y - VALUE_LABEL_RISE;
+    const onLine = referenceY !== null && Math.abs(labelY - referenceY) < REFERENCE_CLEARANCE;
+    return { x: i * pitch, width: pitch - BAR_GAP, height, y, value: v, labelY: onLine ? Math.min(labelY, referenceY) - LABEL_LIFT : labelY };
   });
-  return { bars, w: width, referenceY: reference ? h - (reference.value / max) * h : null };
+  return { bars, w: width, referenceY };
 }
 
 // Vertical bars, one per label, each printing its value above it (length plus number); neutral fill, never the
@@ -194,7 +202,7 @@ export function bars(parent, { x, y, w = null, h = 120, values, labels = null, m
   layout.bars.forEach((b, i) => {
     const rect = svgEl('rect', { class: 'g-bar', x: b.x, y: b.y, width: b.width, height: b.height, rx: 2 }, g);
     svgEl('title', {}, rect).textContent = `${names[i]}: ${format(b.value)}`;
-    text(g, b.x + b.width / 2, b.y - 5, format(b.value), 'g-bar-value', { 'text-anchor': 'middle' });
+    text(g, b.x + b.width / 2, b.labelY, format(b.value), 'g-bar-value', { 'text-anchor': 'middle' });
     if (labels) text(g, b.x + b.width / 2, h + 14, labels[i], 'g-label', { 'text-anchor': 'middle' });
   });
   if (reference) {
