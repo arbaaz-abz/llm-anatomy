@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-07",
+  "as_of": "2026-10-08",
   "entries": [
     {
       "id": "h100",
@@ -57,6 +57,13 @@
           "source_url": "https://www.nvidia.com/en-us/data-center/h100/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2022-03-22",
+          "note": "Announced at GTC 2022 (NVIDIA newsroom, dated March 22, 2022; read 2026-10-08); shipping began later in 2022.",
+          "source_url": "https://nvidianews.nvidia.com/news/nvidia-announces-hopper-architecture-the-next-generation-of-accelerated-computing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -738,6 +745,13 @@
           "source_url": "https://arxiv.org/abs/2407.21783",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2024-07",
+          "note": "Month only: the date of the paper that describes the cluster (arXiv v1 2024-07-31, read 2026-10-08); the cluster itself was built earlier.",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
