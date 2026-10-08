@@ -12,9 +12,9 @@ export function factRows() {
   return [
     { claim: 'GLM-5: {glm-5.rl_infra|raw}; software-engineering environments: {glm-5.agentic_envs_swe|raw}; also {glm-5.agentic_envs_other|raw}.' },
     { claim: 'GLM-5 masks tokens whose trainer-to-engine ratio leaves the band ({glm-5.rl_mismatch_fix|raw}); its KL coefficient is {glm-5.rl_kl_coeff|raw}.' },
-    { claim: 'DeepSeek-V3.2: {deepseek-v3.2.rl_patches|raw}; {deepseek-v3.2.rl_environments|int} synthetic environments; post-training compute {deepseek-v3.2.post_training_compute_share|raw}.' },
+    { claim: 'DeepSeek-V3.2: {deepseek-v3.2.rl_patches|raw}; {deepseek-v3.2.rl_environments|int} synthetic environments with {deepseek-v3.2.rl_tasks|int} tasks; post-training compute {deepseek-v3.2.post_training_compute_share|raw}.' },
     { claim: 'DeepSeek-V4: {deepseek-v4-pro.rl_infra|raw}, because regenerating interrupted requests from scratch biases the data toward short responses; the reward model is {deepseek-v4-pro.reward_model|raw} (the policy itself is the judge).' },
-    { claim: 'Kimi K3: {kimi-k3.rl_experts|int} specialist experts (3 domains × 3 effort levels); {kimi-k3.rl_rollouts|raw}; reward model: {kimi-k3.reward_model|raw}.' },
+    { claim: 'Kimi K3: {kimi-k3.rl_experts|int} specialist experts, {kimi-k3.rl_expert_grid}; {kimi-k3.rl_rollouts|raw}; reward model: {kimi-k3.reward_model|raw}.' },
     { claim: 'Nemotron 3 Super: {nemotron-3-super.rl_algorithm|raw} over {nemotron-3-super.rl_environments|int} environments, with a separate SWE-RL stage{nemotron-3-super.swe_rl_stage|cite} because software-engineering rollouts are slow and long.' },
     { claim: 'Olmo 3: {olmo-3.rl_patches|raw}.' },
     { claim: 'Mistral Large 4: asynchronous RL producing about {mistral-large-4.rl_tokens_per_day|count} tokens per day ({mistral-large-4.rl_trainable_tokens_per_day|count} of them trainable completion tokens) on about {mistral-large-4.rl_gpus|count} GPUs.' },
@@ -28,8 +28,8 @@ const STAGE_LINES = Object.freeze({
   beta: 'β = {glm-5.rl_kl_coeff|raw} (GLM-5, Olmo 3) · "weak or zero for math" (DeepSeek-V3.2)',
   table: [
     'GLM-5: SWE environments {glm-5.agentic_envs_swe|raw}',
-    'DeepSeek-V3.2: {deepseek-v3.2.rl_environments|int} environments',
-    'Kimi K3: {kimi-k3.rl_experts|int} experts (3 domains: general, general agents, coding agents × low / high / max effort)',
+    'DeepSeek-V3.2: {deepseek-v3.2.rl_environments|int} environments, {deepseek-v3.2.rl_tasks|int} tasks',
+    'Kimi K3: {kimi-k3.rl_experts|int} experts: {kimi-k3.rl_expert_grid}',
     'Nemotron 3 Super: {nemotron-3-super.rl_environments|int} environments',
     'Mistral: ~{mistral-large-4.rl_tokens_per_day|count} tokens produced per day by one run on ~{mistral-large-4.rl_gpus|count} GPUs, ~{mistral-large-4.rl_trainable_tokens_per_day|count} of them trainable completion tokens',
   ],

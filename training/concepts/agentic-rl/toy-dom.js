@@ -2,10 +2,10 @@
 // the item groups of the table persist across repaints (so focus survives) and are redrawn each time.
 import * as G from '@shared/glyphs.js';
 import { ADVANTAGES, A_MAX_ABS, DURATIONS, GROUP_SIZE, REWARDS, ROWS } from './numbers.js';
-import { minutes } from './format.js';
+import { minutes, signed2 } from './format.js';
 import { CELL, STAGE, TABLE, TIMELINE, chipFill, linked, note, numberCell, selectChip, timelineBars, timelineX, timelineY, tokenBox } from './stage.js';
 import { schedule, tokenAt } from './toy-view.js';
-import { mountStageSelect } from './stage-select.js';
+import { mountStageSelect } from '@shared/ui/stage-select.js';
 
 const MIN_IDLE_ROOM = 36; // px an "idle" label needs between a bar's end and the cut
 const TABLE_H = STAGE.h;
@@ -31,7 +31,7 @@ export function mountTable(onSelect, state) {
       note(layer, TABLE.x, y + CELL / 2 + 4, String(row + 1));
       G.verdict(layer, { x: TABLE.verdictX, y: y + CELL / 2, ok: REWARDS[row] === 1 });
       numberCell(layer, { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
-      numberCell(linked(layer, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
+      numberCell(linked(layer, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS, format: signed2 });
     });
   };
   const paint = (s) => {

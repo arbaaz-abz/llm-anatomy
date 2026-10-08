@@ -16,15 +16,15 @@ export const CAPTIONS = [
 // page prints what it computes at 3 decimals: 1.156 (a double rounding in the storyboard).
 export const TRY_THIS = [
   {
-    prompt: "Predict first: should the trainer fully trust the ratio? With row 4's 48 selected, step through correction: ignore → weight 1.000, push −0.577; full IS → weight 3.200, push −1.848; truncated IS → weight 2.000, push −1.155; IcePop → masked, push 0, and the readout says 3 of 39 masked.",
+    prompt: "Predict first: should the trainer fully trust the ratio? With row 4's 48 selected, step through “How the trainer treats the mismatch”: ignore → weight 1.000, push −0.577; full IS → weight 3.200, push −1.848; truncated IS → weight 2.000, push −1.155; IcePop → masked, push 0, and the readout says 3 of 39 masked.",
     insight: "corrections trade bias for variance.",
   },
   {
-    prompt: "Keep IcePop and switch precision to FP16. Row 4's ρ falls 3.200 → 1.156, row 7's 2.400 → 1.116, row 6's 0.400 → 0.892, and the readout drops to 0 of 39 masked.",
+    prompt: "Keep IcePop and switch “Rollout and trainer number format” to FP16. Row 4's ρ falls 3.200 → 1.156, row 7's 2.400 → 1.116, row 6's 0.400 → 0.892, and the readout drops to 0 of 39 masked.",
     insight: "part of the mismatch is rounding,",
   },
   {
-    prompt: "Step lambda from all 8 to 6 of 8 to 4 of 8: utilization 37.5% → 72.9% → 87.5%, while the rows that finish under newer weights go from none to rows 4 and 7 to rows 4, 5, 7 and 8.",
+    prompt: "Step “Update when this share of episodes is done” from all 8 to 6 of 8 to 4 of 8: utilization 37.5% → 72.9% → 87.5%, while the rows that finish under newer weights go from none to rows 4 and 7 to rows 4, 5, 7 and 8.",
     insight: "async is a trade.",
   },
 ];

@@ -85,17 +85,17 @@ export function tryThis() {
   const maskedFp = maskedCount(withState({ correction: 'icepop', precision: 'fp16' }));
   return [
     {
-      prompt: `Predict first: should the trainer fully trust the ratio? With row 4's 48 selected, step through correction: ignore → weight ${fixed3(none.weight)}, push ${signed3(none.push)}; full IS → weight ${fixed3(full.weight)}, push ${signed3(full.push)}; truncated IS → weight ${fixed3(tis.weight)}, push ${signed3(tis.push)}; IcePop → masked, push ${signed3(icepop.push)}, and the readout says ${ofTotal(maskedBf, TOKEN_COUNT)} masked.`,
+      prompt: `Predict first: should the trainer fully trust the ratio? With row 4's 48 selected, step through “How the trainer treats the mismatch”: ignore → weight ${fixed3(none.weight)}, push ${signed3(none.push)}; full IS → weight ${fixed3(full.weight)}, push ${signed3(full.push)}; truncated IS → weight ${fixed3(tis.weight)}, push ${signed3(tis.push)}; IcePop → masked, push ${signed3(icepop.push)}, and the readout says ${ofTotal(maskedBf, TOKEN_COUNT)} masked.`,
       insight: 'corrections trade bias for variance.',
       rest: ` Ignoring the gap is biased; full reweighting is unbiased but lets one token push ${formatRatio(full.weight)} as hard; truncation caps it (at ${CAP} in this toy), and IcePop simply drops tokens where engine and trainer disagree more than twofold.`,
     },
     {
-      prompt: `Keep IcePop and switch precision to FP16. Row 4's ρ falls ${fixed3(bf(3, 7))} → ${fixed3(fp(3, 7))}, row 7's ${fixed3(bf(6, 4))} → ${fixed3(fp(6, 4))}, row 6's ${fixed3(bf(5, 0))} → ${fixed3(fp(5, 0))}, and the readout drops to ${ofTotal(maskedFp, TOKEN_COUNT)} masked.`,
+      prompt: `Keep IcePop and switch “Rollout and trainer number format” to FP16. Row 4's ρ falls ${fixed3(bf(3, 7))} → ${fixed3(fp(3, 7))}, row 7's ${fixed3(bf(6, 4))} → ${fixed3(fp(6, 4))}, row 6's ${fixed3(bf(5, 0))} → ${fixed3(fp(5, 0))}, and the readout drops to ${ofTotal(maskedFp, TOKEN_COUNT)} masked.`,
       insight: 'part of the mismatch is rounding,',
       rest: ' and a finer number format shrinks it before any correction is needed (a reported fix). The rest, such as MoE routing that differs between engine and trainer, needs its own fix (Keep Routing).',
     },
     {
-      prompt: `Step lambda from all 8 to 6 of 8 to 4 of 8: utilization ${lambdas.map((l) => l.utilization).join(' → ')}, while the rows that finish under newer weights go from ${lambdas.map((l) => l.carried).join(' to ')}.`,
+      prompt: `Step “Update when this share of episodes is done” from all 8 to 6 of 8 to 4 of 8: utilization ${lambdas.map((l) => l.utilization).join(' → ')}, while the rows that finish under newer weights go from ${lambdas.map((l) => l.carried).join(' to ')}.`,
       insight: 'async is a trade.',
       rest: ' The less the trainer waits, the more of each batch is off-policy, and the more work the corrections from try-this 1 have to do. (Kimi K3\'s partial rollouts pause at a fraction λ of finished episodes and resume the rest next iteration.)',
     },

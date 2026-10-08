@@ -1,7 +1,7 @@
 // agentic-rl frames 7–10: the engine/trainer mismatch, the importance-sampling correction (key frame 8), the KL term, the scale.
 import * as G from '@shared/glyphs.js';
 import { ADVANTAGES, AGREE_COUNT, A_MAX_ABS, ROWS, TOKEN_COUNT, FOLLOWED } from './numbers.js';
-import { fixed2, fixed3, ofTotal, push2, wrapText } from './format.js';
+import { fixed2, fixed3, ofTotal, push2, signed2, wrapText } from './format.js';
 import { INITIAL_STATE, tokenAt } from './toy-view.js';
 import {
   CELL, CHIP_H, TABLE, arriving, chipXs, layer, lerp, linked, litBlock, note, numberCell, readout, seg, selectChip,
@@ -72,7 +72,7 @@ function frame8Rows(svg, p) {
       }
     });
     numberCell(g, { x: TABLE.rX, y, size: CELL, v: 0, maxAbs: 1, fill: 'bad' });
-    numberCell(linked(g, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
+    numberCell(linked(g, 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS, format: signed2 });
   });
   const lastY = ROW_Y.first + SHOWN_ROWS.length * ROW_Y.stride;
   note(g, TABLE.x, lastY + 6, '5 other rows: ρ within [½, 2], unmasked', { cls: 'g-readout' });

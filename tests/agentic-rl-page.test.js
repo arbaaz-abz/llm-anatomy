@@ -9,9 +9,8 @@ import { LESSON, lessonFor } from '../training/concepts/agentic-rl/content.js';
 import { CAPTIONS as PAGE_CAPTIONS } from '../training/concepts/agentic-rl/captions.js';
 import * as N from '../training/concepts/agentic-rl/numbers.js';
 import { factRows, stageText } from '../training/concepts/agentic-rl/facts.js';
-import { fixed2, fixed3, signed3, push2, percent1, minutes, rowsText, carriedRows, wrapText, advantage3, ofTotal } from '../training/concepts/agentic-rl/format.js';
+import { fixed2, fixed3, signed3, push2, signed2, percent1, minutes, rowsText, carriedRows, wrapText, advantage3, ofTotal } from '../training/concepts/agentic-rl/format.js';
 import { INITIAL_STATE, allTokens, maskedCount, schedule, timelineView, toyView, tokenAt, tryThis } from '../training/concepts/agentic-rl/toy-view.js';
-import { keyStep } from '../training/concepts/agentic-rl/stage-select.js';
 import { CAPTIONS, TRY_THIS } from './agentic-rl-expected.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -48,8 +47,8 @@ test('the fact rows print the data: GLM-5, DeepSeek-V3.2, Kimi K3, Mistral', () 
   const text = (i) => fillText(factRows()[i].claim, data);
   assert.match(text(0), /^GLM-5: async decoupled \(slime\), TITO, double-sided IS; software-engineering environments: >10,000 \(9 languages\); also thousands of Docker terminal tasks/);
   assert.match(text(1), /IcePop mask, ρ ∈ \[1\/2, 2\]\); its KL coefficient is 0\.$/);
-  assert.match(text(2), /^DeepSeek-V3\.2: weak\/zero KL \(math\).*; 1,827 synthetic environments; post-training compute >10% of pretraining compute\.$/);
-  assert.match(text(4), /^Kimi K3: 9 specialist experts \(3 domains × 3 effort levels\); partial rollouts \(λ\), AgentEnv microVMs/);
+  assert.match(text(2), /^DeepSeek-V3\.2: weak\/zero KL \(math\).*; 1,827 synthetic environments with 4,417 tasks; post-training compute >10% of pretraining compute\.$/);
+  assert.match(text(4), /^Kimi K3: 9 specialist experts, 3 domains \(general, general agents, coding agents\) × 3 effort levels; partial rollouts \(λ\), AgentEnv microVMs/);
   assert.match(text(5), /^Nemotron 3 Super: asynchronous GRPO over 21 environments, with a separate SWE-RL stage because/);
   assert.equal(text(7), 'Mistral Large 4: asynchronous RL producing about 33B tokens per day (16B of them trainable completion tokens) on about 3K GPUs.');
   assert.doesNotMatch(text(9), /\d{4}/, 'the FP16 row prints no year (X-1, P3-R14)');
@@ -76,8 +75,8 @@ test('stage text for frames 9–10 comes from the data', () => {
   assert.equal(s.beta, 'β = 0 (GLM-5, Olmo 3) · "weak or zero for math" (DeepSeek-V3.2)');
   assert.deepEqual(s.table, [
     'GLM-5: SWE environments >10,000 (9 languages)',
-    'DeepSeek-V3.2: 1,827 environments',
-    'Kimi K3: 9 experts (3 domains: general, general agents, coding agents × low / high / max effort)',
+    'DeepSeek-V3.2: 1,827 environments, 4,417 tasks',
+    'Kimi K3: 9 experts: 3 domains (general, general agents, coding agents) × 3 effort levels',
     'Nemotron 3 Super: 21 environments',
     'Mistral: ~33B tokens produced per day by one run on ~3K GPUs, ~16B of them trainable completion tokens',
   ]);
@@ -204,6 +203,7 @@ test('format.js: real minus, exact zero, one formatter per quantity', () => {
   assert.deepEqual(wrapText('', 10), ['']);
 });
 
-test('stage-select keys: arrows step and hold at the ends, Home and End jump, others are ignored', () => {
-  assert.deepEqual([keyStep('ArrowRight', 0, 3), keyStep('ArrowDown', 2, 3), keyStep('ArrowLeft', 0, 3), keyStep('ArrowUp', 2, 3), keyStep('Home', 2, 3), keyStep('End', 0, 3), keyStep('a', 1, 3)], [1, 2, 0, 1, 0, 2, null]);
+
+test('signed2 prints the advantage like rlvr-grpo: +1.73, −0.58, 0.00 (agentic-rl-1)', () => {
+  assert.deepEqual([signed2(1.7321), signed2(-0.5774), signed2(0), signed2(-0.001)], ['+1.73', '−0.58', '0.00', '0.00']);
 });

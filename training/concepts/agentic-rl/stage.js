@@ -2,7 +2,7 @@
 // the glyph library (the episode strip, the group table, the rollout timeline). Every frame is a pure function of (index, progress).
 import * as G from '@shared/glyphs.js';
 import { ADVANTAGES, A_MAX_ABS, DURATIONS, EPISODE, FOLLOWED, REWARDS, ROWS } from './numbers.js';
-import { minutes } from './format.js';
+import { minutes, signed2 } from './format.js';
 
 export const STAGE = Object.freeze({ w: 580, h: 366 });
 export const CELL = G.NUMBER_CELL;
@@ -66,7 +66,7 @@ export function groupTable(parent, { chip = () => ({}), shown = () => ({ verdict
     const s = shown(row);
     if (s.verdict > 0) G.verdict(layer(parent, s.verdict), { x: TABLE.verdictX, y: y + CELL / 2, ok: REWARDS[row] === 1 });
     if (s.r > 0) numberCell(layer(parent, s.r), { x: TABLE.rX, y, size: CELL, v: REWARDS[row], maxAbs: 1, fill: REWARDS[row] === 1 ? 'ok' : 'bad' });
-    if (s.a > 0) numberCell(linked(layer(parent, s.a), 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS });
+    if (s.a > 0) numberCell(linked(layer(parent, s.a), 'a', { x: TABLE.aX, y, w: CELL, h: CELL }), { x: TABLE.aX, y, size: CELL, v: ADVANTAGES[row], maxAbs: A_MAX_ABS, format: signed2 });
   });
 }
 

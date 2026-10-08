@@ -26,6 +26,8 @@ export const carriedRows = (carried) => carried.map((c, i) => (c ? i + 1 : 0)).f
 
 // Stage numbers at 2 decimals (the clip line prints its marker the same way), with a real minus.
 export const fixed2 = (v) => realMinus(v.toFixed(2));
+// The advantage column on the stage: signed, 2 decimals (rlvr-grpo's rule), so +1.73 on both pages.
+export const signed2 = (v) => (Math.abs(v) < 0.005 ? '0.00' : `${v > 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`);
 // A push on the stage: 2 decimals, and a masked token's exact "0".
 export const push2 = (v) => (Math.abs(v) < 0.005 ? '0' : fixed2(v));
 // A line of stage text split at word boundaries into lines of at most `max` characters.
