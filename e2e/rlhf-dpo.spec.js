@@ -4,7 +4,7 @@ import { CAPTIONS, CHECK_WORK } from '../tests/rlhf-dpo-expected.js';
 
 const URL = '/training/#rlhf-dpo';
 
-registerLessonContract({ name: 'rlhf-dpo', url: URL, captions: CAPTIONS, factRows: 7, returnHash: 'rlhf-dpo' });
+registerLessonContract({ name: 'rlhf-dpo', url: URL, captions: CAPTIONS, factRows: 6, returnHash: 'rlhf-dpo' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
 const setSlider = (page, id, value) => page.locator(`#${id}`).evaluate((input, v) => {

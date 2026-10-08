@@ -9,7 +9,11 @@ export const ROWS = Object.freeze([
   { claim: 'Olmo 3: SFT, then DPO on about {olmo-3.dpo_pairs|count} "Delta Learning" pairs (chosen from a stronger model, rejected from a weaker one), then RLVR on about {olmo-3.rlvr_prompts|count} prompts.' },
   { claim: 'SmolLM3 used {smollm3.preference_method}, a DPO-family method.' },
   { claim: 'DPO is {deepseek-v4-pro.dpo_stage} as a main stage in the DeepSeek-V4-Pro, GLM-5{glm-5.dpo_stage|cite}, Kimi K3{kimi-k3.dpo_stage|cite}, MiniMax-M2{minimax-m2.dpo_stage|cite} and MiMo-V2-Flash{mimo-v2-flash.dpo_stage|cite} reports (absent from the reports read, not proof of non-use).' },
-  { claim: 'PPO keeps four models in memory: policy, reference, reward model and critic (InstructGPT, arXiv 2203.02155). DPO\'s loss is derived from the same KL-anchored objective (arXiv 2305.18290).', derived: true },
+]);
+
+// Mechanics, not a dated fact: a paragraph under the rows, so every row keeps a source link.
+export const PROSE = Object.freeze([
+  'PPO keeps four models in memory: policy, reference, reward model and critic (InstructGPT, arXiv 2203.02155). DPO\'s loss is derived from the same KL-anchored objective (arXiv 2305.18290).',
 ]);
 
 // Frame 11's dated figures sit under the stage, filled from the data (decoder-anatomy's belowFor pattern).

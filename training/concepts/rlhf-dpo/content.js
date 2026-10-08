@@ -4,7 +4,7 @@ import { fillText } from '@shared/claims.js';
 import { render } from './frames.js';
 import { mount } from './toy.js';
 import { CAPTIONS } from './captions.js';
-import { FRAMING, ROWS, FRAME_11_NOTE } from './facts.js';
+import { FRAMING, ROWS, PROSE, FRAME_11_NOTE } from './facts.js';
 
 export { CAPTIONS };
 
@@ -29,6 +29,7 @@ const MATH_BLOCKS = Object.freeze([
 ]);
 
 const MATH_NOTES = Object.freeze([
+  'Shapes: r_φ gives one score per (prompt, answer); the probability rows on the stage are [4] slices of a [vocab] distribution at one position; d_A and d_B are sums of per-token log-probability changes over each whole answer (scalars). Hover a highlighted term to outline its glyph: A is the chosen answer (frames 1, 2, 10), π_θ the policy row, π_ref the reference row (frames 6–8), β the β label (frames 8, 10).',
   'Notes: (a) DPO is derived by solving the RLHF objective above in closed form (the optimal policy is the reference reweighted by exp(r/β)) and substituting it into the Bradley–Terry loss, which is why the same β appears in both. (b) Real PPO computes per-token advantages with GAE and a per-token KL; this page uses one advantage and one position. (c) Variants: SimPO (no reference), KTO (single good/bad labels), ORPO (SFT and preference in one stage), APO.',
 ]);
 
@@ -62,7 +63,7 @@ export function lessonFor(data) {
       mount,
     },
     math: { blocks: MATH_BLOCKS, notes: MATH_NOTES },
-    facts: { framing: FRAMING, rows: ROWS },
+    facts: { framing: FRAMING, rows: ROWS, prose: PROSE },
     takeaways: TAKEAWAYS,
     links: { next: ['rlvr-grpo'], further: FURTHER },
   };

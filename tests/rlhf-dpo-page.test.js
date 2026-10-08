@@ -28,10 +28,12 @@ test('captions are the storyboard\'s, verbatim and in order', () => {
   assert.deepEqual(LESSON.animation.steps.map((s) => s.caption), CAPTIONS);
 });
 
-test('7 facts rows; every placeholder resolves against data/*.json', () => {
-  assert.equal(LESSON.facts.rows.length, 7);
+test('6 facts rows; every placeholder resolves against data/*.json', () => {
+  assert.equal(LESSON.facts.rows.length, 6);
   LESSON.facts.rows.forEach((row, i) => assert.deepEqual(fillClaim(row.claim, data).missing, [], `row ${i + 1}`));
-  assert.equal(LESSON.facts.rows.filter((r) => r.derived).length, 1);
+  assert.equal(LESSON.facts.rows.filter((r) => r.derived).length, 0);
+  assert.equal(LESSON.facts.prose.length, 1);
+  assert.match(LESSON.facts.prose[0], /^PPO keeps four models in memory/);
 });
 
 test('the rows print the data: Nemotron 21 environments, Olmo 200K and 105K, SmolLM3 APO, five "not listed"', () => {
@@ -55,7 +57,7 @@ test('row 4 is flagged "reported" through the data, and the frame 11 note says s
 
 test('every prose placeholder resolves and nothing prints "—" or a year', () => {
   const lesson = lessonFor(data);
-  const prose = [lesson.hook, ...lesson.intuition, lesson.toy.intro, lesson.facts.framing, ...lesson.math.notes, ...lesson.takeaways, ...lesson.animation.belowFor(10)];
+  const prose = [lesson.hook, ...lesson.intuition, lesson.toy.intro, lesson.facts.framing, ...lesson.math.notes, ...lesson.facts.prose, ...lesson.takeaways, ...lesson.animation.belowFor(10)];
   prose.forEach((text) => assert.deepEqual(fillClaim(text, data).missing, [], text.slice(0, 40)));
   [...prose, ...lesson.facts.rows.map((r) => fillText(r.claim, data))].forEach((text) => {
     assert.ok(!fillText(text, data).includes('—'), text.slice(0, 40));
@@ -136,4 +138,10 @@ test('lessonFor never mutates the data', () => {
   const before = JSON.stringify(data);
   lessonFor(data);
   assert.equal(JSON.stringify(data), before);
+});
+test('the math panel opens with the shapes note, then the derivation notes', () => {
+  const [shapes, notes] = LESSON.math.notes;
+  assert.match(shapes, /^Shapes: r_φ gives one score per \(prompt, answer\)/);
+  assert.match(shapes, /\[4\] slices of a \[vocab\] distribution/);
+  assert.match(notes, /^Notes: \(a\)/);
 });
