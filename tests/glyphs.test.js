@@ -368,3 +368,89 @@ test('rooflineLayout: an intensity exactly at the ridge is compute-bound; bad in
   assert.throws(() => rooflineLayout({ w: 360, h: 240, peakTflops: 989, bandwidthTBps: 3.35, points: [{ intensity: 0 }] }), /glyphs.roofline: point intensity must be a finite number > 0/);
   assert.throws(() => rooflineLayout({ w: 360, h: 240, peakTflops: 989, bandwidthTBps: 3.35, ridgeRange: [10, 5] }), /glyphs.roofline: ridgeRange must be \[low, high\]/);
 });
+
+// ---- laneTimeline (gpu-primer §4, P3-R9) ----
+import { laneTimelineLayout } from '../shared/glyphs.js';
+
+const GPIPE_STAGE_1 = ['F1', 'F2', 'F3', 'F4', null, null, null, null, 'B1', 'B2', 'B3', 'B4']; // 3 stages × 4 micro-batches, stage 1
+const cells = (row) => row.map((c, t) => ({ from: t, to: t + 1, kind: c ? (c[0] === 'F' ? 'forward' : 'backward') : 'idle', label: c ?? undefined }));
+
+test('laneTimelineLayout: segments scale onto the track; 12 columns at 43 px fit the 568 px stage row (parallelism frame 7)', () => {
+  const L = laneTimelineLayout({ w: 568, lanes: [{ label: 'stage 1', segments: cells(GPIPE_STAGE_1) }] });
+  assert.equal(L.gutter, 52);
+  assert.equal(L.track, 516);
+  assert.equal(L.scale, 43);
+  const segs = L.segments;
+  assert.deepEqual(segs.slice(0, 3).map((s) => [s.x, s.width]), [[52, 40], [95, 40], [138, 40]]); // a 3 px gap between touching cells
+  assert.equal(segs.at(-1).x + segs.at(-1).width, 568);
+  assert.deepEqual(segs.map((s) => s.kind).slice(3, 6), ['forward', 'idle', 'idle']);
+  assert.equal(segs[0].textInside, true);
+  assert.equal(segs[0].text, 'F1');
+});
+
+test('laneTimelineLayout: an explicit scale wins; a short segment prints its text beside it (gpu-primer frame 7)', () => {
+  const L = laneTimelineLayout({ w: 580, scale: 520 / 40.1, lanes: [
+    { label: 'HBM', segments: [{ from: 0, to: 40.1, kind: 'memory', label: 'memory 40.1 µs' }] },
+    { label: 'math', segments: [{ from: 0, to: 0.54, kind: 'compute', label: 'compute 0.54 µs' }, { from: 0.54, to: 40.1, kind: 'idle' }] },
+  ] });
+  const [memory, compute, idle] = L.segments;
+  assert.ok(near(memory.width, 520));
+  assert.equal(memory.textInside, true);
+  assert.equal(compute.textInside, false, 'a 7 px segment prints its label beside it');
+  assert.ok(compute.textX > compute.x + compute.width);
+  assert.equal(idle.hatched, true);
+  assert.deepEqual(L.lanes.map((l) => l.label), ['HBM', 'math']);
+  assert.ok(L.lanes[1].y > L.lanes[0].y);
+});
+
+test('laneTimelineLayout: labels: false prints no text, and every segment still has a title naming its lane and kind (parallelism, 78 columns)', () => {
+  const row = Array.from({ length: 78 }, (_, t) => ({ from: t, to: t + 1, kind: t % 3 ? 'forward' : 'idle', label: `F${t}` }));
+  const L = laneTimelineLayout({ w: 572, labels: false, lanes: [{ label: 'stage 1', segments: row }] });
+  assert.equal(L.segments.length, 78);
+  assert.ok(L.segments.every((s) => s.text === null));
+  assert.ok(L.segments.every((s) => typeof s.title === 'string' && s.title.length > 0));
+  assert.equal(L.segments[1].title, 'stage 1: forward'); // no micro-batch id, not even on hover (parallelism §6, lesson 18)
+  assert.equal(L.segments[0].title, 'stage 1: idle');
+  const on = laneTimelineLayout({ w: 572, lanes: [{ label: 'stage 1', segments: row.slice(0, 2) }] });
+  assert.equal(on.segments[1].title, 'stage 1: F1 (forward)');
+});
+
+test('laneTimelineLayout: cap cuts a long lane at the track with an arrow and its printed label (cluster-topology frame 3)', () => {
+  const L = laneTimelineLayout({ w: 572, scale: 1.2, cap: { at: 520 / 1.2, label: 'continues: 250%' }, lanes: [
+    { label: 'compute', segments: [{ from: 0, to: 100, kind: 'compute', label: 'compute 100%' }] },
+    { label: 'comm', segments: [{ from: 0, to: 250.4, kind: 'comm', label: 'comm 250%' }] },
+    { label: 'network', segments: [{ from: 0, to: 2254, kind: 'comm', label: 'comm 2,254%' }] },
+  ] });
+  const [compute, nvlink, network] = L.segments;
+  assert.ok(near(compute.width, 120));
+  assert.equal(nvlink.capped, false);
+  assert.equal(network.capped, true);
+  assert.ok(near(network.arrow.tip, L.gutter + 520));
+  assert.ok(network.x + network.width <= network.arrow.base + 1e-9);
+  assert.equal(network.capLabel, 'continues: 250%');
+  assert.equal(network.textAnchor, 'start', 'a capped segment prints its own label at its start, the cap label at its end');
+});
+
+test('laneTimelineLayout: ticks mark checkpoint saves and gaps open restarts (scale-reliability frame 9)', () => {
+  const L = laneTimelineLayout({ w: 580, lanes: [{ label: 'run', segments: [
+    { from: 0, to: 40, kind: 'compute' }, { from: 40, to: 47, kind: 'lost', label: 'lost' }, { from: 50, to: 90, kind: 'compute' },
+  ] }], ticks: [{ t: 13.6, label: 'save' }, { t: 27.2, label: 'save' }], gaps: [{ from: 47, to: 50, label: 'restart' }] });
+  assert.ok(near(L.ticks[0].x, L.gutter + 13.6 * L.scale));
+  assert.equal(L.ticks[1].label, 'save');
+  assert.ok(near(L.gaps[0].x, L.gutter + 47 * L.scale) && near(L.gaps[0].width, 3 * L.scale));
+  assert.equal(L.gaps[0].label, 'restart');
+  assert.equal(L.segments[1].hatched, true);
+  assert.equal(L.segments[1].kind, 'lost');
+  assert.ok(L.top > 0, 'labeled ticks get a row above the lanes');
+  assert.ok(L.height > L.top + 24, 'gap labels get a row below the lanes');
+});
+
+test('laneTimelineLayout rejects unknown kinds, reversed segments, a lane past the track without a cap, and bad ticks', () => {
+  const lane = (segments) => [{ label: 'a', segments }];
+  assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 0, to: 1, kind: 'save' }]) }), /glyphs.laneTimeline: kind must be one of compute, memory, comm, idle, forward, backward, lost/);
+  assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 2, to: 1, kind: 'compute' }]) }), /glyphs.laneTimeline: a segment needs 0 ≤ from < to/);
+  assert.throws(() => laneTimelineLayout({ w: 300, scale: 10, lanes: lane([{ from: 0, to: 100, kind: 'compute' }]) }), /glyphs.laneTimeline: lane "a" runs past the track; pass cap or a smaller scale/);
+  assert.throws(() => laneTimelineLayout({ w: 300, lanes: [] }), /glyphs.laneTimeline: lanes must be a non-empty array/);
+  assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 0, to: 1, kind: 'compute' }]), scale: 100, ticks: [{ t: 5 }] }), /glyphs.laneTimeline: tick t must lie on the track/);
+  assert.throws(() => laneTimelineLayout({ w: 300, lanes: lane([{ from: 0, to: 1, kind: 'compute' }]), scale: -1 }), /glyphs.laneTimeline: scale must be a finite number > 0/);
+});
