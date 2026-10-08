@@ -11,8 +11,9 @@ for (const { id, count } of TRACKS) {
   });
 }
 
-test('an unbuilt lesson shows the coming-soon card with prereq links', async ({ page }) => {
-  // Training is built in a later plan, so this lesson stays unbuilt for all of Plan 2.
+test('a lesson whose module fails to load shows the coming-soon card with prereq links', async ({ page }) => {
+  // Block the concept module so the test holds whether or not the page is built (track-app falls back to coming soon).
+  await page.route('**/training/concepts/pretraining.js', (route) => route.abort());
   await page.goto('/training/#pretraining');
   await expect(page.locator('.coming-soon h2')).toHaveText('Pretraining');
   await expect(page.locator('.coming-soon a')).toHaveText(['The 2026 training pipeline']);
