@@ -103,7 +103,7 @@ Per-position targets and probabilities (frames 4–5, toy default), positions 1�
 |---|---|---|---|---|
 | 1 | A plain text line `The cat sat down on the mat.` above; below it, 8 `token` chips with subscripts 1–8. A plain mark `vocabulary: 163,840 pieces (Kimi K3)`. A plain line under the stage: `Tiktokenizer (go deeper) shows real BPE boundaries on your own text.` | The text line splits at the piece boundaries and each piece drops into a chip; the period becomes its own chip. | A tokenizer cuts text into pieces from a fixed vocabulary: whole common words, fragments of rare ones. Kimi K3's vocabulary has 163,840 pieces. | 8 tokens · vocabularies 129K–201K (DeepSeek-V4 to gpt-oss; printed from `{deepseek-v4-pro.vocab_size|count}–{gpt-oss-120b.vocab_size|count}`, ruling P3-R18) · embedding table Kimi K3 `≈ 163,840 × 7,168 ≈ 1.17B` params · visible note: "Bigger vocabularies mean fewer tokens per document but a bigger table." |
 | 2 | Chips 1–4 lit, 5–8 dim. A `block` "model" over them. Out of position 4 comes a `vector` of 5 printed cells: `on 0.390 · . 0.237 · and 0.087 · the 0.053 · 12 others 0.019 each`. Chip 5 `on` gets a plain label `true next token`. | A `flow` (carry `activation`) runs from chip 4 into the model and out to the probability row; the `on` cell and chip 5 take the selection outline. | At each position the model gives a probability to every possible next token. Here, after "down", the true next token "on" got 0.390. | probabilities from `decoder-anatomy` frame 8 · Σ = 1.000 |
-| 3 | The `on` cell alone, enlarged, with a readout `loss = −ln 0.390 = 0.941`. Beside it two plain reference marks: `if 0.99: 0.010` and `if 0.01: 4.605`. | The readout types in; then the two reference marks fade in. | The grade is the cross-entropy loss: minus the log of the probability given to the true token. Unsure costs a little; confident and wrong costs a lot. | `−ln 0.390 = 0.941` · `−ln 0.99 = 0.010` · `−ln 0.01 = 4.605` |
+| 3 | The `on` cell alone, enlarged, with a readout `loss = −ln 0.3903 = 0.941` (the probability to four places, so the readout checks by hand). Beside it two plain reference marks: `if 0.99: 0.010` and `if 0.01: 4.605`. | The readout types in; then the two reference marks fade in. | The grade is the cross-entropy loss: minus the log of the probability given to the true token. Unsure costs a little; confident and wrong costs a lot. | `−ln 0.3903 = 0.941` · `−ln 0.99 = 0.010` · `−ln 0.01 = 4.605` |
 | 4 | All 8 chips lit. The 8 × 8 causal mask `heatmap` (future hatched; 16 px cells, nothing printed in it) at the left. Layout check at 580 × 366: chip row on top; heatmap 8 × 17 = 136 px wide beside the 7-cell loss row, 7 × 43 = 301 px; 136 + 16 + 301 = 453 px wide, 24 + 12 + 136 px tall. Under the chips, a 7-cell loss `vector` (positions 1–7, value-colored, printed). | The mask's rows light one after another; each lit row drops one loss cell into the strip under its position. | One pass grades every position at once: the causal mask lets each position see only the past. Eight tokens give seven graded predictions. | losses `2.303 · 1.386 · 1.204 · 0.941 · 0.511 · 0.799 · 0.223` |
 | 5 | The loss strip with a plain readout `mean 1.052` and `perplexity 2.86`; a plain mark `uniform guess over 16 words: perplexity 16`. | The seven cells slide together into the mean readout; the perplexity readout types in. | Training lowers the mean loss over all positions. Its exponential, perplexity, is how many equally likely tokens the model is effectively choosing between: about 2.9 here. | `mean = 7.366 / 7 = 1.052` · `perplexity = e^1.052 = 2.86` · `ln 16 = 2.773 → 16` |
 | 6 | A pipeline row of `block`s: `crawl` → `rules` → `quality classifier` → `dedup` → `mixture` → `rephrase` → `packed sequences`, with only `crawl`, `rules` and `quality classifier` active. Plain fact line: `Kimi K3: rule-based heuristics, classifier quality scoring, dedup, per domain`. | A stream of document `token` chips flows in from `crawl`; chips that fail `rules` or score low at the classifier drop out, dimmed. | Raw crawl is mostly not worth training on. Rules remove the obvious junk, and a quality classifier, itself a small model, scores the rest. | facts per §8 (no published keep ratios: "the reports give recipes, not ratios", brief 02 §1.2) |
@@ -265,7 +265,8 @@ here.
 ```js
 // Loss for one position: minus the natural log of the probability given to the true token.
 tokenLoss(p: number) → number
-//   0.390 → 0.9410 (exact p = 0.3903 from decoder-anatomy's logits) · 0.01 → 4.6052 · 1 → 0 · 0.0625 → 2.7726
+//   0.390253 (exact softmax p from decoder-anatomy's logits) → 0.9410 · 0.3903 → 0.9408 · 0.390 → 0.9416
+//   0.01 → 4.6052 · 1 → 0 · 0.0625 → 2.7726
 //   throws RangeError unless 0 < p ≤ 1
 
 // Mean loss over positions; an optional boolean mask keeps only positions where mask[i] is true.
@@ -275,7 +276,7 @@ meanLoss(probs: number[], mask: boolean[] | null = null) → number
 //   throws when mask length differs or no position is kept
 
 perplexity(loss: number) → number            // e^loss
-//   1.0523 → 2.8643 · 2.7726 → 16
+//   1.0523 → 2.8642 · 2.7726 → 16.0002 · ln 16 → 16 (exactly) · the unrounded mean loss → 2.8643
 
 uniformLoss(vocabSize: number) → number      // ln |V|, the loss of a uniform guess
 //   16 → 2.7726 · 163840 → 12.0066 · 201088 → 12.2115 · throws unless an integer ≥ 1
@@ -329,3 +330,6 @@ Applied from `track-review-recipe.md` §2 (change log: `fix-recipe-review.md`):
   "Olmo 3 read 5–12T" (no source for 12T) becomes "Olmo 3 about 5.9T, reported" (`olmo-3.pretrain_tokens`).
 - X-1: "Llama 3.1 405B (2024)" stays: `llama-3.1-405b.release_date` added (confirmed).
 - X-2 / P3-R16: "Check my work" added (§6), from `tokenLoss`, `meanLoss`, `perplexity`.
+- S3-A findings: frame 3 prints `−ln 0.3903 = 0.941` (−ln 0.390 is 0.942); the `tokenLoss` and
+  `perplexity` examples in §11 now hold for their printed inputs (0.390 → 0.9416; 1.0523 → 2.8642; 2.7726 →
+  16.0002).
