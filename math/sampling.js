@@ -12,6 +12,13 @@ const TIE_TOLERANCE = 1e-12; // a running sum this close below p counts as havin
 
 const sum = (list) => list.reduce((acc, x) => acc + x, 0);
 
+// The numbers behind softmax, for "Check my work": e^(z / T) for every score and their sum (temperature above 0).
+export function softmaxTerms(logits, temperature) {
+  if (!(temperature > 0)) throw new RangeError(`softmaxTerms: temperature must be above 0, got ${temperature}`);
+  const exps = logits.map((z) => Math.exp(z / temperature));
+  return { exps, sum: sum(exps) };
+}
+
 // Indices sorted by probability, highest first; ties go to the lower vocabulary index. Every filter and the draw use it.
 export function rankTokens(probs) {
   return probs.map((value, index) => ({ value, index })).sort((a, b) => b.value - a.value || a.index - b.index).map((o) => o.index);

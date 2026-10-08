@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { VOCAB, LOGITS, NAMED, rankTokens, applyTemperature, topK, topP, samplingDistribution, sampleIndex, drawSamples, collapseOthers } from '../math/sampling.js';
+import { VOCAB, LOGITS, NAMED, softmaxTerms, rankTokens, applyTemperature, topK, topP, samplingDistribution, sampleIndex, drawSamples, collapseOthers } from '../math/sampling.js';
 import { softmax } from '../math/core.js';
 
 const near = (actual, expected, tol = 5e-4) => {
@@ -283,4 +283,17 @@ test('frozen results: each filter returns a fresh array the caller may keep', ()
   const b = topK(P1, 3).probs;
   assert.notEqual(a, b);
   assert.deepEqual(a, b);
+});
+
+test('softmaxTerms: the storyboard\'s "Check my work" terms at T = 0.5 (54.6, 20.1, 2.72, 1, 12 × 0.135 = 1.62, sum 80.03) and T = 1 (sum 18.93)', () => {
+  const half = softmaxTerms(LOGITS, 0.5);
+  near([half.exps[4], half.exps[5], half.exps[6], half.exps[7], half.exps[0]], [54.598, 20.086, 2.718, 1, 0.135], 5e-4);
+  near(half.exps[0] * 12, 1.624);
+  near(half.sum, 80.026, 5e-4);
+  near(half.exps[ON] / half.sum, applyTemperature(LOGITS, 0.5)[ON], 1e-12);
+  near(softmaxTerms(LOGITS, 1).sum, 18.934, 5e-4);
+});
+
+test('softmaxTerms rejects a temperature that is not above 0 (greedy has no exponentials to show)', () => {
+  [0, -1, Number.NaN].forEach((t) => assert.throws(() => softmaxTerms(LOGITS, t), RangeError));
 });
