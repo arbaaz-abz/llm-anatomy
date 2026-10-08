@@ -271,3 +271,100 @@ test('barsLayout rejects empty, negative and over-max values, a missing max and 
   assert.throws(() => barsLayout({ values: [1], max: 2, h: 10, reference: { value: 3, label: 'x' } }), /glyphs.bars: reference must be \{ value ≤ max, label \}/);
   assert.throws(() => barsLayout({ values: [1], max: 2, h: 0 }), /glyphs.bars: h must be a finite number > 0/);
 });
+
+// ---- Shared prep S3 (Plan 3, Task 3): curvePlot (P3-R10) and roofline (gpu-primer §4) ----
+import { curvePlotLayout, rooflineLayout, formatTick } from '../shared/glyphs.js';
+
+const LOG_AXES = { xAxis: { label: 'x', log: true, ticks: [0.1, 1, 10, 100, 1000, 10000] }, yAxis: { label: 'y', log: true, ticks: [0.1, 1, 10, 100, 1000, 10000] } };
+
+test('curvePlotLayout: a log axis gives every decade the same width, and ticks sit on their values', () => {
+  const L = curvePlotLayout({ w: 360, h: 240, ...LOG_AXES, series: [{ points: [[0.1, 0.335], [295.2, 989], [1e4, 989]], label: 'roof' }] });
+  const xs = L.xTicks.map((t) => t.x);
+  const widths = xs.slice(1).map((x, i) => x - xs[i]);
+  widths.forEach((d) => assert.ok(near(d, widths[0], 1e-9), `decade widths ${widths.join(', ')}`));
+  assert.ok(near(xs[0], L.plot.left) && near(xs.at(-1), L.plot.right));
+  assert.ok(near(L.toX(Math.sqrt(10)), (L.toX(1) + L.toX(10)) / 2)); // half a decade is half the width
+  assert.deepEqual(L.xTicks.map((t) => t.label), ['0.1', '1', '10', '100', '1,000', '10,000']);
+  const ys = L.yTicks.map((t) => t.y);
+  assert.ok(ys[0] > ys.at(-1), 'y grows upward on screen');
+  assert.ok(near(ys[0], L.plot.bottom) && near(ys.at(-1), L.plot.top));
+  assert.ok(L.plot.left > 0 && L.plot.right <= 360 && L.plot.bottom < 240 && L.plot.top > 0, 'the axes fit inside w × h');
+});
+
+test('curvePlotLayout: a linear axis maps the domain onto the plot; the domain defaults to the tick extent', () => {
+  const L = curvePlotLayout({ w: 300, h: 200, xAxis: { label: 'step', ticks: [0, 50, 100] }, yAxis: { label: 'lr', ticks: [0, 1, 2, 3] }, series: [{ points: [[0, 0], [10, 3], [100, 0.3]], label: 'lr' }] });
+  assert.ok(near(L.toX(50), (L.plot.left + L.plot.right) / 2));
+  assert.ok(near(L.toY(1.5), (L.plot.top + L.plot.bottom) / 2));
+  assert.equal(L.series[0].path.split('L').length, 3);
+  assert.match(L.series[0].path, /^M/);
+});
+
+test('curvePlotLayout: refY is drawn at its value, like the bars reference line; markers, bands and labels are placed', () => {
+  const L = curvePlotLayout({
+    w: 360, h: 220, xAxis: { label: 'N', log: true, ticks: [1e8, 1e9, 1e10, 1e11] }, yAxis: { label: 'loss', ticks: [1.5, 2, 2.5, 3] },
+    series: [{ points: [[1e8, 2.9], [1e11, 1.9]], label: 'fit', style: 'solid' }, { points: [[1e8, 2.5], [1e11, 1.6]], label: 'branch', style: 'muted' }],
+    markers: [{ x: 1e10, y: 1.96, label: 'same loss', followed: true }, { x: 1e11, y: 1.9, label: 'right edge' }],
+    bands: [{ from: 1e8, to: 1e9, label: 'warmup' }, { from: 1e9, to: 1e11, label: 'stable' }],
+    refY: { value: 1.96, label: 'same loss 1.960' },
+  });
+  assert.ok(near(L.refY.y, L.toY(1.96)));
+  assert.equal(L.refY.label, 'same loss 1.960');
+  assert.ok(near(L.refY.x1, L.plot.left) && near(L.refY.x2, L.plot.right));
+  assert.deepEqual(L.series.map((s) => s.style), ['solid', 'muted']);
+  assert.ok(near(L.markers[0].x, L.toX(1e10)) && near(L.markers[0].y, L.toY(1.96)));
+  assert.equal(L.markers[0].followed, true);
+  assert.equal(L.markers[1].labelAnchor, 'end', 'a marker at the right edge prints its label to its left');
+  assert.equal(L.markers[0].labelAnchor, 'start');
+  const [warm, stable] = L.bands;
+  assert.ok(warm.x + warm.width < stable.x, 'touching bands keep a visible gap');
+  assert.ok(near(warm.x, L.toX(1e8) + 1) && near(stable.x + stable.width, L.toX(1e11) - 1));
+  assert.equal(curvePlotLayout({ w: 300, h: 200, xAxis: { ticks: [0, 1] }, yAxis: { ticks: [0, 1] }, series: [] }).refY, null);
+});
+
+test('curvePlotLayout rejects dashed series, out-of-domain points, non-positive log values and bad sizes', () => {
+  const base = { w: 300, h: 200, xAxis: { label: 'x', ticks: [0, 10] }, yAxis: { label: 'y', ticks: [0, 10] } };
+  assert.throws(() => curvePlotLayout({ ...base, series: [{ points: [[1, 1]], style: 'dashed' }] }), /glyphs.curvePlot: series style must be solid or muted \(no dashed series, P3-R11\)/);
+  assert.throws(() => curvePlotLayout({ ...base, series: [{ points: [[11, 1]] }] }), /glyphs.curvePlot: point \(11, 1\) is outside the domain/);
+  assert.throws(() => curvePlotLayout({ ...base, markers: [{ x: 5, y: -1 }] }), /outside the domain/);
+  assert.throws(() => curvePlotLayout({ ...base, xAxis: { log: true, ticks: [0, 10] } }), /glyphs.curvePlot: a log axis needs a domain > 0/);
+  assert.throws(() => curvePlotLayout({ ...base, w: 0 }), /glyphs.curvePlot: w and h must be finite numbers > 0/);
+  assert.throws(() => curvePlotLayout({ ...base, bands: [{ from: 4, to: 2 }] }), /glyphs.curvePlot: band from must be < to/);
+  assert.throws(() => curvePlotLayout({ ...base, refY: { value: 12, label: 'x' } }), /glyphs.curvePlot: refY must be \{ value inside the y domain, label \}/);
+  assert.throws(() => curvePlotLayout({ ...base, xAxis: { ticks: [3] } }), /glyphs.curvePlot: x axis needs a domain/);
+  assert.throws(() => curvePlotLayout({ ...base, series: [{ points: [[1, 1]], tone: 'accent' }] }), /glyphs.curvePlot: series tone must be one of/);
+});
+
+test('formatTick: thousands separators, short decimals, a real minus', () => {
+  assert.deepEqual([0.1, 1, 10, 1000, 10000, 2.5, -3, 0.25, 1e6].map(formatTick), ['0.1', '1', '10', '1,000', '10,000', '2.5', '−3', '0.25', '1,000,000']);
+});
+
+test('rooflineLayout: the ridge sits at peak ÷ bandwidth on the log axis; points ride the roof with their bound (gpu-primer frames 6–8)', () => {
+  const L = rooflineLayout({ w: 360, h: 240, peakTflops: 989, bandwidthTBps: 3.35, points: [{ intensity: 2, label: '4 tokens', followed: true }, { intensity: 2048, label: '4,096 tokens' }] });
+  assert.ok(near(L.ridge.value, (989 * 1e12) / (3.35 * 1e12)));
+  assert.ok(near(L.ridge.x, L.plot.toX(989 / 3.35)));
+  assert.ok(near(L.ridge.y, L.plot.toY(989)));
+  assert.equal(L.ridge.label, 'ridge point 295');
+  assert.deepEqual(L.points.map((p) => p.bound), ['memory', 'compute']);
+  assert.ok(near(L.points[0].attainable, 6.7) && near(L.points[1].attainable, 989));
+  assert.ok(near(L.points[0].y, L.plot.toY(6.7)));
+  assert.deepEqual(L.plot.markers.map((m) => m.label), ['4 tokens · 2', '4,096 tokens · 2,048']);
+  assert.equal(L.plot.markers[0].followed, true);
+  assert.deepEqual(L.plot.series.map((s) => [s.tone, s.label]), [['memory', '3.35 TB/s'], ['compute', '989 TFLOPS']]);
+  assert.deepEqual(L.plot.xTicks.map((t) => t.value), [0.1, 1, 10, 100, 1000, 10000]); // default xDomain [0.1, 1e4]
+  assert.equal(L.plot.bands.length, 0);
+});
+
+test('rooflineLayout: ridgeRange draws a band with both ends printed instead of one bend label (Rubin)', () => {
+  const L = rooflineLayout({ w: 360, h: 240, peakTflops: 35000, bandwidthTBps: 22, yDomain: [1, 1e5], ridgeRange: [1590.9, 1822.9], points: [] });
+  assert.equal(L.ridge.label, null);
+  assert.equal(L.plot.bands.length, 1);
+  assert.equal(L.plot.bands[0].label, 'ridge 1,591–1,823');
+  assert.ok(near(L.plot.bands[0].x, L.plot.toX(1590.9) + 1));
+});
+
+test('rooflineLayout: an intensity exactly at the ridge is compute-bound; bad input throws', () => {
+  assert.equal(rooflineLayout({ w: 360, h: 240, peakTflops: 1000, bandwidthTBps: 4, points: [{ intensity: 250 }] }).points[0].bound, 'compute');
+  assert.throws(() => rooflineLayout({ w: 360, h: 240, peakTflops: 0, bandwidthTBps: 3.35 }), /glyphs.roofline: peakTflops and bandwidthTBps must be finite numbers > 0/);
+  assert.throws(() => rooflineLayout({ w: 360, h: 240, peakTflops: 989, bandwidthTBps: 3.35, points: [{ intensity: 0 }] }), /glyphs.roofline: point intensity must be a finite number > 0/);
+  assert.throws(() => rooflineLayout({ w: 360, h: 240, peakTflops: 989, bandwidthTBps: 3.35, ridgeRange: [10, 5] }), /glyphs.roofline: ridgeRange must be \[low, high\]/);
+});

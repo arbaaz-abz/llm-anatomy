@@ -6,3 +6,4 @@ export { kvStack, gpu, rack, request } from './glyphs/systems.js';
 export { requestSlot, verdict, clipLine, blockPool, blockTable } from './glyphs/serving.js';
 export { barSegments, formatShare, shareBarLayout, shareBar, memBar, barsLayout, bars } from './glyphs/bars.js';
 export { selectionMark, pixelFill, patch, adder, blockStackLayout, blockStack, dialLayout, dial } from './glyphs/architecture.js';
+export { formatTick, curvePlotLayout, curvePlot, rooflineLayout, roofline } from './glyphs/plots.js';
