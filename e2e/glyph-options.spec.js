@@ -95,3 +95,18 @@ test('hatch: a hatched cell prints format(v), keeps its value color, and draws t
   expect(cells[3].title).toBe('0.000');
 });
 
+
+test('lastLabel: printed on the last drawn block only; the default stays `block ${count}`', async ({ page }) => {
+  const labels = (count, lastLabel) => page.evaluate(async ({ n, last }) => {
+    const G = await import('/shared/glyphs.js');
+    const svg = G.svgEl('svg', { width: 400, height: 400 }, document.body);
+    const g = G.blockStack(svg, { x: 0, y: 0, count: n, ...(last ? { lastLabel: last } : {}) });
+    const out = [...g.querySelectorAll(':scope > .g-sub')].map((t) => t.textContent);
+    svg.remove();
+    return out;
+  }, { n: count, last: lastLabel });
+  expect(await labels(61)).toEqual(['block 1', 'block 2', 'block 61']);
+  expect(await labels(61, 'block N')).toEqual(['block 1', 'block 2', 'block N']);
+  expect(await labels(1, 'block N')).toEqual(['block N']);
+  expect(await labels(3, 'block N')).toEqual(['block 1', 'block 2', 'block N']);
+});

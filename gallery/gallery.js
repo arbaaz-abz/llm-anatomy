@@ -149,8 +149,8 @@ const FIGURES = [
   ['adder', 'the residual add: a junction on the stream lane, no quantity', 300, 40, (s) => {
     G.adder(s, { x: 20, y: 20 });
   }],
-  ['blockStack', '"this block × N" with the residual lane; count is printed, never a height', 300, 200, (s) => {
-    G.blockStack(s, { x: 8, y: 8, w: 240, count: 61, active: { block: 1, half: 0 } });
+  ['blockStack', '"this block × N" with the residual lane; count is printed, never a height; lastLabel names the last block ("block N")', 300, 200, (s) => {
+    G.blockStack(s, { x: 8, y: 8, w: 240, count: 61, active: { block: 1, half: 0 }, lastLabel: 'block N' });
   }],
   ['token draft', 'the draft state: a guess that may still count (dashed, muted), never hatched · idle · active · draft', 300, 50, (s) => {
     G.token(s, { x: 8, y: 10, text: 'on', index: 5 });

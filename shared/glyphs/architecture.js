@@ -57,10 +57,10 @@ export function blockStackLayout({ count, shown = 2 }) {
 
 const STACK = { lane: 12, inset: 26, padTop: 16, pad: 8, halfH: 26, halfGap: 6, gap: 12, collapseH: 24, adderR: 8 };
 
-function drawStackBlock(g, { top, w, blockH, index, halves, active, residual }) {
+function drawStackBlock(g, { top, w, blockH, index, label, halves, active, residual }) {
   const left = STACK.inset - 8;
   svgEl('rect', { class: 'g-stack-frame', x: left, y: top, width: w - left, height: blockH, rx: 6 }, g);
-  text(g, left + 6, top + 11, `block ${index}`, 'g-sub');
+  text(g, left + 6, top + 11, label, 'g-sub');
   halves.forEach((name, i) => {
     const hy = top + STACK.padTop + i * (STACK.halfH + STACK.halfGap);
     const cy = hy + STACK.halfH / 2;
@@ -73,7 +73,8 @@ function drawStackBlock(g, { top, w, blockH, index, halves, active, residual }) 
 }
 
 // "This block repeated N times, with a residual lane through all of them." Count is printed, never a height.
-export function blockStack(parent, { x, y, w = 220, count, shown = 2, residual = true, halves = ['attention', 'MLP'], active = null, countLabel = `⋮ × ${count}` }) {
+// `lastLabel` (optional) names the last drawn block, e.g. 'block N' for a stack that stands for any model.
+export function blockStack(parent, { x, y, w = 220, count, shown = 2, residual = true, halves = ['attention', 'MLP'], active = null, countLabel = `⋮ × ${count}`, lastLabel = `block ${count}` }) {
   const rows = blockStackLayout({ count, shown });
   const blockH = STACK.padTop + halves.length * STACK.halfH + (halves.length - 1) * STACK.halfGap + STACK.pad;
   const heights = rows.map((row) => (row.kind === 'block' ? blockH : STACK.collapseH));
@@ -82,7 +83,8 @@ export function blockStack(parent, { x, y, w = 220, count, shown = 2, residual =
   const g = group(parent, 'g-stack', x, y, { role: 'img', 'aria-label': `${count} blocks, each ${halves.join(' then ')}` });
   if (residual) svgEl('line', { class: 'g-lane', x1: STACK.lane, y1: 0, x2: STACK.lane, y2: height }, g);
   rows.forEach((row, i) => {
-    if (row.kind === 'block') drawStackBlock(g, { top: tops[i], w, blockH, index: row.index, halves, active, residual });
+    const label = row.index === count ? lastLabel : `block ${row.index}`;
+    if (row.kind === 'block') drawStackBlock(g, { top: tops[i], w, blockH, index: row.index, label, halves, active, residual });
     else text(g, STACK.inset, tops[i] + STACK.collapseH / 2, countLabel, 'g-label g-collapse', { 'dominant-baseline': 'central' });
   });
   return g;
