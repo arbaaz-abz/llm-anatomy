@@ -110,3 +110,31 @@ test('lastLabel: printed on the last drawn block only; the default stays `block 
   expect(await labels(1, 'block N')).toEqual(['block N']);
   expect(await labels(3, 'block N')).toEqual(['block 1', 'block 2', 'block N']);
 });
+
+// ---- Shared prep S3 (Plan 3, Task 3): Training options on existing glyphs ----
+// Leaving every S3 option out must reproduce the pre-S3 output byte for byte (Architecture pages on main
+// draw these glyphs). Pinned as SHA-256 of outerHTML, captured at 64e85d1 before any S3 change.
+import { createHash } from 'node:crypto';
+
+const sha = (html) => createHash('sha256').update(html).digest('hex').slice(0, 16);
+const PRE_S3 = {
+  gpu: [{ x: 10, y: 6, memFill: 0.3, label: 'H100 · 30 %' }, 'bd29feac8e2b2a57'],
+  gpuBare: [{ x: 0, y: 0 }, '2390321fb8501279'],
+  rack: [{ x: 10, y: 6, gpus: 8, linkWidth: 4, label: 'HGX, 8 NVLink' }, '5d6d6612d43c2b18'],
+  rack72: [{ x: 0, y: 0, gpus: 72, cols: 9 }, '5ff689f9c867e922'],
+  flowActivation: [{ from: [0, 0], to: [120, 40], carry: 'activation', progress: 0.25 }, 'c897f1204c71450c'],
+  flowGradient: [{ from: [0, 0], to: [120, 0], carry: 'gradient', progress: 0.5 }, 'fdf1dafda17f31d9'],
+  vector: [{ x: 0, y: 0, values: [1, 0, 0.25, -0.5], cell: 40, orient: 'col', label: 'R' }, '9af5c50b3af02524'],
+  shareBar: [{ x: 4, y: 6, w: 172, label: 'toy model', parts: [
+    { name: 'embedding', value: 128, hue: 1 }, { name: 'attention', value: 512, hue: 2 }, { name: 'MLP', value: 768, hue: 3 },
+    { name: 'other (norms)', value: 40, hue: 4 }, { name: 'head', value: 128, hue: 5 }, { name: 'not published', value: 60, unknown: true },
+  ] }, '352382e1ebe83354'],
+  shareBarPlain: [{ x: 0, y: 0, w: 300, parts: [{ name: 'a', value: 3, hue: 1 }, { name: 'b', value: 1, hue: 2 }], tail: 'none' }, '06a2840a9e65f74a'],
+};
+const GLYPH_OF = { gpuBare: 'gpu', rack72: 'rack', flowActivation: 'flow', flowGradient: 'flow', shareBarPlain: 'shareBar' };
+
+test('S3: defaults of gpu, rack, flow, vector and shareBar reproduce the pre-S3 output byte for byte', async ({ page }) => {
+  const got = {};
+  for (const [key, [opts]] of Object.entries(PRE_S3)) got[key] = sha(await draw(page, GLYPH_OF[key] ?? key, opts));
+  expect(got).toEqual(Object.fromEntries(Object.entries(PRE_S3).map(([k, [, h]]) => [k, h])));
+});
