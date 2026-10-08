@@ -215,7 +215,7 @@ const m3=2*60*4*128*2;console.log("m3",m3,m3*1e6,formatBytes(m3*1e6),"v4",format
 ```
 Output on 2026-10-07: `deepseek-v4-pro 1.6T 49B 3.06% 1.56%` · `kimi-k3 2.78T 104B 3.75% 1.79%` · `qwen3.8 2.4T 95B
 3.96% 1.95%` · `glm-5.3 753B 40B 5.31% -` · `minimax-m3 428B 23B 5.37% -` · `mistral-large-4 1.05T 49B 4.67% -` ·
-`gpt-oss-120b 117B 5.1B 4.37% 3.13%` · `mistral 52B 4.95%` · `m3 122880 122880000000 123 GB v4 4 GB 12 GB gptoss
+`gpt-oss-120b 117B 5.13B 4.39% 3.13%` · `mistral 52B 4.95%` · `m3 122880 122880000000 123 GB v4 4 GB 12 GB gptoss
 4836556800 4.84 GB llama 327.68`. (`formatCount` prints Kimi K3's 104.2B as "104B"; the card row prints the data
 value 104.2B.)
 
