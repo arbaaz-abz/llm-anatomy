@@ -100,6 +100,26 @@
           "note": "arXiv 2304.08485 (Apr 2023); the adapter recipe in brief 01 §6: pretrained ViT + small MLP projector + an already-trained LLM."
         }
       }
+    },
+    {
+      "id": "flashattention-2022",
+      "name": "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness (Dao et al., 2022)",
+      "facts": {
+        "release_date": {
+          "value": "2022-05",
+          "note": "arXiv 2205.14135, submitted 2022-05-27.",
+          "source_url": "https://arxiv.org/abs/2205.14135",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "mechanism": {
+          "value": "tiles attention so the score matrix stays in on-chip SRAM instead of HBM",
+          "note": "arXiv 2205.14135; brief 03 §1.1.",
+          "source_url": "https://arxiv.org/abs/2205.14135",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        }
+      }
     }
   ]
 }

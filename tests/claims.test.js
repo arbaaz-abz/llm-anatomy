@@ -93,3 +93,28 @@ test('the cite format prints nothing but keeps the source and the reported flag 
   assert.equal(fillText('X{gpt-oss-120b.biases|cite}.', data), 'X.');
   assert.deepEqual(fillClaim('X{nope.biases|cite}.', data).missing, ['nope.biases|cite']);
 });
+
+test('cite on a [low, high] range prints nothing, not a lone dash (shared-10)', () => {
+  const data = { models: { entries: [{ id: 'x', facts: { r: fact([0.38, 0.43]) } }] } };
+  assert.equal(fillText('{x.r|cite}', data), '');
+  assert.equal(fillText('A{x.r|cite}.', data), 'A.');
+});
+
+test('pct prints a share as a percentage at up to one decimal, ranges end by end (shared-10)', () => {
+  const data = { models: { entries: [{ id: 'x', facts: { r: fact([0.38, 0.43]), s: fact(0.587), t: fact(0.5) } }] } };
+  assert.equal(fillText('{x.r|pct}%', data), '38–43%');
+  assert.equal(fillText('{x.s|pct}%', data), '58.7%');
+  assert.equal(fillText('{x.t|pct}%', data), '50%');
+});
+
+test('the shared-11 and shared-2 data keys exist and read through fillText', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const read = async (f) => JSON.parse(await readFile(new URL(`../data/${f}.json`, import.meta.url), 'utf8'));
+  const data = { models: await read('models'), papers: await read('papers') };
+  assert.equal(fillText('{deepseek-v4-flash.lr_schedule}', data), 'peak 2.7e-4, batch ramped to 75.5M tokens');
+  assert.equal(fillText('{deepseek-v3.2.rl_tasks|int}', data), '4,417');
+  assert.equal(fillText('{kimi-k3.rl_expert_grid}', data), '3 domains (general, general agents, coding agents) × 3 effort levels');
+  assert.equal(fillText('{deepseek-v4-pro.opd_teachers}', data), 'more than 10');
+  assert.equal(fillText('{paper:flashattention-2022.release_date|year}', data), '2022');
+  assert.equal(fillText('{paper:flashattention-2022.mechanism}', data), 'tiles attention so the score matrix stays in on-chip SRAM instead of HBM');
+});
