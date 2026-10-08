@@ -122,10 +122,11 @@ function maskedText(format) {
 
 const SEM_FILLS = new Set(['ok', 'bad']);
 
+// Every cell carries `glyph` itself, so the `.glyph` text rules apply wherever a cell is drawn (Training review shared-8).
 function cellClass({ isMasked, hatched, fill, gpu }) {
-  if (isMasked) return 'g-cell g-cell--masked';
+  if (isMasked) return 'glyph g-cell g-cell--masked';
   const tint = gpu != null ? ' g-cell--shard' : fill ? ` g-cell--${fill}` : '';
-  return `g-cell${hatched ? ' g-cell--hatched' : ''}${tint}`;
+  return `glyph g-cell${hatched ? ' g-cell--hatched' : ''}${tint}`;
 }
 
 // One value cell. Masked cells (mask === false or v === −∞) are hatched. A `hatched` cell is a value that
