@@ -66,17 +66,22 @@ choice: a bad anneal mix is baked in at exactly the moment the model is settling
 still disagree on the schedule.
 
 ## 4. Visual metaphor
-Glyphs used (spec §5.1 and the built library): `curvePlot` (proposed on `prefill-decode`, with the `bands` option proposed on `scaling-laws`: the learning-rate
-schedule, x = tokens, y = fraction of peak or absolute LR; bands for warmup, stable and decay phases; a
-selection-style marker for the "stop or branch here" point), `shareBar` (proposed on `decoder-anatomy`:
-token budget by context length; unknown counts in the neutral fill, labeled `not published`, never
-hatched; frame 6 adds a second, zoomed bar for the last 5%), `dial` (proposed on `rope`, which lists this
+Glyphs used (spec §5.1 and the built library): `curvePlot` (built in S3, ruling P3-R10: the learning-rate
+schedule, x = share of the run with `domain: [0, 1]` (or tokens for the Nemotron preset), y = fraction of
+peak with `domain: [0, 1]` (or absolute LR); `bands: [{ from, to, label }]` for the warmup, stable and decay
+phases; series `style: 'solid' | 'muted'` (`labelAt: 'mid'` for the `branch` label), never dashed; in the
+toy the "stop or branch here" point is the one marker with `followed: true`, which draws its own
+`G.selectionMark`; in frames 3–5 the page draws `G.selectionMark` around the decay band, since curvePlot
+outlines only a followed marker),
+`shareBar` (token budget by context length; unpublished counts passed as `{ value: null }`, drawn in the
+neutral fill at the fixed width outside the scale, labeled `not published`, never hatched; a bar with no
+published counts is labeled `no published shares`, ruling P3-R6; frame 6 uses its zoomed tail with
+`tailBasis: 'tail'` and `tailLabel: 'last 5%'`, ruling P3-R7), `dial` (proposed on `rope`, which lists this
 page as a reuser: frame 8), `block` (the data mixture's
 sources, `active` vs `dim`), `flow` (carry `token` from the mixture into the run), `token` (document chips
 of different lengths in frames 6–7), plain labeled text marks (phase labels, facts, the per-model table).
 
-New glyphs proposed: none on this page (`curvePlot` and its `bands` option, and `dial`, are proposed
-elsewhere).
+New glyphs proposed: none.
 
 Stand-ins (visible line under the stage): "Curves are drawn as a fraction of the peak learning rate
 because most labs do not publish their peak; Nemotron 3 Super's numbers are its published ones. The decay
@@ -101,12 +106,12 @@ Thread order: 1–4 the schedule and why its end matters; 5 the named stage; 6�
 |---|---|---|---|---|
 | 1 | Empty `curvePlot`: x = share of the run (0–100%), y = learning rate as a fraction of peak (0–1). A short warmup ramp draws from 0 to 1. | The line climbs from 0 to 1 over the first few percent. | The learning rate sets how big each weight update is. Runs start it near zero and raise it over a short warmup, so early updates do not wreck the weights. | Nemotron 3 Super: warmup over the first 200B of 25T tokens to 4.5 × 10⁻⁴ |
 | 2 | The cosine schedule draws from the peak down to 0 across the whole run. A plain mark at 60%: `0.35 of peak`. | The curve sweeps down; the 60% mark drops in. | A cosine schedule lowers the rate smoothly over the whole run. The finish line has to be chosen on day one, because the curve depends on it. | cosine at 25% `0.854`, 50% `0.500`, 60% `0.345`, 75% `0.146`, 100% `0` |
-| 3 | The WSD schedule beside it: flat at 1.0 to 80%, then a decay to 0. Bands `warmup · stable · decay`. A dashed branch leaves the plateau at 60% with its own short decay (plain label `branch`). A plain mark: `DeepSeek-V4: constant, then a cosine tail to 10% (start not published)`. | The plateau draws; then the decay; then the main decay dims while the dashed branch peels off and draws. | Warmup-stable-decay keeps the rate flat and drops it only at the end. Any checkpoint on the plateau can be branched into its own short decay. | WSD: 1.0 until 80%, linear decay `0.5` at 90%, `0` at 100% · branch from 60% |
+| 3 | The WSD schedule beside it: flat at 1.0 to 80%, then a decay to 0. Bands `warmup · stable · decay`. A branch leaves the plateau at 60% with its own short decay, drawn as a solid `muted` series labeled `branch` (no dashes, ruling P3-R11). A plain mark: `DeepSeek-V4: constant, then a cosine tail to 10% (start not published)`. | The plateau draws; then the decay; then the main decay dims while the muted branch peels off and draws. | Warmup-stable-decay keeps the rate flat and drops it only at the end. Any checkpoint on the plateau can be branched into its own short decay. | WSD: 1.0 until 80%, linear decay `0.5` at 90%, `0` at 100% · branch from 60% |
 | 4 | The decay band of the WSD curve outlined. Above it, the data mixture `block`s switch: `web` dims while `high-quality · reasoning · code · agent traces` light; a legend under the stage names both groups (`dims: web` · `lights: high-quality · reasoning · code · agent traces`). | The mix blocks change state as the curve enters the decay band. | As the steps shrink, the model settles into what it reads last. So labs put their best data in the decay: this is annealing. | Nemotron 3 Super decay: last 5T of 25T (20%) · MiniMax-M2 decay: 9.3T of 29.2T (31.8%) |
 | 5 | A plain stage label `mid-training` spans the decay band; a fact list: `GLM-5: 1.55T tokens, long documents and synthetic agent trajectories upsampled` · `Olmo 3: ~100B tokens (reported)` · `DeepSeek-V4: agentic data injected here`. | The label stretches across the band; facts type in. | In 2026 this end phase is a named stage, mid-training. It is still next-token prediction on documents, with a richer mix and longer sequences. | GLM-5 mid-training `1.55T of 28.55T = 5.4%` (28.5T reported; its published stages sum to 28.55T) |
-| 6 | **Key frame.** Upper `shareBar` (560 px): GLM-5's whole run by context length, `4K 94.57%` printed in its segment and the tail labeled `last 5%` (32K is 19.6 px; 128K and 200K under 10 px, unlabeled). A bracket from the tail to a lower, zoomed `shareBar` (560 px) titled `the last 5%, zoomed (1.55T)`: `32K 64.5% · 128K 32.3% · 200K 3.2%`, the 200K segment 18.1 px wide with its label printed under it on a leader. Document `token` chips above the zoomed segments get longer. | The upper bar slides in; the bracket opens; the zoomed bar slides in segment by segment; the zoomed 200K segment takes the selection outline. | Context extension grows the sequence length in a few short stages. GLM-5 goes from 4K to 200K tokens using the last 5% of its run. | `27T @ 4K · 1T @ 32K · 500B @ 128K · 50B @ 200K` · 28.5T (its published stages sum to 28.55T) · zoomed: `1 / 1.55 = 64.5%`, `0.5 / 1.55 = 32.3%`, `0.05 / 1.55 = 3.2%` · 200K is 0.18% of the whole run |
+| 6 | **Key frame.** One `shareBar` (560 px) with its zoomed tail (`tail: 'zoom'`, `tailBasis: 'tail'`, `tailLabel: 'last 5%'`, ruling P3-R7). Main bar: GLM-5's whole run by context length, `4K 94.57%` printed in its segment; 32K (17.6 px drawn), 128K and 200K fold into the tail, bracketed `last 5%`. The zoomed tail bar (560 px) states its basis in its label, `the last 5%, zoomed (1.55T): shares of the tail`: `32K 64.5% · 128K 32.3% · 200K 3.2%` (shares of the tail, through `sharePct`), the 200K segment 18.1 px wide, under the 30 px print threshold, so its share prints in the tail's legend as `200K · 3.2% of last 5%` (no leader line; the page draws `G.selectionMark` around the segment). Document `token` chips above the zoomed segments get longer. | The upper bar slides in; the bracket opens; the zoomed bar slides in segment by segment; the zoomed 200K segment takes the selection outline. | Context extension grows the sequence length in a few short stages. GLM-5 goes from 4K to 200K tokens using the last 5% of its run. | `27T @ 4K · 1T @ 32K · 500B @ 128K · 50B @ 200K` · 28.5T (its published stages sum to 28.55T) · zoomed: `1 / 1.55 = 64.5%`, `0.5 / 1.55 = 32.3%`, `0.05 / 1.55 = 3.2%` · 200K is 0.18% of the whole run |
 | 7 | Beside each segment, a plain readout of attention work per new token in the forward pass, relative to 4K: `×8 · ×32 · ×50`. A plain fact: `long documents are scarce`. A visible line under the readouts: `attention only: the rest of the forward pass costs the same per token (long-context-attention shows how 2026 models cut this)`. | The readouts type in under the zoomed bar. | Late and short, because each long-context token is costly: at 200K a new token attends to 50 times as many earlier tokens as at 4K. Long documents are scarce too. | `32K / 4K = 8` · `128K / 4K = 32` · `200K / 4K = 50` |
-| 8 | Two `dial`s (from `rope`) for the slowest-rotating pair, labeled `offset 4K` and `offset 200K`. Each has the pale `seen` sector "angles seen in training" from 0 to 5.4° (the angle at offset 4K). The left hand sits at 5.4°, inside the sector; the right hand sweeps to 270°, far outside it. Plain label `RoPE: rescale (see rope)`; a second label `Kimi K3: 24 full-attention layers with no positional encoding; nothing to rescale`. Stand-in line: `pair speed chosen so 200K is ¾ turn`. | The right dial's hand sweeps from 5.4° to 270° past the sector edge. | A model using RoPE has never seen rotations this large, so its rotations are rescaled to fit. Kimi K3's full-attention layers have no positional encoding and skip this step. | slowest pair, stand-in speed: `270° × 4K / 200K = 5.4°` at 4K · `270°` at 200K · trained to 4K · extended to 200K (GLM-5) · Kimi K3 256K → 1M in its cooldown |
+| 8 | Two `dial`s (from `rope`) for the slowest-rotating pair, labeled `offset 4K` and `offset 200K`. Each has the pale `seen` sector "angles seen in training" from 0 to 0.015 turn (the angle at offset 4K). The left hand sits at 0.015 turn, inside the sector; the right hand sweeps to ¾ turn, far outside it. No degrees are printed (dial condition e, ruling P3-R18); the dial's quarter-turn ticks carry the reading. Plain label `RoPE: rescale (see rope)`; a second label `Kimi K3: 24 full-attention layers with no positional encoding; nothing to rescale`. Stand-in line: `pair speed chosen so 200K is ¾ turn`. | The right dial's hand sweeps from 0.015 turn to ¾ turn past the sector edge. | A model using RoPE has never seen rotations this large, so its rotations are rescaled to fit. Kimi K3's full-attention layers have no positional encoding and skip this step. | slowest pair, stand-in speed: `¾ turn × 4K / 200K = 0.015 turn` at 4K · `¾ turn` at 200K · trained to 4K · extended to 200K (GLM-5) · Kimi K3 256K → 1M in its cooldown |
 | 9 | A plain table of 2026 runs: GLM-5 `4K → 32K → 128K → 200K`, MiniMax-M2 `8K → 32K → 192K inside its 9.3T decay`, DeepSeek-V4 `4K → 16K → 64K → 1M`, Kimi K3 `8K → 64K in pretraining, 256K → 1M in cooldown`. | Rows type in. | All four 2026 reports here stage their context this way, ending near 200K or 1M. Kimi K3 says why: the extension is cheap because it is short. | as listed |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
@@ -132,7 +137,7 @@ spend their last tokens.
 | LR at `stopAt`, as a fraction of peak, under the chosen schedule | `lrAt(stopAt, { kind, total: 1, decayStart: 1 − decayFrac, decayShape })` | 3 decimals |
 | The same for the other schedule (side by side) | `lrAt(...)` | 3 decimals |
 | Nemotron 3 Super absolute LR at the marker (when its chip is on) | `lrAt(t, { kind: 'wsd', peak: 4.5e-4, floor: 4.5e-6, warmup: 0.2, total: 25, decayStart: 20, decayShape: 'minus-sqrt' })` (t in T tokens) | scientific, 3 s.f. |
-| Context `shareBar`s: the whole run, and the extension stages zoomed (any segment under 18 px moves to the zoomed bar) | `budgetShares(stages)` and `budgetShares(extensionStages)`; unpublished token counts drawn in the neutral fill, labeled `not published` | percent, 2 decimals (zoomed: 1 decimal) |
+| Context `shareBar` with its zoomed tail (any segment under 18 px folds into the tail; `tailBasis: 'tail'`) | `budgetShares(stages)` for the main bar, `budgetShares(tailStages)` for the tail's printed shares; unpublished counts passed as `{ value: null }` (neutral fill, `not published`); a run with no published counts (DeepSeek-V4, Kimi K3, MiniMax-M2) draws the all-unknown bar labeled `no published shares` | `sharePct`: percent, 2 decimals (tail: 1 decimal) |
 | Attention work per new token vs the first stage | `attentionCostRatio(ctx, firstCtx)` per stage | `×n` |
 
 **Try this** (each leads to a named insight)
@@ -146,8 +151,19 @@ spend their last tokens.
    29.2T.
 3. With `GLM-5`, read both bars: 4K 94.57% of the run; zoomed, 32K 64.5%, 128K 32.3%, 200K 3.2% of the last
    1.55T (0.18% of the run), and the attention-only readouts ×8, ×32, ×50. Switch to `Kimi K3` or
-   `DeepSeek-V4`: their per-stage token counts are not published and show in the neutral fill. → **Insight: context is extended on a thin slice of tokens,** precisely because each long token
+   `DeepSeek-V4`: their per-stage token counts are not published, so the bar shows only neutral segments
+   labeled `no published shares`. → **Insight: context is extended on a thin slice of tokens,** precisely because each long token
    costs much more attention work and long documents are scarce.
+
+**Check my work** (default state: `WSD`, decay 20%, stop at 60%; templated from `lrAt` for any state, the
+plateau, decay and cosine lines chosen by where `stopAt` falls; mono, `aria-live="polite"`; this exact text
+appears on the page):
+```text
+WSD: the decay starts at 100% − 20% = 80% of the run
+stop at 60%: before 80%, on the plateau → 1.000 of peak
+cosine at 60%: ½ × (1 + cos(π × 0.60)) = ½ × (1 − 0.309) = 0.345 of peak
+```
+(Inside the decay the WSD line reads, e.g. at 90%: `1 − (90% − 80%) ÷ 20% = 0.500 of peak`.)
 
 Lesson-17 check: the readouts give tokens per stage and per-token attention work separately and never a
 "cheap" total; the page's "cheap" claim is Kimi K3's, quoted, and the toy does not compute total compute
@@ -173,21 +189,22 @@ constant peak (2.0 × 10⁻⁴ for Pro) for most of training, then a cosine deca
 its decay start is not published, so it has no `decayFrac` chip. (b) Nemotron 3 Super's decay is called
 "minus-sqrt" in its report; the page's `s(p) = 1 − √p` is the standard form of that shape, stated here as
 the page's assumption. (c) Batch size also ramps during DeepSeek-V4's run (to 94.4M tokens for Pro).
-Color links: the `curvePlot`'s decay band and the `decayFrac` slider share the selection accent; the `shareBar`
-segment for the selected stage carries the selection outline.
+Color links: the decay band (page-drawn `G.selectionMark` in frames 3–5) and the `decayFrac` slider share the
+selection accent; the `shareBar` segment for the selected stage carries the selection outline (page-drawn).
 
 ## 8. In today's models (Oct 2026)
-All keys proposed for the data-extension pass; entry ids as accepted in `rlvr-grpo` §13.
+Every key below is in `data/models.json` (data passes 2026-10-07 and 2026-10-08); entry ids as accepted in `rlvr-grpo` §13.
 
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| Nemotron 3 Super: WSD, 200B-token warmup to 4.5e-4, long plateau, minus-sqrt decay over the final 5T of 25T to 4.5e-6 | `models.nemotron-3-super.lr_schedule` = { kind: "wsd", peak: 4.5e-4, warmup_tokens: 200e9, decay_tokens: 5e12, floor: 4.5e-6, shape: "minus-sqrt" } (confirmed) | 02 §1.4 |
+| Nemotron 3 Super: WSD, 200B-token warmup to 4.5e-4, long plateau, minus-sqrt decay over the final 5T of 25T to 4.5e-6 | `models.nemotron-3-super.lr_schedule` (the string, printed) and the numeric keys the toy's preset reads: `.lr_schedule_kind` = "wsd", `.lr_peak` = 4.5e-4, `.lr_floor` = 4.5e-6, `.lr_warmup_tokens` = 200e9, `.lr_decay_tokens` = 5e12, `.lr_decay_shape` = "minus-sqrt", with `.pretrain_tokens` = 25e12 (confirmed) | 02 §1.4 |
 | DeepSeek-V4: 2000-step warmup, constant peak (Pro 2.0e-4, Flash 2.7e-4), cosine decay to 10% of peak near the end; sequence length 4K → 16K → 64K → 1M; batch ramped to 94.4M (Pro) / 75.5M (Flash) tokens | `models.deepseek-v4-pro.lr_schedule`, `.context_stages` = ["4K", "16K", "64K", "1M"]* (confirmed) | 02 §1.4, §2 |
 | Kimi K3: cosine with 1% warmup; its scaling study found cosine beat WSD when each was tuned separately; context 8K → 64K in pretraining and 256K → 1M in the cooldown; NoPE | `models.kimi-k3.lr_schedule` = "cosine, 1% warmup", `.context_stages` (confirmed) | 02 §1.4, §2 |
-| MiniMax-M2: 19.9T constant phase + 9.3T decay phase; context 8K → 32K → 192K during the decay | `models.minimax-m2.lr_schedule` = { constant: 19.9e12, decay: 9.3e12 }, `.context_stages` (confirmed) | 02 §1.4, §2 |
-| GLM-5: cosine decay; context 32K (1T tokens) → 128K (500B) → 200K (50B) after a 27T base at 4K; long documents and synthetic agent trajectories upsampled late; 160B tokens of SWE data | `models.glm-5.lr_schedule` = "cosine", `.context_stages` = [["4K", 27e12], ["32K", 1e12], ["128K", 0.5e12], ["200K", 0.05e12]] (confirmed) | 02 §1.4, §2 |
+| MiniMax-M2: 19.9T constant phase + 9.3T decay phase; context 8K → 32K → 192K during the decay | `models.minimax-m2.lr_schedule` (string), `.constant_phase_tokens` = 19.9e12, `.decay_phase_tokens` = 9.3e12 (the 31.8% chip: `sharePct(9.3e12, 29.2e12)`), `.context_stages` (confirmed) | 02 §1.4, §2 |
+| GLM-5: cosine decay; context 32K (1T tokens) → 128K (500B) → 200K (50B) after a 27T base at 4K; long documents and synthetic agent trajectories upsampled late; 160B tokens of SWE data | `models.glm-5.lr_schedule` = "cosine", `.context_stages` (string, printed), and the numeric stage counts the bars read: `.base_tokens` = 27e12, `.stage_32k_tokens` = 1e12, `.stage_128k_tokens` = 0.5e12, `.stage_200k_tokens` = 0.05e12; `.midtrain_data` = "long documents and synthetic agent trajectories upsampled at later stages"; `.swe_data_tokens` (confirmed) | 02 §1.4, §2 |
 | MiMo-V2-Flash: AdamW, two-stage cosine (to 1e-4 over 10T, then to 3e-5 over 4T) | `models.mimo-v2-flash.lr_schedule` (confirmed) | 02 §1.4 |
-| Olmo 3: 100B-token Dolmino mid-training, then 65K context extension | `models.olmo-3.midtrain_tokens` = 100e9 (reported) | 02 §2 |
+| Olmo 3: 100B-token Dolmino mid-training, then 65K context extension | `models.olmo-3.midtrain_tokens` = 100e9, `.context_extension` = "65K" (reported) | 02 §2 |
+| DeepSeek-V4: agentic data injected in mid-training (frame 5) | `models.deepseek-v4-pro.midtrain_data` = "agentic data in mid-training" (confirmed) | 02 §2 |
 | Kimi K3 states that context extension is cheap because it is concentrated in a small fraction of the budget | `models.kimi-k3.context_extension_note` (confirmed) | 02 §2 |
 
 \* "4K", "32K" etc. are the briefs' nominal labels; the data pass should store the exact token counts from
@@ -219,12 +236,12 @@ Frame 6 (GLM-5's context stages), desktop width. `▒` = selected segment. Check
  │ 4K                                     94.57% │ │││  ← last 5%
  └───────────────────────────────────────────────┴─┴┴┘
                                                   ╲___╱
- the last 5%, zoomed (1.55T)
+ the last 5%, zoomed (1.55T): shares of the tail
  ┌──────────────────────────────┬───────────────┬▒┐
  │ 32K 64.5%                    │ 128K 32.3%    │▒│
  └──────────────────────────────┴───────────────┴▒┘
-   1T                             500B           └ 200K 3.2%
-                                                   50B ◀ followed
+   1T                             500B            50B ◀ followed
+ legend: … · 200K · 3.2% of last 5%
  [doc────] [doc──────────] [doc───────────────]
  Context extension grows the sequence length in a few
  short stages. GLM-5 goes from 4K to 200K tokens using
@@ -307,3 +324,21 @@ Applied from `track-review-recipe.md` §4 (change log: `fix-recipe-review.md`):
 - Should: hook separates "end of pretraining" (best data) from "last few percent" (longest documents); frame 1's term is warmup ("learning rate" defined in §3 and on the axis); Kimi K3 NoPE wording matches `rope`; GLM-5 printed as "28.5T (its published stages sum to 28.55T)"; the LR-schedule and `sft`-prereq alternatives are deleted and the rulings stated (lesson 20); frame 3 dims the main decay while the branch draws; try-this 1's Kimi caveat is part of the insight.
 - Nice: frame 4 has a legend naming the groups that dim and light.
 - Data pass 2026-10-07: `context_schedule` renamed `context_stages` for deepseek-v4-pro, kimi-k3 and minimax-m2; no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R10 / P3-R11: `curvePlot` named with its built API; frame 3's dashed branch is a solid `muted` series
+  labeled `branch`.
+- P3-R7: frame 6 is one `shareBar` with `tailBasis: 'tail'`, `tailLabel: 'last 5%'`; the tail prints shares of
+  the tail (64.5 / 32.3 / 3.2%) and says so in its label. §6's output row matches.
+- S3-C final API (reconciled 2026-10-08): axes carry `domain: [0, 1]`; the decay band's outline is a
+  page-drawn `G.selectionMark` (curvePlot outlines only a followed marker); frame 6's 200K share prints in
+  the tail's legend, "200K · 3.2% of last 5%", with no leader line (the segment is under the print threshold).
+- P3-R6: runs with no published stage counts draw the all-unknown bar labeled `no published shares` (§6,
+  try-this 3).
+- P3-R18: frame 8 prints turns, not degrees (0.015 turn at 4K, ¾ turn at 200K).
+- P3-R14 (data gaps 13–17): numeric keys added beside the strings: `nemotron-3-super.lr_schedule_kind`,
+  `.lr_peak`, `.lr_floor`, `.lr_warmup_tokens`, `.lr_decay_tokens`, `.lr_decay_shape`;
+  `minimax-m2.constant_phase_tokens`, `.decay_phase_tokens`; `glm-5.stage_32k_tokens`, `.stage_128k_tokens`,
+  `.stage_200k_tokens`, `.midtrain_data`; `deepseek-v4-pro.midtrain_data`; `olmo-3.context_extension`. The
+  string keys stay (printed in §8 rows).
+- X-2 / P3-R16: "Check my work" added (§6), from `lrAt`.

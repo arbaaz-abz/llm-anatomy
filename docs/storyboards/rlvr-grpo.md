@@ -1,6 +1,7 @@
 # RLVR and GRPO (`rlvr-grpo`)
 
 Track: training · Section: recipe · Prereqs: rlhf-dpo
+Next: `agentic-rl` (the one slug whose `prereqs` list `rlvr-grpo`, from `shared/concepts.json`)
 Status: approved (expert review)
 Sources: 02 §4.1, §4.3, §4.4, §4.5, §4.6, §4.7, §5, §7; 05 §1.1, §2
 
@@ -62,7 +63,7 @@ Thread order: frames 1–5 tell the advantage story; frame 6 is a labeled what-i
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
 | 1 | Prompt chips `7 × 8 = ?` at the top. Policy `block` (active) at the left, labeled `policy: the model being trained`. Eight empty rows below. | A `flow` dot (carry `token`) leaves the policy for each row in turn; the row's token chips appear left to right as the dot passes. Rows fill top to bottom. | One prompt, eight sampled answers from the same model. Only the random sampling differs. | `G = 8`; row index 1–8 |
-| 2 | Same rows. Checker `block` (label `checker: last token = 56?`) at the right, drawn as a small program block, not a model, with a visible one-line footnote under it: `Real checkers parse a boxed answer and compare it symbolically; this one reads the last token.` Column header `R`. | The checker lights `active`; a `verdict` badge stamps onto each row top to bottom; the `R` `vector` fills cell by cell: `--sem-ok` for 1, `--sem-bad` for 0. | A program checks each final answer: 1 if it is 56, 0 if not. Row 5 has wrong working and a right final token, and still gets a 1. | `R = [1, 0, 0, 0, 1, 0, 0, 0]` |
+| 2 | Same rows. Checker `block` (label `checker: last token = 56?`) at the right, drawn as a small program block, not a model, with a visible one-line footnote under it: `Real checkers parse a boxed answer and compare it symbolically; this one reads the last token.` Column header `R`. | The checker lights `active`; a `verdict` badge stamps onto each row top to bottom; the `R` `vector` fills cell by cell with the semantic fill option, one entry per cell (`fill: ['ok', 'bad', 'bad', 'bad', 'ok', 'bad', 'bad', 'bad']`: a 40% `--sem-ok` / `--sem-bad` tint with ink text), each cell still printing its number. | A program checks each final answer: 1 if it is 56, 0 if not. Row 5 has wrong working and a right final token, and still gets a 1. | `R = [1, 0, 0, 0, 1, 0, 0, 0]` |
 | 3 | The `R` column with a horizontal rule across it labeled `mean 0.25` (plain labeled mark). Column header becomes `R − mean`. | The rule slides from 0 up to 0.25. Each cell's number counts from `R` to `R − mean`. Nothing else moves. | The group's own mean is the baseline, the score an answer has to beat: 2 of 8 right gives 0.25. Right answers sit 0.75 above it, wrong ones 0.25 below. | `mean = 2/8 = 0.25`; `+0.75` (rows 1, 5); `−0.25` (others) |
 | 4 | The column, now headed `A (advantage)`, colored by the value scale. A `std 0.43` label beside it. | Each cell's number scales from `+0.75 / −0.25` to `+1.73 / −0.58` while its fill goes from `--val-zero` to its value color. A `Σ A = 0.00` readout stays at zero. | Divide by the group's spread, 0.43, and you have each answer's advantage: +1.73 for right, −0.58 for wrong. Within a group they always sum to zero. | `std = √(0.25 · 0.75) = 0.433`; `0.75 / 0.433 = +1.73`; `−0.25 / 0.433 = −0.58`; `Σ A = 0` |
 | 5 | **Key frame.** Rows of chips at the left, the `A` column at the right. | A `flow` dot (carry `gradient`) leaves each `A` cell and travels right to left along its row; every chip it passes takes the row's value color. Right rows warm, wrong rows cool. | Every token in a right answer gets +1.73 and is pushed up; every token in a wrong one gets −0.58 and is pushed down, shared prefix included. | per-chip `A`: `+1.73` on 10 chips, `−0.58` on 29 chips |
@@ -76,7 +77,7 @@ Determinism: every frame is a pure function of (step, progress). Reduced motion 
 ## 6. Toy
 "Grade a group." One prompt, eight seeded sampled answers, live rewards, advantages, and per-token pushes.
 
-**Seeded data** (hand-authored constants in `training/concepts/rlvr-grpo.js`, not drawn from the RNG, so every number is reproducible from this file). A visible line under the toy says: `The eight answers and the ratios are hand-picked stand-ins; a real policy samples them and a real trainer measures the ratios.`
+**Seeded data** (hand-authored constants, not drawn from the RNG, so every number is reproducible from this file). The pools, the slot order and the target are `GROUP_TOY = { correct: [C1…C8], wrong: [W1…W8], slotOrder: [1, 5, 3, 7, 2, 6, 4, 8], target: '56' }`, imported from `math/grpo.js` (ruling P3-R5; `agentic-rl` and `distillation` import the same constant); the per-token ratios below stay in `training/concepts/rlvr-grpo.js`. A visible line under the toy says: `The eight answers and the ratios are hand-picked stand-ins; a real policy samples them and a real trainer measures the ratios.`
 
 Correct pool (final token `56`), in order:
 `C1 = 7 × 8 = 56` · `C2 = 7 + 8 = 56` · `C3 = 56` · `C4 = 8 × 7 = 56` · `C5 = 49 + 7 = 56` · `C6 = 70 − 14 = 56` · `C7 = so 56` · `C8 = 7 eights are 56`
@@ -98,6 +99,8 @@ Importance ratios `r = π_θ / π_old` per token (1.00 everywhere except): `C1 =
 
 **Selection, not hover.** A chip is selected by click, tap, or arrow keys (visible focus ring = "the token we're following"); the default selection is row 1's `56`. A visible **token inspector** panel under the table always shows the selected token's row, `A`, weight `w`, push `A · w`, ratio (`when sampled` → `now`), objective and `clipped yes/no`. Every number a try-this prompt refers to is in the inspector or printed in the table; nothing is behind hover.
 
+**Check my work:** none (the token inspector is this page's check: it prints every step behind the selected chip's push; ruling P3-R16).
+
 **Live outputs**
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
@@ -112,7 +115,7 @@ Importance ratios `r = π_θ / π_old` per token (1.00 everywhere except): `C1 =
 | Chip hatch (gradient off) | `clippedSurrogate(...).clipped` | hatch |
 
 **Try this** (each leads to a named insight)
-1. Predict first: if 4 of 8 answers are right instead of 2, does `7 × 8 = 56` get a bigger or smaller push? Slide `k` 2 → 4 → 8. `A` for a right answer goes +1.73 → +1.00 → 0.00; `Σ|A|` goes 6.93 → 8.00 → 0. Now slide to 1: +2.65 for the lone right answer, −0.38 for each of the seven wrong ones; and to 0: all zeros, the same banner as at 8. Then switch `norm` off and repeat: +0.75 → +0.50 → 0, and the lone right answer gets only +0.875. → **Insight: advantages are relative, not absolute.** The rarer the outcome inside its group, the bigger its push; dividing by the std amplifies that unevenly. Compare `Σ|A|` with and without the division: 5.29 vs 1.75 at k = 1 (3.02×), 6.93 vs 3.00 at k = 2 (2.31×), 8.00 vs 4.00 at k = 4 (2.00×). The total push still peaks at k = 4, but the division boosts near-impossible and near-solved prompts the most (the difficulty bias), which is Dr.GRPO's argument for dropping it, as DeepSeek-V3.2 does. A group with no spread teaches nothing, which is why dynamic sampling throws it away and why GLM-5 keeps only prompts its previous model solves rarely but can solve (§8).
+1. Predict first: if 4 of 8 answers are right instead of 2, does `7 × 8 = 56` get a bigger or smaller push? Slide `k` 2 → 4 → 8. `A` for a right answer goes +1.73 → +1.00 → 0.00; `Σ|A|` goes 6.93 → 8.00 → 0. Now slide to 1: +2.65 for the lone right answer, −0.38 for each of the seven wrong ones; and to 0: all zeros, the same banner as at 8. Then switch `norm` off and repeat: +0.75 → +0.50 → 0, and the lone right answer gets only +0.875. → **Insight: advantages are relative, not absolute.** The rarer the outcome inside its group, the bigger its push; dividing by the std amplifies that unevenly. Compare `Σ|A|` with and without the division: 5.29 vs 1.75 at k = 1 (3.02×), 6.93 vs 3.00 at k = 2 (2.31×), 8.00 vs 4.00 at k = 4 (2×). The total push still peaks at k = 4, but the division boosts near-impossible and near-solved prompts the most (the difficulty bias), which is Dr.GRPO's argument for dropping it, as DeepSeek-V3.2 does. A group with no spread teaches nothing, which is why dynamic sampling throws it away and why GLM-5 keeps only prompts its previous model solves rarely but can solve (§8).
 2. With `k = 2`, select the `48` in row 4 (`7 × 8 = 48 , so 48`, 8 tokens) and then the `63` in row 6 (1 token). Under `sample` aggregation the inspector shows a `push per token` of −0.0090 for row 4 and −0.0722 for row 6: both wrong, but the long answer is punished 8× less per token, and both rows print the same `push per answer`, −0.0722. Flip `agg` to `token`: every token now pays −0.0148, so the long wrong answer's `push per answer` becomes −0.1184 and the short one's −0.0148. → **Insight: sample-level averaging shields long wrong answers (and dilutes long right ones); token-level loss charges every token the same.** That is DAPO's token-level loss, part of the 2026 consensus recipe (§8: Olmo 3; brief 02 §4.4).
 3. With `k = 2` and `epsHigh = 0.20`, three chips are hatched: `56` in row 1 (r = 1.25), `56` in row 5 (r = 1.35), and the first `48` in row 4 (r = 0.75). Select row 1's `56`: objective 2.078, clipped. Press the `clip-higher 0.28` chip: row 1's `56` loses its hatch (objective 2.165, gradient on); row 5's `56` stays hatched (1.35 > 1.28); row 4's `48` stays hatched (0.75 < 0.8, the lower bound did not move). → **Insight: clipping switches a token's gradient off, it does not shrink it, and clip-higher widens only the upward side** so a good token that was improbable when sampled can keep gaining probability (no entropy collapse), while the lower bound still stops collapse the other way.
 
@@ -140,7 +143,7 @@ Importance ratios `r = π_θ / π_old` per token (1.00 everywhere except): `C1 =
 \qquad \text{(DAPO token-level; 2026 consensus: } \beta \approx 0,\; \varepsilon_{\text{high}} > \varepsilon_{\text{low}}\text{)}
 ```
 Shapes: `R, A ∈ ℝ^G` (G = 8 on this page); `r_{i,t}` is one scalar per token, `Σ|o_i| = 39` tokens in the default group; the policy's logits are `[|o_i| × vocab]` per answer, never shown. Population std (divides by G): `std = √(p(1−p))` for 0/1 rewards with pass rate `p`, so `Σ|A_i| = 2G·√(p(1−p))`, which peaks at `p = 0.5` and is 0 at `p ∈ {0, 1}`.
-Notes shown in the panel: (a) Trainers such as TRL and verl divide by G − 1, which makes the std 1.069× larger and every advantage 1.069× smaller (+1.62 instead of +1.73), and add a small ε instead of returning zeros. (b) Dr.GRPO also drops the 1/|oᵢ| length term (compare the `agg` toggle); the `norm` toggle shows only the std change. (c) `π_old` is the policy that produced the sample; it differs from `π_θ` because the trainer takes several steps per batch and rollouts may be asynchronous (frame 8).
+Notes shown in the panel: (a) Trainers such as TRL and verl divide by G − 1, which makes the std 1.07× larger and every advantage 1.07× smaller (+1.62 instead of +1.73), and add a small ε instead of returning zeros. (b) Dr.GRPO also drops the 1/|oᵢ| length term (compare the `agg` toggle); the `norm` toggle shows only the std change. (c) `π_old` is the policy that produced the sample; it differs from `π_θ` because the trainer takes several steps per batch and rollouts may be asynchronous (frame 8).
 Color links to the animation: `hl-r` = the R column (frames 2–3, `--sem-ok`/`--sem-bad`); `hl-a` = the A column and the chip fills (frames 4–5, value scale); `hl-ratio` = the marker on the `clipLine` (frames 8–9).
 
 ## 8. In today's models (Oct 2026)
@@ -260,7 +263,7 @@ clippedSurrogate(ratio: number, advantage: number, { epsLow = 0.2, epsHigh = 0.2
 //   (0.75, −0.5774)                   → { objective: −0.4619, clipped: true }
 //   (1.50, −0.5774)                   → { objective: −0.8661, clipped: false }   // pushing down past the band is allowed
 
-// Deterministic group assembly from the pools (pools live in the concept module).
+// Deterministic group assembly from the pools (pools: `GROUP_TOY`, exported by this module, ruling P3-R5).
 buildGroup(k: number, { correct: string[][], wrong: string[][], slotOrder: number[] }) → string[][]
 //   k = 2 → [C1, W1, W2, W3, C2, W4, W5, W6]  (the §5 table)
 //   k = 3 → [C1, W1, C2, W2, C3, W3, W4, W5]
@@ -277,7 +280,7 @@ Resolved by the main-session and expert reviews: see §13. Still open:
 
 ## 13. Reviewer rulings (main session)
 Worked numbers hand-checked: k = 1/2/4 advantages, Σ|A|, per-token pushes under both aggregations, all four `clippedSurrogate` cases, 39 tokens (10 right / 29 wrong).
-- Std: keep the population std; the math panel adds one line noting that trainers often use the unbiased std plus an ε. **Expert review 2026-10-07:** wording fixed to "divide by G − 1, which makes the std 1.069× larger and every advantage 1.069× smaller (+1.62 instead of +1.73)".
+- Std: keep the population std; the math panel adds one line noting that trainers often use the unbiased std plus an ε. **Expert review 2026-10-07:** wording fixed to "divide by G − 1, which makes the std 1.07× larger and every advantage 1.07× smaller (+1.62 instead of +1.73)".
 - Data: accept the proposed RL keys and entries (`glm-5`, `deepseek-v3.2`, `nemotron-3-super`, `minimax-m2`, `olmo-3`, `magistral`, `qwen3-2507`). They are added in the data-extension pass after Task 12. Magistral's ε_high is stored as the string "0.26–0.28" (not a conflict range).
 - BG mechanics are treated as timeless (spec §7); only adoption facts are dated.
 - Kimi K3 effort control (the untagged −1 override) stays off the page until tagged. **Expert review 2026-10-07:** a generic length/effort-control row was added to §8 using only the CONFIRMED §4.5 facts (K3 verbosity budget, MiniMax-M2 completion-time reward).
@@ -291,7 +294,7 @@ Worked numbers hand-checked: k = 1/2/4 advantages, Σ|A|, per-token pushes under
 - **Catch-up pass 2026-10-07 (README lessons 16–28 + settlements):**
   - Terms (coordinator note): `policy` and the ratio `r` are defined by `rlhf-dpo` (its frames 3 and 5) and are now listed as assumed; frame 1 keeps the identical recap label `policy: the model being trained`; frame 1 introduces "group of G samples", frame 8 introduces nothing new (recap of r plus why it drifts). `KL term (penalty)` wording kept.
   - Lesson 16: one definition per quantity. Chip fill encodes the advantage A only; `push per token` = A · w and `push per answer` = A · w · L are printed numbers, never colors (§4 encoding line; §6 output names).
-  - Lesson 17: try-this 1's "difficulty bias" insight now states the toy's own numbers: Σ|A| with vs without the std division is 5.29 vs 1.75 at k = 1 (3.02×), 6.93 vs 3.00 at k = 2 (2.31×), 8.00 vs 4.00 at k = 4 (2.00×); the total still peaks at k = 4, so the bias is in the amplification, not the total. Reproducer call recorded in §11.
+  - Lesson 17: try-this 1's "difficulty bias" insight now states the toy's own numbers: Σ|A| with vs without the std division is 5.29 vs 1.75 at k = 1 (3.02×), 6.93 vs 3.00 at k = 2 (2.31×), 8.00 vs 4.00 at k = 4 (2×); the total still peaks at k = 4, so the bias is in the amplification, not the total. Reproducer call recorded in §11.
   - Lesson 18: stage budget stated in §4: 22 px header + 8 × 43 px = 366 px; readouts in the right margin; the toy table is a non-stage SVG.
   - Lessons 19, 22, 25, 27, 28 and the byte-unit, `math/memory.js`, chip-memory, FORMATS and `--carry-activation` settlements: no change (no share bars, byte sizes, bandwidth ladders, back-solved presets or activation flows on this page; slider stops 0–8 and ε_high 0.20/0.28 are inside the model).
   - Lesson 20: the two struck-through alternatives in this section were deleted and restated as settled rulings.
@@ -299,3 +302,14 @@ Worked numbers hand-checked: k = 1/2/4 advantages, Σ|A|, per-token pushes under
   - Lessons 23 and 26: the DeepSeek-V3.2 compute anchor says "compute, in the report's own accounting"; §3 ¶2 says which pass (generation = forward only; the update = forward + backward).
   - Lesson 24 / hatch settlement: hatch = excluded everywhere on the page; frame 6 now hatches the filtered group's chips (excluded from the batch); zero advantages keep the neutral `--val-zero` fill.
   - Data-id settlement: §8 says which ids are single checkpoints and which are series-level reports carrying a `note`.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R19: the header carries `Next: agentic-rl` (from `shared/concepts.json`).
+- P3-R5: the pools, slot order and target are `GROUP_TOY` in `math/grpo.js` (§6 seeded data, `buildGroup`
+  comment); the ratios stay in the concept module.
+- X-3: the ratio with trailing zeros (2.00) now prints "(2×)" (try-this 1, §13); the four-figure 1.069
+  ratio prints "1.07×" (math note a, §12). Every ratio prints
+  through `formatRatio` (3.02×, 2.31×, 2×; README lesson 35).
+- S3 glyph option: the R column uses the `vector` semantic fill (`fill` per cell, `'ok' | 'bad'`; S3-C final
+  API), frame 2 and §7.
+- P3-R16: no "Check my work" (the token inspector is the check).

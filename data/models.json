@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-07",
+  "as_of": "2026-10-08",
   "entries": [
     {
       "id": "deepseek-v4-pro",
@@ -382,6 +382,13 @@
           "source_url": "https://arxiv.org/pdf/2606.19348",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "midtrain_data": {
+          "value": "agentic data in mid-training",
+          "note": "Brief 02 §2.",
+          "source_url": "https://arxiv.org/pdf/2606.19348",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -1699,6 +1706,27 @@
           "source_url": "https://arxiv.org/abs/2407.21783",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2024-07-23",
+          "note": "Meta's release post, dated July 23, 2024 (read 2026-10-08).",
+          "source_url": "https://ai.meta.com/blog/meta-llama-3-1/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "interruptions_hardware_share": {
+          "value": 0.78,
+          "note": "About 78% of the 419 unexpected interruptions in the 54-day window were attributed to confirmed or suspected hardware issues (brief 03 §5.4).",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "interruptions_gpu_share": {
+          "value": 0.587,
+          "note": "GPU issues (faulty GPU, HBM3, SRAM, …) were 58.7% of unexpected interruptions (brief 03 §5.4).",
+          "source_url": "https://arxiv.org/abs/2407.21783",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2047,6 +2075,13 @@
           "source_url": "https://arxiv.org/abs/2501.12948",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2025-01",
+          "note": "Month only: the report's arXiv v1 is dated 2025-01-22 (read 2026-10-08).",
+          "source_url": "https://arxiv.org/abs/2501.12948",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2109,6 +2144,13 @@
           "source_url": "https://arxiv.org/abs/2507.20534",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2025-07",
+          "note": "Month only: the report's arXiv v1 is dated 2025-07-28 (read 2026-10-08).",
+          "source_url": "https://arxiv.org/abs/2507.20534",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2379,6 +2421,52 @@
           "source_url": "https://arxiv.org/abs/2602.15763",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "swe_issue_pr_pairs": {
+          "value": 10000000,
+          "unit": "pairs",
+          "note": "About 10M issue–PR pairs (~160B unique tokens, see swe_data_tokens).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "stage_32k_tokens": {
+          "value": 1000000000000,
+          "unit": "tokens",
+          "note": "Mid-training context stage at the nominal 32K label (§2.3); numeric form of context_stages.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "stage_128k_tokens": {
+          "value": 500000000000,
+          "unit": "tokens",
+          "note": "Mid-training context stage at the nominal 128K label (§2.3); numeric form of context_stages.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "stage_200k_tokens": {
+          "value": 50000000000,
+          "unit": "tokens",
+          "note": "Mid-training context stage at the nominal 200K label (§2.3); numeric form of context_stages.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "midtrain_data": {
+          "value": "long documents and synthetic agent trajectories upsampled at later stages",
+          "note": "Brief 02 §2 (GLM-5 §2.3).",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "agentic_envs_other": {
+          "value": "thousands of Docker terminal tasks (Harbor format); multi-hop search over a web knowledge graph (>2M pages); slide generation",
+          "note": "Brief 02 §4.6.",
+          "source_url": "https://arxiv.org/abs/2602.15763",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2523,6 +2611,14 @@
           "source_url": "https://arxiv.org/abs/2505.09388",
           "confidence": "reported",
           "last_verified": "2026-10-07"
+        },
+        "languages": {
+          "value": 119,
+          "unit": "languages and dialects",
+          "note": "Qwen3 release post (April 29, 2025): \"supporting 119 languages and dialects\" (read 2026-10-08).",
+          "source_url": "https://qwenlm.github.io/blog/qwen3/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2623,6 +2719,22 @@
           "source_url": "https://arxiv.org/abs/2605.26494",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "constant_phase_tokens": {
+          "value": 19900000000000,
+          "unit": "tokens",
+          "note": "Numeric form of lr_schedule.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "decay_phase_tokens": {
+          "value": 9300000000000,
+          "unit": "tokens",
+          "note": "Numeric form of lr_schedule.",
+          "source_url": "https://arxiv.org/abs/2605.26494",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -2933,6 +3045,50 @@
           "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "lr_schedule_kind": {
+          "value": "wsd",
+          "note": "Numeric form of lr_schedule (warmup-stable-decay).",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "lr_peak": {
+          "value": 0.00045,
+          "note": "Peak learning rate; numeric form of lr_schedule.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "lr_floor": {
+          "value": 0.0000045,
+          "note": "Final learning rate after the decay; numeric form of lr_schedule.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "lr_warmup_tokens": {
+          "value": 200000000000,
+          "unit": "tokens",
+          "note": "Warmup length; numeric form of lr_schedule.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "lr_decay_tokens": {
+          "value": 5000000000000,
+          "unit": "tokens",
+          "note": "Decay over the final 5T of 25T (pretrain_tokens); numeric form of lr_schedule.",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "lr_decay_shape": {
+          "value": "minus-sqrt",
+          "note": "The report's name for the decay shape; midtraining draws it as 1 − √p (its stated assumption).",
+          "source_url": "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -3022,6 +3178,29 @@
           "source_url": "https://arxiv.org/abs/2512.13961",
           "confidence": "reported",
           "last_verified": "2026-10-07"
+        },
+        "total_params_small": {
+          "value": 7000000000,
+          "unit": "params",
+          "note": "The abstract: \"at the 7B and 32B parameter scales\" (read 2026-10-08).",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "total_params_large": {
+          "value": 32000000000,
+          "unit": "params",
+          "note": "The abstract: \"at the 7B and 32B parameter scales\" (read 2026-10-08).",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
+        },
+        "context_extension": {
+          "value": "65K",
+          "note": "Context extension after Dolmino mid-training (brief 02 §2, REPORTED).",
+          "source_url": "https://arxiv.org/abs/2512.13961",
+          "confidence": "reported",
+          "last_verified": "2026-10-08"
         }
       }
     },
@@ -3122,6 +3301,13 @@
           "source_url": "https://developer.nvidia.com/blog/nvfp4-trains-with-precision-of-16-bit-and-speed-and-efficiency-of-4-bit/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2025-08-25",
+          "note": "Publication date of NVIDIA's technical blog describing the run (read 2026-10-08); a research model, not a released checkpoint.",
+          "source_url": "https://developer.nvidia.com/blog/nvfp4-trains-with-precision-of-16-bit-and-speed-and-efficiency-of-4-bit/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-08"
         }
       }
     },

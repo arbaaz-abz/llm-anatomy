@@ -10,7 +10,8 @@ Running example, continued from `rlvr-grpo` and `agentic-rl`: the prompt `7 × 8
 Four candidates `56 · 54 · 48 · 63` (the final tokens of `rlvr-grpo`'s rows 1, 2, 4 and 6). A **teacher**
 (the math specialist that RL produced) and a **student** each give a probability to each:
 teacher `[0.90, 0.05, 0.03, 0.02]`, student `[0.40, 0.30, 0.20, 0.10]`. Frame 6 reuses `rlvr-grpo`'s row 2,
-`7 × 8 = 54`, whose GRPO advantage was −0.58 on every token. A visible line under the stage says: "The
+`7 × 8 = 54`, whose GRPO advantage was −0.58 on every token (the row is `buildGroup(2, GROUP_TOY)` row 2 and
+its advantage `groupAdvantages`, both from `math/grpo.js`, ruling P3-R5). A visible line under the stage says: "The
 teacher and student probabilities are hand-picked stand-ins; the losses and rewards computed from them are
 exact."
 
@@ -69,7 +70,8 @@ matches its teacher; to go past the teacher, MiMo-V2-Flash adds an outcome advan
 ## 4. Visual metaphor
 Glyphs used (spec §5.1 and the built library): `vector` (`NUMBER_CELL` rows of 4 printed probabilities,
 labeled `56 · 54 · 48 · 63`, value scale maxAbs 1; 4 × 43 = 172 px), `cell` (printed losses and rewards),
-`token` (the student's sampled answer chips; `fill` = `valueColor(reward, 2)`), `block` (teacher, student,
+`token` (the student's sampled answer chips; `fill` = `valueColor(reward, 3)`: maxAbs 3 everywhere on this
+page, chips and toy cells alike, so every printed reward down to −2.639 reads on one scale, ruling P3-R18), `block` (teacher, student,
 specialists; `active` vs `dim`), `flow` (carry `token` for the sampled answer; carry `gradient` from the
 teacher's grades into the chips), plain labeled text marks (`teacher wrote 56`, `student's own sample`,
 `dense`, the per-model table).
@@ -120,7 +122,7 @@ learns, which token it sampled, and which teacher grades it.
 |---|---|---|---|---|---|
 | `method` | How the student learns | Preset chips | `teacher's text` / `teacher's probabilities` / `on-policy` | `on-policy` | the chips are the control |
 | `student` | Student's probabilities | Preset chips | `unsure [0.40, 0.30, 0.20, 0.10]` / `confident and wrong [0.10, 0.70, 0.10, 0.10]` / `close to the math teacher [0.85, 0.07, 0.05, 0.03]` | `unsure` | the chips |
-| `sampled` | Which token the student sampled (on-policy only) | Selection: click, tap or arrow keys on a student cell | `56` / `54` / `48` / `63` | `54` | – |
+| `sampled` | Which token the student sampled (on-policy only) | Selection: click, tap or arrow keys on a student cell (each cell a focusable `<g role="button" tabindex="0" aria-label="sampled: token">`, Enter / Space selects, visible focus, selection drawn with `G.selectionMark`: the `pretraining` template's pattern, ruling P3-R17) | `56` / `54` / `48` / `63` | `54` | – |
 | `teacher` | Who grades | Preset chips | `math teacher [0.90, 0.05, 0.03, 0.02]` / `chat teacher [0.60, 0.20, 0.10, 0.10]` / `50/50 mix` | `math` | – |
 
 **Live outputs** (printed)
@@ -146,6 +148,16 @@ learns, which token it sampled, and which teacher grades it.
    **Insight: averaging teachers pulls the student toward a blend.** A student that already matches the math
    specialist is still pushed away from it by the mix, which is why Kimi K3 picks one teacher per prompt by
    domain and effort level; DeepSeek-V4 sums its teachers' KLs with weights.
+
+**Check my work** (default state: `on-policy`, `unsure`, sampled `54`, math teacher; templated for any state
+from `opdTokenReward` and `klDivergence`, or `tokenLoss` / forward KL / `multiTeacherLoss` lines for the
+other methods and the mix; mono, `aria-live="polite"`; this exact text appears on the page):
+```text
+reward(54) = ln 0.05 − ln 0.30 = −2.996 − (−1.204) = −1.792
+expected reward = −KL(student ‖ teacher)
+  = −(0.40 ln(0.40/0.90) + 0.30 ln(0.30/0.05) + 0.20 ln(0.20/0.03) + 0.10 ln(0.10/0.02))
+  = −(−0.324 + 0.538 + 0.379 + 0.161) = −0.754
+```
 
 Lesson-17 check: the three insights are read straight off `opdTokenReward`, `klDivergence` and
 `multiTeacherLoss` at the stated presets (reproducer below); none depends on more than the four-candidate
@@ -297,3 +309,10 @@ Applied from `track-review-recipe.md` §8 (change log: `fix-recipe-review.md`):
 - Nice: try-this 3 no longer implies DeepSeek-V4's weights ("sums its teachers' KLs with weights").
 - `papers.on-policy-distillation-2025` id applied.
 - Data pass 2026-10-07: the unsourced Mistral Large 4 distillation claim is dropped (no data key); DeepSeek-R1 SFT samples cited as `deepseek-r1.sft_samples`; no numbers changed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R18: the reward fill uses `maxAbs` 3 everywhere (§4 said 2; the toy said 3).
+- P3-R17: `sampled` is the course's stage-selection pattern (focusable cells, `G.selectionMark`).
+- P3-R5: row 2 (`7 × 8 = 54`) and its −0.58 come from `GROUP_TOY` via `buildGroup` and `groupAdvantages`.
+- X-1: "DeepSeek-R1 (2025)" stays: `models.deepseek-r1.release_date` = "2025-01" (confirmed, arXiv 2501.12948).
+- X-2 / P3-R16: "Check my work" added (§6), from `opdTokenReward` and `klDivergence`.

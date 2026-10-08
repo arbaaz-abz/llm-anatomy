@@ -59,3 +59,4 @@ Lessons from the pilot expert review (2026-10-07). These apply to every storyboa
 32. **A `flow` dot must contrast with what it enters.** A dot entering an `active` (accent-filled) block gets a halo or stops at the block's edge.
 33. **Lesson names in text.** On the stage, name a lesson by its title; in page text, use `[[slug]]` only where a title reads naturally ("… in [[x]]", "see [[x]]"), never as a possessive or a bare parenthetical slug.
 34. **Try-this at the end of the toy.** Every page prints its storyboard's try-this list at the end of the toy section (`h4` "Try this" + `ol.try-this`, each item "prompt → Insight: …"), numbers computed, text pinned in the page test.
+35. **One formatter per quantity.** Bytes print through `formatBytes`, counts through `formatCount`, shares through `sharePct` / `formatShare`, ratios through `formatRatio`, durations through `formatDuration`; two pages never print the same quantity in two formats.

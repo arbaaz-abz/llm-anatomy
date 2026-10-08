@@ -66,31 +66,34 @@ compute inside the rack but not across the network. The cost is that everything 
 still runs at network speed, and big clusters thin the network further between pods.
 
 ## 4. Visual metaphor
-The stage is a map of links. Servers are `rack` glyphs (8 GPUs; 72 for NVL72 with `cols: 9`) whose
-internal link thickness encodes NVLink bandwidth (`rack` gains a `labels` option, accepted, so frame 8
-can number the GPUs); network links between racks are drawn with the same
-`rack` link style, thinner, with the bandwidth always printed beside every link ("450 GB/s each way",
-"50 GB/s each way"), so thickness is never the only encoding. Traffic is a `flow` dot on a link (carry
+The stage is a map of links. Servers are `rack` glyphs (8 GPUs; 72 for NVL72 with `cols: 9`) drawn with
+the default `linkWidth` (ruling P3-R8: link thickness never encodes an amount; the `rack` `labels` option
+numbers the GPUs in frame 8); network links between racks use the same `rack` link style, and the
+bandwidth is printed beside every link ("450 GB/s each way", "50 GB/s each way"), the one encoding of
+link speed. Traffic is a `flow` dot on a link (carry
 `activation` for tensor and pipeline traffic, `gradient` for data-parallel syncs, `token` for expert
 dispatch). Each cut's cost is a two-lane `laneTimeline` (compute lane, comm lane) on one time axis,
 with the percentage printed and the visible line "one full training step; both lanes in the same time
 units" (lesson 21). The compute lane is drawn 120 px wide; a longer comm lane is cut at the 520 px track
-(4.3× compute) and ends in an arrow with its number printed, "continues: 250%". Pods in frame 7 are faint filled regions (no outline: outlines mean
+(4.33× compute) with the `laneTimeline` options `scale: 1.2` (px per unit, so the compute lane's 100 units
+are 120 px) and one global `cap: { at: 433.3, label: 'continues: 250%' }` (520 px ÷ 1.2; ruling P3-R9), and
+ends in an arrow with its number printed before it; `w` is the lane-label gutter plus the 520 px track. Pods in frame 7 are faint filled regions (no outline: outlines mean
 selection) labeled with their size. The followed GPU, "GPU 1" of server 1, has the selection outline in
 every frame.
 
 Glyphs used (from spec §5.1 and the built library): `rack` (frames 1–2, 6–10), `gpu` (frame 2:
 one GPU, `showMem: false`), `flow`, `block` (frame 7:
 leaf and spine switches as small labeled blocks), `token` (frame 8: one token chip traveling).
-From approved proposals: `laneTimeline` (`gpu-primer`) for comm vs compute.
+Shared glyph built in S3: `laneTimeline` (ruling P3-R9; segments `{ from, to, kind: 'compute' | 'comm',
+label }`, `scale`, one global `cap`) for comm vs compute.
 
-New glyphs proposed: none. Glyph option used (accepted): `rack` `labels: ['1', …, '8']` so frame 8 can
-number rails.
+New glyphs proposed: none. Glyph options built in S3: `rack` `labels: ['1', …, '8']` so frame 8 can
+number rails; `gpu` `showMem: false`.
 
-Frame 10 layout (lesson 18): the 72-GPU `rack` at `cols: 9` is 234 × 208 px; it stands alone at the
-left with the printed line "= 9 HGX servers". The nine servers appear only as the merge's start state,
-collapsed to three 8-GPU racks (104 × 52 px each) and the text "+ 6 other servers", so the frame stays
-inside 580 × 366.
+Frame 10 layout (lesson 18): the 72-GPU `rack` at `cols: 9` is 244 × 218 px (the built geometry, ruling
+P3-R8); it stands alone at the left with the printed line "= 9 HGX servers". The nine servers appear only
+as the merge's start state, collapsed to three 8-GPU racks (each 114 × 62 px overall at `cols: 4`) and the text
+"+ 6 other servers", so the frame stays inside 580 × 366.
 
 Plain labeled marks: link bandwidth labels; "one full training step; compute at dense BF16 peak; real
 kernels run slower, so real ratios are smaller" (frame 3); "tokens per replica per step: stand-in" (frame 4); "1:7" on the
@@ -113,16 +116,16 @@ TFLOPS). Numbers from `math/topology.js` (§6).
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | One `rack` glyph of 8 GPUs labeled "H100 server (HGX)"; thick internal links labeled "NVLink: 900 GB/s per GPU, both directions = 450 each way". GPU 1 outlined. | Links draw from GPU 1 to every other GPU. | Inside a server, eight GPUs talk through NVLink switches at 450 GB/s each way on H100s. That fast island is called the scale-up domain. | 8 GPUs · 900 GB/s bidirectional = 450 GB/s each way |
+| 1 | One `rack` glyph of 8 GPUs labeled "H100 server (HGX)"; internal links (default width) labeled "NVLink: 900 GB/s per GPU, both directions = 450 each way". GPU 1 outlined. | Links draw from GPU 1 to every other GPU. | Inside a server, eight GPUs talk through NVLink switches at 450 GB/s each way on H100s. That fast island is called the scale-up domain. | 8 GPUs · 900 GB/s bidirectional = 450 GB/s each way |
 | 2 | Four servers in a row; thin links from each GPU to a network switch, labeled "400 Gb/s = 50 GB/s each way". A side ladder, each way only: NVLink 450 → network 50 GB/s (HBM is a shared total and stays off this ladder, lesson 28; `gpu-primer` link). | The network links draw; the ladder's second bar shrinks to one ninth. | Between servers, each GPU gets one network port: 50 GB/s each way, nine times slower than NVLink. That second layer is the scale-out network. | 450 ÷ 50 = 9× |
 | 3 | Tensor parallelism over 8 GPUs, drawn twice: inside one server, and spread over 8 servers. Under each, a `laneTimeline`: compute vs comm. Plain mark: "one full training step; compute at dense BF16 peak; real kernels run slower, so real ratios are smaller". | All-reduce dots run on both; the comm lanes grow to 28% and 250% of the compute lane (the second cut at the track with "continues: 250%"). | Tensor parallelism all-reduces inside every layer, and the next layer waits. Over NVLink that takes 28% as long as the math; over the network, two and a half times longer. | per layer per step (forward and backward): 352 MB sent per GPU vs 2,783 GFLOP per GPU · ratio 27.8% (NVLink) vs 250.4% (network) |
 | 4 | Data parallelism across 64 servers' worth of GPUs (collapsed: "GPU 1 of servers 1, 2, …, 64", "61 others"). One gradient sync per step, its comm lane drawn *under* the backward part of the compute lane. Plain mark: "tokens per replica per step: 262,144 (stand-in)". | The sync dot runs while the backward segment of the compute lane is still filling. | Data parallelism syncs gradients once per step, and the sync can overlap with the backward pass that produces them. Over the network it costs 5% of the compute time here. | ratio 5.0% (network) · rises to 79.2% at 16,384 tokens per replica |
 | 5 | Pipeline parallelism, 16 stages, one per server; a small activation dot hops forward between servers, then a gradient dot hops back. | The dots hop; the comm lane stays a sliver. | Pipeline stages hand over one activation per micro-batch at each boundary, and its gradient comes back. Even over the network that is about 1.5% of the compute. | ratio 1.5% (network), 0.2% (NVLink) at 16 stages |
-| 6 | Llama 3's 8,192-GPU layout: tensor 8 inside each server (thick links), pipeline 16 across servers, data 64 across groups of pipelines. A plain list "innermost → outermost: tensor, context, pipeline, data". Visible note: "data parallelism sends more per unit of compute than pipeline here (5.0% vs 1.5%), but it overlaps with backward; pipeline hand-offs sit between stages". | The three cuts light in order, innermost first. | So the cut that blocks compute gets the fastest link. Llama 3 kept tensor parallelism inside each 8-GPU server and put pipeline, then data parallelism, on the network. | 8 × 16 × 64 = 8,192 · order TP, CP, PP, DP |
+| 6 | Llama 3's 8,192-GPU layout: tensor 8 inside each server (on NVLink, labeled), pipeline 16 across servers, data 64 across groups of pipelines. A plain list "innermost → outermost: tensor, context, pipeline, data". Visible note: "data parallelism sends more per unit of compute than pipeline here (5.0% vs 1.5%), but it overlaps with backward; pipeline hand-offs sit between stages". | The three cuts light in order, innermost first. | So the cut that blocks compute gets the fastest link. Llama 3 kept tensor parallelism inside each 8-GPU server and put pipeline, then data parallelism, on the network. | 8 × 16 × 64 = 8,192 · order TP, CP, PP, DP |
 | 7 | Meta's 24K-GPU cluster: two `rack` glyphs of 16 GPUs (2 servers each) under a leaf `block`, "190 other racks"; a faint region "pod: 3,072 GPUs, full bandwidth"; eight pod regions side by side ("6 other pods") joined by thin uplinks labeled "1:7". | Pods tile in; uplinks thin out; a data-parallel sync dot crosses pods on a thin link. | Meta's 24,576-GPU Llama 3 cluster has full bandwidth only within pods of 3,072 GPUs. Above them, links are oversubscribed seven to one, so chatty traffic stays inside a pod. | 16 per rack × 192 racks = 3,072 per pod · 8 pods = 24,576 · 400 Gb/s per GPU · 1:7 above pods |
 | 8 | Four servers; GPU 3 of every server labeled and joined to the same "rail 3" switch. A `token` chip on server 1, GPU 3, travels over rail 3 to server 4, GPU 3, then over NVLink to GPU 6 (its expert). | The token chip takes the two hops. | In a rail-optimized network, GPU 3 of every server shares one switch. DeepSeek sends each token over the network to the same-numbered GPU, then over NVLink to its expert. | DeepSeek-V3 (2024, H800): NVLink 160 GB/s vs network 50 GB/s (3.2×), DeepSeek's stated effective rates; the paper gives no direction, and 50 GB/s matches a 400 Gb/s port each way; the H800's NVLink is reduced vs the H100 · each token reaches at most 4 servers |
 | 9 | A `laneTimeline` for expert parallelism on an H100 server: compute lane vs all-to-all lane, inside NVLink and over the network. Plain mark "for DeepSeek-V4's expert shape". | The all-to-all lane fits under the compute lane on NVLink (36%) and overflows it on the network (322%). | DeepSeek-V4 states when expert traffic can hide behind compute: roughly 1 GB/s of link for every 6 TFLOPS. An H100 needs 161 GB/s; the network gives 50. | 989 TFLOPS ÷ 6,144 FLOPs per byte = 161 GB/s · NVLink 450 → 35.8% · network 50 → 321.9% |
-| 10 | Start state: three 8-GPU racks and "+ 6 other servers". End state: one `rack` with 72 GPUs (`cols: 9`, 234 × 208 px) at the left, labeled "GB200 NVL72: 72 GPUs + 36 Grace CPUs, one NVLink domain, 900 GB/s each way per GPU (1.8 TB/s both directions), 130 TB/s total" and "= 9 HGX servers". Expert groups light inside the rack. | The servers merge into one rack; expert-parallel `flow` dots stay inside it. | A GB200 NVL72 rack puts 72 GPUs in one NVLink domain, nine servers' worth. Expert groups bigger than 8 can now stay off the network. | 72 ÷ 8 = 9 · expert parallelism on GB200 (2,500 TFLOPS BF16): needs 407 GB/s; NVLink 900 → 45.2%; network 100 (800 Gb/s, reported) → 406.9% · tensor 16 inside the rack: 75.4% |
+| 10 | Start state: three 8-GPU racks and "+ 6 other servers". End state: one `rack` with 72 GPUs (`cols: 9`, 244 × 218 px) at the left, labeled "GB200 NVL72: 72 GPUs + 36 Grace CPUs, one NVLink domain, 900 GB/s each way per GPU (1.8 TB/s both directions), 130 TB/s total" and "= 9 HGX servers". Expert groups light inside the rack. | The servers merge into one rack; expert-parallel `flow` dots stay inside it. | A GB200 NVL72 rack puts 72 GPUs in one NVLink domain, nine servers' worth. Expert groups bigger than 8 can now stay off the network. | 72 ÷ 8 = 9 · expert parallelism on GB200 (2,500 TFLOPS BF16): needs 407 GB/s; NVLink 900 → 45.2%; network 100 (800 Gb/s, reported) → 406.9% · tensor 16 inside the rack: 75.4% |
 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end
 state. Frames 3–5 and 9–10 draw the ratio functions in §6 with GPT-3's shape, full-step basis.
@@ -142,17 +145,26 @@ but their order is the same."
 | `system` | System | Preset chips | H100 HGX (8-GPU servers; NVLink 450, network 50 GB/s each way; 989 TFLOPS) · GB200 NVL72 (72-GPU domain; NVLink 900 each way; network 100 GB/s each way, 800 Gb/s ConnectX-8, reported; 2,500 TFLOPS) | H100 HGX | from `hardware.json` (§8): `*.nvlink_gb_s_each_way`, `network-400g`, `network-800g` |
 | `cut` | Parallelism | Segmented | tensor · pipeline · data · expert | tensor | – |
 | `degree` | Degree | Slider (powers of 2) | tensor 2–64 · pipeline 2–32 · data 2–1,024 · expert (not used) | 8 | – |
-| `where` | Runs on | Segmented | inside the NVLink domain · over the network | inside | "inside" is disabled when the degree exceeds the domain (8 or 72) and the visible note says "this cut no longer fits in one NVLink domain" |
+| `where` | Runs on | Segmented | inside the NVLink domain · over the network | inside | "inside" is disabled when the degree exceeds the domain (8 or 72) and the visible note says "this cut no longer fits in one NVLink domain" (ruling P3-R12: a single option the selection cannot use is disabled with a visible note) |
 | `tokens` | Tokens per replica per step (data only) | Slider (powers of 2) | 4,096 … 1,048,576 | 262,144 | stand-in; visible label |
 
 **Live outputs**
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
 | **Comm as % of compute** | `tpCommRatio`, `ppCommRatio`, `dpCommRatio` or `epCommRatio` (below) | %, 1 decimal |
-| Lanes | compute = 100 units, comm = ratio × 100; the compute lane is drawn 120 px wide and the comm lane is capped at the 520 px track (4.3× compute), with an arrow "continues: 2,254%" and the number printed when it overflows; visible line "both lanes in the same time units; comm lane cut at 4.3× compute" | `laneTimeline` |
+| Lanes | compute = 100 units, comm = ratio × 100; the compute lane is drawn 120 px wide and the comm lane is capped at the 520 px track (4.33× compute, `cap`), with an arrow "continues: 2,254%" and the number printed when it overflows; visible line "both lanes in the same time units; comm lane cut at 4.33× compute" | `laneTimeline`; the cap ratio through `formatRatio` |
 | Can it hide? (text, from 03 §2.3, §5.2) | tensor: "no: on the critical path"; pipeline: "mostly, in 1F1B's steady state"; data: "yes, during backward"; expert: "only below the hiding line" | text |
 | Link needed for expert traffic to hide | `epMinLinkGBps({ peakTflops })` | GB/s |
 | Bytes per GPU behind the ratio (tensor) | `ringAllReduceBytes` (imported from `math/parallel.js`) × 4 per layer per step (2 forward, 2 backward) | MB per layer per step |
+
+**Check my work** (default state: tensor, degree 8, H100 HGX, inside; templated for any state from the
+cut's function in `math/topology.js` with its bytes and FLOPs per GPU; mono, `aria-live="polite"`; this
+exact text appears on the page):
+```text
+bytes per GPU, one layer, full step = 4 × ring all-reduce of 2,048 × 12,288 × 2 B over 8 GPUs = 352.32 MB
+FLOPs per GPU, one layer, full step = 72 × 2,048 × 12,288² ÷ 8 = 2,783.1 GFLOP
+comm ÷ compute = (352.32 MB ÷ 450 GB/s) ÷ (2,783.1 GFLOP ÷ 989 TFLOPS) = 27.8%
+```
 
 **Try this** (each leads to a named insight)
 1. Tensor, degree 8, H100 HGX: inside 27.8%, network 250.4%. Raise the degree to 16: it no longer
@@ -249,7 +261,7 @@ the comm lane, `hl-link` = the link label under the dot, `hl-flops` = the comput
 | Scale-out per GPU, each way: 400 Gb/s (50 GB/s) in H100-era clusters; 800 Gb/s (100 GB/s) ConnectX-8 on Blackwell (reported); GB300 NVL72 uses ConnectX-8 at 800 Gb/s per GPU (confirmed) | `hardware.json/network-400g.gb_s_each_way` = 50, `network-800g.gb_s_each_way` = 100 (the serving track's ids) | 03 §2.1 |
 | GB200 / GB300 NVL72: 72 GPUs + 36 Grace CPUs in one NVLink domain, about 130 TB/s aggregate | `hardware.json/gb200-nvl72.scale_up_domain`, `.rack_nvlink_tbps`; `gb300-nvl72.*` | 03 §1.4, §2.2 |
 | Vera Rubin NVL72: 72 Rubin GPUs, 260 TB/s NVLink 6; Rubin Ultra NVL576 planned for H2 2027 (reported) | `hardware.json/rubin.scale_up_domain`; `rubin-ultra.scale_up_gpus` = 576 *(proposed, reported)* | 03 §1.4 |
-| Meta's Llama 3 cluster (2024): 16 GPUs per rack, 192 racks per pod = 3,072 GPUs with full bisection bandwidth, 8 pods = 24K GPUs, 1:7 oversubscribed above pods, 400 Gb/s per GPU, topology-aware scheduling | `hardware.json/meta-llama3-cluster.*` *(proposed entry: `gpus_per_rack` 16, `gpus_per_pod` 3072, `pods` 8, `oversubscription` "1:7", `per_gpu_gbps` 400)* | 03 §2.2 |
+| Meta's Llama 3 cluster (2024 paper): 16 GPUs per rack, 192 racks per pod = 3,072 GPUs with full bisection bandwidth, 8 pods = 24K GPUs, 1:7 oversubscribed above pods, 400 Gb/s per GPU, topology-aware scheduling | `hardware.json/meta-llama3-cluster.*` *(proposed entry: `gpus_per_rack` 16, `gpus_per_pod` 3072, `pods` 8, `oversubscription` "1:7", `per_gpu_gbps` 400)* | 03 §2.2 |
 | Llama 3 order, innermost to outermost: TP, CP, PP, DP ("innermost parallelism requires the highest network bandwidth and lowest latency") | `models.json/llama-3.1-405b.parallelism_order` *(proposed by `parallelism`; the paper calls the model Llama 3, the checkpoint is Llama 3.1 405B)* | 03 §2.3 |
 | DeepSeek-V3 (2024): H800s with NVLink 160 GB/s vs InfiniBand 50 GB/s per GPU (3.2×), DeepSeek's stated effective rates (direction not given; 50 GB/s matches a 400 Gb/s port each way); the H800's NVLink is reduced vs the H100 (200 vs 450 GB/s each way, `hardware.json/h800.nvlink_gb_s_each_way`); all-to-all goes over IB to the same-index GPU, then NVLink; each token reaches at most 4 nodes | `models.json/deepseek-v3.nvlink_effective_gb_s` = 160, `.ib_gb_s` = 50 (notes: "stated effective rates; direction not stated"), `.max_nodes_per_token` = 4 *(proposed)* | 03 §2.1, §2.2, §4.5 |
 | DeepSeek-V4 (2026): expert traffic hides behind compute when compute ÷ bandwidth ≤ 6,144 FLOPs per byte (each GB/s hides about 6.1 TFLOPS) | `models.json/deepseek-v4-pro.ep_hiding_flops_per_byte` = 6144 *(proposed)* | 03 §4.5 |
@@ -305,8 +317,8 @@ Caption check (2026-10-07, after the review, the `rlvr-grpo` counter adapted): f
 - `hardware.json/meta-llama3-cluster` (new entry): `gpus_per_rack 16`, `racks_per_pod 192`,
   `gpus_per_pod 3072`, `pods 8`, `oversubscription "1:7"`, `per_gpu_gbps 400` (03 §2.2, CONFIRMED arXiv
   2407.21783).
-- `models.json/deepseek-v3`: `nvlink_effective_gb_s 160`, `ib_gb_s 50` (notes: "stated effective rates;
-  direction not stated"), `max_nodes_per_token 4` (03 §2.1, §4.5, CONFIRMED); `hardware.json/h800` (now in
+- `models.json/deepseek-v3`: `nvlink_effective_gb_s 160`, `ib_gb_s 50` (direction not given; notes:
+  "stated effective rates"), `max_nodes_per_token 4` (03 §2.1, §4.5, CONFIRMED); `hardware.json/h800` (now in
   data: `nvlink_gb_s_each_way` 200; no peak FLOPS stored, so the page prints none).
 - `models.json/deepseek-v4-pro.ep_hiding_flops_per_byte = 6144` (03 §4.5, CONFIRMED).
 - `models.json/kimi-k2.node = "8 GPUs, 2 TB RAM, 8 × 400 Gb/s RoCE"` (03 §2.2, CONFIRMED).
@@ -344,3 +356,20 @@ Settled and applied (README lesson 20):
 - **Nice-to-haves applied:** misconception 1 says "decides where each cut can live"; try-this 3's
   4-server point is credited to frame 8.
 - Data pass 2026-10-07: DeepSeek-V3 link keys renamed to `nvlink_effective_gb_s` and `ib_gb_s`; `h800` NVLink (200 GB/s each way) now cited; no H800 FLOPS printed.
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R8: link thickness never encodes an amount: every `rack` uses the default `linkWidth` and bandwidths
+  are printed (§4, frames 1 and 6); the rack sizes are the built ones (244 × 218 at `cols: 9`, 114 × 62 at
+  `cols: 4`).
+- P3-R9: the capped comm lane is `laneTimeline`'s `cap` option.
+- S3-C final API (reconciled 2026-10-08): the lanes use `scale: 1.2` px per unit and one global `cap` at
+  433.3 units (the 520 px track); an 8-GPU rack at `cols: 4` is 114 × 62 overall.
+- X-3: "(4.3× compute)" → "(4.33× compute)" (§4, §6), through `formatRatio`.
+- P3-R12: "inside" stays disabled with its visible note.
+- P3-R13: `epCommRatio`'s default `flopsPerByte` (6,144) carries an equality test against
+  `deepseek-v4-pro.ep_hiding_flops_per_byte` in `tests/topology.test.js` (the builder's module test).
+- X-1 / P3-R14 (data gap 7): "Meta's Llama 3 cluster (2024 paper)": the year is the paper's,
+  `hardware.meta-llama3-cluster.release_date` = "2024-07" (confirmed, arXiv 2407.21783); "Kimi K2 (2025)"
+  stays with `kimi-k2.release_date` added.
+- Conventions: the DeepSeek-V3 link keys' line says "direction not given" (`tests/training-conventions.test.js` (b)).
+- X-2 / P3-R16: "Check my work" added (§6), from `tpCommRatio` and `ringAllReduceBytes`.
