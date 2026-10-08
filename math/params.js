@@ -99,7 +99,7 @@ export function paramBreakdown(config) {
     total,
     active,
     activeWithEmbedding: active + (tiedEmbeddings ? 0 : parts.embedding),
-    perLayer: { attention: per.attention, mlp: per.mlp, expert: per.expert },
+    perLayer: { attention: per.attention, mlp: per.mlp, expert: per.expert, norms: 2 * normSize },
     share: shares(parts, total),
     activeShare: shares(activeParts, active),
   };

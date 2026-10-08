@@ -33,7 +33,9 @@ test('toy: the animation\'s 656 per block and the "Check my work" totals', () =>
   const r = paramBreakdown(PRESETS.toy);
   assert.deepEqual(r.parts, { embedding: 128, positional: 0, attention: 512, mlp: 768, experts: 0, router: 0, norms: 40, head: 128 });
   assert.deepEqual([r.total, r.active, r.activeWithEmbedding], [1576, 1448, 1576]);
-  assert.equal(r.perLayer.attention + r.perLayer.mlp + 2 * 8, 656);
+  assert.equal(r.perLayer.norms, 16);
+  assert.equal(r.perLayer.attention + r.perLayer.mlp + r.perLayer.norms, 656);
+  assert.equal(r.parts.norms - r.perLayer.norms * 2, 8); // the final norm
   assert.equal(r.share.mlp.toFixed(4), '0.4873');
   assert.equal(r.share.attention.toFixed(4), '0.3249');
 });
@@ -53,6 +55,7 @@ test('toy try-this numbers: blocks 1, blocks 8 × d 64, experts 8 and 16', () =>
 test('real presets reproduce the storyboard to the digit', () => {
   const g3 = paramBreakdown(PRESETS.gpt3);
   assert.deepEqual([g3.total, g3.active], [174_604_259_328, 174_604_259_328]); // tied: the shared matrix is multiplied
+  assert.equal(g3.perLayer.norms, 4 * 12288); // two LayerNorms per block, weight + bias each
   assert.equal((g3.share.mlp * 100).toFixed(2), '66.42');
   assert.equal((g3.share.attention * 100).toFixed(2), '33.21');
   assert.equal((g3.share.embedding * 100).toFixed(2), '0.35');
