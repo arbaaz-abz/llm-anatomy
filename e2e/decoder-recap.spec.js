@@ -6,7 +6,7 @@ import { CAPTIONS, FRAME5_EXACT, STAND_IN, RESIDUAL_NOTE } from '../tests/decode
 const URL = '/architecture/#decoder-recap';
 const STEPPER = '[data-section="animation"] .stepper';
 
-registerLessonContract({ name: 'decoder-recap', url: URL, captions: CAPTIONS, factRows: 10, returnHash: 'decoder-recap' });
+registerLessonContract({ name: 'decoder-recap', url: URL, captions: CAPTIONS, factRows: 12, returnHash: 'decoder-recap' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
 const pick = (page, control, value) => page.locator(`#${control} [data-value="${value}"]`).click();
@@ -50,7 +50,7 @@ test.describe('decoder-recap toy: modernize GPT-3, one switch at a time', () => 
     await pick(page, 'norm', 'layernorm');
     await pick(page, 'mlp', 'swiglu');
     await expect(readout(page, 'part-mlp')).toHaveText('115,971,588,096');
-    await expect(readout(page, 'part-mlp-delta')).toHaveText('+1,573,864');
+    await expect(readout(page, 'part-mlp-delta')).toHaveText('+1,572,864');
   });
 
   test('try this 2: RoPE removes the position table; 8 KV heads cut the cache 12×', async ({ page }) => {
@@ -60,7 +60,7 @@ test.describe('decoder-recap toy: modernize GPT-3, one switch at a time', () => 
     await expect(readout(page, 'longest')).toContainText('set by training');
     await pick(page, 'kvHeads', '8');
     await expect(readout(page, 'cache')).toHaveText('393,216 B');
-    await expect(page.locator('[data-section="toy"] [data-sub="cache"]')).toHaveText('393 kB (12× less than GPT-3)');
+    await expect(page.locator('[data-section="toy"] tr:has([data-readout="cache"]) .ro-sub')).toHaveText('393 kB (12× less than GPT-3)');
     await page.locator('#presets [data-value="2026"]').click();
     await pick(page, 'experts', 'dense');
     await expect(readout(page, 'total')).toHaveText('147,990,994,944');
