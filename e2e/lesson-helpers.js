@@ -21,23 +21,42 @@ export const stepperParts = (root) => ({
   prev: `${root} [data-act="prev"]`,
 });
 
-// Every glyph (bbox grown by 2 px for strokes) must sit inside its own <svg>.
-export function glyphOverflows(page, svgSelector) {
-  return page.evaluate((sel) => {
+// Every measured element's box, grown by 2 px for strokes, must sit inside its own <svg>.
+// glyphs: only `.glyph` groups; all: every rendered descendant (labels, lines, notes drawn straight on the stage).
+function svgOverflows(page, svgSelector, scope) {
+  return page.evaluate(({ sel, all }) => {
+    const pad = 2;
+    const NOT_RENDERED = 'defs, pattern, clipPath, mask, marker, symbol, title, desc';
+    const name = (el) => (el.classList.contains('glyph') ? el.getAttribute('class')
+      : `${el.tagName}${el.getAttribute('class') ? `.${el.getAttribute('class')}` : ''}${el.textContent.trim() ? ` "${el.textContent.trim().slice(0, 24)}"` : ''}`);
     const out = [];
     for (const svg of document.querySelectorAll(sel)) {
       const box = svg.getBoundingClientRect();
-      for (const el of svg.querySelectorAll('.glyph')) {
+      const els = all ? [...svg.querySelectorAll('*')].filter((el) => !el.closest(NOT_RENDERED)) : [...svg.querySelectorAll('.glyph')];
+      for (const el of els) {
         const r = el.getBoundingClientRect();
         if (r.width === 0 && r.height === 0) continue;
-        const pad = 2;
         const outside = r.left - pad < box.left - 0.5 || r.top - pad < box.top - 0.5
           || r.right + pad > box.right + 0.5 || r.bottom + pad > box.bottom + 0.5;
-        if (outside) out.push(`${el.getAttribute('class')} in ${svg.getAttribute('aria-labelledby') ?? svg.getAttribute('aria-label') ?? sel}`);
+        if (outside) out.push(`${name(el)} in ${svg.getAttribute('aria-labelledby') ?? svg.getAttribute('aria-label') ?? sel}`);
       }
     }
     return out;
-  }, svgSelector);
+  }, { sel: svgSelector, all: scope === 'all' });
+}
+
+// Every glyph (bbox grown by 2 px for strokes) must sit inside its own <svg>.
+export const glyphOverflows = (page, svgSelector) => svgOverflows(page, svgSelector, 'glyphs');
+
+// Everything drawn on a stage (text, lines, notes outside any glyph too) must sit inside its own <svg>.
+export const stageOverflows = (page, svgSelector) => svgOverflows(page, svgSelector, 'all');
+
+// Rendered size of every <svg> in the stage (a viewBox-only or CSS-sized svg is measured too, never read as 0).
+export function stageBoxes(page, svgSelector) {
+  return page.locator(svgSelector).evaluateAll((svgs) => svgs.map((s) => {
+    const r = s.getBoundingClientRect();
+    return { width: r.width, height: r.height };
+  }));
 }
 
 // Accent strokes are selection marks only, never wider than the 2 px focus ring.
@@ -118,13 +137,17 @@ function captionTests({ url, captions, root }) {
 
 function determinismTests({ url, captions, root }) {
   test('every step is a pure function of (step, progress): two routes give the same mid and end frames', async ({ page }) => {
+    const errors = collectConsoleErrors(page);
     const last = captions.length - 1;
     await startPausedClock(page, url);
     for (let k = 0; k <= last; k += 1) {
-      const a = await animateTo(page, root, k, MID_MS, k === 0 ? Math.min(1, last) : k - 1);
+      const aFrom = k === 0 ? 1 : k - 1;
+      const a = await animateTo(page, root, k, MID_MS, aFrom);
       await page.clock.runFor(END_MS - MID_MS);
       const aEnd = await stageState(page, root);
-      const b = await animateTo(page, root, k, MID_MS, k === last ? 0 : last);
+      // Two steps have one neighbor each, so route b differs by history instead: k → aFrom → k.
+      if (last === 1) await seekAndRun(page, root, k, END_MS);
+      const b = await animateTo(page, root, k, MID_MS, last === 1 ? aFrom : (k === last ? 0 : last));
       await page.clock.runFor(END_MS - MID_MS);
       const bEnd = await stageState(page, root);
       expect(a.progress, `step ${k + 1}: mid-transition sample`).toBe(MID_PROGRESS);
@@ -132,25 +155,34 @@ function determinismTests({ url, captions, root }) {
       expect([aEnd.progress, bEnd.progress]).toEqual([1, 1]);
       expect(bEnd.html, `step ${k + 1}: end frame differs by route`).toBe(aEnd.html);
     }
+    expect(errors).toEqual([]);
   });
 }
 
 function layoutTests({ url, captions, root }) {
-  test('no glyph clips at mid-transition or at rest on any step; the stage fits 580 × 366', async ({ page }) => {
+  test('nothing clips at mid-transition or at rest on any step; every stage svg fits 580 × 366', async ({ page }) => {
+    const errors = collectConsoleErrors(page);
     const stageSvg = `${stepperParts(root).stage} svg`;
     await startPausedClock(page, url);
     await page.evaluate(() => document.fonts.ready);
     for (let k = 0; k < captions.length; k += 1) {
       await animateTo(page, root, k, MID_MS);
       expect(await glyphOverflows(page, stageSvg), `step ${k + 1} mid`).toEqual([]);
+      expect(await stageOverflows(page, stageSvg), `step ${k + 1} mid (all drawn elements)`).toEqual([]);
       await page.clock.runFor(END_MS - MID_MS);
       expect(await glyphOverflows(page, stageSvg), `step ${k + 1} end`).toEqual([]);
-      const size = await page.locator(stageSvg).first().evaluate((s) => ({ width: Number(s.getAttribute('width')), height: Number(s.getAttribute('height')) }));
-      expect(size.width, `step ${k + 1} stage width`).toBeLessThanOrEqual(STAGE_MAX.width);
-      expect(size.height, `step ${k + 1} stage height`).toBeLessThanOrEqual(STAGE_MAX.height);
+      expect(await stageOverflows(page, stageSvg), `step ${k + 1} end (all drawn elements)`).toEqual([]);
+      const boxes = await stageBoxes(page, stageSvg);
+      expect(boxes.length, `step ${k + 1}: the stage draws an svg`).toBeGreaterThan(0);
+      boxes.forEach((b, i) => {
+        expect(b.width > 0 && b.height > 0, `step ${k + 1} svg ${i + 1} has a rendered size`).toBe(true);
+        expect(b.width, `step ${k + 1} svg ${i + 1} width`).toBeLessThanOrEqual(STAGE_MAX.width);
+        expect(b.height, `step ${k + 1} svg ${i + 1} height`).toBeLessThanOrEqual(STAGE_MAX.height);
+      });
       expect(await accentStrokeOffenders(page, '.concept'), `step ${k + 1} accent strokes`).toEqual([]);
     }
     expect(await glyphOverflows(page, '[data-section="toy"] svg')).toEqual([]);
+    expect(errors).toEqual([]);
   });
 
   test('no horizontal page scroll at 400 px with the math panel open', async ({ page }) => {
@@ -164,6 +196,7 @@ function layoutTests({ url, captions, root }) {
 
 function controlTests({ url, captions, root }) {
   test('keyboard: arrows step, space plays and pauses, focus is visible', async ({ page }) => {
+    const errors = collectConsoleErrors(page);
     const p = stepperParts(root);
     const n = captions.length;
     await openSettled(page, url, root);
@@ -178,9 +211,11 @@ function controlTests({ url, captions, root }) {
     await expect(page.locator(p.toggle)).toHaveText('Play');
     await page.locator(p.next).focus();
     expect(await page.locator(p.next).evaluate((b) => getComputedStyle(b).outlineStyle)).not.toBe('none');
+    expect(errors).toEqual([]);
   });
 
   test('reduced motion: a step change renders its final frame within one animation frame', async ({ page }) => {
+    const errors = collectConsoleErrors(page);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await openSettled(page, url, root);
     const frame = await page.evaluate((r) => new Promise((resolve) => {
@@ -191,6 +226,7 @@ function controlTests({ url, captions, root }) {
       });
     }), root);
     expect(frame).toEqual({ step: '1', progress: '1' });
+    expect(errors).toEqual([]);
   });
 }
 
@@ -217,12 +253,14 @@ function lifecycleTests({ url, captions, root, leaveHash, returnHash }) {
 
 function factTests({ url, root, factRows }) {
   test(`facts: ${factRows} rows, each sourced row links its source, none missing`, async ({ page }) => {
+    const errors = collectConsoleErrors(page);
     await openSettled(page, url, root);
     const rows = page.locator('[data-section="facts"] .fact-row');
     await expect(rows).toHaveCount(factRows);
     await expect(page.locator('[data-section="facts"] .fact-missing')).toHaveCount(0);
     const unsourced = await page.locator('[data-section="facts"] .fact-row:not([data-derived])').evaluateAll((lis) => lis.filter((li) => !li.querySelector('.fact-source')).map((li) => li.textContent.slice(0, 60)));
     expect(unsourced).toEqual([]);
+    expect(errors).toEqual([]);
   });
 
   test('dark theme: the whole page renders with no console errors', async ({ page }) => {
@@ -238,6 +276,7 @@ function factTests({ url, root, factRows }) {
 // One call per lesson spec file. `captions` are the storyboard's, verbatim; `factRows` is its §8 row count.
 export function registerLessonContract({ name, url, captions, factRows, leaveHash = 'unmount-check', returnHash, root = LESSON_STEPPER }) {
   if (!captions?.length || !Number.isInteger(factRows) || !returnHash) throw new Error('registerLessonContract: captions, factRows and returnHash are required');
+  if (captions.length < 2) throw new Error('registerLessonContract: a lesson animation has at least 2 steps');
   const opts = { url, captions, factRows, leaveHash, returnHash, root };
   test.describe(`${name}: lesson contract`, () => {
     captionTests(opts);

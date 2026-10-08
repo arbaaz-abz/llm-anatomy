@@ -1,6 +1,7 @@
 // Test-only fixture lesson (never published): proves the scaffold and runs the lesson contract
 // (e2e/lesson-contract.spec.js). #away unmounts it (the contract's "leave" route); #broken-toy mounts it
-// with a toy that throws. `render` is exported so the contract can compare a clock sample with it.
+// with a toy that throws; #two-step mounts only the first two steps (the contract's smallest lesson).
+// `render` is exported so the contract can compare a clock sample with it.
 import * as G from '@shared/glyphs.js';
 import { mountLesson } from '@shared/lesson-page.js';
 import { mountSlider } from '@shared/ui/slider.js';
@@ -39,11 +40,11 @@ function mountToy(host) {
   return () => { toy.destroy(); slider.destroy(); choice.destroy(); };
 }
 
-const lesson = (toyMount) => ({
+const lesson = (toyMount, stepCount = CAPTIONS.length) => ({
   slug: 'fixture',
   hook: 'Does the lesson scaffold hold every section a page needs?',
   intuition: ['A fixture page uses the real scaffold with toy content.', 'It links to [[attention]] and prints `W_O` as code.'],
-  animation: { label: 'Fixture animation', steps: CAPTIONS.map((caption) => ({ caption })), render, standIn: 'These numbers are hand-picked stand-ins.', belowFor: (i) => (i === 2 ? ['Page text under the stage on step 3.'] : []) },
+  animation: { label: 'Fixture animation', steps: CAPTIONS.slice(0, stepCount).map((caption) => ({ caption })), render, standIn: 'These numbers are hand-picked stand-ins.', belowFor: (i) => (i === 2 ? ['Page text under the stage on step 3.'] : []) },
   toy: { title: 'Try the fixture', intro: 'Doubles or squares n.', mount: toyMount },
   math: { blocks: [{ tex: '\\htmlClass{hl-q}{q} = x\\,W_Q', note: 'x [1 × 8], W_Q [8 × 4].' }] },
   facts: { framing: 'Three facts read live from [[decoder-anatomy]]\'s data.', rows: [
@@ -69,7 +70,7 @@ try {
     root.replaceChildren();
     if (location.hash === '#away') return;
     const broken = () => { throw new Error('fixture: this toy fails on purpose'); };
-    unmount = mountLesson(root, ctx, lesson(location.hash === '#broken-toy' ? broken : mountToy));
+    unmount = mountLesson(root, ctx, lesson(location.hash === '#broken-toy' ? broken : mountToy, location.hash === '#two-step' ? 2 : CAPTIONS.length));
   };
   addEventListener('hashchange', sync);
   sync();

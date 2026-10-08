@@ -9,6 +9,8 @@ const CAPTIONS = [
 ];
 
 registerLessonContract({ name: 'fixture', url: `${FIXTURE}#fixture`, captions: CAPTIONS, factRows: 3, leaveHash: 'away', returnHash: 'fixture' });
+// The smallest lesson the contract allows: two steps, so determinism compares routes by history (W0-11).
+registerLessonContract({ name: 'fixture (two steps)', url: `${FIXTURE}#two-step`, captions: CAPTIONS.slice(0, 2), factRows: 3, leaveHash: 'away', returnHash: 'two-step' });
 
 test('fixture: clock sampling through the public UI equals the pure render at the same (step, progress)', async ({ page }) => {
   await startPausedClock(page, `${FIXTURE}#fixture`);

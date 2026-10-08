@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { MID_MS, END_MS, MID_PROGRESS, startPausedClock, stageState, animateTo, glyphOverflows, accentStrokeOffenders } from './lesson-helpers.js';
+import { MID_MS, END_MS, MID_PROGRESS, startPausedClock, stageState, animateTo, glyphOverflows, stageOverflows, accentStrokeOffenders } from './lesson-helpers.js';
 
 const ROOT = '#stepper-root';
 
@@ -37,4 +37,34 @@ test('overflow and accent helpers agree with the gallery as shipped', async ({ p
   await page.evaluate(() => document.fonts.ready);
   expect(await glyphOverflows(page, '#figures svg')).toEqual([]);
   expect(await accentStrokeOffenders(page, '#figures')).toEqual([]);
+});
+
+test('stageOverflows: nothing drawn on the gallery stepper stage clips, at mid-transition or at rest, on any step', async ({ page }) => {
+  await startPausedClock(page, '/gallery/');
+  await page.evaluate(() => document.fonts.ready);
+  const svg = `${ROOT} .stepper-stage svg`;
+  for (let k = 0; k < 5; k += 1) {
+    await animateTo(page, ROOT, k, MID_MS);
+    expect(await stageOverflows(page, svg), `step ${k + 1} mid`).toEqual([]);
+    await page.clock.runFor(END_MS - MID_MS);
+    expect(await stageOverflows(page, svg), `step ${k + 1} end`).toEqual([]);
+  }
+});
+
+test('stageOverflows: nothing drawn in any gallery figure clips its svg', async ({ page }) => {
+  await page.goto('/gallery/');
+  await page.evaluate(() => document.fonts.ready);
+  expect(await stageOverflows(page, '#figures svg')).toEqual([]);
+});
+
+test('stageOverflows catches a label drawn straight on the svg past its edge (not only glyphs)', async ({ page }) => {
+  await page.goto('/gallery/');
+  await page.evaluate(() => {
+    const svg = document.querySelector('#figures svg');
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', '-30'); t.setAttribute('y', '12'); t.textContent = 'keys →';
+    svg.append(t);
+  });
+  expect(await glyphOverflows(page, '#figures svg')).toEqual([]);
+  expect((await stageOverflows(page, '#figures svg')).join()).toContain('text "keys →"');
 });
