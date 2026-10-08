@@ -145,6 +145,12 @@ test('formatDuration: 3 significant figures, unit by magnitude', () => {
   assert.throws(() => formatDuration(-1), RangeError);
 });
 
+test('formatDuration: below 1 in its unit it still prints 3 significant figures', () => {
+  assert.equal(formatDuration(5.428e-7), '0.543 µs');
+  assert.equal(formatDuration(1.36e-7), '0.136 µs');
+  assert.deepEqual([1180, 40.1, 2.5, 13.6, 74.4].map((x) => formatDuration(x * 1e-6)), ['1.18 ms', '40.1 µs', '2.5 µs', '13.6 µs', '74.4 µs']);
+});
+
 test('formatDuration: unit edges (µs < 1 ms ≤ ms < 1 s ≤ s < 60 s ≤ min < 60 min ≤ h < 48 h ≤ days)', () => {
   assert.deepEqual([1e-3, 0.999e-3, 1, 0.9994, 60, 59.9, 3600, 3500, 47 * 3600, 48 * 3600, 1e9].map(formatDuration),
     ['1 ms', '999 µs', '1 s', '999 ms', '1 min', '59.9 s', '1 h', '58.3 min', '47 h', '2 days', '11,600 days']);
