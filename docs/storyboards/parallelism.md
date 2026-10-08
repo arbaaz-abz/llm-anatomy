@@ -73,14 +73,16 @@ decides where on the network it must live, which is the next lesson.
 
 ## 4. Visual metaphor
 A "cut map" in frame 1: the toy's four token rows on the left, two blocks (attention, MLP) as `block`s,
-and dashed cut lines along five axes, each labeled with its strategy. From frame 2 on, each strategy
+and solid 1 px `--ink-muted` cut lines along five axes, each labeled with its strategy (no dashes, ruling
+P3-R11). From frame 2 on, each strategy
 gets its own GPU picture: two to four small `gpu` glyphs ("GPU 1" always on the left; the followed row
 "sat" outlined wherever it appears), with what each GPU holds drawn on it and every transfer drawn as a
 `flow` whose label prints the bytes. A plain counter "sent per GPU" sits at the bottom right in every
 frame (`NUMBER_CELL` readout).
 
 Glyphs used (from spec §5.1 and the built library): `token` (the four chips; "sat" outlined), `matrix`
-(W_in, W_gate, W_out as shape grids, 20 px cells, no numbers; split halves tinted per GPU), `vector`
+(W_in, W_gate, W_out as shape grids, 20 px cells, no numbers; split halves tinted per GPU with the S3
+`matrix` option `shards: [{ cols: [from, to], gpu }]`), `vector`
 (`NUMBER_CELL` rows for the "sat" partial sums in frame 4: 8 cells × 43 px = 344 px, within the stage),
 `block` (blocks, stages and experts; `active` = running now, `idle` = waiting), `gpu` (with `showMem: false`, accepted: this page shows no fullness), `flow` (carry
 `gradient` for the DP all-reduce and for backward-pass hand-offs, `activation` for TP partial sums,
@@ -88,16 +90,16 @@ forward PP hand-offs and EP tokens, `kv` for CP; activation dots use `--carry-ac
 `var(--accent-arch)` on every track, so they differ from the pink `--carry-gradient` on Training pages), `kvStack` (frame 9, K/V tiles of "The" and "cat"), `heatmap` (frame 9: the 4 × 4 causal mask split
 between two GPUs, hatched cells masked).
 
-From approved proposals: `laneTimeline` (proposed by `gpu-primer`) for the pipeline schedule (frames
-6–8): one lane per stage, 40 px cells printing "F1", "B2" and so on, `forward` and `backward` fills
-(`--carry-activation` and `--carry-gradient`, so they match the dots), idle hatched ("excluded"). With 3 stages × 4 micro-batches the schedule is 12 cells: 12 × 43 = 516 px plus a 52 px
+Shared glyphs built in S3: `laneTimeline` (ruling P3-R9) for the pipeline schedule (frames 6–8): one lane
+per stage, 40 px cells printing "F1", "B2" and so on, segment `kind: 'forward' | 'backward'` (fills
+`--carry-activation` and `--carry-gradient`, so they match the dots), `kind: 'idle'` hatched ("excluded");
+wide toy grids pass `labels: false` (each cell keeps its `<title>`). With 3 stages × 4 micro-batches the schedule is 12 cells: 12 × 43 = 516 px plus a 52 px
 lane-label gutter = 568 px (lesson 18). `blockStack` (proposed by `decoder-anatomy`) for the 6-block
 stand-in model in frame 5.
 
-New glyphs proposed: none. `flow` gains `carry: 'weight'` (accepted for the Training build; needs
-`'weight'` in `CARRIES` in `shared/glyphs/core.js` and a `--carry-weight` token) for weights in motion
-(ZeRO-3 gathers in `training-memory`, W_O in `gpu-primer`); `gpu` gains `showMem: false` (accepted);
-`rack` gains `labels` (accepted, used by `cluster-topology`).
+New glyphs proposed: none. Glyph options built in S3: `flow` `carry: 'weight'` (with `--carry-weight`) for
+weights in motion (ZeRO-3 gathers in `training-memory`, W_O in `gpu-primer`); `gpu` `showMem: false`;
+`matrix` `shards`; `rack` `labels` (used by `cluster-topology`).
 
 Plain labeled marks: "partial sums are hand-picked stand-ins; they add up to `decoder-anatomy`'s MLP
 output for sat" (frame 4); "stand-in 6-block model" (frame 5); "routes from `moe`'s router toy" (frame
@@ -121,7 +123,7 @@ Numbers from `math/parallel.js` (reproducer in §6).
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Cut map: the four token chips ("sat" outlined) entering two `block`s (attention, MLP), a second sequence's chips greyed below. Five dashed cut lines appear one by one, each with its label: between the two sequences (data), through each block's matrices (tensor), between the blocks (pipeline), between "cat" and "sat" (context), between experts inside the MLP (expert). | Each cut line draws in turn. | A training step can be cut by data, inside each matrix, between blocks, along the sequence or between experts. A cut's degree is how many GPUs share it. | 5 cuts |
+| 1 | Cut map: the four token chips ("sat" outlined) entering two `block`s (attention, MLP), a second sequence's chips greyed below. Five solid cut lines (1 px, `--ink-muted`) appear one by one, each with its label: between the two sequences (data), through each block's matrices (tensor), between the blocks (pipeline), between "cat" and "sat" (context), between experts inside the MLP (expert). | Each cut line draws in turn. | A training step can be cut by data, inside each matrix, between blocks, along the sequence or between experts. A cut's degree is how many GPUs share it. | 5 cuts |
 | 2 | Two `gpu` glyphs, each with the full toy model ("1,576 parameters"). GPU 1 gets "The cat sat down", GPU 2 "another 4-token sequence" (greyed chips). After backward, `flow` arrows (carry `gradient`) run both ways; counter "sent per GPU: 3,152 B". Link chip: "ZeRO shards this state: `training-memory`". | Sequences drop in; a forward and backward pulse runs on each; then the gradient arrows run. | Data parallelism gives each GPU a full copy and different sequences. Once per step, an all-reduce averages their gradients so every copy takes the same update. | gradients 1,576 × 2 B = 3,152 B · all-reduce over 2 GPUs: 2 × 1/2 × 3,152 = 3,152 B per GPU · GPT-3 shape on 64 GPUs: 689 GB per GPU per step (plain data parallel, BF16 gradients, no sharding) |
 | 3 | Two GPUs. W_in and W_gate [8 × 16] each cut down the middle: columns 1–8 on GPU 1, 9–16 on GPU 2 (two tints). The four token rows go to both GPUs. Each GPU's hidden output [4 × 8]. | The cut slides through the matrices; the halves slide apart; each GPU's hidden half fills. Counter stays 0 B. | Tensor parallelism cuts each weight matrix between GPUs. Cut the MLP's first matrices by columns and each GPU computes half of the hidden numbers, without talking. | each GPU: W_in, W_gate [8 × 8] · hidden [4 × 8] · 0 B sent |
 | 4 | W_out [16 × 8] cut by rows: rows 1–8 on GPU 1, 9–16 on GPU 2. Each GPU produces a full-width [4 × 8] partial output. The "sat" row of each is shown as a `NUMBER_CELL` `vector`; an all-reduce `flow` (carry `activation`) adds them into `decoder-anatomy`'s MLP output for sat. Visible stand-in label. | Partial rows appear; arrows cross; cells add column by column. Counter 0 → 64 B. | Cut the second matrix by rows and each GPU holds a partial sum of the output. An all-reduce adds them inside every layer before anything downstream can start. | GPU 1 sat: [0.25, 0.5, −0.25, −0.25, 0.25, 0.25, 0, 0] · GPU 2: [−0.25, −0.25, 0.25, −0.25, 0.25, −0.25, −0.25, 0.25] · sum [0, 0.25, 0, −0.5, 0.5, 0, −0.25, 0.25] · [4 × 8] × 2 B = 64 B; all-reduce over 2: 64 B per GPU · per GPU 192 of 384 MLP parameters · 2 all-reduces per block in the forward pass |
@@ -153,7 +155,7 @@ backward passes take about twice as long, which changes the bubble's size a litt
 
 | Output | Formula / `math/` function | Units / format |
 |---|---|---|
-| Schedule grid | `pipelineSchedule({ schedule, stages, microBatches })` → `grid` | `laneTimeline`; cells print "F3" / "B3" at 40 px when the grid has ≤ 12 columns; wider grids (up to 2 × (32 + 8 − 1) = 78 columns) draw label-free cells sized to the 520 px track, and the micro-batch ids are not shown anywhere (no hover-only numbers; lesson 18). The readouts below carry every number. |
+| Schedule grid | `pipelineSchedule({ schedule, stages, microBatches })` → `grid` | `laneTimeline`; cells print "F3" / "B3" at 40 px when the grid has ≤ 12 columns; wider grids (up to 2 × (32 + 8 − 1) = 78 columns) draw label-free cells (`labels: false`) sized to the 520 px track, and the micro-batch ids are not shown anywhere (no hover-only numbers; lesson 18). The readouts below carry every number. |
 | **Bubble** | `pipelineBubble({ stages, microBatches })`; equals `grid` idle fraction (tested) | % (1 decimal) |
 | Peak micro-batches in flight, stage 1 | `pipelineSchedule(...).peakInFlight[0]` | count; "activation memory ∝ this" |
 | Step length | `pipelineSchedule(...).columns` | time units |
@@ -168,6 +170,17 @@ backward passes take about twice as long, which changes the bubble's size a litt
 |---|---|---|
 | GPU count | `gpuCount({ tp, cp, pp, dp })` | integer |
 | State per GPU for a 405B model (Adam, 16 B) | `zeroPerGpuBytes({ params: 405e9, recipe: TRAINING_RECIPES.adam, stage, dp, modelShards: tp * pp })` (imported from `math/training-memory.js`; same definition as `training-memory`) | GB, 2 decimals; activations not modeled (visible note: "405B's layer shape is not in `data/`") |
+
+**Check my work** (default state: GPipe, 4 stages, 4 micro-batches; the "8K GPUs" degrees, ZeRO-2;
+templated from `pipelineBubble`, `gpuCount` and `zeroPerGpuBytes` for any state, an unsharded part printing
+no "÷ dp"; mono, `aria-live="polite"`; this exact text appears on the page):
+```text
+bubble  = (4 − 1) ÷ (4 + 4 − 1) = 3 ÷ 7 = 42.9%
+GPUs    = 8 × 1 × 16 × 64 = 8,192
+per GPU (ZeRO-2): 405B ÷ (8 × 16) = 3.164B parameters
+  weights 3.164B × 2 B = 6.33 GB · gradients 3.164B × 2 B ÷ 64 = 0.10 GB
+  optimizer 3.164B × 12 B ÷ 64 = 0.59 GB · total 7.02 GB
+```
 
 **Try this** (each leads to a named insight)
 1. GPipe, 4 stages: set micro-batches 4 → 8 → 16 → 32 and read the bubble: 42.9% → 27.3% → 15.8% →
@@ -285,8 +298,8 @@ idle cells in `laneTimeline`.
 | DeepSeek-V3 (2024): 2,048 H800s, PP 16, EP 64 across 8 nodes, ZeRO-1 data parallel, **no tensor parallelism**; DualPipe schedule; communication kernels use only 20 of 132 SMs | `models.json/deepseek-v3.training_gpus` = 2048, `.parallelism` = "PP16 / EP64 / ZeRO-1 DP, no TP", `.pipeline_schedule` = "DualPipe" *(proposed; entry proposed by `paged-attention`)* | 03 §4.2, §4.5, §4.6 |
 | DualPipe feeds micro-batches from both ends of the pipeline and overlaps all-to-all and pipeline traffic with compute; it keeps two copies of the parameters | (mechanism; DeepSeek-V3 Table 2, code github.com/deepseek-ai/DualPipe) | 03 §4.4 |
 | Kimi K2 (2025): PP 16 with virtual stages, EP 16, ZeRO-1 data parallel, trainable on any multiple of 32 nodes (minimum 256 GPUs) | `models.json/kimi-k2.parallelism` *(proposed; entry proposed by `training-memory`)* | 03 §4.6 |
-| Kimi K3 (2026): pipeline with virtual stages, MoonEP expert parallelism (dynamic redundant experts for perfect load balance), ZeRO-1 plus "Pipeline ZeRO-2", context parallelism that passes the linear-attention state | `models.json/kimi-k3.parallelism` *(proposed)* | 03 §4.1, §4.3, §4.5, §4.6 |
-| DeepSeek-V4 (2026) fuses dispatch, expert GEMMs and combine into one mega-kernel so expert traffic hides behind compute (the condition is in `cluster-topology`) | `models.json/deepseek-v4-pro.ep_kernel` = "MegaMoE mega-kernel" *(proposed)* | 03 §4.5 |
+| Kimi K3: pipeline with virtual stages, MoonEP expert parallelism (dynamic redundant experts for perfect load balance), ZeRO-1 plus "Pipeline ZeRO-2", context parallelism that passes the linear-attention state | `models.json/kimi-k3.parallelism` *(proposed)* | 03 §4.1, §4.3, §4.5, §4.6 |
+| DeepSeek-V4 (2026) fuses dispatch, expert GEMMs and combine into one mega-kernel so expert traffic hides behind compute (the condition is in `cluster-topology`) | `models.json/deepseek-v4-pro.ep_kernel` = "MegaMoE fused dispatch-GEMM-combine" (the page prints the data's string, ruling P3-R18) | 03 §4.5 |
 
 Not shown: GPU counts for Kimi K3 and DeepSeek-V4 (not disclosed), "5D parallelism" as a product claim.
 
@@ -369,3 +382,14 @@ Settled and applied (README lesson 20):
   cost (the later half does 7 of 10 score cells) is on screen; frame 2's 689 GB carries "plain data
   parallel, BF16 gradients, no sharding"; checkpoint id `llama-3.1-405b`; takeaway 2 names DualPipe's
   price (a second copy of the parameters).
+
+## 14. Plan 3 rulings applied (S3, 2026-10-08)
+- P3-R11: frame 1's five dashed cut lines are solid 1 px `--ink-muted` lines.
+- P3-R9: `laneTimeline` named with its built API (`forward` / `backward` kinds, hatched `idle`,
+  `labels: false` for wide grids).
+- S3 glyph options: `matrix` `shards` for the per-GPU halves (frames 3–4), `gpu` `showMem: false`,
+  `flow` `carry: 'weight'`.
+- P3-R18: §8 prints the data's `deepseek-v4-pro.ep_kernel` string.
+- X-1: "Kimi K3 (2026)" drops its year (`kimi-k3.release_date` is reported); "Llama 3.1 405B (2024)",
+  "(2024 paper)" and "Kimi K2 (2025)" stay with confirmed `release_date` keys added.
+- X-2 / P3-R16: "Check my work" added (§6), from `pipelineBubble`, `gpuCount`, `zeroPerGpuBytes`.
