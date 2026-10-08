@@ -1510,6 +1510,14 @@
           "confidence": "reported",
           "last_verified": "2026-10-07"
         },
+        "active_params_with_embeddings": {
+          "value": 52000000000,
+          "unit": "params",
+          "confidence": "reported",
+          "source_url": "https://mistral.ai/news/mistral-large-4",
+          "last_verified": "2026-10-07",
+          "note": "Model card: 49B routed-active, 52B including embeddings (brief 01 §7)."
+        },
         "context_length": {
           "value": [
             512000,
