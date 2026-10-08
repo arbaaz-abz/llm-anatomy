@@ -82,13 +82,17 @@ printed), `cell` (single printed readouts), plain labeled text marks (formulas i
 tokens-per-parameter table in frame 8, the definition line).
 
 Shared glyph (built in S3, ruling P3-R10): **`curvePlot`**, `G.curvePlot(parent, { x, y, w, h, xAxis: {
-label, log, ticks }, yAxis: { label, log, ticks }, series: [{ points, label, style: 'solid' | 'muted' }],
-markers: [{ x, y, label, followed }], bands: [{ from, to, label }], refY: { value, label } | null })`.
+label, log, ticks, domain }, yAxis: { label, log, ticks, domain }, series: [{ points, label, style: 'solid' |
+'muted', tone, labelAt: 'end' | 'mid' }], markers: [{ x, y, label, followed }], bands: [{ from, to, label,
+labelAt }], refY: { value, label } | null })`; `w × h` is the whole figure, axis labels included. This page
+fixes both domains so the scale holds between frames: x log, `domain: [1e9, 1e12]`, decade ticks; y linear,
+`domain: [1.94, 2.20]` (a point outside a domain throws, so every marker and the 1B point stay inside).
 `bands` are shaded x-ranges under the series (midtraining's warmup / stable / decay). The "same loss 1.960"
 guide in frame 7 and the toy is `refY: { value: 1.960, label: 'same loss' }`, drawn like the `bars`
-reference line (dashed, labeled: the one dashed chart guide). No dashed series. Every point a learner must
-read is also printed as text (the marker label or a readout), so the curve itself is never load-bearing. A
-marker with `followed: true` carries the selection accent.
+reference line (dashed, its label at the left end: the one dashed chart guide). No dashed series. Every
+point a learner must read is also printed as text (the marker label or a readout), so the curve itself is
+never load-bearing. A marker with `followed: true` draws its own `G.selectionMark` (the page adds none);
+one marker is followed at a time.
 
 New glyphs proposed: none.
 
@@ -105,7 +109,8 @@ Terms assumed from prereqs: pretraining loss, tokens (`pretraining`); parameters
 
 Indexing: no positions or addresses on this page.
 
-Selection: the followed item is the compute-optimal point (frames 3–7, the `curvePlot` marker), then the larger
+Selection: the followed item is the compute-optimal point (frames 3–6, the `curvePlot` marker), then the
+over-trained 29B point (frame 7, when it appears; the 96B marker stays as a plain marker), then the larger
 singular value (frames 9–10).
 
 ## 5. Animation script
@@ -119,7 +124,7 @@ Thread order: 1–5 the compute split; 6–8 over-training; 9–10 the optimizer
 | 4 | Same `curvePlot`; the marker settles at the minimum with label `96B · 1.74T tokens · 18 per param`. A plain note: `2020 (Kaplan): mostly bigger · 2022 (Chinchilla): about 20 tokens per parameter`. | The marker slides along the curve to the bottom. | The bottom of the valley is the compute-optimal split: about 20 tokens per parameter, the 2022 Chinchilla rule. Earlier 2020 laws had favored bigger models. | `N* = 9.59 × 10¹⁰`, `D* = 1.74 × 10¹²`, `18.1 tokens/param`, loss `1.960` |
 | 5 | A plain table of the optimum at four budgets. | Rows type in. | Bigger budgets move the optimum along both axes together: model and data grow at about the same rate, and the ratio stays near 20. | `10²² → 9.0B, 184B tokens (20.4)` · `10²⁴ → 96B, 1.74T (18.1)` · `10²⁶ → 1.0T, 16.4T (16.1)` |
 | 6 | A second readout row under the curve: `serving: 2 FLOPs per active parameter per token`, with the visible basis line `training counts the full step (forward + backward) per token; serving counts the forward pass only`, and a chip `served: 100T tokens` (what-if). Two stacked readouts for the compute-optimal model: `train 1.0 × 10²⁴` + `serve 1.9 × 10²⁵` = `lifetime 2.0 × 10²⁵`. | The serve readout counts up and dwarfs the train readout. | Serving costs about two operations per parameter for every token generated. For a popular model, serving can dwarf training. | compute-optimal 96B serving 100T tokens: `2 × 9.59e10 × 1e14 = 1.92 × 10²⁵` · lifetime `2.02 × 10²⁵` |
-| 7 | **Key frame.** Same curve and the loss reference line `1.960` (`refY`, labeled `same loss`). A second marker (selection style) at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. Layout check at 580 × 366: `curvePlot` 360 × 240 at the left; the two lifetime readouts and the saving in a 200 px column at its right; the caption below. If the build finds it tight, the readouts move under the stage (the toy repeats them). | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
+| 7 | **Key frame.** Same curve and the loss reference line `1.960` (`refY`, labeled `same loss`). A second marker, now the followed one (`followed: true`; the 96B marker turns plain), at `29B` with label `14.4T tokens · 495 per param`. Readouts side by side: compute-optimal lifetime `2.02 × 10²⁵` vs over-trained lifetime `8.36 × 10²⁴`, and `58.5% less`. Layout check at 580 × 366: `curvePlot` 360 × 240 at the left; the two lifetime readouts and the saving in a 200 px column at its right; the caption below. If the build finds it tight, the readouts move under the stage (the toy repeats them). | The second marker slides left from 96B to 29B; the readouts count. | Over-training: a smaller model fed more tokens reaches the same loss. Training costs more, serving much less, so over a model's life it is far cheaper. | over-trained: `N = 2.92 × 10¹⁰`, `D = 1.44 × 10¹³`, train `2.53 × 10²⁴`, serve `5.84 × 10²⁴`, total `8.36 × 10²⁴` · saving `58.5%` |
 | 8 | A plain table `tokens per active parameter`: `Chinchilla rule 20 · Llama 3.1 405B (2024) 39 · DeepSeek-V4-Pro 673 · Nemotron 3 Super 2,083 · DeepSeek-V4-Flash 2,462`, with a dim second column `per total parameter: 39 (dense: same number) · 21 · 208 · 113`. Definition line visible. | Rows type in; the second column fades in last. | 2026 open models train at hundreds to thousands of tokens per active parameter, far past Chinchilla. Counted per total parameter, the gap is much smaller. | `33T / 49B = 673` · `25T / 12B = 2,083` · `32T / 13B = 2,462` · `15.6T / 405B = 39` · per total: `33T / 1.6T = 21` · `25T / 120B = 208` · `32T / 284B = 113` |
 | 9 | Optimizer thread. A `block` "update for one weight matrix" with a two-cell `vector` `[3.00, 0.30]` labeled `stretch per direction (singular values)`; after normalizing, `[0.995, 0.100]`. A plain mark: `momentum step: the 10 : 1 stretch stays (AdamW rescales elements, not directions)`. | The two cells fill; then both scale down together to their normalized values. | A weight update stretches some directions far more than others; the stretch factors are its singular values. Here one direction is ten times stronger than the other. | `[3.0, 0.3] / √9.09 = [0.995, 0.100]` |
 | 10 | Same `vector`, labeled `Muon: Newton–Schulz iterations`. A step counter `0 → 10`. | The two cells step through the iterations: the small one jumps up, both oscillate near 1, and the last two DeepSeek steps settle them at 1.0000. | Muon repeats a cheap polynomial step that pulls every singular value toward one, so every direction moves equally. DeepSeek-V4's last two steps settle them on one to four decimals. | Muon coefficients (3.4445, −4.7750, 2.0315): after 1 step `[0.705, 0.338]`, 2 `[1.109, 0.989]`, 8 `[1.092, 1.103]` (between 0.70 and 1.11 throughout) · then (2, −1.5, 0.5) twice: `[1.007, 1.009]`, `[1.0000, 1.0000]` (exactly 1.000027 and 1.000047) |
@@ -368,6 +373,8 @@ Applied from `track-review-recipe.md` §3 (change log: `fix-recipe-review.md`):
 
 ## 14. Plan 3 rulings applied (S3, 2026-10-08)
 - P3-R10: `curvePlot` named with its built API; the "same loss 1.960" line is `refY` (§4, frame 7).
+- S3-C final API (reconciled 2026-10-08): axes carry fixed `domain`s; a `followed` marker draws its own
+  `G.selectionMark`, so frame 7 follows one marker (29B) and the Selection line says so.
 - P3-R19 / P3-R14 (data gap 11): Olmo 3's range is computed with `tokensPerParam` from the data, 184–843
   (was "185–840"); `olmo-3.total_params_small` / `.total_params_large` added.
 - P3-R13: `CHINCHILLA_FIT` carries an equality test against `papers.chinchilla-refit-2024` in
