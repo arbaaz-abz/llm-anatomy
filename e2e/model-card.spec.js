@@ -91,8 +91,8 @@ test.describe('model-card toy: decode a card', () => {
     await expect(notes).toContainText('config.json');
     await expect(notes).toContainText('GLM-5 paper');
     await expect(notes).toContainText('52B including embeddings');
-    await expect(page.locator('tr[data-field="layers"] td[data-col="left"] .fact-reported')).toHaveCount(0);
-    await expect(page.locator('tr[data-field="active_params"] td[data-col="left"] .fact-reported')).toHaveCount(1);
+    await expect(page.locator('tr[data-field="layers"] td[data-side="left"] .fact-reported')).toHaveCount(0);
+    await expect(page.locator('tr[data-field="active_params"] td[data-side="left"] .fact-reported')).toHaveCount(1);
   });
 
   test('"none" leaves a single column', async ({ page }) => {

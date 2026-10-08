@@ -3,7 +3,7 @@
 import { formatCount, formatBytes, deepFreeze } from './core.js';
 import { kvBytesPerToken, stackKvBytes, kvCacheBytes, sharePct } from './memory.js';
 
-const BYTES_PER_ELEM = 2; // BF16 keys and values, the convention data/models.json's derived cache sizes use
+export const BYTES_PER_ELEM = 2; // BF16 keys and values, the convention data/models.json's derived cache sizes use
 const PCT_DECIMALS = 2; // "3.06%": a share this small needs the second decimal
 
 // One entry per data key the page shows: label, a one-line gloss (always visible), the lesson(s) that explain it.
