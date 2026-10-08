@@ -82,7 +82,9 @@ frame (`NUMBER_CELL` readout).
 
 Glyphs used (from spec §5.1 and the built library): `token` (the four chips; "sat" outlined), `matrix`
 (W_in, W_gate, W_out as shape grids, 20 px cells, no numbers; split halves tinted per GPU with the S3
-`matrix` option `shards: [{ cols: [from, to], gpu }]`), `vector`
+`matrix` option `shards`, 1-based and inclusive: frame 3's W_in and W_gate pass `[{ cols: [1, 8], gpu: 1 },
+{ cols: [9, 16], gpu: 2 }]`, frame 4's W_out passes `[{ rows: [1, 8], gpu: 1 }, { rows: [9, 16], gpu: 2 }]`;
+each cell takes its GPU's tint and a `<title>` "GPU n"), `vector`
 (`NUMBER_CELL` rows for the "sat" partial sums in frame 4: 8 cells × 43 px = 344 px, within the stage),
 `block` (blocks, stages and experts; `active` = running now, `idle` = waiting), `gpu` (with `showMem: false`, accepted: this page shows no fullness), `flow` (carry
 `gradient` for the DP all-reduce and for backward-pass hand-offs, `activation` for TP partial sums,
@@ -387,7 +389,8 @@ Settled and applied (README lesson 20):
 - P3-R11: frame 1's five dashed cut lines are solid 1 px `--ink-muted` lines.
 - P3-R9: `laneTimeline` named with its built API (`forward` / `backward` kinds, hatched `idle`,
   `labels: false` for wide grids).
-- S3 glyph options: `matrix` `shards` for the per-GPU halves (frames 3–4), `gpu` `showMem: false`,
+- S3 glyph options: `matrix` `shards` for the per-GPU halves (frames 3–4; S3-C final API: `cols` or `rows`,
+  1-based, inclusive), `gpu` `showMem: false`,
   `flow` `carry: 'weight'`.
 - P3-R18: §8 prints the data's `deepseek-v4-pro.ep_kernel` string.
 - X-1: the Kimi K3 row drops its year (`kimi-k3.release_date` is reported); "Llama 3.1 405B (2024)",
