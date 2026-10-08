@@ -6,7 +6,7 @@ import { fillClaim } from '../shared/claims.js';
 import { paramBreakdown, PRESETS } from '../math/params.js';
 import { LESSON, lessonFor } from '../architecture/concepts/decoder-anatomy/content.js';
 import { checkWork, gapLine, signedPct, toyConfig, perBlockLine, perBlockRows, barParts } from '../architecture/concepts/decoder-anatomy/format.js';
-import { toyView, kimiLine, v3GapLine, tryThis, INITIAL_STATE, EXPERTS_EDGE_NOTE } from '../architecture/concepts/decoder-anatomy/toy-view.js';
+import { toyView, kimiLine, v3GapLine, tryThis, positionTableNote, INITIAL_STATE, EXPERTS_EDGE_NOTE } from '../architecture/concepts/decoder-anatomy/toy-view.js';
 import { BELOW, factRows, framing } from '../architecture/concepts/decoder-anatomy/facts.js';
 import * as S from '../architecture/concepts/decoder-anatomy/numbers.js';
 import { CAPTIONS, CHECK_WORK } from './decoder-anatomy-expected.js';
@@ -47,7 +47,7 @@ test('dated text: hook, intuition and the notes under the stage fill from data, 
   BELOW.flat().forEach((t) => assert.deepEqual(fillClaim(t, data).missing, [], t.slice(0, 60)));
   assert.match(lesson.hook, /1\.6T parameters/);
   assert.match(lesson.animation.belowFor(8)[0], /4,718,592 B ≈ 4\.72 MB; DeepSeek-V3 \(2024\) 70,272 B ≈ 70\.3 kB/);
-  assert.match(lesson.animation.belowFor(6)[0], /toy 2 · GPT-3 \(2020\) 96 · gpt-oss-120b \(2025\) 36 · DeepSeek-V4-Pro \(2026\) 61 · Kimi K3 \(2026\) 93/);
+  assert.match(lesson.animation.belowFor(6)[0], /toy 2 · GPT-3 \(2020\) 96 · gpt-oss-120b \(2025\) 36 · DeepSeek-V4-Pro \(2026\) 61 · Kimi K3 93/);
   assert.equal(lesson.animation.belowFor(42).length, 0);
 });
 
@@ -188,7 +188,7 @@ test('toy view: the experts = 2 stop and the experts slider (try this 3)', () =>
 });
 
 test('the Kimi K3 line and the DeepSeek-V3 gap line read the data', () => {
-  assert.equal(kimiLine(data), 'Kimi K3 (2026): 2.35B of 2.78T, 0.08%');
+  assert.equal(kimiLine(data), 'Kimi K3: 2.35B of 2.78T, 0.08%');
   assert.equal(v3GapLine(data), 'Explain the gap: the Hugging Face checkpoint is 685B because it also ships the 14B multi-token-prediction (MTP) module; the paper\'s 671B is the main model alone. '
     + 'Active: our 36.6B leaves out the 927M embedding table; counting it gives 37.6B. The published 37B sits between the two, and the paper does not say how it counts, so neither convention matches it exactly.');
   assert.match(tryThis(data)[2].prompt, /Then tap DeepSeek-V4-Pro: 1\.6T total, 49B active, 3\.1%\.$/);
@@ -205,4 +205,10 @@ test('nothing here mutates its inputs', () => {
   toyConfig(PRESETS.toy, state);
   checkWork(PRESETS.toy, paramBreakdown(PRESETS.toy));
   assert.equal(JSON.stringify(PRESETS), before);
+});
+
+test('the active definition footnotes GPT-3\'s learned position table, its share computed from the breakdown', () => {
+  const b = paramBreakdown(PRESETS.gpt3);
+  assert.equal(b.parts.positional, 25165824);
+  assert.equal(positionTableNote(), '(GPT-3\'s learned position table is a lookup too; it is so small, 0.01 %, that this course counts it as active.)');
 });

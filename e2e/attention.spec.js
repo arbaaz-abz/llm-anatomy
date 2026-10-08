@@ -21,6 +21,16 @@ test.describe('attention toy: compute one row yourself', () => {
     await expect(page.locator('[data-readout="check-work"]')).toHaveText(CHECK_WORK);
   });
 
+  test('the toy ends with the storyboard\'s try-this list: three prompts, each with a named insight', async ({ page }) => {
+    const items = page.locator('[data-section="toy"] ol.try-this > li');
+    await expect(page.locator('[data-section="toy"] h4', { hasText: 'Try this' })).toHaveCount(1);
+    await expect(items).toHaveCount(3);
+    await expect(items.nth(0)).toContainText('the row becomes [0.086, 0.635, 0.182, 0.097]');
+    await expect(items.nth(0).locator('strong')).toHaveText(['off', 'Insight: The mask is the only thing that makes attention causal.']);
+    await expect(items.nth(1)).toContainText('→ [0.259, 0.428, 0.313, 0]');
+    await expect(items.nth(2).locator('strong').last()).toHaveText('Insight: Same tokens, different pattern: multi-head is several attention patterns at once.');
+  });
+
   test('try this 1: mask off — "down" gets weight and cat drops to 0.635', async ({ page }) => {
     await page.locator('#causal').click();
     await expect(page.locator('#causal')).toHaveAttribute('aria-pressed', 'false');

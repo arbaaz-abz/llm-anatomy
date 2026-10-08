@@ -9,7 +9,7 @@ import { readoutTable } from '@shared/ui/readout-table.js';
 import { formatCount } from '@math/core.js';
 import { lookupFact } from '@shared/claims.js';
 import { TOY_LIMITS } from './format.js';
-import { PRESET_CHIPS, INITIAL_STATE, toyView, kimiLine, v3GapLine, tryThis } from './toy-view.js';
+import { PRESET_CHIPS, INITIAL_STATE, toyView, kimiLine, v3GapLine, tryThis, positionTableNote } from './toy-view.js';
 
 const BAR_W = 264; // wide enough that the toy keeps the storyboard's folds (only "other" folds); scrolls in its box at 400 px
 // The experts slider's stops as chips: "dense" and "8, like the animation" are the storyboard's two named ones.
@@ -27,10 +27,11 @@ function tryThisList(data) {
 }
 
 function convention(data, inline) {
-  const mistral = lookupFact(data?.models, 'mistral-large-4', 'active_params')?.value;
-  const labs = mistral ? `Mistral Large 4 quotes ${formatCount(mistral)} routed-active and a higher figure with the embedding counted` : 'their published counts differ by the embedding table';
+  const [mistral, withEmbeddings] = ['active_params', 'active_params_with_embeddings'].map((k) => lookupFact(data?.models, 'mistral-large-4', k)?.value);
+  const labs = mistral && withEmbeddings ? `Mistral Large 4 quotes ${formatCount(mistral)} routed-active and ${formatCount(withEmbeddings)} with embeddings` : 'their published counts differ by the embedding table';
   return el('p', { className: 'toy-note' }, [
-    'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.) Counting the lookup too gives ',
+    'Active = the parameters multiplied for one token: every block parameter except unused experts, plus the unembedding. The embedding table is left out: looking up a row is not a multiplication. (If the table is shared with the unembedding, as in GPT-3, it is counted once.) ',
+    positionTableNote(), ' Counting the lookup too gives ',
     inline, `; labs differ: ${labs}.`,
   ]);
 }
