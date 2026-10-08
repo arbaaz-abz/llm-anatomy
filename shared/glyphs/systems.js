@@ -204,6 +204,10 @@ function drawSegment(g, s) {
     svgEl('polygon', { class: `g-lane-arrow g-lane--${s.kind}`, points: `${num(s.arrow.base)},${s.y} ${num(s.arrow.tip)},${mid} ${num(s.arrow.base)},${s.y + s.height}` }, g);
     if (s.capLabel) text(g, num(s.arrow.base - 4), mid, s.capLabel, 'g-label g-lane-text g-lane-cap', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
   }
+}
+
+// Drawn after every segment, so a label printed beside a short segment is never covered by its neighbor.
+function drawSegmentText(g, s) {
   if (s.text) text(g, num(s.textX), s.y + s.height / 2, s.text, `g-lane-text${s.textInside ? '' : ' g-label'}`, { 'text-anchor': s.textAnchor, 'dominant-baseline': 'central' });
 }
 
@@ -219,6 +223,7 @@ export function laneTimeline(parent, { x, y, w = 568, lanes, scale = null, cap =
     if (lane.label) text(g, L.gutter - 5, lane.y + LANE.h / 2, lane.label, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
   });
   L.segments.forEach((s) => drawSegment(g, s));
+  L.segments.forEach((s) => drawSegmentText(g, s));
   L.ticks.forEach((t) => {
     svgEl('line', { class: 'g-lane-tick', x1: num(t.x), y1: L.top - 4, x2: num(t.x), y2: L.lanesBottom + 4 }, g);
     if (t.label) text(g, num(t.x), L.top - 6, t.label, 'g-label', { 'text-anchor': 'middle' });
@@ -243,6 +248,14 @@ export function bitFields(layout) {
   return parts.map((bits, i) => ({ role: ROLES[i], bits })).filter((f) => f.bits > 0);
 }
 
+// The bracket's text is centered under the scale field, slid left or right so it never runs past the row.
+function bracketOf(scale, sharedBy, width) {
+  const text = `shared by ${sharedBy} numbers`;
+  const half = (text.length * CHAR_W) / 2;
+  const center = scale.x + scale.width / 2;
+  return { x0: scale.x, x1: scale.x + scale.width, text, textX: Math.max(Math.min(center, width - half), Math.min(half, width / 2)) };
+}
+
 // Geometry only (pure): one cell per bit at `bitW` px; per field its x, width and printed text (S, E8, M7, scale);
 // with `sharedBy`, the bracket under the last scale field.
 export function bitLayoutLayout({ fields = null, format = null, bitW = 14, sharedBy = null }) {
@@ -254,14 +267,16 @@ export function bitLayoutLayout({ fields = null, format = null, bitW = 14, share
     if (!(Number.isInteger(f.bits) && f.bits >= 1)) failBits(`bits must be an integer ≥ 1, got ${f.bits}`);
   });
   const starts = list.map((_, i) => list.slice(0, i).reduce((s, f) => s + f.bits, 0));
-  const placed = list.map((f, i) => ({ role: f.role, bits: f.bits, x: starts[i] * bitW, width: f.bits * bitW, text: fieldText(f) }));
+  // A field's text prints when it fits its field (+ 2 px); otherwise only its <title> names it (e.g. M1 at bitW 11).
+  const fits = (f) => fieldText(f).length * CHAR_W <= f.bits * bitW + 2;
+  const placed = list.map((f, i) => ({ role: f.role, bits: f.bits, x: starts[i] * bitW, width: f.bits * bitW, text: fits(f) ? fieldText(f) : null }));
   const scale = placed.filter((f) => f.role === 'scale').at(-1);
   if (sharedBy != null && !scale) failBits('sharedBy needs a scale field');
+  const width = placed.reduce((s, f) => s + f.width, 0);
   return {
-    bitW, fields: placed,
-    width: placed.reduce((s, f) => s + f.width, 0),
+    bitW, fields: placed, width,
     cells: placed.flatMap((f) => Array.from({ length: f.bits }, (_, b) => ({ x: f.x + b * bitW, role: f.role }))),
-    bracket: sharedBy != null ? { x0: scale.x, x1: scale.x + scale.width, text: `shared by ${sharedBy} numbers` } : null,
+    bracket: sharedBy != null ? bracketOf(scale, sharedBy, width) : null,
   };
 }
 
@@ -276,12 +291,12 @@ export function bitLayout(parent, { x, y, fields = null, format = null, bitW = 1
     const field = svgEl('g', { class: `g-bit-field g-bit--${f.role}` }, g);
     svgEl('title', {}, field).textContent = `${f.role}: ${f.bits} bit${f.bits === 1 ? '' : 's'}`;
     L.cells.filter((c) => c.x >= f.x && c.x < f.x + f.width).forEach((c) => svgEl('rect', { class: 'g-bit', x: c.x + 0.5, y: 0.5, width: bitW - 1, height: bitW - 1, rx: 1.5 }, field));
-    text(g, f.x + f.width / 2, bitW + 11, f.text, 'g-label g-bit-text', { 'text-anchor': 'middle' });
+    if (f.text) text(g, f.x + f.width / 2, bitW + 11, f.text, 'g-label g-bit-text', { 'text-anchor': 'middle' });
   });
   if (L.bracket) {
     const b = bitW + 16;
     svgEl('path', { class: 'g-bracket', d: `M${L.bracket.x0} ${b}v4H${L.bracket.x1}v-4` }, g);
-    text(g, (L.bracket.x0 + L.bracket.x1) / 2, b + 16, L.bracket.text, 'g-label', { 'text-anchor': 'middle' });
+    text(g, num(L.bracket.textX), b + 16, L.bracket.text, 'g-label', { 'text-anchor': 'middle' });
   }
   return g;
 }

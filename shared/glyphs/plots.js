@@ -59,8 +59,12 @@ function checkInput({ w, h, series, bands, markers }) {
     if (!STYLES.has(s.style ?? 'solid')) fail(`series style must be solid or muted (no dashed series, P3-R11), got ${s.style}`);
     if (!TONES.includes(s.tone ?? 'ink')) fail(`series tone must be one of ${TONES.join(', ')}, got ${s.tone}`);
     if (!Array.isArray(s.points)) fail('each series needs points: [[x, y], …]');
+    if (!['end', 'mid'].includes(s.labelAt ?? 'end')) fail(`series labelAt must be end or mid, got ${s.labelAt}`);
   });
-  bands.forEach((b) => { if (!(isNum(b.from) && isNum(b.to) && b.from < b.to)) fail(`band from must be < to, got ${b.from} → ${b.to}`); });
+  bands.forEach((b) => {
+    if (!(isNum(b.from) && isNum(b.to) && b.from < b.to)) fail(`band from must be < to, got ${b.from} → ${b.to}`);
+    if (!['top', 'bottom'].includes(b.labelAt ?? 'top')) fail(`band labelAt must be top or bottom, got ${b.labelAt}`);
+  });
 }
 
 function margins(ay) {
@@ -103,12 +107,11 @@ export function curvePlotLayout({ w, h, xAxis = {}, yAxis = {}, series = [], mar
     xLabel: ax.label, yLabel: ay.label,
     xTicks: ax.ticks.filter((t) => inside(ax, t.value)).map((t) => ({ ...t, x: toX(t.value) })),
     yTicks: ay.ticks.filter((t) => inside(ay, t.value)).map((t) => ({ ...t, y: toY(t.value) })),
-    bands: bands.map((b) => ({ label: b.label ?? '', x: toX(b.from) + BAND_INSET, width: Math.max(1, toX(b.to) - toX(b.from) - 2 * BAND_INSET) })),
+    bands: bands.map((b) => ({ label: b.label ?? '', labelY: (b.labelAt ?? 'top') === 'top' ? plot.top + 11 : plot.bottom - 5, x: toX(b.from) + BAND_INSET, width: Math.max(1, toX(b.to) - toX(b.from) - 2 * BAND_INSET) })),
     series: series.map((s) => {
       s.points.forEach(([x, y]) => checkPoint(ax, ay, x, y));
       const pts = s.points.map(([x, y]) => ({ x: toX(x), y: toY(y) }));
-      const last = pts[pts.length - 1];
-      return { label: s.label ?? '', style: s.style ?? 'solid', tone: s.tone ?? 'ink', points: pts, path: pts.map((p, i) => `${i ? 'L' : 'M'}${round(p.x)} ${round(p.y)}`).join(''), end: last ?? null };
+      return { label: s.label ?? '', style: s.style ?? 'solid', tone: s.tone ?? 'ink', points: pts, path: pts.map((p, i) => `${i ? 'L' : 'M'}${round(p.x)} ${round(p.y)}`).join(''), labelPos: seriesLabel(pts, s.labelAt ?? 'end') };
     }),
     markers: markers.map((mk) => { checkPoint(ax, ay, mk.x, mk.y); return placeMarker(mk, toX, toY, plot); }),
     refY: refY ? { y: toY(refY.value), x1: plot.left, x2: plot.right, label: refY.label } : null,
@@ -116,6 +119,24 @@ export function curvePlotLayout({ w, h, xAxis = {}, yAxis = {}, series = [], mar
 }
 
 const round = (v) => Number(v.toFixed(2));
+
+// The point halfway along a polyline (screen length), for a label placed mid-series.
+function midpoint(pts) {
+  const lens = pts.slice(1).map((p, i) => Math.hypot(p.x - pts[i].x, p.y - pts[i].y));
+  let left = lens.reduce((a, b) => a + b, 0) / 2;
+  for (let i = 0; i < lens.length; i += 1) {
+    if (left <= lens[i] && lens[i] > 0) return { x: pts[i].x + ((pts[i + 1].x - pts[i].x) * left) / lens[i], y: pts[i].y + ((pts[i + 1].y - pts[i].y) * left) / lens[i] };
+    left -= lens[i];
+  }
+  return pts[pts.length - 1] ?? null;
+}
+
+// A series label sits above its end (anchor end), or above-left of its midpoint (labelAt 'mid', anchor end).
+function seriesLabel(pts, labelAt) {
+  const at = labelAt === 'mid' ? midpoint(pts) : pts[pts.length - 1];
+  if (!at) return null;
+  return labelAt === 'mid' ? { x: at.x - 6, y: at.y - 6 } : { x: at.x, y: at.y - 6 };
+}
 
 function drawAxes(g, L) {
   const { plot } = L;
@@ -136,7 +157,7 @@ function drawSeries(g, L) {
   L.series.forEach((s) => {
     const path = svgEl('path', { class: `g-series g-series--${s.style} g-tone--${s.tone}`, d: s.path }, g);
     if (s.label) svgEl('title', {}, path).textContent = s.label;
-    if (s.label && s.end) text(g, round(s.end.x), round(s.end.y) - 6, s.label, `g-label g-series-label g-tone--${s.tone}`, { 'text-anchor': 'end' });
+    if (s.label && s.labelPos) text(g, round(s.labelPos.x), round(s.labelPos.y), s.label, `g-label g-series-label g-tone--${s.tone}`, { 'text-anchor': 'end' });
   });
 }
 
@@ -159,12 +180,12 @@ export function curvePlot(parent, { x, y, w, h, xAxis, yAxis, series = [], marke
   const g = group(parent, 'g-plot', x, y, { role: 'img', 'aria-label': [label, ...L.markers.map((m) => m.label).filter(Boolean), L.refY?.label].filter(Boolean).join('; ') });
   L.bands.forEach((b) => {
     svgEl('rect', { class: 'g-band', x: round(b.x), y: L.plot.top, width: round(b.width), height: L.plot.bottom - L.plot.top }, g);
-    if (b.label) text(g, round(b.x + b.width / 2), L.plot.top + 11, b.label, 'g-label g-band-label', { 'text-anchor': 'middle' });
+    if (b.label) text(g, round(b.x + b.width / 2), b.labelY, b.label, 'g-label g-band-label', { 'text-anchor': 'middle' });
   });
   drawAxes(g, L);
   if (L.refY) {
     svgEl('line', { class: 'g-plot-ref', x1: L.refY.x1, y1: round(L.refY.y), x2: L.refY.x2, y2: round(L.refY.y) }, g);
-    text(g, L.refY.x2 - 2, round(L.refY.y) - 4, L.refY.label, 'g-label g-plot-ref-label', { 'text-anchor': 'end' });
+    text(g, L.refY.x1 + 4, round(L.refY.y) - 4, L.refY.label, 'g-label g-plot-ref-label'); // left end: series labels sit at the right
   }
   drawSeries(g, L);
   drawMarkers(g, L);
@@ -191,7 +212,7 @@ function roofSeries({ peakTflops: peak, bandwidthTBps: bw, xDomain, yDomain, rid
   const [x0, x1] = xDomain;
   const start = Math.max(x0, yDomain[0] / bw);
   const bend = Math.min(ridge, x1);
-  const memory = { points: [[start, bw * start], [bend, bw * bend]], label: `${formatTick(bw)} TB/s`, tone: 'memory' };
+  const memory = { points: [[start, bw * start], [bend, bw * bend]], label: `${formatTick(bw)} TB/s`, tone: 'memory', labelAt: 'mid' };
   const compute = { points: [[Math.max(ridge, x0), peak], [x1, peak]], label: `${formatTick(peak)} TFLOPS`, tone: 'compute' };
   return [...(ridge > x0 ? [memory] : []), ...(ridge < x1 ? [compute] : [])];
 }
@@ -212,7 +233,7 @@ export function rooflineLayout({ w, h, peakTflops, bandwidthTBps, xDomain = ROOF
     yAxis: { label: 'TFLOPS', log: true, domain: yd, ticks: decades(yd) },
     series: roofSeries({ peakTflops, bandwidthTBps, xDomain, yDomain: yd, ridge }),
     markers: placed.map((p) => ({ x: p.intensity, y: p.attainable, followed: p.followed, label: p.label ? `${p.label} · ${formatTick(p.intensity)}` : formatTick(p.intensity) })),
-    bands: ridgeRange ? [{ from: ridgeRange[0], to: ridgeRange[1], label: `ridge ${formatTick(ridgeRange[0])}–${formatTick(ridgeRange[1])}` }] : [],
+    bands: ridgeRange ? [{ from: ridgeRange[0], to: ridgeRange[1], label: `ridge ${formatTick(ridgeRange[0])}–${formatTick(ridgeRange[1])}`, labelAt: 'bottom' }] : [],
   };
   const plot = curvePlotLayout(spec);
   return {
@@ -229,6 +250,7 @@ export function roofline(parent, { x, y, w = 360, h = 240, peakTflops, bandwidth
   const spoken = [...L.plot.series.map((s) => s.label), L.ridge.label ?? L.plot.bands[0]?.label].filter(Boolean).join(', ');
   const g = curvePlot(parent, { x, y, ...L.spec, label: `${label}: ${spoken}` });
   g.classList.add('g-roofline');
-  if (L.ridge.label) text(g, round(L.ridge.x), round(L.ridge.y) - 8, L.ridge.label, 'g-label g-ridge-label', { 'text-anchor': 'middle' });
+  // Above-left of the bend: the slope comes up from the lower left, the flat roof's label sits at the right end.
+  if (L.ridge.label) text(g, round(L.ridge.x) - 4, round(L.ridge.y) - 8, L.ridge.label, 'g-label g-ridge-label', { 'text-anchor': 'end' });
   return g;
 }

@@ -492,8 +492,10 @@ test('bitLayoutLayout: an explicit field list and a shared scale with its bracke
   const numbers = [...bitFields('1/2/1'), ...bitFields('1/2/1'), ...bitFields('1/2/1')];
   const L = bitLayoutLayout({ fields: [...numbers, { role: 'scale', bits: 8 }], sharedBy: 16 });
   assert.equal(L.width, 280); // "3 × 4 + 8 = 20 bit cells × 14 px = 280 px"
-  assert.deepEqual(L.bracket, { x0: 168, x1: 280, text: 'shared by 16 numbers' });
+  assert.deepEqual(L.bracket, { x0: 168, x1: 280, text: 'shared by 16 numbers', textX: 280 - (20 * 6.6) / 2 }); // slid left: the text never runs past the row
   assert.equal(L.fields.at(-1).text, 'scale');
+  assert.deepEqual(L.fields.slice(0, 3).map((f) => f.text), ['S', 'E2', 'M1']);
+  assert.deepEqual(bitLayoutLayout({ fields: bitFields('1/2/1'), bitW: 11 }).fields.map((f) => f.text), ['S', 'E2', null]); // "M1" is wider than 11 px + 2: its title names it
   assert.equal(bitLayoutLayout({ fields: [{ role: 'sign', bits: 1 }], bitW: 10 }).width, 10);
 });
 
@@ -551,4 +553,15 @@ test('shareBarLayout: a hatched part keeps its hue and share and is flagged for 
   const { main } = shareBarLayout(run, { w: 400 });
   assert.deepEqual(main.map((s) => [s.name, s.hatched === true]), [['useful', false], ['below peak', false], ['lost to failures', true]]);
   assert.throws(() => shareBarLayout([{ name: 'a', value: 1, hue: 1 }, { name: 'b', value: null, hatched: true }]), /glyphs.shareBar: part "b" is unknown and cannot be hatched/);
+});
+
+test('curvePlotLayout: a series label sits above its end, or above-left of its midpoint (labelAt: mid); a band label at the top or bottom', () => {
+  const L = curvePlotLayout({ w: 300, h: 200, xAxis: { ticks: [0, 10] }, yAxis: { ticks: [0, 10] },
+    series: [{ points: [[0, 0], [10, 10]], label: 'slope', labelAt: 'mid' }, { points: [[0, 5], [10, 5]], label: 'flat' }],
+    bands: [{ from: 2, to: 4, label: 'top' }, { from: 6, to: 8, label: 'low', labelAt: 'bottom' }] });
+  assert.ok(near(L.series[0].labelPos.x, L.toX(5) - 6) && near(L.series[0].labelPos.y, L.toY(5) - 6));
+  assert.ok(near(L.series[1].labelPos.x, L.toX(10)) && near(L.series[1].labelPos.y, L.toY(5) - 6));
+  assert.equal(L.bands[0].labelY, L.plot.top + 11);
+  assert.equal(L.bands[1].labelY, L.plot.bottom - 5);
+  assert.throws(() => curvePlotLayout({ w: 300, h: 200, xAxis: { ticks: [0, 10] }, yAxis: { ticks: [0, 10] }, series: [{ points: [], labelAt: 'start' }] }), /series labelAt must be end or mid/);
 });

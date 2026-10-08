@@ -138,7 +138,7 @@ function legendRows(parts, layout, format, { tailBasis, tailLabel }) {
   const ctx = { printed, whole: sumOf(parts), format, tailNames: new Set(layout.tail.map((s) => s.name)), tailShares: new Map(layout.tail.map((s) => [s.name, s.share])), basisNote };
   const rows = parts.map((p) => ({ ...p, text: legendText(p, ctx) }));
   const others = layout.main.find((s) => s.others);
-  const othersText = basisNote ? `others: zoomed in the bar below, as shares${basisNote}` : 'others: zoomed in the bar below';
+  const othersText = basisNote ? `others: zoomed below, shares${basisNote}` : 'others: zoomed in the bar below';
   return others ? [...rows, { ...others, text: othersText }] : rows;
 }
 
