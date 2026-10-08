@@ -11,7 +11,8 @@ const FULL_STEP_FLOPS_FACTOR = 3; // forward 1× + backward 2× the forward matm
 const MATMUL_FLOPS_PER_TOKEN_UNIT = 24; // one layer's forward matmul FLOPs = 24·s·b·h²
 const TP_ALLREDUCES_PER_STEP = 4; // 2 forward + 2 backward per layer
 const PP_HANDOFFS_PER_STEP = 2; // one activation forward + one gradient backward per boundary
-const DEFAULT_EP_FLOPS_PER_BYTE = 6144; // DeepSeek-V4's hiding condition, 2d (data/models.json deepseek-v4-pro.ep_hiding_flops_per_byte)
+// DeepSeek-V4's hiding condition, 2d; tests/topology.test.js pins it to data/models.json deepseek-v4-pro.ep_hiding_flops_per_byte (P3-R13).
+export const EP_HIDING_FLOPS_PER_BYTE = 6144;
 
 function requireCount(fn, name, value) {
   if (!Number.isInteger(value) || value < 1) throw new RangeError(`${fn}: ${name} must be a positive integer, got ${value}`);
@@ -62,7 +63,7 @@ export function dpCommRatio({ dp, tokensPerReplica, peakTflops, linkGBps }) {
 }
 
 // DeepSeek-V4's rule: expert traffic hides when FLOPs per byte of link ≤ flopsPerByte; a ratio of 1 is the line.
-export function epCommRatio({ peakTflops, linkGBps, flopsPerByte = DEFAULT_EP_FLOPS_PER_BYTE }) {
+export function epCommRatio({ peakTflops, linkGBps, flopsPerByte = EP_HIDING_FLOPS_PER_BYTE }) {
   requirePositive('epCommRatio', 'peakTflops', peakTflops);
   requirePositive('epCommRatio', 'linkGBps', linkGBps);
   requirePositive('epCommRatio', 'flopsPerByte', flopsPerByte);
@@ -70,7 +71,7 @@ export function epCommRatio({ peakTflops, linkGBps, flopsPerByte = DEFAULT_EP_FL
 }
 
 // The slowest link (GB/s each way) that still hides expert traffic at this peak.
-export function epMinLinkGBps({ peakTflops, flopsPerByte = DEFAULT_EP_FLOPS_PER_BYTE }) {
+export function epMinLinkGBps({ peakTflops, flopsPerByte = EP_HIDING_FLOPS_PER_BYTE }) {
   requirePositive('epMinLinkGBps', 'peakTflops', peakTflops);
   requirePositive('epMinLinkGBps', 'flopsPerByte', flopsPerByte);
   return (peakTflops * TFLOPS_PER_GBPS) / flopsPerByte;
