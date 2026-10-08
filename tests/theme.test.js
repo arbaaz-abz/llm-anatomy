@@ -71,3 +71,14 @@ test('bars: neutral ink-tint fill with no outline; the reference line is dashed 
   assert.equal(merged('.g-bars .g-bar').stroke, 'none');
   assert.match(merged('.g-bars .g-bars-ref')['stroke-dasharray'], /^\d/);
 });
+
+// Shared patch S2 (shared-2): fact-row source links stay on one line on desktop and wrap on a phone.
+test('.fact-meta stays nowrap above 640 px and wraps at 640 px or less', () => {
+  assert.equal(declarations(ruleFor('.fact-meta')[0].body)['white-space'], 'nowrap'); // the base rule, before the media query
+  const phone = css.match(/@media \(max-width: 640px\) \{[^@]*?\.fact-meta \{([^}]*)\}/);
+  assert.ok(phone, 'a .fact-meta rule inside the 640 px media query');
+  const d = declarations(phone[1]);
+  assert.equal(d['flex-wrap'], 'wrap');
+  assert.equal(d['white-space'], 'normal');
+  assert.equal(d['row-gap'], 'var(--space-1)');
+});
