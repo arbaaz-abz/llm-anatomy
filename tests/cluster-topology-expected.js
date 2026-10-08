@@ -14,8 +14,8 @@ export const CAPTIONS = Object.freeze([
 
 // storyboard §6 "Check my work" (default state: tensor, degree 8, H100 HGX, inside)
 export const CHECK_WORK = [
-  'bytes per GPU, one layer, full step = 4 × ring all-reduce of 2,048 × 12,288 × 2 B over 8 GPUs = 352.32 MB',
-  'FLOPs per GPU, one layer, full step = 72 × 2,048 × 12,288² ÷ 8 = 2,783.1 GFLOP',
+  'bytes per GPU, one layer, full step\n  = 4 × ring all-reduce of 2,048 × 12,288 × 2 B over 8 GPUs = 352.32 MB',
+  'FLOPs per GPU, one layer, full step\n  = 72 × 2,048 × 12,288² ÷ 8 = 2,783.1 GFLOP',
   'comm ÷ compute = (352.32 MB ÷ 450 GB/s) ÷ (2,783.1 GFLOP ÷ 989 TFLOPS) = 27.8%',
 ].join('\n');
 

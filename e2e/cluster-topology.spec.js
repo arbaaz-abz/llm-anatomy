@@ -7,7 +7,7 @@ import { CAPTIONS, CHECK_WORK, TRY_THIS } from '../tests/cluster-topology-expect
 const URL = '/training/#cluster-topology';
 const STEPPER = '[data-section="animation"] .stepper';
 
-registerLessonContract({ name: 'cluster-topology', url: URL, captions: CAPTIONS, factRows: 11, returnHash: 'cluster-topology' });
+registerLessonContract({ name: 'cluster-topology', url: URL, captions: CAPTIONS, factRows: 10, returnHash: 'cluster-topology' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
 const pick = (page, control, value) => page.locator(`#${control} [data-value="${value}"]`).click();

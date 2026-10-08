@@ -5,6 +5,7 @@ import { el } from '@shared/ui/dom.js';
 import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
+import { readoutTable } from '@shared/ui/readout-table.js';
 import { INITIAL_STATE, SYSTEM_CHIPS, CUT_OPTIONS, TOKENS_NOTE, toyView, tryThis, stopsFor, snapDegree, whereOptions, systemFromData } from './toy-view.js';
 import { TOKEN_STOPS, int } from './format.js';
 import { LANES } from './numbers.js';
@@ -17,7 +18,18 @@ const output = (name, props = {}) => {
   o.dataset.readout = name;
   return o;
 };
-const line = (label, name) => { const out = output(name); return { out, row: el('p', { className: 'toy-note' }, [`${label}${label.endsWith('?') ? ' ' : ': '}`, out]) }; };
+
+// One table for the labelled numbers (template layout); the data-readout names stay as the e2e specs read them.
+function readoutsTable() {
+  const table = readoutTable({ name: 'cluster-readouts', rows: [
+    { label: 'Comm as % of compute', cells: [{ value: '', name: 'ratio' }] },
+    { label: 'Can it hide?', cells: [{ value: '', name: 'hide' }] },
+    { label: 'Link needed for expert traffic to hide', cells: [{ value: '', name: 'link-needed' }] },
+    { label: 'Bytes per GPU, per layer per step', sub: 'behind the ratio', cells: [{ value: '', name: 'bytes' }] },
+  ] });
+  const out = (name) => table.querySelector(`[data-readout="${name}"]`);
+  return { table, ratio: out('ratio'), hide: out('hide'), need: out('link-needed'), bytes: out('bytes') };
+}
 
 function tryThisList(data) {
   const items = tryThis(data).map(({ text, insight }) => el('li', {}, [`${text} → `, el('strong', { textContent: `Insight: ${insight}` })]));
@@ -27,10 +39,7 @@ function tryThisList(data) {
 function buildDom(host, data) {
   const pre = el('pre', { className: 'check-work', ariaLive: 'polite' });
   pre.dataset.readout = 'check-work';
-  const rows = {
-    ratio: line('Comm as % of compute', 'ratio'), hide: line('Can it hide?', 'hide'), need: line('Link needed for expert traffic to hide', 'link-needed'),
-    bytes: line('Bytes per GPU behind the ratio, per layer per step', 'bytes'),
-  };
+  const rows = readoutsTable();
   const refs = {
     chips: el('div'), cut: el('div'), degree: el('div'), degreeWrap: el('div'), where: el('div'), tokens: el('div'), tokensSlider: el('div'), tokensNote: el('p', { className: 'toy-note', textContent: TOKENS_NOTE }),
     system: output('system-line'), cutLine: output('cut-line'), laneNote: output('lane-note'), rows, pre,
@@ -40,8 +49,8 @@ function buildDom(host, data) {
   refs.tokens.append(refs.tokensSlider, refs.tokensNote);
   host.append(
     refs.chips, el('p', { className: 'toy-note' }, [refs.system]), el('div', { className: 'toy-controls' }, [refs.cut, refs.degreeWrap, refs.where, refs.tokens]),
-    el('p', { className: 'toy-note' }, [refs.cutLine]), rows.ratio.row, el('div', { className: 'scroll-x' }, [refs.lanes]), el('p', { className: 'toy-note' }, [refs.laneNote]),
-    rows.hide.row, rows.need.row, rows.bytes.row, el('h4', { textContent: 'Check my work' }), pre, ...tryThisList(data),
+    el('p', { className: 'toy-note' }, [refs.cutLine]), rows.table, el('div', { className: 'scroll-x' }, [refs.lanes]), el('p', { className: 'toy-note' }, [refs.laneNote]),
+    el('h4', { textContent: 'Check my work' }), pre, ...tryThisList(data),
   );
   return refs;
 }
@@ -56,13 +65,13 @@ function paintLanes(svg, { lanes, state }) {
 
 function paint(refs, view) {
   const { rows } = refs;
-  rows.ratio.out.textContent = view.ratioText;
+  rows.ratio.textContent = view.ratioText;
   refs.laneNote.textContent = view.lanes.note;
-  rows.hide.out.textContent = view.hide;
-  rows.need.out.textContent = view.linkNeeded ?? '';
-  rows.need.row.hidden = view.linkNeeded === null;
-  rows.bytes.out.textContent = view.bytes ?? '';
-  rows.bytes.row.hidden = view.bytes === null;
+  rows.hide.textContent = view.hide;
+  rows.need.textContent = view.linkNeeded ?? '';
+  rows.need.closest('tr').hidden = view.linkNeeded === null;
+  rows.bytes.textContent = view.bytes ?? '';
+  rows.bytes.closest('tr').hidden = view.bytes === null;
   refs.system.textContent = view.systemLine;
   refs.cutLine.textContent = view.cutLine;
   refs.pre.textContent = view.check;

@@ -74,9 +74,13 @@ export function factRows(data) {
     { claim: `DeepSeek-V4 ({deepseek-v4-pro.release_date|year}): expert traffic hides behind compute when compute ÷ bandwidth is at most {deepseek-v4-pro.ep_hiding_flops_per_byte|int} FLOPs per byte (each GB/s hides about ${hides} TFLOPS).` },
     { claim: 'Kimi K2 ({kimi-k2.release_date|year}) servers: {kimi-k2.node}.' },
     { claim: 'NVIDIA\'s Nemotron 3 RL report: {nemotron-3-ultra.ep_colocation}.' },
-    { claim: 'Tensor parallelism stays compute-bound only up to about 8–16-way (Scaling Book).', derived: true },
   ];
 }
+
+// A paragraph under the rows: the claim has no data entry to cite, so it points to the Go deeper link instead of a row.
+export const PROSE = Object.freeze([
+  'Tensor parallelism stays compute-bound only up to about 8–16-way (Google\'s How to Scale Your Model, listed under Go deeper).',
+]);
 
 const pctOne = (ratio) => `${sharePct(ratio, 1).toFixed(1)}%`;
 

@@ -52,8 +52,8 @@ const tensorCheck = (state, sys, link) => {
   const { bytes, flops } = tensorLayerWork(state.degree);
   const { seq, hidden } = GPT3;
   return [
-    `bytes per GPU, one layer, full step = 4 × ring all-reduce of ${int(seq)} × ${int(hidden)} × 2 B over ${int(state.degree)} GPUs = ${mbText(bytes)}`,
-    `FLOPs per GPU, one layer, full step = 72 × ${int(seq)} × ${int(hidden)}² ÷ ${int(state.degree)} = ${gflopText(flops)}`,
+    `bytes per GPU, one layer, full step\n  = 4 × ring all-reduce of ${int(seq)} × ${int(hidden)} × 2 B over ${int(state.degree)} GPUs = ${mbText(bytes)}`,
+    `FLOPs per GPU, one layer, full step\n  = 72 × ${int(seq)} × ${int(hidden)}² ÷ ${int(state.degree)} = ${gflopText(flops)}`,
     `comm ÷ compute = (${mbText(bytes)} ÷ ${int(link)} GB/s) ÷ (${gflopText(flops)} ÷ ${int(sys.peakTflops)} TFLOPS) = ${pct1(ratioFor(state, sys))}`,
   ].join('\n');
 };
@@ -63,8 +63,8 @@ const pipelineCheck = (state, sys, link) => {
   const bytes = 2 * seq * hidden * 2;
   const flops = (72 * seq * hidden * hidden * layers) / state.degree;
   return [
-    `bytes per boundary, one micro-batch, full step = 2 × ${int(seq)} × ${int(hidden)} × 2 B = ${mbText(bytes)}`,
-    `FLOPs per stage, one micro-batch, full step = 72 × ${int(seq)} × ${int(hidden)}² × (${int(layers)} ÷ ${int(state.degree)}) = ${gflopText(flops)}`,
+    `bytes per boundary, one micro-batch, full step\n  = 2 × ${int(seq)} × ${int(hidden)} × 2 B = ${mbText(bytes)}`,
+    `FLOPs per stage, one micro-batch, full step\n  = 72 × ${int(seq)} × ${int(hidden)}² × (${int(layers)} ÷ ${int(state.degree)}) = ${gflopText(flops)}`,
     `comm ÷ compute = (${mbText(bytes)} ÷ ${int(link)} GB/s) ÷ (${gflopText(flops)} ÷ ${int(sys.peakTflops)} TFLOPS) = ${pct1(ratioFor(state, sys))}`,
   ].join('\n');
 };

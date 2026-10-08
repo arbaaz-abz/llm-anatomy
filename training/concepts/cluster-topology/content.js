@@ -4,7 +4,7 @@ import { render } from './frames.js';
 import { mount } from './toy.js';
 import { CAPTIONS } from './captions.js';
 import { fillText } from '@shared/claims.js';
-import { HOOK, FRAMING, intuition, factRows, belowFor } from './facts.js';
+import { HOOK, FRAMING, PROSE, intuition, factRows, belowFor } from './facts.js';
 import { BASIS_LINE } from './toy-view.js';
 
 const SLUG = 'cluster-topology';
@@ -59,7 +59,7 @@ export function lessonFor(data) {
       mount,
     },
     math: { blocks: MATH_BLOCKS, notes: MATH_NOTES },
-    facts: { framing: FRAMING, rows: factRows(data) },
+    facts: { framing: FRAMING, rows: factRows(data), prose: PROSE },
     takeaways: TAKEAWAYS,
     links: { next: ['scale-reliability'], further: FURTHER },
   };

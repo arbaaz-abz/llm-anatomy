@@ -26,7 +26,8 @@ test('the lesson spec is complete, with and without data', () => {
 });
 test('captions are the storyboard\'s, verbatim and in order', () => assert.deepEqual(LESSON.animation.steps.map((s) => s.caption), CAPTIONS));
 test('11 facts rows, every placeholder resolves, none prints a stale dash once filled', () => {
-  assert.equal(LESSON.facts.rows.length, 11);
+  assert.equal(LESSON.facts.rows.length, 10);
+  assert.match(LESSON.facts.prose[0], /8–16-way .*Go deeper/);
   LESSON.facts.rows.forEach((row, i) => assert.deepEqual(fillClaim(row.claim, data).missing, [], `row ${i + 1}`));
   factRows(data).forEach((row, i) => assert.doesNotMatch(row.claim, /—/, `row ${i + 1}`));
   assert.match(factRows(data)[0].claim, /900, 1,800 and 3,000–3,600 GB\/s|900, 1,800 and 3,600 GB\/s|both-directions totals/);
@@ -64,8 +65,9 @@ test('"Check my work" for the default state is the storyboard text', () => {
 });
 test('"Check my work" fills the same template for every cut and system', () => {
   const pipeline = checkWork({ ...INITIAL_STATE, cut: 'pipeline', degree: 16, where: 'network' }, S.SYSTEMS.h100).split('\n');
-  assert.match(pipeline[0], /^bytes per boundary, one micro-batch, full step = 2 × 2,048 × 12,288 × 2 B = 100\.66 MB$/);
-  assert.match(pipeline[2], /= 1\.5%$/);
+  assert.match(pipeline[0], /^bytes per boundary, one micro-batch, full step$/);
+  assert.match(pipeline[1], /^  = 2 × 2,048 × 12,288 × 2 B = 100\.66 MB$/);
+  assert.match(pipeline[4], /= 1\.5%$/);
   const dp = checkWork({ ...INITIAL_STATE, cut: 'data', degree: 64, where: 'network' }, S.SYSTEMS.h100).split('\n');
   assert.match(dp[0], /= 3\.9375 B$/);
   assert.match(dp[2], /= 5\.0%$/);
