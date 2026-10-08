@@ -3,6 +3,7 @@
 //   {gpt-3.layers}            models.json, default format     {hw:h100.hbm_gb}   hardware.json
 //   {deepseek-v3.total_params|count}  a named format (CLAIM_FORMATS)
 //   {sv:deepseek-v3-mtp.acceptance_pct}  serving.json   {paper:chinchilla-refit-2024.E}  papers.json
+//   {gpt-oss-120b.biases|cite}  prints nothing; the row still gets that fact's source link and "reported" flag
 import { formatCount, formatBytes } from '../math/core.js';
 
 const REF = /\{(?:(hw|sv|paper):)?([a-z0-9][a-z0-9.-]*)\.([A-Za-z0-9_]+)(?:\|([a-z0-9]+))?\}/g;
@@ -18,6 +19,7 @@ export const CLAIM_FORMATS = Object.freeze({
   count5: (v) => formatCount(v, { digits: 5 }),
   bytes: (v) => formatBytes(v),
   year: (v) => String(v).slice(0, 4),
+  cite: () => '',
 });
 
 export function lookupFact(dataset, entryId, key) {
