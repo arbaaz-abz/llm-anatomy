@@ -4,10 +4,11 @@ import * as G from '@shared/glyphs.js';
 import { CANDIDATES, PROB_MAX_ABS, REWARD_MAX_ABS } from './numbers.js';
 import { signed } from './format.js';
 
-export const TOY_STAGE = Object.freeze({ w: 560, h: 236, x0: 150, cell: G.NUMBER_CELL, headY: 14, firstRowY: 22, gap: 4 });
+export const TOY_STAGE = Object.freeze({ w: 340, h: 216, x0: 132, cell: G.NUMBER_CELL, headY: 14, firstRowY: 22, gap: 4 });
 const DIM = 0.35;
 
-const svgText = (parent, x, y, str, props = {}) => G.svgEl('text', { x, y, class: 'g-label', ...props }, parent).append(str);
+// Plain labels sit in a `.glyph.g-note` group, which is what gives them the theme's label ink (as stage.js note).
+const svgText = (parent, x, y, str, props = {}) => G.svgEl('text', { x, y, class: 'g-label', ...props }, G.svgEl('g', { class: 'glyph g-note' }, parent)).append(str);
 const cellX = (i) => TOY_STAGE.x0 + i * TOY_STAGE.cell;
 const rowLabel = (parent, y, str) => svgText(parent, TOY_STAGE.x0 - 10, y + TOY_STAGE.cell / 2, str, { 'text-anchor': 'end', 'dominant-baseline': 'central' });
 
