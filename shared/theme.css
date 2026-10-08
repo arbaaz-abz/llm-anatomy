@@ -1,7 +1,7 @@
 /* LLM Anatomy visual language. Layout: one centered column (prose 680 px, figures 960 px) under a slim header; a cool drafting-paper ground,
    one quiet surface for every panel, ink-on-paper type, and a single diverging value scale
    for every number drawn as a cell. Track accents are chrome only. */
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
   color-scheme: light;
@@ -44,8 +44,8 @@
   --carry-token: var(--ink);
   --focus: var(--accent);
   --shadow: 0 1px 2px rgb(20 26 36 / 0.06), 0 4px 16px rgb(20 26 36 / 0.05);
-  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-display: "Geist", system-ui, sans-serif;
+  --font-body: "Geist", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 40px;
   --radius-s: 4px; --radius-m: 8px; --radius-l: 14px;
@@ -96,10 +96,10 @@ body {
   font-family: var(--font-body); font-size: 17px; line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; margin: 0 0 var(--space-3); text-wrap: balance; }
-h1 { font-size: var(--fs-2xl); font-variation-settings: "opsz" 96; letter-spacing: -0.01em; }
-h2 { font-size: var(--fs-xl); font-variation-settings: "opsz" 48; }
-h3 { font-size: var(--fs-l); font-variation-settings: "opsz" 24; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; margin: 0 0 var(--space-3); text-wrap: balance; }
+h1 { font-size: var(--fs-2xl); letter-spacing: -0.02em; }
+h2 { font-size: var(--fs-xl); letter-spacing: -0.02em; }
+h3 { font-size: var(--fs-l); letter-spacing: -0.01em; }
 h4 { font-size: var(--fs-m); font-family: var(--font-body); font-weight: 700; }
 p { margin: 0 0 var(--space-4); max-width: var(--measure); }
 a { color: var(--accent); text-underline-offset: 0.15em; }
@@ -111,13 +111,16 @@ pre { overflow-x: auto; padding: var(--space-3); background: var(--surface-2); b
 small, .muted { color: var(--ink-muted); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
 button, select, input { font: inherit; color: inherit; }
+/* Every button is a pill; icon-only buttons (.icon-button) are circles. */
 button {
-  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-s);
-  padding: var(--space-2) var(--space-3); min-height: 44px; cursor: pointer; font-weight: 500;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+  padding: var(--space-2) var(--space-4); min-height: 44px; cursor: pointer; font-weight: 500;
 }
+.icon-button { width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.icon-button svg { display: block; }
 button:hover { border-color: var(--accent); }
 button:active { background: var(--surface-2); }
-select { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-s); padding: var(--space-2); min-height: 44px; }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: var(--space-2) var(--space-3); min-height: 44px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 ::selection { background: color-mix(in oklab, var(--accent) 30%, transparent); }
 input[type="range"] { accent-color: var(--accent); width: 100%; min-width: 0; min-height: 44px; }
@@ -141,9 +144,8 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .app-header h1 { font-size: var(--fs-m); margin: 0; white-space: nowrap; }
 .app-header h1::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--accent); margin-right: var(--space-2); }
 .app-header-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
-.app-header button { min-height: 36px; padding-block: var(--space-1); background: transparent; }
-.theme-toggle { min-width: 36px; padding-inline: var(--space-2); display: inline-flex; align-items: center; justify-content: center; }
-.theme-toggle svg { display: block; }
+.app-header button { background: transparent; }
+.nav-collapse { display: none; } /* from 1440 px only: below that the Lessons menu button does this job */
 .app-nav[hidden] { display: none; }
 .app-nav {
   position: fixed; z-index: 30; top: calc(var(--header-h) + var(--space-2)); right: var(--space-4); width: min(340px, calc(100vw - 2 * var(--space-4)));
@@ -160,6 +162,8 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 /* Very wide screens: the lesson list is a quiet note at the left edge. It is fixed, so the column stays centered on the viewport. */
 @media (min-width: 1440px) {
   .menu-toggle { display: none; }
+  .nav-collapse { display: inline-flex; }
+  .app.nav-collapsed .app-nav, .app.nav-collapsed .app-nav[hidden] { display: none; }
   .app-nav[hidden], .app-nav {
     display: block; top: calc(var(--header-h) + var(--space-6)); right: auto; left: var(--space-5); width: 208px;
     padding: 0; background: none; border: 0; box-shadow: none;
@@ -185,15 +189,15 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .concept > * + * { margin-top: var(--space-5); }
 .concept :where(.lesson-head, .lesson-section, .lesson-foot, .coming-soon, .load-error) > :where(*) { max-width: var(--measure); margin-inline: auto; }
 .concept :where(.lesson-section) > .wide { max-width: var(--wide); }
-.lesson-head { padding-top: var(--space-5); }
-.lesson-head h2 { font-size: clamp(2rem, 5vw, 3rem); font-variation-settings: "opsz" 96; letter-spacing: -0.015em; margin-bottom: var(--space-4); }
+.lesson-head { padding-top: var(--space-5); text-align: center; } /* title and hook centered; everything after stays left-aligned in the column */
+.lesson-head h2 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.02em; margin-bottom: var(--space-4); }
 .lesson-foot { margin-top: var(--space-6); }
 .lesson-foot > * + * { margin-top: var(--space-5); }
 .lesson-pager { display: flex; justify-content: space-between; gap: var(--space-4); border-top: 1px solid var(--line); padding-top: var(--space-4); }
 .pager-link { display: grid; gap: 2px; text-decoration: none; color: var(--ink); max-width: 48%; }
 .pager-next { text-align: right; margin-left: auto; }
 .pager-dir { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
-.pager-title { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-l); }
+.pager-title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-l); }
 .pager-link:hover .pager-title { color: var(--accent); }
 .learned-toggle[aria-pressed="true"] { background: color-mix(in oklab, var(--sem-ok) 18%, var(--surface)); border-color: var(--sem-ok); }
 .coming-soon, .load-error, .boot {
@@ -217,12 +221,11 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .stepper-stage svg { display: block; width: 100%; height: auto; max-width: 900px; max-height: 80vh; margin-inline: auto; }
 @media (max-width: 700px) { .stepper-stage svg { min-width: 580px; } }
 .stepper-caption { font-size: var(--fs-m); min-height: 2lh; margin: var(--space-3) auto; max-width: 900px; padding-inline: var(--space-3); } /* room for the longest caption: no layout shift during playback (spec §8) */
-@media (max-width: 480px) { .stepper-caption { min-height: 4lh; padding-inline: 0; } .stepper-bar { padding-inline: 0; } }
+@media (max-width: 480px) { .stepper-caption { min-height: 5lh; padding-inline: 0; } .stepper-bar { padding-inline: 0; } }
 .stepper-bar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; max-width: 900px; margin-inline: auto; padding-inline: var(--space-3); }
 .stepper-bar input[type="range"] { flex: 1 1 140px; min-width: 120px; }
 .stepper-count { font-family: var(--font-mono); font-size: var(--fs-s); color: var(--ink-muted); white-space: nowrap; }
 .stepper-bar select { min-width: 64px; }
-.stepper-bar .stepper-icon { min-width: 44px; padding-inline: 0; display: inline-flex; align-items: center; justify-content: center; }
 .stepper-bar .stepper-play { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 96px; }
 .stepper-bar svg { display: block; }
 
@@ -234,7 +237,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 
 /* ---------- Math panel (Task 6 contract) ---------- */
 .math-panel { border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface); }
-.math-panel summary { padding: var(--space-3) var(--space-4); cursor: pointer; font-weight: 700; font-family: var(--font-display); }
+.math-panel summary { padding: var(--space-3) var(--space-4); cursor: pointer; font-weight: 600; font-family: var(--font-display); }
 .math-panel summary:hover { color: var(--accent); }
 .math-body { padding: 0 var(--space-4) var(--space-4); }
 .math-body > div { overflow-x: auto; padding: var(--space-2) 0; }
@@ -404,11 +407,18 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .choice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .choice-label { font-weight: 500; font-size: var(--fs-s); margin-right: var(--space-2); }
 .choice-option[aria-pressed="true"], .toggle[aria-pressed="true"] { background: color-mix(in oklab, var(--accent) 16%, var(--surface)); border-color: var(--accent); }
-.choice--chips .choice-option { border-radius: 999px; }
+/* Segmented choice: a pill track with one filled neutral pill (never the accent: that means "selection on the stage"). The thumb slides; without it the selected option fills itself. */
+.choice-track { position: relative; display: inline-flex; flex-wrap: nowrap; max-width: 100%; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.choice-track .choice-option { position: relative; z-index: 1; border-color: transparent; background: transparent; white-space: nowrap; }
+.choice-track .choice-option:hover { border-color: transparent; background: color-mix(in oklab, var(--ink) 5%, transparent); }
+.choice-track .choice-option[aria-pressed="true"] { background: var(--surface-2); border-color: transparent; font-weight: 700; }
+.choice-thumb { display: none; position: absolute; top: 2px; bottom: 2px; left: 0; border-radius: 999px; background: var(--surface-2); width: var(--thumb-w); transform: translateX(var(--thumb-x)); transition: transform var(--duration) var(--ease), width var(--duration) var(--ease); }
+.choice-track[data-thumb] .choice-thumb { display: block; }
+.choice-track[data-thumb] .choice-option[aria-pressed="true"], .choice-track[data-thumb] .choice-option[aria-pressed="true"]:hover { background: transparent; }
 .fact-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink-muted); }
 .fact-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
 .fact-meta { display: flex; gap: var(--space-3); align-items: baseline; justify-content: flex-end; white-space: nowrap; }
-@media (max-width: 640px) { .fact-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } .fact-meta { justify-content: flex-start; } }
+@media (max-width: 640px) { .fact-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } .fact-meta { justify-content: flex-start; flex-wrap: wrap; white-space: normal; row-gap: var(--space-1); } }
 .fact-missing { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--sem-bad); }
 /* Toy number readouts: rows of value cells (pages set only the per-cell valueColor / valueLevel inline). */
 .toy-rows { display: grid; gap: 3px; overflow-x: auto; max-width: 100%; }

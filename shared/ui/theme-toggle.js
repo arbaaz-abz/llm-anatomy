@@ -33,7 +33,7 @@ const ICONS = {
 // A toggle button: aria-pressed is "dark mode is on"; the icon shows the mode a click switches to.
 export function mountThemeToggle(options) {
   const theme = createTheme(options);
-  const button = el('button', { type: 'button', className: 'theme-toggle', title: 'Switch between light and dark' });
+  const button = el('button', { type: 'button', className: 'theme-toggle icon-button', title: 'Switch between light and dark' });
   button.setAttribute('aria-label', 'Dark mode');
   const paint = () => {
     button.setAttribute('aria-pressed', String(theme.current() === 'dark'));

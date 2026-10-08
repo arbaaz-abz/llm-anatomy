@@ -83,3 +83,13 @@ test('count5 prints five significant figures: the gpt-oss card figure 116.83B', 
   assert.equal(fillText('{gpt-oss-120b.total_params|count5}', data), '116.83B');
   assert.equal(CLAIM_FORMATS.count5(116.83e9), '116.83B');
 });
+
+test('the cite format prints nothing but keeps the source and the reported flag (shared-3)', () => {
+  const data = { models: { entries: [{ id: 'gpt-oss-120b', facts: { biases: fact(true, { source_url: 'https://example.org/oss', confidence: 'reported' }) } }] } };
+  const r = fillClaim('X{gpt-oss-120b.biases|cite}.', data);
+  assert.equal(text(r), 'X.');
+  assert.deepEqual(r.sources, ['https://example.org/oss']);
+  assert.equal(r.reported, true);
+  assert.equal(fillText('X{gpt-oss-120b.biases|cite}.', data), 'X.');
+  assert.deepEqual(fillClaim('X{nope.biases|cite}.', data).missing, ['nope.biases|cite']);
+});
