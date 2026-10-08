@@ -46,17 +46,20 @@ function factRow(row, ctx) {
   const filled = fillClaim(row.claim, ctx.data);
   const li = el('li', { className: 'fact-row' });
   if (row.derived) li.dataset.derived = '';
+  const text = el('span', { className: 'fact-text' });
   filled.segments.forEach((seg) => (seg.type === 'text'
-    ? appendRich(li, seg.text, ctx)
-    : li.append(el('span', { className: 'fact', textContent: seg.text, ...(seg.note ? { title: seg.note } : {}) }))));
-  filled.sources.forEach((href, i) => li.append(' ', el('a', {
+    ? appendRich(text, seg.text, ctx)
+    : text.append(el('span', { className: 'fact', textContent: seg.text, ...(seg.note ? { title: seg.note } : {}) }))));
+  const meta = el('span', { className: 'fact-meta' });
+  filled.sources.forEach((href, i) => meta.append(el('a', {
     className: 'fact-source', href, target: '_blank', rel: 'noopener', textContent: filled.sources.length > 1 ? `source ${i + 1}` : 'source',
   })));
-  if (filled.reported) li.append(' ', el('span', { className: 'fact-reported', textContent: 'reported' }));
+  if (filled.reported) meta.append(el('span', { className: 'fact-reported', textContent: 'reported' }));
   if (filled.missing.length) {
     console.error(`Lesson fact missing from data/*.json: ${filled.missing.join(', ')}`);
-    li.append(' ', el('span', { className: 'fact-missing', textContent: `missing fact: ${filled.missing.join(', ')}` }));
+    meta.append(el('span', { className: 'fact-missing', textContent: `missing fact: ${filled.missing.join(', ')}` }));
   }
+  li.append(text, meta);
   return li;
 }
 
@@ -66,21 +69,21 @@ function buildShells(spec, ctx) {
   const intuition = section('intuition', 'The idea');
   intuition.append(...spec.intuition.map((p) => para(p, ctx)), ...(spec.intuitionNote ? [para(spec.intuitionNote, ctx, 'lesson-note')] : []));
   const animation = section('animation', 'Step through it');
-  const stepperHost = el('div', { className: 'lesson-stepper' });
+  const stepperHost = el('div', { className: 'lesson-stepper wide' });
   const below = el('div', { className: 'below-stage', ariaLive: 'polite' });
   animation.append(stepperHost, ...(spec.animation.standIn ? [para(spec.animation.standIn, ctx, 'stand-in')] : []), below);
   const toy = section('toy', spec.toy.title);
-  const toyHost = el('div', { className: 'toy' });
+  const toyHost = el('div', { className: 'toy wide' });
   toy.append(...(spec.toy.intro ? [para(spec.toy.intro, ctx, 'toy-intro')] : []), toyHost);
   const math = section('math');
-  const mathHost = el('div');
+  const mathHost = el('div', { className: 'wide' });
   math.append(mathHost, ...(spec.math.notes ?? []).map((n) => para(n, ctx, 'math-note')));
   return { nodes: [hook, intuition, animation, toy, math, factsSection(spec, ctx), takeawaysSection(spec, ctx), linksSection(spec, ctx)], stepperHost, below, toyHost, mathHost };
 }
 
 function factsSection(spec, ctx) {
   const node = section('facts', 'In today\'s models (Oct 2026)');
-  node.append(para(spec.facts.framing, ctx), el('ul', { className: 'fact-rows' }, spec.facts.rows.map((r) => factRow(r, ctx))), ...(spec.facts.prose ?? []).map((p) => para(p, ctx)));
+  node.append(para(spec.facts.framing, ctx), el('ul', { className: 'fact-rows wide' }, spec.facts.rows.map((r) => factRow(r, ctx))), ...(spec.facts.prose ?? []).map((p) => para(p, ctx)));
   return node;
 }
 

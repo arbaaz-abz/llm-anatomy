@@ -8,6 +8,7 @@ const URL = '/architecture/#decoder-anatomy';
 registerLessonContract({ name: 'decoder-anatomy', url: URL, captions: CAPTIONS, factRows: 13, returnHash: 'decoder-anatomy' });
 
 const readout = (page, name) => page.locator(`[data-readout="${name}"]`);
+const blockRows = (page) => page.locator('table[data-readout="per-block"] tbody tr');
 const cell = (page, part, col) => page.locator(`table[data-readout="parts"] tr[data-part="${part}"] td[data-col="${col}"]`);
 
 test.describe('decoder-anatomy toy: where do the parameters live?', () => {
@@ -17,7 +18,7 @@ test.describe('decoder-anatomy toy: where do the parameters live?', () => {
     await expect(readout(page, 'total')).toHaveText('1,576');
     await expect(readout(page, 'active')).toHaveText('1,448');
     await expect(readout(page, 'active-with-embedding')).toHaveText('1,576');
-    await expect(readout(page, 'per-block')).toHaveText('attention 256 · MLP 384 · norms 16');
+    await expect(blockRows(page)).toHaveText(['attention 256', 'MLP 384', 'norms 16'], { useInnerText: true });
     await expect(readout(page, 'active-note')).toHaveText('Active 1,448 of 1,576: active leaves out the 128-parameter embedding table.');
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);
     await expect(cell(page, 'mlp', 'share')).toHaveText('48.7%');
@@ -37,7 +38,7 @@ test.describe('decoder-anatomy toy: where do the parameters live?', () => {
     await page.locator('#experts').fill('3');
     await expect(readout(page, 'total')).toHaveText('4,008');
     await expect(readout(page, 'active')).toHaveText('1,576');
-    await expect(readout(page, 'per-block')).toHaveText('attention 256 · expert 192 × 8 · norms 16');
+    await expect(blockRows(page)).toHaveText(['attention 256', 'expert 192 × 8', 'norms 16'], { useInnerText: true });
     await page.locator('#experts').fill('4');
     await expect(readout(page, 'total')).toHaveText('7,208');
     await expect(readout(page, 'active')).toHaveText('1,704');

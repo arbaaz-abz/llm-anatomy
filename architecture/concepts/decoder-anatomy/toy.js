@@ -5,6 +5,7 @@ import { el } from '@shared/ui/dom.js';
 import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
+import { readoutTable } from '@shared/ui/readout-table.js';
 import { formatCount } from '@math/core.js';
 import { lookupFact } from '@shared/claims.js';
 import { TOY_LIMITS } from './format.js';
@@ -13,7 +14,6 @@ import { PRESET_CHIPS, INITIAL_STATE, toyView, kimiLine, v3GapLine, tryThis } fr
 const BAR_W = 264; // wide enough that the toy keeps the storyboard's folds (only "other" folds); scrolls in its box at 400 px
 // The experts slider's stops as chips: "dense" and "8, like the animation" are the storyboard's two named ones.
 const EXPERT_OPTIONS = Object.freeze(TOY_LIMITS.experts.map((v) => ({ value: v, label: v === 0 ? 'dense' : v === 8 ? '8, like the animation' : String(v) })));
-const READOUTS = Object.freeze([['total', 'Total'], ['active', 'Active'], ['active-with-embedding', 'Active, counting the lookup'], ['per-block', 'Per block']]);
 
 const output = (name, props = {}) => {
   const o = el('output', props);
@@ -38,7 +38,7 @@ function convention(data, inline) {
 function partsTable() {
   const head = el('thead', {}, [el('tr', {}, ['part', 'count', '% of total', '% of active'].map((t) => el('th', { scope: 'col', textContent: t })))]);
   const body = el('tbody');
-  const table = el('table', { className: 'parts-table' }, [el('caption', { className: 'muted', textContent: 'Where the parameters are' }), head, body]);
+  const table = el('table', { className: 'parts-table readout-table' }, [el('caption', { className: 'muted', textContent: 'Where the parameters are' }), head, body]);
   table.dataset.readout = 'parts';
   return { table, body };
 }
@@ -56,10 +56,22 @@ function paintRows(body, rows) {
   }));
 }
 
-function readoutGrid(out) {
-  return el('div', { className: 'readouts' }, READOUTS.map(([name, label]) => el('div', { className: 'readout' }, [
-    el('span', { textContent: label }), out(name), ...(name === 'active' ? [out('active-pct')] : []),
-  ])));
+function totalsTable(view) {
+  return readoutTable({
+    head: ['Count', 'Parameters'],
+    rows: [
+      { label: 'Total', cells: [{ value: view.total, name: 'total' }] },
+      { label: 'Active', cells: [{ value: view.active, sub: view.activePct, name: 'active' }] },
+      { label: 'Active, counting the lookup', cells: [{ value: view.activeWithEmbedding, name: 'active-with-embedding' }] },
+    ],
+  });
+}
+
+function blockTable(view) {
+  return readoutTable({
+    head: ['Per block', 'Parameters'], name: 'per-block',
+    rows: view.perBlockRows.map(({ label, value, sub }) => ({ label, cells: [{ value, sub }] })),
+  });
 }
 
 function buildDom(host, data) {
@@ -69,15 +81,16 @@ function buildDom(host, data) {
   pre.dataset.readout = 'check-work';
   outputs['check-work'] = pre;
   const refs = {
+    totals: el('div'), blocks: el('div'),
     outputs, chips: el('div'), sliders: [el('div'), el('div'), el('div')], expertChips: el('div'), inline: output('active-with-embedding-inline'),
-    v3: output('v3-gap', { className: 'toy-note', textContent: v3GapLine(data) }),
+    v3: output('v3-gap', { textContent: v3GapLine(data) }),
     bar: G.svgEl('svg', { role: 'group', 'aria-label': 'parameter shares' }), parts: partsTable(),
   };
   refs.controls = el('div', { className: 'toy-controls' }, [...refs.sliders, refs.expertChips, el('p', { className: 'toy-note' }, [out('experts-note')])]);
   host.append(
-    refs.chips, el('p', {}, [refs.v3]), refs.controls, el('p', { className: 'toy-note' }, [out('spec')]),
-    readoutGrid(out), convention(data, refs.inline), el('p', {}, [out('active-note')]),
-    el('p', {}, [out('published-gap')]), el('p', {}, [out('published-active-gap')]),
+    refs.chips, el('p', { className: 'toy-note' }, [refs.v3]), refs.controls, el('p', { className: 'toy-note' }, [out('spec')]),
+    el('div', { className: 'toy-tables' }, [refs.totals, refs.blocks]), convention(data, refs.inline), el('p', { className: 'toy-note' }, [out('active-note')]),
+    el('p', { className: 'toy-note' }, [out('published-gap')]), el('p', { className: 'toy-note' }, [out('published-active-gap')]),
     el('div', { className: 'scroll-x' }, [refs.bar]), el('div', { className: 'scroll-x' }, [refs.parts.table]),
     el('h4', { textContent: 'Check my work' }), pre, ...tryThisList(data),
   );
@@ -91,10 +104,11 @@ function paintBar(svg, parts) {
 }
 
 function paint(refs, view, state) {
-  const text = { total: view.total, active: view.active, 'active-pct': view.activePct, 'active-with-embedding': view.activeWithEmbedding, 'per-block': view.perBlock,
-    'active-note': view.activeNote, 'published-gap': view.gap, 'published-active-gap': view.activeGap, 'experts-note': view.expertsNote, spec: view.spec, 'check-work': view.checkWork };
+  const text = { 'active-note': view.activeNote, 'published-gap': view.gap, 'published-active-gap': view.activeGap, 'experts-note': view.expertsNote, spec: view.spec, 'check-work': view.checkWork };
   Object.entries(text).forEach(([name, value]) => { refs.outputs[name].textContent = value; });
   refs.inline.textContent = view.activeWithEmbedding;
+  refs.totals.replaceChildren(totalsTable(view));
+  refs.blocks.replaceChildren(blockTable(view));
   refs.v3.hidden = state.preset !== 'deepseekV3';
   paintRows(refs.parts.body, view.rows);
   paintBar(refs.bar, view.bar);

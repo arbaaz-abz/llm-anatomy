@@ -5,7 +5,7 @@ import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim } from '../shared/claims.js';
 import { paramBreakdown, PRESETS } from '../math/params.js';
 import { LESSON, lessonFor } from '../architecture/concepts/decoder-anatomy/content.js';
-import { checkWork, gapLine, signedPct, toyConfig, perBlockLine, barParts } from '../architecture/concepts/decoder-anatomy/format.js';
+import { checkWork, gapLine, signedPct, toyConfig, perBlockLine, perBlockRows, barParts } from '../architecture/concepts/decoder-anatomy/format.js';
 import { toyView, kimiLine, v3GapLine, tryThis, INITIAL_STATE, EXPERTS_EDGE_NOTE } from '../architecture/concepts/decoder-anatomy/toy-view.js';
 import { BELOW, factRows, framing } from '../architecture/concepts/decoder-anatomy/facts.js';
 import * as S from '../architecture/concepts/decoder-anatomy/numbers.js';
@@ -131,10 +131,17 @@ test('per-block line and share-bar parts', () => {
   assert.deepEqual(barParts({ experts: 3, unknown: 1 }).map((p) => [p.name, p.unknown ?? false]), [['experts', false], ['not published', true]]);
 });
 
+test('per-block rows: one row per part, an expert row carries its multiplier, nothing is one long phrase', () => {
+  const v3 = paramBreakdown(PRESETS.deepseekV3);
+  assert.deepEqual(perBlockRows(PRESETS.deepseekV3, v3, { exact: false }), [
+    { label: 'attention', value: '187M' }, { label: 'MLP', value: '396M' }, { label: 'expert', value: '44M', sub: '× 257' }, { label: 'norms', value: '14.3K' }]);
+});
+
 test('toy view: the default state prints the animation\'s numbers', () => {
   const v = toyView(INITIAL_STATE, data);
   assert.deepEqual([v.total, v.active, v.activeWithEmbedding, v.activePct], ['1,576', '1,448', '1,576', '91.9% of total']);
   assert.equal(v.perBlock, 'attention 256 · MLP 384 · norms 16');
+  assert.deepEqual(v.perBlockRows.map((r) => [r.label, r.value]), [['attention', '256'], ['MLP', '384'], ['norms', '16']]);
   assert.equal(v.activeNote, 'Active 1,448 of 1,576: active leaves out the 128-parameter embedding table.');
   assert.equal(v.checkWork, CHECK_WORK);
   const row = (part) => v.rows.find((r) => r.part === part);
@@ -166,6 +173,7 @@ test('toy view: DeepSeek-V4-Pro prints its published total and active back, with
   assert.deepEqual([v.total, v.active, v.activePct], ['1.6T', '49B', '3.1% of total']);
   assert.deepEqual(v.rows.map((r) => [r.part, r.share, r.activeShare]), [['experts', '97.0%', '57.6%'], ['unknown', '3.0%', '42.4%']]);
   assert.equal(v.perBlock, 'expert 66.1M × 385 · the rest is not published');
+  assert.deepEqual(v.perBlockRows, [{ label: 'expert', value: '66.1M', sub: '× 385' }, { label: 'the rest', value: 'not published' }]);
   assert.match(v.activeNote, /28\.2B of it is derivable \(7 experts × 61 blocks\)/);
   assert.equal(v.bar.at(-1).unknown, true);
   assert.match(v.spec, /384 \+ 1 experts of hidden 3,072, 6 \+ 1 used per token/);

@@ -49,7 +49,6 @@
   .readout output { font-weight: 600; }
   .track-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
   .track-row .chip { border-color: var(--accent); color: var(--accent); }
-  #theme-toggle { min-height: 36px; padding-block: var(--space-1); }
 </style>
 </head>
 <body>
@@ -61,7 +60,7 @@
         <h1>Gallery</h1>
         <p class="rule">Every color, type size, glyph and control the lessons use, in one place for review. Toggle the theme to check both.</p>
       </div>
-      <button type="button" id="theme-toggle" aria-live="polite">Theme: system</button>
+      <span id="theme-toggle"></span>
     </header>
 
     <section id="palette">

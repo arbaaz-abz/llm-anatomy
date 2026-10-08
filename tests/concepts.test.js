@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { indexConcepts, topoOrder, learningPath, bySection } from '../shared/concepts.js';
+import { indexConcepts, topoOrder, learningPath, bySection, neighbours } from '../shared/concepts.js';
 
 const data = JSON.parse(await readFile(new URL('../shared/concepts.json', import.meta.url), 'utf8'));
 
@@ -63,4 +63,14 @@ test('decoder-anatomy is the first architecture concept and has no prereqs', () 
   assert.equal(data.concepts.find((c) => c.track === 'architecture').slug, 'decoder-anatomy');
   assert.deepEqual(index.get('attention').prereqs, ['decoder-anatomy']);
   assert.deepEqual(index.get('decoder-recap').prereqs, ['decoder-anatomy']);
+});
+
+test('neighbours: previous and next follow the nav order across sections, null at the ends', () => {
+  const groups = bySection(data.concepts, 'training');
+  const flat = groups.flatMap((g) => g.concepts);
+  assert.equal(neighbours(groups, flat[0].slug).prev, null);
+  assert.equal(neighbours(groups, flat[0].slug).next, flat[1]);
+  assert.equal(neighbours(groups, flat[1].slug).prev, flat[0]);
+  assert.equal(neighbours(groups, flat.at(-1).slug).next, null);
+  assert.deepEqual(neighbours(groups, 'no-such-lesson'), { prev: null, next: null });
 });

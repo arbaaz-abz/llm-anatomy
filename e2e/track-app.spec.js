@@ -29,6 +29,7 @@ for (const hash of ['#key=value', '#RoPE', '#..%2Fx', '#%E0%A4%A', '#']) {
 
 test('nav marks the current lesson and back/forward routes work', async ({ page }) => {
   await page.goto('/serving/');
+  await page.getByRole('button', { name: 'Lessons' }).click();
   await page.locator('.nav-link', { hasText: 'PagedAttention' }).click();
   await expect(page).toHaveURL(/#paged-attention$/);
   await expect(page.locator('.nav-link[aria-current="page"]')).toHaveText('PagedAttention');

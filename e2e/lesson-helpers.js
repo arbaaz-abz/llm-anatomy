@@ -51,11 +51,12 @@ export const glyphOverflows = (page, svgSelector) => svgOverflows(page, svgSelec
 // Everything drawn on a stage (text, lines, notes outside any glyph too) must sit inside its own <svg>.
 export const stageOverflows = (page, svgSelector) => svgOverflows(page, svgSelector, 'all');
 
-// Rendered size of every <svg> in the stage (a viewBox-only or CSS-sized svg is measured too, never read as 0).
+// Rendered size and viewBox of every <svg> in the stage (a viewBox-only or CSS-sized svg is measured too, never read as 0).
 export function stageBoxes(page, svgSelector) {
   return page.locator(svgSelector).evaluateAll((svgs) => svgs.map((s) => {
     const r = s.getBoundingClientRect();
-    return { width: r.width, height: r.height };
+    const { width: vbWidth, height: vbHeight } = s.viewBox.baseVal;
+    return { width: r.width, height: r.height, vbWidth, vbHeight };
   }));
 }
 
@@ -163,7 +164,7 @@ function determinismTests({ url, captions, root }) {
 export const toggleTop = (page, selector) => page.locator(selector).evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
 
 function layoutTests({ url, captions, root }) {
-  test('nothing clips at mid-transition or at rest on any step; every stage svg fits 580 × 366', async ({ page }) => {
+  test('nothing clips at mid-transition or at rest on any step; every stage viewBox fits 580 × 366 and the stage scales up on a wide screen', async ({ page }) => {
     const errors = collectConsoleErrors(page);
     const stageSvg = `${stepperParts(root).stage} svg`;
     await startPausedClock(page, url);
@@ -179,8 +180,10 @@ function layoutTests({ url, captions, root }) {
       expect(boxes.length, `step ${k + 1}: the stage draws an svg`).toBeGreaterThan(0);
       boxes.forEach((b, i) => {
         expect(b.width > 0 && b.height > 0, `step ${k + 1} svg ${i + 1} has a rendered size`).toBe(true);
-        expect(b.width, `step ${k + 1} svg ${i + 1} width`).toBeLessThanOrEqual(STAGE_MAX.width);
-        expect(b.height, `step ${k + 1} svg ${i + 1} height`).toBeLessThanOrEqual(STAGE_MAX.height);
+        expect(b.vbWidth, `step ${k + 1} svg ${i + 1} viewBox width`).toBeLessThanOrEqual(STAGE_MAX.width);
+        expect(b.vbHeight, `step ${k + 1} svg ${i + 1} viewBox height`).toBeLessThanOrEqual(STAGE_MAX.height);
+        // The stage scales to the figure; on a desktop-width viewport that is larger than the viewBox's native size.
+        if ((page.viewportSize()?.width ?? 0) >= 1280) expect(b.width, `step ${k + 1} svg ${i + 1} rendered width`).toBeGreaterThan(b.vbWidth);
       });
       expect(await accentStrokeOffenders(page, '.concept'), `step ${k + 1} accent strokes`).toEqual([]);
     }

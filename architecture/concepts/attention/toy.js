@@ -22,7 +22,7 @@ function controls(host, set) {
   const reset = el('button', { type: 'button', id: 'divisor-reset', className: 'choice-option', textContent: '√d_head' });
   const divisorBox = el('div', {}, [parts[1], reset,
     el('p', { className: 'toy-intro', textContent: 'This slider is a temperature knob on the attention softmax. Real models fix it at √d_head; the slider is here so you can feel why.' }),
-    el('p', { className: 'toy-intro' }, [el('code', { textContent: 'typical score size for random ±1 entries: 4 terms → 2; 128 terms → 11' })]),
+    el('p', { className: 'toy-intro', textContent: 'typical score size for random ±1 entries: 4 terms → 2; 128 terms → 11' }),
   ]);
   host.prepend(parts[0], divisorBox, parts[2], parts[3]); // controls above the readouts
   const query = mountChoice(parts[0], { id: 'query', label: 'Query token', value: START.query, onChange: (q) => set({ query: q }),

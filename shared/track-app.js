@@ -1,10 +1,11 @@
 // Track shell: nav, index view, and lazy loading of concepts/<slug>.js.
-import { indexConcepts, bySection } from './concepts.js';
+import { indexConcepts, bySection, neighbours } from './concepts.js';
 import { startRouter } from './router.js';
 import { safeStorage, toggleLearned, LEARNED_KEY } from './storage.js';
 import { conceptHref, hubHref, currentTarget } from './links.js';
 import { loadJSON } from './data.js';
 import { el } from './ui/dom.js';
+import { mountThemeToggle } from './ui/theme-toggle.js';
 
 // Chrome, Safari and Firefox word a failed dynamic import differently.
 const isMissingModule = (error) =>
@@ -62,14 +63,37 @@ export async function mountTrack({ root, track }) {
   const title = (slug) => index.get(slug)?.title ?? null;
   const importer = (slug) => import(new URL(`concepts/${slug}.js`, document.baseURI).href);
 
-  const nav = el('nav', { className: 'app-nav', ariaLabel: `${trackInfo.title} lessons` });
+  const nav = el('nav', { className: 'app-nav', id: 'lesson-nav', ariaLabel: `${trackInfo.title} lessons`, hidden: true });
   const main = el('main', { className: 'app-main', id: 'main', tabIndex: -1 });
   const home = hubHref({ from: track, target, artifactUrls: links.artifactUrls });
+  const menuButton = el('button', { type: 'button', className: 'menu-toggle', textContent: 'Lessons' });
+  menuButton.setAttribute('aria-controls', 'lesson-nav');
+  menuButton.setAttribute('aria-expanded', 'false');
   const header = el('header', { className: 'app-header' }, [
     home ? el('a', { href: home, textContent: 'LLM Anatomy' }) : el('span', { textContent: 'LLM Anatomy' }),
     el('h1', { textContent: trackInfo.title }),
+    el('div', { className: 'app-header-actions' }, [menuButton, mountThemeToggle()]),
   ]);
   root.replaceChildren(el('div', { className: 'app' }, [header, nav, main]));
+
+  // Below 1440 px the lesson list is a popover; from 1440 px CSS shows it as a quiet list at the left edge.
+  const setMenu = (open) => {
+    nav.hidden = !open;
+    menuButton.setAttribute('aria-expanded', String(open));
+  };
+  menuButton.addEventListener('click', () => {
+    setMenu(nav.hidden);
+    if (!nav.hidden) (nav.querySelector('[aria-current="page"]') ?? nav.querySelector('a'))?.focus();
+  });
+  nav.addEventListener('click', (event) => { if (event.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || nav.hidden || menuButton.offsetParent === null) return;
+    setMenu(false);
+    menuButton.focus();
+  });
+  document.addEventListener('click', (event) => {
+    if (!nav.hidden && !nav.contains(event.target) && !menuButton.contains(event.target)) setMenu(false);
+  });
 
   const sectionTitle = (id) => trackInfo.sections.find((s) => s.id === id)?.title ?? id;
   const groups = bySection(graph.concepts, track);
@@ -95,6 +119,16 @@ export async function mountTrack({ root, track }) {
     paint(store.get(LEARNED_KEY, []));
     button.addEventListener('click', () => paint(toggleLearned(store, slug)));
     return button;
+  }
+
+  function pager(slug) {
+    const { prev, next } = neighbours(groups, slug);
+    const link = (concept, dir, label) => el('a', { className: `pager-link pager-${dir}`, href: `#${concept.slug}` }, [
+      el('span', { className: 'pager-dir', textContent: label }), el('span', { className: 'pager-title', textContent: concept.title }),
+    ]);
+    return el('nav', { className: 'lesson-pager', ariaLabel: 'Previous and next lesson' }, [
+      prev ? link(prev, 'prev', '← Previous') : el('span'), next ? link(next, 'next', 'Next →') : el('span'),
+    ]);
   }
 
   function prereqLinks(concept) {
@@ -143,7 +177,7 @@ export async function mountTrack({ root, track }) {
       const mounted = mountSafely(result.module, container, { concept, data, href, title });
       if (mounted.status === 'ok') {
         unmount = mounted.unmount;
-        container.append(learnedButton(concept.slug));
+        container.append(el('div', { className: 'lesson-foot' }, [learnedButton(concept.slug), pager(concept.slug)]));
       } else {
         container.replaceChildren(loadErrorCard(concept));
       }

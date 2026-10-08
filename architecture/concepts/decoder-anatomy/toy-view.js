@@ -5,7 +5,7 @@ import { sharePct } from '@math/memory.js';
 import { formatCount } from '@math/core.js';
 import { lookupFact, fillText } from '@shared/claims.js';
 import { formatShare } from '@shared/glyphs/bars.js';
-import { PART_ORDER, int, toyConfig, checkWork, gapLine, perBlockLine, barParts } from './format.js';
+import { PART_ORDER, int, toyConfig, checkWork, gapLine, perBlockLine, perBlockRows, barParts } from './format.js';
 
 export const PRESET_CHIPS = Object.freeze([
   { value: 'toy', label: 'toy' },
@@ -73,6 +73,7 @@ function fullView(preset, config, data) {
     activeWithEmbedding: count(b.activeWithEmbedding),
     activeNote: activeNote(config, b, count),
     perBlock: perBlockLine(config, b, { exact }),
+    perBlockRows: perBlockRows(config, b, { exact }),
     rows: PART_ORDER.map((part) => ({ part, label: PART_LABELS[part], count: count(b.parts[part]), share: shareOrDash(b.parts[part], b.share[part]), activeShare: shareOrDash(b.activeShare[part], b.activeShare[part]) })),
     bar: barParts(b.parts),
     gap: published?.total ? gapLine(b.total, published.total) : 'The toy has no published total: every count here is exact.',
@@ -98,6 +99,9 @@ function partialView(data) {
     activeWithEmbedding: 'not published',
     activeNote: `Active ${formatCount(a.total)} of ${formatCount(p.total)}, both published: ${formatCount(a.parts.experts)} of it is derivable (${f('experts_active') + f('experts_shared')} experts × ${f('layers')} blocks), the rest is not published.`,
     perBlock: expert ? `expert ${formatCount(expert)} × ${f('experts_total') + f('experts_shared')} · the rest is not published` : 'not published',
+    perBlockRows: expert
+      ? [{ label: 'expert', value: formatCount(expert), sub: `× ${f('experts_total') + f('experts_shared')}` }, { label: 'the rest', value: 'not published' }]
+      : [{ label: 'per block', value: 'not published' }],
     rows: [
       { part: 'experts', label: PART_LABELS.experts, count: formatCount(p.parts.experts), share: formatShare(p.share.experts), activeShare: formatShare(a.share.experts) },
       { part: 'unknown', label: unknownLabel, count: formatCount(p.parts.unknown), share: formatShare(p.share.unknown), activeShare: formatShare(a.share.unknown) },

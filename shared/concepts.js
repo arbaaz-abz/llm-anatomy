@@ -53,3 +53,11 @@ export function bySection(concepts, trackId) {
   }
   return groups;
 }
+
+// The lessons before and after `slug` in the order the nav lists them (null at either end or for an unknown slug).
+export function neighbours(groups, slug) {
+  const flat = groups.flatMap((g) => g.concepts);
+  const at = flat.findIndex((c) => c.slug === slug);
+  if (at < 0) return { prev: null, next: null };
+  return { prev: flat[at - 1] ?? null, next: flat[at + 1] ?? null };
+}

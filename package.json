@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --import ./tests/support/aliases.js --test \"tests/**/*.test.js\"",
-    "coverage": "node --import ./tests/support/aliases.js --test --experimental-test-coverage --test-coverage-lines=80 --test-coverage-include=\"math/**\" --test-coverage-include=\"shared/concepts.js\" --test-coverage-include=\"shared/router.js\" --test-coverage-include=\"shared/storage.js\" --test-coverage-include=\"shared/links.js\" --test-coverage-include=\"shared/lesson-spec.js\" --test-coverage-include=\"shared/rich-text.js\" --test-coverage-include=\"shared/claims.js\" --test-coverage-include=\"shared/ui/toy-state.js\" --test-coverage-include=\"architecture/concepts/**/format.js\" --test-coverage-include=\"scripts/**\" \"tests/**/*.test.js\"",
+    "coverage": "node --import ./tests/support/aliases.js --test --experimental-test-coverage --test-coverage-lines=80 --test-coverage-include=\"math/**\" --test-coverage-include=\"shared/concepts.js\" --test-coverage-include=\"shared/router.js\" --test-coverage-include=\"shared/storage.js\" --test-coverage-include=\"shared/links.js\" --test-coverage-include=\"shared/lesson-spec.js\" --test-coverage-include=\"shared/rich-text.js\" --test-coverage-include=\"shared/claims.js\" --test-coverage-include=\"shared/ui/toy-state.js\" --test-coverage-include=\"shared/ui/readout-table.js\" --test-coverage-include=\"shared/ui/theme-toggle.js\" --test-coverage-include=\"architecture/concepts/**/format.js\" --test-coverage-include=\"scripts/**\" \"tests/**/*.test.js\"",
     "serve": "node scripts/serve.js .",
     "validate": "node scripts/validate-data.js",
     "build:artifact": "node scripts/build-artifact.js",

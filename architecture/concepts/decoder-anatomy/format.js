@@ -83,16 +83,19 @@ export function checkWork(config, b) {
   return ['per block', ...rows.map(([left, v]) => `${padTo(left, EQ_COL)}= ${int(v).padStart(width)}`)].join('\n');
 }
 
-// "attention 256 · MLP 384 · norms 16", "attention 256 · expert 192 × 8 · norms 16" (exact counts for the toy).
-export function perBlockLine(config, b, { exact = true } = {}) {
+// The per-block parts as table rows: attention, MLP (when dense), "expert 192 × 8" (value + multiplier), norms (exact counts for the toy).
+export function perBlockRows(config, b, { exact = true } = {}) {
   const count = (n) => (exact ? int(n) : formatCount(n));
   const { moe } = config;
-  const parts = [`attention ${count(b.perLayer.attention)}`];
-  if (!moe || moe.denseLayers > 0) parts.push(`MLP ${count(b.perLayer.mlp)}`);
-  if (moe) parts.push(`expert ${count(b.perLayer.expert)} × ${moe.routed + moe.shared}`);
-  parts.push(`norms ${count(b.perLayer.norms)}`);
-  return parts.join(' · ');
+  const rows = [{ label: 'attention', value: count(b.perLayer.attention) }];
+  if (!moe || moe.denseLayers > 0) rows.push({ label: 'MLP', value: count(b.perLayer.mlp) });
+  if (moe) rows.push({ label: 'expert', value: count(b.perLayer.expert), sub: `× ${moe.routed + moe.shared}` });
+  rows.push({ label: 'norms', value: count(b.perLayer.norms) });
+  return rows;
 }
+
+// "attention 256 · MLP 384 · norms 16", "attention 256 · expert 192 × 8 · norms 16": the same rows as one line.
+export const perBlockLine = (config, b, options) => perBlockRows(config, b, options).map((r) => `${r.label} ${r.value}${r.sub ? ` ${r.sub}` : ''}`).join(' · ');
 
 // The shareBar's five hues (Task 4 mapping): 1 embedding + positional · 2 attention · 3 MLP + experts · 4 other · 5 head.
 export function barParts(parts) {

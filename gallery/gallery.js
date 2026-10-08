@@ -1,6 +1,7 @@
 // Gallery page script: palette, glyph figures, and the control demos.
 import * as G from '@shared/glyphs.js';
 import { mountStepper } from '@shared/ui/stepper.js';
+import { mountThemeToggle } from '@shared/ui/theme-toggle.js';
 import { mountSlider } from '@shared/ui/slider.js';
 import { mountMathPanel, linkMathToStage } from '@shared/ui/math-panel.js';
 import { renderFact } from '@shared/facts.js';
@@ -11,20 +12,8 @@ import { TOY as ATTENTION_TOY } from '@math/attention.js';
 const $ = (sel) => document.querySelector(sel);
 const svg = (parent, w, h, attrs = {}) => G.svgEl('svg', { width: w, height: h, viewBox: `0 0 ${w} ${h}`, ...attrs }, parent);
 
-// ---- theme toggle (per-viewer convenience; storage may throw) ----
-const THEMES = ['system', 'light', 'dark'];
-const readTheme = () => { try { return localStorage.getItem('theme') ?? 'system'; } catch { return 'system'; } };
-function applyTheme(theme) {
-  if (theme === 'system') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', theme);
-  $('#theme-toggle').textContent = `Theme: ${theme}`;
-  try { localStorage.setItem('theme', theme); } catch { /* private window: toggle still works for this view */ }
-}
-applyTheme(readTheme());
-$('#theme-toggle').addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme') ?? 'system';
-  applyTheme(THEMES[(THEMES.indexOf(current) + 1) % THEMES.length]);
-});
+// ---- theme toggle (shared with the lesson header) ----
+$('#theme-toggle').replaceWith(mountThemeToggle());
 
 // ---- palette ----
 function swatches(root, list) {
