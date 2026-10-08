@@ -72,9 +72,10 @@ the compute-share line, `illustrative`).
 `shareBar` usage note for its builder (ruling P3-R6): the page passes an unpublished part as
 `{ name, value: null }`; `shareBar` draws it at a fixed width outside the scale (24 px, the built glyph) in
 the neutral `--line`-tone fill (never hatched: hatch means masked or excluded elsewhere in the course),
-labeled `not published`; known segments share the bar in proportion. A bar whose parts are **all**
-unpublished (Kimi K3) draws each part at that fixed width with the label `no published shares` and no
-scale. The printed shares are `budgetShares` shares (of the published total), never shareBar's own.
+and prints `post-training: not published` beside the bar (legend row `post-training · not published`);
+known segments share the bar in proportion, as shares of the known total. A bar whose parts are **all**
+unpublished (Kimi K3) draws each part at 24 px from the bar's start with the label `no published shares`
+and no scale. The printed shares are `budgetShares` shares (of the published total), never shareBar's own.
 
 New glyphs proposed: none.
 
@@ -294,6 +295,8 @@ Applied from `track-review-recipe.md` §1 (change log: `fix-recipe-review.md`):
 ## 14. Plan 3 rulings applied (S3, 2026-10-08)
 - P3-R6: unknown parts are `{ value: null }` at the built fixed width outside the scale (was "12% of the bar
   width"); Kimi K3's all-unknown bar is labeled `no published shares` (§4, §6, try-this 3, §12).
+- S3-C final API (reconciled 2026-10-08): a `{ value: null }` part prints `<name>: not published`; the
+  all-unknown bar prints `no published shares`.
 - P3-R17: stage blocks are focusable selection buttons drawn with `G.selectionMark` (§6 `stage`).
 - X-2 / P3-R16: "Check my work" added (§6), from `budgetShares`.
 - X-1: "DeepSeek-R1 (2025)" stays: `models.deepseek-r1.release_date` = "2025-01" (confirmed, arXiv 2501.12948).
