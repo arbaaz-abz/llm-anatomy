@@ -78,13 +78,13 @@ export { countText };
 
 export function framing() {
   return 'The schedule family is unsettled: Nemotron 3 Super uses warmup-stable-decay, DeepSeek-V4 a constant rate with a cosine tail, and Kimi K3 found cosine better when each was tuned separately. '
-    + 'All four 2026 reports in the table stage their context length near the end of the run; RoPE models also rescale their rotations ([[rope]]).';
+    + 'All four 2026 reports in the table stage their context length near the end of the run; RoPE models also rescale their rotations (see [[rope]]).';
 }
 
 export function factRows() {
   return [
     { claim: 'Nemotron 3 Super: {nemotron-3-super.lr_schedule}.{nemotron-3-super.lr_peak|cite}{nemotron-3-super.lr_floor|cite}{nemotron-3-super.lr_warmup_tokens|cite}{nemotron-3-super.lr_decay_tokens|cite}{nemotron-3-super.lr_decay_shape|cite}{nemotron-3-super.pretrain_tokens|cite}' },
-    { claim: 'DeepSeek-V4-Pro: {deepseek-v4-pro.lr_schedule}; sequence length {deepseek-v4-pro.context_stages}. Flash: peak 2.7e-4, batch ramped to 75.5M tokens.' },
+    { claim: 'DeepSeek-V4-Pro: {deepseek-v4-pro.lr_schedule}; sequence length {deepseek-v4-pro.context_stages}. DeepSeek-V4-Flash: {deepseek-v4-flash.lr_schedule}.' },
     { claim: 'Kimi K3: {kimi-k3.lr_schedule}; its scaling study found cosine beat WSD when each was tuned separately; context {kimi-k3.context_stages}; its {kimi-k3.full_attention_layers} full-attention layers use no positional encoding (NoPE).' },
     { claim: 'MiniMax-M2: {minimax-m2.lr_schedule}; context {minimax-m2.context_stages}.{minimax-m2.constant_phase_tokens|cite}{minimax-m2.decay_phase_tokens|cite}' },
     { claim: 'GLM-5: {glm-5.lr_schedule} decay; context 32K ({glm-5.stage_32k_tokens|count}) → 128K ({glm-5.stage_128k_tokens|count}) → 200K ({glm-5.stage_200k_tokens|count}) after a {glm-5.base_tokens|count} base at 4K; {glm-5.midtrain_data}; {glm-5.swe_data_tokens|count} tokens of SWE data.{glm-5.context_stages|cite}' },
@@ -129,7 +129,7 @@ export function intuition(data) {
     'The learning rate sets how big each weight update is. Runs warm it up from near zero, hold it high while the model learns broadly, and decay it at the end. With a cosine schedule the rate falls smoothly over the whole run, so the end has to be fixed on day one. With warmup-stable-decay (WSD) the rate stays flat for most of the run and falls only in a final stretch; any checkpoint on the plateau can be branched into its own short decay. That makes the end of the run a separate, cheaper decision.',
     'The decay matters because, as the steps shrink, the model stops bouncing around and settles into what it is reading at that moment. So labs put their best data there: this is annealing, and in 2026 it is a named stage, mid-training. The mix shifts toward high-quality text, reasoning, code and synthetic agent trajectories. It is still plain next-token prediction on documents: no chat template, no answers to imitate.',
     `Mid-training is also where context grows. Most of pretraining runs on 4K–8K-token sequences, because long documents are scarce and every token in a long sequence costs more attention work: at 200K each new token is compared with ${times} times as many earlier tokens as at 4K. So labs stretch the window in a few short stages near the end. GLM-5 goes 4K → 32K (${countText(k32.value)} tokens) → 128K (${countText(k128.value)}) → 200K (${countText(k200.value)}): the 200K stage is ${share200}% of the run (GLM-5's ${countText(run.reportedTotal)}; its published stages sum to ${countText(sum, 4)}). `
-      + `Models that use RoPE also rescale their rotations so the new, larger offsets look familiar ([[rope]]); ${fillText('Kimi K3 avoids that: its {kimi-k3.full_attention_layers} full-attention layers have no positional encoding (its linear-attention layers carry order another way)', data)}. The cost of all this is choice: a bad anneal mix is baked in at exactly the moment the model is settling, and the briefs show labs still disagree on the schedule.`,
+      + `Models that use RoPE also rescale their rotations so the new, larger offsets look familiar (see [[rope]]); ${fillText('Kimi K3 avoids that: its {kimi-k3.full_attention_layers} full-attention layers have no positional encoding (its linear-attention layers carry order another way)', data)}. The cost of all this is choice: a bad anneal mix is baked in at exactly the moment the model is settling, and the briefs show labs still disagree on the schedule.`,
   ];
 }
 

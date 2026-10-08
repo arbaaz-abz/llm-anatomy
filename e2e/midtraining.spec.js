@@ -53,6 +53,9 @@ test.describe('midtraining toy: plan the end of a run', () => {
   });
 
   test('try this 2: the Nemotron 3 Super and MiniMax-M2 chips set the decay share and show the absolute rate', async ({ page }) => {
+    await expect(page.locator('#decayPreset button')).toHaveText(['Nemotron 3 Super 20%', 'MiniMax-M2 31.8%']);
+    await expect(page.locator('#decayPreset [aria-pressed]')).toHaveCount(0);
+    await expect(page.locator('#stopAt').locator('xpath=..')).toContainText('60%');
     await chip(page, 'decayPreset', 'nemotron').click();
     await expect(page.locator('#decayFrac')).toHaveValue('3');
     await expect(chip(page, 'schedule', 'wsd-minus-sqrt')).toHaveAttribute('aria-pressed', 'true');

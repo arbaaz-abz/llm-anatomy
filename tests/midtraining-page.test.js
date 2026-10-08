@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { validateLessonSpec } from '../shared/lesson-spec.js';
 import { fillClaim, fillText, lookupFact } from '../shared/claims.js';
 import { LESSON, lessonFor } from '../training/concepts/midtraining/content.js';
-import { checkWork, INITIAL_STATE, DECAY_VALUES, sci, fmt3, ofPeak, percentText, scheduleOptions, mainShare, tailShare } from '../training/concepts/midtraining/format.js';
+import { checkWork, INITIAL_STATE, DECAY_VALUES, sci, fmt3, ofPeak, percentText, SCHEDULES, scheduleOptions, mainShare, tailShare } from '../training/concepts/midtraining/format.js';
 import { runData, stageText, glmBudget, contextLabels, labelK } from '../training/concepts/midtraining/facts.js';
 import { toyView, stageRows, curves, nemotronRate } from '../training/concepts/midtraining/toy-view.js';
 import { tryThis } from '../training/concepts/midtraining/try-this.js';
@@ -94,7 +94,7 @@ test('the plot curves and the followed stop marker come from lrAt', () => {
 });
 test('try this: the numbers are the storyboard\'s', () => {
   const [one, two, three] = tryThis(data).map((t) => t.join(' '));
-  assert.match(one, /stop at 60%\. Under \*\*cosine\*\* the learning rate there is 0\.345 of peak.*\*\*WSD\*\* → 1\.000/);
+  assert.match(one, /stop at 60%\. Under \*\*cosine\*\* the learning rate there is 0\.345 of peak.*\*\*WSD\*\*: 1\.000/);
   assert.match(two, /Nemotron 3 Super 20%.*MiniMax-M2 31\.8%/);
   assert.match(two, /5T of 25T, 9\.3T of 29\.2T/);
   assert.match(three, /4K 94\.57% of the run; zoomed, 32K 64\.5%, 128K 32\.3%, 200K 3\.2% of the last 1\.55T \(200K is 0\.18% of the run\).*8×, 32×, 50×/);
@@ -122,11 +122,21 @@ test('the decay-share chips: Nemotron 20% and MiniMax-M2 31.8% are on the slider
   assert.ok(DECAY_VALUES.includes(run.nemotron.decayPercent) && DECAY_VALUES.includes(run.minimax.decayPercent));
   assert.equal(percentText(31.8), '31.8%');
 });
-test('the DeepSeek-V4 row\'s Flash figures are the data note\'s', () => {
+test('the DeepSeek-V4 row fills Flash\'s schedule from its own data key, not typed text', () => {
   const row = LESSON.facts.rows[1].claim;
-  const note = lookupFact(data.models, 'deepseek-v4-pro', 'lr_schedule').note;
-  assert.ok(row.includes('2.7e-4') && note.includes('2.7e-4'));
-  assert.ok(row.includes('75.5M') && note.includes('75.5M'));
+  assert.match(row, /\{deepseek-v4-flash\.lr_schedule\}/);
+  assert.doesNotMatch(row, /2\.7e-4|75\.5M/);
+  assert.deepEqual(fillClaim(row, data).missing, []);
+  assert.match(fillText(row, data), /DeepSeek-V4-Flash: peak 2\.7e-4, batch ramped to 75\.5M tokens\./);
+});
+test('review fixes: schedule chips run cosine, WSD, WSD minus-sqrt; lessons are named by title; try-this insights are lower case', () => {
+  assert.deepEqual(SCHEDULES.map((o) => o.value), ['cosine', 'wsd', 'wsd-minus-sqrt']);
+  const text = JSON.stringify([lessonFor(data).intuition, LESSON.facts.framing]);
+  assert.match(text, /look familiar \(see \[\[rope\]\]\)/);
+  assert.match(text, /rescale their rotations \(see \[\[rope\]\]\)/);
+  const items = tryThis(data);
+  assert.deepEqual(items.map(([, insight]) => insight), ['WSD lets you choose the end late.', 'the decay window where the best data goes is a fifth to a third of these runs:', 'context is extended on a thin slice of tokens,']);
+  items.forEach(([prompt]) => assert.match(prompt, /[.:]$|[.:] /, prompt.slice(-30)));
 });
 test('stage text and intuition print the data\'s numbers: 28.5T reported, 28.55T published, 5.4% mid-training', () => {
   const text = stageText(data);

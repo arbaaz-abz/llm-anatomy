@@ -74,7 +74,7 @@ export function drawFrame7(svg, p, { run }) {
   const sums = chips.map((c) => `${c.name} / ${run.stages[0].name} = ${attentionCostRatio(labelK(c.name), base)}`).join(' · ');
   label(svg, BAR.x, CHIP_TOP_7 + 66, sums, { opacity: seg(p, 0.7, 0.9) });
   label(svg, BAR.x, CHIP_TOP_7 + 84, 'long documents are scarce', { opacity: seg(p, 0.75, 0.95) });
-  wrap('attention only: the rest of the forward pass costs the same per token (long-context-attention shows how 2026 models cut this)', 80)
+  wrap('attention only: the rest of the forward pass costs the same per token (Reaching 1M tokens shows how 2026 models cut this)', 80)
     .forEach((line, i) => label(svg, BAR.x, CHIP_TOP_7 + 102 + i * 16, line, { opacity: seg(p, 0.8, 1) }));
 }
 
@@ -94,7 +94,7 @@ export function drawFrame8(svg, p, ctx) {
     label(svg, DIAL.xs[i], DIAL.y + DIAL.r + 18, i === 0 ? turnText(DIAL_STAND_IN.turnsAt4K) : turnText(Number(turns[1].toFixed(3))), { anchor: 'middle' });
   });
   select(svg, { x: DIAL.xs[1] - DIAL.r, y: DIAL.y - DIAL.r, w: 2 * DIAL.r, h: 2 * DIAL.r }, seg(p, 0.1, 0.3));
-  label(svg, 290, 214, 'RoPE: rescale (see rope)', { anchor: 'middle', opacity: seg(p, 0.7, 0.9) });
+  label(svg, 290, 214, 'RoPE: rescale (see the RoPE lesson)', { anchor: 'middle', opacity: seg(p, 0.7, 0.9) });
   label(svg, 290, 236, text.kimiLayers, { anchor: 'middle', opacity: seg(p, 0.75, 0.95) });
   label(svg, 290, 258, 'pair speed chosen so 200K is ¾ turn', { anchor: 'middle', opacity: seg(p, 0.8, 1) });
   label(svg, BAR.x, 290, `slowest pair, stand-in speed: ¾ turn × 4K / 200K = ${trimNumber(DIAL_STAND_IN.turnsAt4K)} turn at 4K · ¾ turn at 200K`, { opacity: seg(p, 0.85, 1) });
@@ -113,8 +113,8 @@ export function drawFrame9(svg, p, ctx) {
   ];
   rows.forEach(([name, stages], i) => {
     const o = seg(p, 0.25 + i * 0.15, 0.4 + i * 0.15);
-    label(svg, BAR.x, 60 + i * 44, name, { cls: 'g-label', opacity: o });
-    label(svg, 140, 60 + i * 44, stages, { cls: '', opacity: o });
+    label(svg, BAR.x + 8, 60 + i * 44, name, { cls: 'g-label', opacity: o });
+    label(svg, 148, 60 + i * 44, stages, { cls: '', opacity: o });
   });
   select(svg, { x: BAR.x, y: 60 - 14, w: 560, h: 28 }, seg(p, 0.25, 0.4));
   wrap(text.kimiNote, 84).forEach((line, i) => label(svg, BAR.x, 262 + i * 18, line, { opacity: seg(p, 0.85, 1) }));

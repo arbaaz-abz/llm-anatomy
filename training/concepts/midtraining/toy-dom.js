@@ -10,14 +10,6 @@ import { curves } from './toy-view.js';
 const BAR_HEIGHT = 214;
 const BAR_ORIGIN = Object.freeze({ x: 10, y: 22 });
 
-// A toy figure scales down with its container (stopgap for a theme rule, see shared-requests).
-function fluid(svg) {
-  svg.style.width = '100%';
-  svg.style.maxWidth = '760px';
-  svg.style.height = 'auto';
-  return svg;
-}
-
 // The schedule plot: the chosen curve solid, the other muted, the stop as the one followed marker.
 export function plotView(state, scheduleLabels) {
   const c = curves(state);
@@ -29,7 +21,7 @@ export function plotView(state, scheduleLabels) {
   const svg = G.svgEl('svg', { width: 580, height: PLOT.h + 8, viewBox: `0 0 580 ${PLOT.h + 8}`, role: 'img', 'aria-label': 'Learning rate over the run for the chosen schedule, the other schedule, and your stop point' });
   G.hatchFill(svg);
   G.curvePlot(svg, { x: 4, y: 4, ...plotSpec({ series, markers: [c.marker], bands, label: 'learning rate over the run' }) });
-  return fluid(svg);
+  return svg;
 }
 
 // GLM-5's (or another run's) context stages as one share bar with its zoomed tail; the longest stage is outlined.
@@ -41,7 +33,7 @@ export function barView(state, data) {
   drawContextBar(svg, run.stages, { ...BAR_ORIGIN, label: `${run.name} context stages` });
   const box = lastStageBox(run.stages, BAR_ORIGIN);
   if (box) G.selectionMark(svg, box);
-  return fluid(svg);
+  return svg;
 }
 
 export function lrTable(view) {

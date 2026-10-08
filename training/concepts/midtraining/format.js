@@ -5,9 +5,9 @@ import { formatShare } from '@shared/glyphs.js';
 
 export const MINUS = '−';
 export const SCHEDULES = Object.freeze([
+  { value: 'cosine', label: 'cosine' },
   { value: 'wsd', label: 'WSD (linear decay)' },
   { value: 'wsd-minus-sqrt', label: 'WSD minus-sqrt' },
-  { value: 'cosine', label: 'cosine' },
 ]);
 export const DECAY_VALUES = Object.freeze([5, 10, 15, 20, 25, 30, 31.8, 35, 40]); // percent; 31.8 is MiniMax-M2's
 export const STOP_RANGE = Object.freeze({ min: 50, max: 100, step: 5 });
