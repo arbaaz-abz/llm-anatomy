@@ -11,8 +11,8 @@ import { TRAINING_RECIPES, zeroPerGpuBytes, trainingBytesPerParam } from '../mat
 import { M_SAT } from '../architecture/concepts/decoder-anatomy/numbers.js';
 import { LESSON, lessonFor } from '../training/concepts/parallelism/content.js';
 import { BELOW, factRows } from '../training/concepts/parallelism/facts.js';
-import { checkWork, formatStateGB, lanesFromGrid, pipelineView, presetFor, stateView, bytesExact, int, INITIAL_STATE } from '../training/concepts/parallelism/format.js';
-import { toyView, tryThis } from '../training/concepts/parallelism/toy-view.js';
+import { checkWork, formatStateGB, lanesFromGrid, pipelineView, stateView, bytesExact, int, INITIAL_STATE } from '../training/concepts/parallelism/format.js';
+import { toyView, tryThis, PRESET_CHIPS } from '../training/concepts/parallelism/toy-view.js';
 import * as N from '../training/concepts/parallelism/numbers.js';
 import { CAPTIONS, CHECK_WORK, TRY_THIS } from './parallelism-expected.js';
 
@@ -121,10 +121,9 @@ test('toy readouts at the default and at the try-this stops', () => {
   assert.equal(toyView({ ...INITIAL_STATE, ...N.LLAMA_PRESETS['16k'] }).gpus, '16,384');
 });
 
-test('presets: a matching degree set names its preset, anything else is custom', () => {
-  assert.deepEqual(['8k', '16k', 'long'].map((k) => presetFor({ ...N.LLAMA_PRESETS[k] })), ['8k', '16k', 'long']);
-  assert.equal(presetFor({ tp: 8, cp: 1, pp: 16, dp: 32 }), 'custom');
-  assert.equal(toyView({ ...INITIAL_STATE, dp: 32 }).preset, 'custom');
+test('the Llama presets carry no custom option and the view has no preset state', () => {
+  assert.deepEqual(PRESET_CHIPS.map((c) => c.value), ['8k', '16k', 'long']);
+  assert.equal('preset' in toyView({ ...INITIAL_STATE, dp: 32 }), false);
 });
 
 test('the try-this list is the storyboard\'s, with its numbers computed', () => {
@@ -194,4 +193,15 @@ test('nothing here mutates its inputs', () => {
   checkWork(state);
   tryThis();
   assert.equal(JSON.stringify(N.LLAMA_PRESETS), before);
+});
+
+test('stage text names lessons by title, never by slug (X-4); the framing carries no data-rule note', async () => {
+  const dir = new URL('../training/concepts/parallelism/', import.meta.url);
+  const text = (await readFile(new URL('frames-cuts.js', dir), 'utf8')) + (await readFile(new URL('frames-rest.js', dir), 'utf8'));
+  assert.match(text, /ZeRO shards this state: see Where training memory goes/);
+  assert.match(text, /they add up to the MLP output'[\s\S]*'for sat in The whole model, end to end'/);
+  assert.match(text, /routes from the router toy in Mixture of Experts/);
+  assert.doesNotMatch(text, /state: training-memory|decoder-anatomy\\'s|moe\\'s/);
+  const { FRAMING } = await import('../training/concepts/parallelism/facts.js');
+  assert.doesNotMatch(FRAMING, /Kimi|Years are/);
 });

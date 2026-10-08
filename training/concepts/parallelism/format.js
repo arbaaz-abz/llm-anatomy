@@ -30,12 +30,6 @@ export function formatStateGB(bytes) {
   return `${gb >= 100 ? int(Math.round(gb)) : gb.toFixed(2)} GB`;
 }
 
-// The preset whose degrees match the sliders, or 'custom'.
-export function presetFor({ tp, cp, pp, dp }) {
-  const hit = Object.entries(LLAMA_PRESETS).find(([, d]) => d.tp === tp && d.cp === cp && d.pp === pp && d.dp === dp);
-  return hit ? hit[0] : 'custom';
-}
-
 const KIND = { F: 'forward', B: 'backward', '.': 'idle' };
 export const kindOf = (op) => KIND[op[0]];
 

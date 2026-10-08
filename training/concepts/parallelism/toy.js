@@ -3,6 +3,7 @@ import * as G from '@shared/glyphs.js';
 import { el } from '@shared/ui/dom.js';
 import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice } from '@shared/ui/choice.js';
+import { mountPresetButtons } from '@shared/ui/preset-buttons.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { readoutTable } from '@shared/ui/readout-table.js';
 import { DEGREE_STOPS, MICRO_CHIPS, MICRO_RANGE, SCHEDULES, SCHEDULE_LABELS, STAGE_STOPS, ZERO_STAGES } from './format.js';
@@ -18,20 +19,6 @@ function tryThisList() {
   return [el('h4', { textContent: 'Try this' }), el('ol', { className: 'try-this' }, items)];
 }
 
-function microChips(host, onPick) {
-  host.className = 'choice choice--chips';
-  host.id = 'micro-chips';
-  host.setAttribute('role', 'group');
-  host.setAttribute('aria-label', 'Micro-batch presets');
-  const buttons = MICRO_CHIPS.map((m) => el('button', { type: 'button', className: 'choice-option', textContent: String(m) }));
-  buttons.forEach((b, i) => { b.dataset.value = String(MICRO_CHIPS[i]); b.addEventListener('click', () => onPick(MICRO_CHIPS[i])); });
-  host.replaceChildren(...buttons);
-  return {
-    show: (micro) => buttons.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.value) === micro))),
-    destroy: () => host.replaceChildren(),
-  };
-}
-
 function pipelinePanel(host, set) {
   const parts = Array.from({ length: 4 }, () => el('div'));
   const chipsHost = el('div');
@@ -41,7 +28,7 @@ function pipelinePanel(host, set) {
   const stages = mountChoice(parts[1], { id: 'stages', label: 'Pipeline stages p', value: INITIAL_STATE.stages, onChange: (v) => set({ stages: v }),
     options: STAGE_STOPS.map((s) => ({ value: s, label: String(s) })) });
   const micro = mountSlider(parts[2], { id: 'micro', label: 'Micro-batches m', ...MICRO_RANGE, step: 1, value: INITIAL_STATE.micro, onInput: (v) => set({ micro: v }) });
-  const chips = microChips(chipsHost, (m) => micro.set(m));
+  const chips = mountPresetButtons(chipsHost, { id: 'micro-chips', label: 'Micro-batch presets', options: MICRO_CHIPS.map((m) => ({ value: m, label: String(m) })), onPick: (m) => micro.set(m) });
   return { micro, chips, destroy: () => [schedule, stages, micro, chips].forEach((c) => c.destroy()) };
 }
 
@@ -51,17 +38,15 @@ function countPanel(host, set) {
   const zeroHost = el('div');
   host.append(el('h4', { textContent: 'B. Count the GPUs' }), presetHost, ...Object.values(sliders), zeroHost);
   let syncing = false;
-  const preset = mountChoice(presetHost, { id: 'preset', label: 'Llama 3.1 405B', variant: 'chips', value: '8k', options: PRESET_CHIPS,
-    onChange: (key) => { if (!syncing && key !== 'custom') set({ ...LLAMA_PRESETS[key] }); } });
+  const preset = mountPresetButtons(presetHost, { id: 'preset', label: 'Llama 3.1 405B', options: PRESET_CHIPS, onPick: (key) => set({ ...LLAMA_PRESETS[key] }) });
   const degrees = Object.entries(DEGREE_LABELS).map(([key, text]) => mountSlider(sliders[key], {
     id: key, label: text, values: DEGREE_STOPS[key], value: INITIAL_STATE[key], onInput: (v) => { if (!syncing) set({ [key]: v }); },
   }));
   const zero = mountChoice(zeroHost, { id: 'zero', label: 'ZeRO stage on the data-parallel group', value: INITIAL_STATE.zero, onChange: (v) => set({ zero: v }),
     options: ZERO_STAGES.map((s) => ({ value: s, label: String(s) })) });
   const keys = Object.keys(DEGREE_LABELS);
-  const show = (state, key) => {
+  const show = (state) => {
     syncing = true;
-    preset.set(key);
     keys.forEach((k, i) => { if (degrees[i].value !== state[k]) degrees[i].set(state[k]); });
     syncing = false;
   };
@@ -108,8 +93,7 @@ function paint(view, panels, state) {
   out('gpus').textContent = v.gpus;
   out('state-per-gpu').textContent = v.statePerGpu;
   view.check.textContent = v.checkWork;
-  panels.pipe.chips.show(state.micro);
-  panels.count.show(state, v.preset);
+  panels.count.show(state);
 }
 
 export function mount(host) {

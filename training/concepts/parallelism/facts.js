@@ -2,7 +2,7 @@
 // Dated numbers are {entry.key|format} placeholders filled from data/models.json; rows keep their placeholders so the
 // scaffold adds each row's source link and "reported" chip.
 
-export const FRAMING = 'Real runs combine several cuts, and the published configurations below show which. Years are the release years of confirmed checkpoints; Kimi K3\'s year is only reported, so it is left out.';
+export const FRAMING = 'Real runs combine several cuts, and the published configurations below show which.';
 
 // The 8 rows of storyboard §8, in order.
 export function factRows() {

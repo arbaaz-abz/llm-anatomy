@@ -62,7 +62,7 @@ export function drawFrame2(svg, p) {
   const gpt3 = formatBytes(ringAllReduceBytes(GPT3_GRADIENT_BYTES, GPT3_DP_GPUS));
   label(svg, 290, 286, `GPT-3 shape on ${GPT3_DP_GPUS} GPUs: ${gpt3} per GPU per step`, { anchor: 'middle', opacity: seg(p, 0.7, 0.9) });
   label(svg, 290, 302, '(plain data parallel, BF16 gradients, no sharding)', { anchor: 'middle', cls: 'g-label', opacity: seg(p, 0.7, 0.9) });
-  label(svg, 290, 326, 'ZeRO shards this state: training-memory', { anchor: 'middle', cls: 'g-label' });
+  label(svg, 290, 326, 'ZeRO shards this state: see Where training memory goes', { anchor: 'middle', cls: 'g-label' });
   counter(svg, `sent per GPU: ${bytesExact(Math.round(DP_SENT_BYTES * seg(p, 0.5, 1)))}`);
 }
 
@@ -129,6 +129,7 @@ export function drawFrame4(svg, p) {
   partial(sumLink, ROW.sum, typeIn(MLP_OUT_SAT, seg(p, 0.6, 1)), 'sum');
   label(svg, 24, 300, `[${TOKENS.length} × ${D_MODEL}] × ${BYTES_PER_NUMBER} B = ${bytesExact(TP_OUTPUT_BYTES)}; all-reduce over 2: ${bytesExact(TP_SENT_BYTES)} per GPU`);
   label(svg, 24, 316, `per GPU ${MLP_PARAMS_PER_GPU} of ${TOY.perLayer.mlp} MLP parameters · 2 all-reduces per block in the forward pass`);
-  label(svg, 8, 332, 'hand-picked stand-in partial sums; they add up to decoder-anatomy\'s MLP output for sat', { cls: 'g-label' });
+  label(svg, 8, 332, 'hand-picked stand-in partial sums; they add up to the MLP output', { cls: 'g-label' });
+  label(svg, 8, 348, 'for sat in The whole model, end to end', { cls: 'g-label' });
   counter(svg, `sent per GPU: ${bytesExact(Math.round(TP_SENT_BYTES * seg(p, 0.3, 0.6)))}`);
 }

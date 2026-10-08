@@ -2,7 +2,7 @@
 // Numbers come from math/parallel.js and math/training-memory.js through format.js; this file only words them.
 import { pipelineBubble, pipelineSchedule } from '@math/parallel.js';
 import { formatShare } from '@shared/glyphs/bars.js';
-import { INITIAL_STATE, MICRO_CHIPS, checkWork, int, lanesFromGrid, pipelineView, presetFor, stateView, formatStateGB } from './format.js';
+import { INITIAL_STATE, MICRO_CHIPS, checkWork, int, lanesFromGrid, pipelineView, stateView, formatStateGB } from './format.js';
 import { LLAMA } from './numbers.js';
 
 export { INITIAL_STATE };
@@ -13,7 +13,6 @@ export const PRESET_CHIPS = Object.freeze([
   { value: '8k', label: '8K GPUs' },
   { value: '16k', label: '16K GPUs' },
   { value: 'long', label: 'long context' },
-  { value: 'custom', label: 'custom' },
 ]);
 
 export function toyView(state) {
@@ -28,7 +27,6 @@ export function toyView(state) {
     stepLength: String(p.columns),
     gpus: int(s.gpus),
     statePerGpu: s.perGpu,
-    preset: presetFor(state),
     checkWork: checkWork(state),
   };
 }

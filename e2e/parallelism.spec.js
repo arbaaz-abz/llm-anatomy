@@ -58,14 +58,15 @@ test.describe('parallelism toy: schedule a pipeline, then count the GPUs', () =>
   });
 
   test('try this 3: degrees multiply into GPUs; ZeRO-3 alone reaches the same state', async ({ page }) => {
-    await expect(page.locator('#preset [data-value="8k"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#preset [aria-pressed]')).toHaveCount(0);
     await page.locator('#zero [data-value="1"]').click();
     await expect(readout(page, 'state-per-gpu')).toHaveText('13.25 GB');
     await page.locator('#zero [data-value="2"]').click();
     for (const id of ['tp', 'cp', 'pp', 'dp']) await page.locator(`#${id}`).fill('0');
     await expect(readout(page, 'gpus')).toHaveText('1');
     await expect(readout(page, 'state-per-gpu')).toHaveText('6,480 GB');
-    await expect(page.locator('#preset [data-value="custom"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#preset [data-value="custom"]')).toHaveCount(0);
+    await expect(page.locator('#micro-chips [aria-pressed]')).toHaveCount(0);
     await page.locator('#zero [data-value="0"]').click();
     await expect(readout(page, 'state-per-gpu')).toHaveText('6,480 GB');
     await page.locator('#dp').fill(DP_LAST);

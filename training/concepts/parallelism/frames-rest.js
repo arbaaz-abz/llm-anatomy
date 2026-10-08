@@ -75,7 +75,7 @@ export function drawFrame10(svg, p) {
   const crossing = CROSSING.map(({ token, expert }) => `${TOKENS[token]} → E${expert + 1}`).join(', ');
   label(svg, 12, 290, `${ROUTES.flat().length} copies, ${CROSSING.length} cross GPUs (${crossing})`);
   label(svg, 12, 308, `${CROSSING.length} × ${EP_COPY_BYTES} B = ${bytesExact(EP_DISPATCH_BYTES)} dispatch + ${bytesExact(EP_DISPATCH_BYTES)} combine`);
-  label(svg, 12, 326, 'routes from moe\'s router toy', { cls: 'g-label' });
+  label(svg, 12, 326, 'routes from the router toy in Mixture of Experts', { cls: 'g-label' });
   counter(svg, `sent, all GPUs: ${bytesExact(Math.round(EP_DISPATCH_BYTES * (out + back) ))}`);
 }
 
