@@ -13,22 +13,22 @@ export const CAPTIONS = [
 ];
 
 export const CHECK_WORK = [
-  'on         e^2         = 7.39',
-  '"."        e^1.5       = 4.48',
-  'and        e^0.5       = 1.65',
-  'the        e^0         = 1',
-  '12 others  12 × e^−1   = 4.41',
-  'sum                    = 18.93',
+  'on         e^2           = 7.39',
+  '"."        e^1.5         = 4.48',
+  'and        e^0.5         = 1.65',
+  'the        e^0           = 1',
+  '12 others  12 × e^−1     = 4.41',
+  'sum                      = 18.93',
   'on = 7.39 ÷ 18.93 = 0.390',
 ].join('\n');
 
 export const CHECK_WORK_HALF = [
-  'on         e^4         = 54.6',
-  '"."        e^3         = 20.1',
-  'and        e^1         = 2.72',
-  'the        e^0         = 1',
-  '12 others  12 × e^−2   = 1.62',
-  'sum                    = 80.03',
+  'on         e^4           = 54.6',
+  '"."        e^3           = 20.1',
+  'and        e^1           = 2.72',
+  'the        e^0           = 1',
+  '12 others  12 × e^−2     = 1.62',
+  'sum                      = 80.03',
   'on = 54.6 ÷ 80.03 = 0.682',
 ].join('\n');
 
