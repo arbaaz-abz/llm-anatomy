@@ -147,6 +147,30 @@
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
         },
+        "csa_merge": {
+          "value": 4,
+          "unit": "tokens per entry",
+          "note": "CSA compression ratio. Read in config.json on 2026-10-07 (shared patch S1): the per-layer list \"compress_ratios\": [128, 128, 4, 128, 4, 128, 4, ...] ends with 0; the layers with ratio 4 are the CSA layers.",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "hca_merge": {
+          "value": 128,
+          "unit": "tokens per entry",
+          "note": "HCA compression ratio: the layers with ratio 128 in config.json \"compress_ratios\" (read 2026-10-07, shared patch S1). HCA reads every merged entry (no top-k).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "csa_top_k": {
+          "value": 1024,
+          "unit": "entries",
+          "note": "Merged entries CSA's indexer lets attention read: config.json \"index_topk\": 1024 (read 2026-10-07, shared patch S1; \"index_n_heads\": 64, \"index_head_dim\": 128).",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/raw/main/config.json",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
         "expert_hidden": {
           "value": 3072,
           "note": "config moe_intermediate_size.",

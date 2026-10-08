@@ -41,7 +41,24 @@ test('a masked HTML cell is hatched, and its text sits on a solid surface chip s
   assert.deepEqual(merged('.cell--masked .cell-text'), { background: 'var(--surface)', color: 'var(--ink)', padding: '0 3px', 'border-radius': '2px' });
 });
 
-// ---- Shared patch S1: dial and bars styles ----
+// ---- Shared patch S1: math-panel links for the wave-1b storyboards, dial and bars styles ----
+import { readdir } from 'node:fs/promises';
+
+const STORYBOARDS = new URL('../docs/storyboards/', import.meta.url);
+
+test('every Architecture storyboard\'s \\htmlClass{hl-…} name outlines its linked glyph (theme data-hl rule)', async () => {
+  const files = (await readdir(STORYBOARDS)).filter((f) => f.endsWith('.md'));
+  const names = new Set();
+  for (const file of files) {
+    const md = await readFile(new URL(file, STORYBOARDS), 'utf8');
+    if (!/^Track: architecture/m.test(md)) continue;
+    for (const m of md.matchAll(/htmlClass\{hl-(\w+)\}/g)) names.add(m[1]);
+  }
+  assert.ok(names.size >= 30, `found ${names.size} names`);
+  const linked = rules.filter((r) => /stroke:\s*var\(--accent\)/.test(r.body) && /stroke-width:\s*2\b/.test(r.body)).flatMap((r) => r.selector.split(',').map((s) => s.trim()));
+  for (const name of names) assert.ok(linked.includes(`[data-hl="${name}"] [data-link="${name}"] .g-frame`), `hl-${name} has no outline rule`);
+});
+
 test('dial: the hand is ink (never accent or value scale), the seen wedge a pale line fill with no outline (rope §4 b, c)', () => {
   assert.equal(merged('.g-dial .g-dial-hand').stroke, 'var(--ink)');
   assert.equal(merged('.g-dial .g-dial-seen').fill, 'var(--line)');

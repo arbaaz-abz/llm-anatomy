@@ -211,7 +211,16 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 [data-hl="x"] [data-link="x"] .g-frame, [data-hl="q"] [data-link="q"] .g-frame, [data-hl="k"] [data-link="k"] .g-frame,
 [data-hl="v"] [data-link="v"] .g-frame, [data-hl="s"] [data-link="s"] .g-frame, [data-hl="a"] [data-link="a"] .g-frame,
 [data-hl="o"] [data-link="o"] .g-frame, [data-hl="m"] [data-link="m"] .g-frame, [data-hl="z"] [data-link="z"] .g-frame,
-[data-hl="p"] [data-link="p"] .g-frame { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
+[data-hl="p"] [data-link="p"] .g-frame,
+/* wave-1b storyboards (shared patch S1) */
+[data-hl="cache"] [data-link="cache"] .g-frame, [data-hl="bytes"] [data-link="bytes"] .g-frame, [data-hl="kvh"] [data-link="kvh"] .g-frame,
+[data-hl="lat"] [data-link="lat"] .g-frame, [data-hl="rope"] [data-link="rope"] .g-frame, [data-hl="read"] [data-link="read"] .g-frame,
+[data-hl="store"] [data-link="store"] .g-frame, [data-hl="sink"] [data-link="sink"] .g-frame, [data-hl="state"] [data-link="state"] .g-frame,
+[data-hl="base"] [data-link="base"] .g-frame, [data-hl="score"] [data-link="score"] .g-frame, [data-hl="off"] [data-link="off"] .g-frame,
+[data-hl="rms"] [data-link="rms"] .g-frame, [data-hl="glu"] [data-link="glu"] .g-frame, [data-hl="qk"] [data-link="qk"] .g-frame,
+[data-hl="bias"] [data-link="bias"] .g-frame, [data-hl="gate"] [data-link="gate"] .g-frame, [data-hl="tok"] [data-link="tok"] .g-frame,
+[data-hl="merge"] [data-link="merge"] .g-frame, [data-hl="proj"] [data-link="proj"] .g-frame, [data-hl="t"] [data-link="t"] .g-frame,
+[data-hl="act"] [data-link="act"] .g-frame, [data-hl="kv"] [data-link="kv"] .g-frame { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
 
 /* ---------- Facts (Task 6 contract) ---------- */
 .fact { font-variant-numeric: tabular-nums; }
