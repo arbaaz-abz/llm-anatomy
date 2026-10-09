@@ -4,7 +4,7 @@
 // row's source link and "reported" flag.
 import { formatRatio } from '@math/core.js';
 import { batchSpeedup } from '@math/specdec.js';
-import { fillText, lookupFact } from '@shared/claims.js';
+import { CLAIM_FORMATS, fillText, lookupFact } from '@shared/claims.js';
 import { ALPHA, C, K, MODEL } from './numbers.js';
 import { ratioText } from './format.js';
 
@@ -17,9 +17,9 @@ export function factRows() {
     { claim: 'vLLM: speculative decoding "preserves the verifier model\'s output distribution exactly" via rejection sampling.{sv:vllm-specdec.exact_distribution|cite}' },
     { claim: 'DeepSeek-V3 ({deepseek-v3.release_date|year} report): its multi-token-prediction (MTP) module predicts one extra token; the second token is accepted {sv:deepseek-v3-mtp.acceptance_pct}% of the time, about {sv:deepseek-v3-mtp.tps_gain|raw}× tokens per second.' },
     { claim: 'EAGLE-3 ({sv:eagle-3.release_date|year}): up to {sv:eagle-3.peak_speedup|raw}× over plain decoding at small batch, about {sv:eagle-3.gain_vs_eagle2|raw}× better than EAGLE-2 (the abstract\'s words); {sv:eagle-3.batch64_throughput_gain|raw}× throughput at batch 64 in SGLang.' },
-    { claim: 'P-EAGLE parallel drafting (vLLM): the drafter emits all k tokens in one forward pass; up to {sv:p-eagle.gain_vs_eagle3|raw}× over EAGLE-3 on B200.' },
-    { claim: 'vLLM: {sv:vllm-specdec.parallel_drafters_note|raw}.' },
-    { claim: 'MTP raised per-user throughput {sv:lmsys-gb300-longctx.mtp_per_user_gain_pct}% for DeepSeek-R1 on GB300 NVL72 at 128K tokens in and 8K out, while keeping peak system throughput (LMSYS).' },
+    { claim: 'P-EAGLE parallel drafting (vLLM, {sv:p-eagle.date|date}): the drafter emits all k tokens in one forward pass; up to {sv:p-eagle.gain_vs_eagle3|raw}× over EAGLE-3 on B200.' },
+    { claim: 'vLLM ({sv:vllm-specdec.date|date}): {sv:vllm-specdec.parallel_drafters_note|raw}.' },
+    { claim: 'MTP raised per-user throughput {sv:lmsys-gb300-longctx.mtp_per_user_gain_pct}% for DeepSeek-R1 on GB300 NVL72 at 128K tokens in and 8K out, while keeping peak system throughput (LMSYS, {sv:lmsys-gb300-longctx.date|date}).' },
     { claim: '{sv:vllm-specdec.mainstream_note|raw}.' },
   ];
 }
@@ -27,6 +27,7 @@ export function factRows() {
 const value = (data, set, id, key) => lookupFact(data?.[set], id, key)?.value ?? null;
 const ratio = (v) => (v == null ? '—' : formatRatio(v));
 const range = (v) => (Array.isArray(v) ? `${v[0]}–${v[1]}` : '—');
+const date = (v) => (v == null ? '—' : CLAIM_FORMATS.date(v));
 const year = (v) => (typeof v === 'string' ? v.slice(0, 4) : '—');
 
 // The three rows of frame 10: system, setup, result. "—" where the data lacks the figure.
@@ -37,7 +38,7 @@ export function stageText(data) {
     rows: Object.freeze([
       { name: 'MTP head', setup: `DeepSeek-V3 (${v3Year} report)`, result: `second token accepted ${range(sv('deepseek-v3-mtp', 'acceptance_pct'))}%, about ${ratio(sv('deepseek-v3-mtp', 'tps_gain'))} tokens/s` },
       { name: 'EAGLE-3 head', setup: `EAGLE-3 (${year(sv('eagle-3', 'release_date'))}, SGLang)`, result: `up to ${ratio(sv('eagle-3', 'peak_speedup'))} at small batch, ${ratio(sv('eagle-3', 'batch64_throughput_gain'))} at batch ${BATCH_COMPARED}` },
-      { name: 'P-EAGLE', setup: 'parallel drafter (vLLM)', result: `up to ${ratio(sv('p-eagle', 'gain_vs_eagle3'))} over EAGLE-3 on B200` },
+      { name: 'P-EAGLE', setup: `parallel drafter (vLLM, ${date(sv('p-eagle', 'date'))})`, result: `up to ${ratio(sv('p-eagle', 'gain_vs_eagle3'))} over EAGLE-3 on B200` },
     ]),
   });
 }

@@ -51,7 +51,7 @@ test('dated text under the stage fills from data and carries no unfilled mark', 
 test('frame 10 rows print the data back; without data they print dashes, never stale numbers', () => {
   const rows = stageText(data).rows;
   assert.deepEqual(rows.map((r) => r.result), ['second token accepted 85–90%, about 1.8× tokens/s', 'up to 6.5× at small batch, 1.38× at batch 64', 'up to 1.69× over EAGLE-3 on B200']);
-  assert.deepEqual(rows.map((r) => r.setup), ['DeepSeek-V3 (2024 report)', 'EAGLE-3 (2025, SGLang)', 'parallel drafter (vLLM)']);
+  assert.deepEqual(rows.map((r) => r.setup), ['DeepSeek-V3 (2024 report)', 'EAGLE-3 (2025, SGLang)', 'parallel drafter (vLLM, 2026-03-13)']);
   assert.match(stageText(null).rows[1].result, /—/);
 });
 test('the stand-ins match the storyboard and the shared vocabulary', () => {
@@ -77,12 +77,12 @@ test('the step bars are stepTime\'s parts: weights + KV + activations is the mem
 test('"Check my work" at the default is the storyboard text and follows the state', () => {
   assert.equal(checkWork(INITIAL_STATE), CHECK_WORK);
   assert.equal(toyView(INITIAL_STATE, data).checkWork, CHECK_WORK);
-  assert.match(checkWork({ alpha: 0.5, k: 8, c: 0.2 }), /= 2\.00 tokens per round\nspeedup = E \/ \(1 \+ k·c\) = 2\.00 \/ \(1 \+ 8 · 0\.2\) = 2\.00 \/ 2\.6 = 0\.77× /);
+  assert.match(checkWork({ alpha: 0.5, k: 8, c: 0.2 }), /= 2\.00 tokens per round\nspeedup = E \/ \(1 \+ k·c\) = 2\.00 \/ \(1 \+ 8 · 0\.2\) = 2\.00 \/ 2\.6 = 0\.77 of the plain speed \(rounded once/);
 });
 
 test('formatters: ratios below 1 are plain numbers, probabilities are shortest, cells keep two decimals', () => {
   assert.equal(ratioText(2.2026), '2.2×');
-  assert.equal(ratioText(0.9114), '0.91×');
+  assert.equal(ratioText(0.9114), '0.91 of the plain speed');
   assert.equal(ratioText(0.9999), '1×');
   assert.equal([0.7, 0.85, 0.05, 0.1, 0].map(probText).join(' '), '0.7 0.85 0.05 0.1 0');
   assert.deepEqual([0, 0.6, 0.5].map(cellText), ['0', '0.60', '0.50']);
@@ -111,7 +111,7 @@ test('toy view: the storyboard\'s batch rows (128 users math-bound, 211 users at
   assert.deepEqual([at({ batch: 64 }).batchSpeedup, at({ batch: 128 }).batchSpeedup, at({ batch: 211 }).batchSpeedup], ['2.14×', '1.53×', '1.19×']);
   const h = at({ batch: 128 });
   assert.deepEqual([h.plain, h.verify, h.verifyBound], ['24 ms', '36.2 ms', 'compute-bound']);
-  assert.equal(at({ batch: 211, k: 5 }).batchSpeedup, '0.91×');
+  assert.equal(at({ batch: 211, k: 5 }).batchSpeedup, '0.91 of the plain speed');
 });
 test('the batch slider\'s last stop is the largest count that fits: 211 at 1,024 tokens, 105 at 2,048', () => {
   assert.deepEqual(batchStops(data), [1, 4, 16, 64, 128, 211]);
@@ -153,4 +153,12 @@ test('nothing here mutates its inputs', () => {
   toyView(state, data);
   fillText('x', data);
   assert.equal(JSON.stringify([N.MODEL, N.P, N.Q]), before);
+});
+
+test('dated rows restore their dates from the keys; a ratio just under 1 rounds to 1× (XS-4, XS-3)', () => {
+  const claims = factRows().map((r) => fillClaim(r.claim, data).segments.map((s) => s.text).join(''));
+  assert.match(claims[3], /^P-EAGLE parallel drafting \(vLLM, 2026-03-13\)/);
+  assert.match(claims[4], /^vLLM \(2026-07-28\): /);
+  assert.match(claims[5], /\(LMSYS, 2026-02-19\)\.$/);
+  assert.equal(ratioText(0.998), '1×');
 });

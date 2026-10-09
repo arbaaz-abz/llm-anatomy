@@ -9,11 +9,11 @@ export const tokensText = (e) => e.toFixed(2); // 2.53
 export const chanceText = (x) => x.toFixed(3); // 0.857, 1.000
 export const cellText = (v) => (v === 0 ? '0' : v.toFixed(2)); // vector cells: 0.60, 0.25, 0 for none
 
-// "2.2×", "1.38×"; below 1 the speedup is a loss, printed as the plain number at two decimals ("0.91×", the notes' form).
+// "2.2×", "1.38×"; a ratio below 1 is a loss and never a "×" figure (X-3): "0.91 of the plain speed", two significant figures.
 export function ratioText(x) {
   if (x >= 1) return formatRatio(x);
-  const plain = Number(x.toFixed(2));
-  return plain >= 1 ? formatRatio(1) : `${plain}×`;
+  const plain = Number(x.toPrecision(2));
+  return plain >= 1 ? formatRatio(1) : `${plain} of the plain speed`;
 }
 
 // The toy's two-line check box for any (α, k, c): E from expectedTokens, speedup from simpleSpeedup, both rounded once.

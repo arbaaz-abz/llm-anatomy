@@ -63,7 +63,7 @@ function mountControls(refs, data, set) {
     onPick: (a) => { alpha.set(a); k.set(1); },
   });
   const c = mountChoice(refs.c, { id: 'c', label: 'Drafter cost per guess', variant: 'chips', value: INITIAL_STATE.c, options: C_OPTIONS.map((v) => ({ value: v, label: probText(v) })), onChange: (v) => set({ c: v }) });
-  const batch = mountSlider(refs.batch, { id: 'batch', label: 'Users in the batch', values: stops, value: INITIAL_STATE.batch, unit: 'users', format: formatInt, onInput: (v) => set({ batch: v }) });
+  const batch = mountSlider(refs.batch, { id: 'batch', label: 'Users in the batch', values: stops, value: INITIAL_STATE.batch, format: (v) => `${formatInt(v)} ${v === 1 ? 'user' : 'users'}`, onInput: (v) => set({ batch: v }) });
   const guess = mountChoice(refs.guess, { id: 'guess', label: "Drafter's guess", variant: 'chips', value: INITIAL_STATE.guess, options: ZOOM_WORDS.map((w) => ({ value: w, label: w })), onChange: (v) => set({ guess: v }) });
   return [alpha, k, mtp, c, batch, guess];
 }

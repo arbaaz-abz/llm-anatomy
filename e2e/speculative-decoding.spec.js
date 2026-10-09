@@ -38,6 +38,11 @@ test.describe('speculative-decoding toy: guess and check', () => {
     await expect(page.locator('[data-section="toy"] .slider', { has: page.locator('#batch') }).locator('output')).toHaveText('211 users');
   });
 
+  test('the batch slider reads "1 user" at its first stop', async ({ page }) => {
+    await setBatch(page, 1);
+    await expect(page.locator('[data-section="toy"] .slider', { has: page.locator('#batch') }).locator('output')).toHaveText('1 user');
+  });
+
   test('the try-this list closes the toy, verbatim', async ({ page }) => {
     await expect(page.locator('[data-section="toy"] ol.try-this > li')).toHaveText(TRY_THIS);
   });
@@ -61,7 +66,7 @@ test.describe('speculative-decoding toy: guess and check', () => {
     await setBatch(page, 211);
     await expectReadouts(page, { 'speedup-batch': '1.19×' });
     await setK(page, 5);
-    await expectReadouts(page, { 'speedup-batch': '0.91×' });
+    await expectReadouts(page, { 'speedup-batch': '0.91 of the plain speed' });
   });
 
   test('try this 3: MTP 0.85 sets one guess that survives a large batch', async ({ page }) => {
