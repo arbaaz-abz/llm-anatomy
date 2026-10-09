@@ -152,7 +152,7 @@ function measured(parent, connector) {
   };
   G.curvePlot(parent, plot);
   const first = G.curvePlotLayout(plot).markers[0];
-  note(parent, MEAS.x + first.x - FIRST_LABEL_BACK, MEAS.y + first.y - FIRST_LABEL_RISE, pointText(a));
+  note(parent, MEAS.x + first.x - FIRST_LABEL_BACK, MEAS.y + first.y - FIRST_LABEL_RISE, pointText(a), { cls: '' });
   lines(parent, LEFT, 300, [`${MEASURED.model} on ${MEASURED.hardware}`, MEASURED.conditions]);
   lines(parent, LEFT, 336, LIKE_WITH_LIKE, { cls: 'g-label' });
 }
