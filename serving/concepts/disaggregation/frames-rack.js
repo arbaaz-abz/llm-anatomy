@@ -1,7 +1,7 @@
 // disaggregation frames 9–10: wide EP wants one fast link domain (the 72-GPU rack against two nodes on a network), then the bill.
 import * as G from '@shared/glyphs.js';
 import { formatCount, formatRatio } from '@math/core.js';
-import { GB300, GB300_GAIN, GB300_TOK_S_USER, STAGE_LINKS, PAPERS, EP_SHOWN } from './numbers.js';
+import { GB300, GB300_GAIN, GB300_TOK_S_USER, STAGE_LINKS, PAPERS, EP_SHOWN, DATES } from './numbers.js';
 import { LEFT, LINE, seg, layer, note, lines, scene } from './stage.js';
 import { drawFrame8 } from './frames-experts.js';
 
@@ -39,7 +39,7 @@ export function drawFrame9(svg, p) {
       'counts both directions',
       `GB300's ${formatCount(GB300.hbmBytes / 1e9)} GB allowed EP ${EP_SHOWN}: ${formatRatio(GB300_GAIN)}`,
       'more tokens per GPU than GB200 at',
-      `${GB300_TOK_S_USER} tok/s/user (InferenceX, 2026-05)`,
+      `${GB300_TOK_S_USER} tok/s/user (InferenceX, ${DATES.inferencexGb300})`,
     ]);
   });
 }

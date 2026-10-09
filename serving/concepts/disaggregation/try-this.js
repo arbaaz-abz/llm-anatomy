@@ -26,7 +26,7 @@ function second(setup) {
     prompt: `Keep Prompt length at 4,096 tokens and switch Link between pools: network 400 Gb/s ${bf[0]} · network 800 Gb/s ${bf[1]} · NVLink5 ${bf[2]}. Then set KV cache to FP8, which halves each: ${fp8.join(', ')}. `
       + `The MLA readout, at 400 Gb/s with BF16 KV: ${formatBytes(mla.kvBytes)}, ${ms(mla.transferS)}.`,
     insight: 'a fast link or a smaller KV makes the split nearly free;',
-    rest: ' this is one more reason MLA and FP8 KV matter ([[kv-compression]], [[quantization]]).',
+    rest: ' this is one more reason MLA and FP8 KV caches matter: see [[kv-compression]] and [[quantization]].',
   };
 }
 

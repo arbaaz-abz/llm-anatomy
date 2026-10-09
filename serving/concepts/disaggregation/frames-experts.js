@@ -3,7 +3,7 @@ import * as G from '@shared/glyphs.js';
 import { formatBytes, formatCount, formatInt, mulberry32 } from '@math/core.js';
 import { tokensPerExpert, freeHbmPerGpu } from '@math/serving.js';
 import { matmulCost, arithmeticIntensity, ridgePoint, tokensToComputeBound, bytesPerElement } from '@math/roofline.js';
-import { EXPERT_COUNT, EP_SHOWN, USERS_SHOWN, ROUTING_SEED, V4_PRO, GB300, DEEPSEEK } from './numbers.js';
+import { EXPERT_COUNT, EP_SHOWN, USERS_SHOWN, ROUTING_SEED, V4_PRO, GB300, DEEPSEEK, DATES } from './numbers.js';
 import { LEFT, CELL, LINE, seg, lerp, layer, note, lines, connector, scene } from './stage.js';
 import { drawFrame5 } from './frames-transfer.js';
 
@@ -159,7 +159,7 @@ export function drawFrame8(svg, p) {
       `${DEEPSEEK.routedExperts} routed + ${DEEPSEEK.redundant} redundant = ${DEEPSEEK.routedExperts + DEEPSEEK.redundant}`,
       `${DEEPSEEK.routedExperts + DEEPSEEK.redundant} ÷ ${DEEPSEEK.decodeEp} GPUs = ${(DEEPSEEK.routedExperts + DEEPSEEK.redundant) / DEEPSEEK.decodeEp} routed experts per GPU`,
       `${DEEPSEEK.activePerToken} experts active per token`,
-      'measured, dated: Feb 2025',
+      `measured, dated: ${DATES.deepseekProduction}`,
     ]);
   });
 }

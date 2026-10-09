@@ -60,7 +60,8 @@ export function drawFrame1(svg, p) {
     `chunks of ${CHUNK_BUDGET}: D's prompt takes ${WORDS[FULL_SLICES.length]} steps of ${ms(FULL_SLICES[0].ms)};`,
     `A sits through ${WORDS[seated('A')]} of them, C through ${WORDS[seated('C')]}`,
   ]);
-  note(svg, LEFT, 352, 'block: prefill · tick: one token · grey: waiting for a seat · time runs left to right');
+  note(svg, LEFT, 338, 'block: prefill, ending with the first token · tick: one more token');
+  note(svg, LEFT, 352, 'grey: waiting for a seat · time runs left to right');
 }
 
 // Frame 2's gauges: time to first token and time per token against illustrative targets, one verdict per request.
@@ -76,10 +77,10 @@ function stopAt(p) {
 
 function gauges(svg, stop) {
   const [a, b] = [colocatedMetrics(GOODPUT_BUDGETS[stop.from]), colocatedMetrics(GOODPUT_BUDGETS[stop.to])];
-  G.clipLine(svg, { x: GAUGE.x, y: GAUGE.ttft.y, w: GAUGE.w, lo: 0, hi: GAUGE.ttft.hi, band: [0, TTFT_TARGET_MS], marker: lerp(a.worstTtftMs, b.worstTtftMs, stop.move) });
-  note(svg, GAUGE.x, GAUGE.ttft.y - 34, 'time to first token, slowest request (ms)', { cls: '' });
-  G.clipLine(svg, { x: GAUGE.x, y: GAUGE.tpot.y, w: GAUGE.w, lo: 0, hi: GAUGE.tpot.hi, band: [0, TPOT_TARGET_MS], marker: lerp(a.worstTpotMs, b.worstTpotMs, stop.move) });
-  note(svg, GAUGE.x, GAUGE.tpot.y - 34, 'time per token, slowest request (ms)', { cls: '' });
+  G.clipLine(svg, { x: GAUGE.x, y: GAUGE.ttft.y, w: GAUGE.w, lo: 0, hi: GAUGE.ttft.hi, format: ms, band: [0, TTFT_TARGET_MS], marker: lerp(a.worstTtftMs, b.worstTtftMs, stop.move) });
+  note(svg, GAUGE.x, GAUGE.ttft.y - 34, 'TTFT (time to first token), slowest request', { cls: '' });
+  G.clipLine(svg, { x: GAUGE.x, y: GAUGE.tpot.y, w: GAUGE.w, lo: 0, hi: GAUGE.tpot.hi, format: ms, band: [0, TPOT_TARGET_MS], marker: lerp(a.worstTpotMs, b.worstTpotMs, stop.move) });
+  note(svg, GAUGE.x, GAUGE.tpot.y - 34, 'TPOT (time per output token), slowest request', { cls: '' });
   note(svg, GAUGE.x, GAUGE.ttft.y + 36, `target: at most ${TTFT_TARGET_MS} ms (illustrative)`);
   note(svg, GAUGE.x, GAUGE.tpot.y + 36, `target: at most ${TPOT_TARGET_MS} ms (illustrative)`);
 }
@@ -132,12 +133,13 @@ function poolRows(svg, upToMs) {
   });
 }
 
-export function poolExtras(svg, p = 1) {
+// The connector joins the end of D's bar to D's decode row, so it is drawn (`connectorP`) only once the bar has ended.
+export function poolExtras(svg, p = 1, connectorP = p) {
   if (p <= 0) return;
   const g = layer(svg, p);
   note(g, POOLS.x0 + PREFILL_PX / 2, POOLS.prefillY - 8, `prefill ${ms(TIMES.prefillMs)}`, { cls: '', anchor: 'middle' });
-  connector(g, [POOLS.x0 + PREFILL_PX, POOLS.prefillY + 14], [POOLS.x0 + PREFILL_PX, POOLS.decodeY.D + 12]);
-  note(g, POOLS.x0 + PREFILL_PX + 8, POOLS.decodeY.A + 4, `${ms(TIMES.decodeMs)} steps`, { cls: '' });
+  if (connectorP > 0) connector(layer(svg, connectorP), [POOLS.x0 + PREFILL_PX, POOLS.prefillY + 14], [POOLS.x0 + PREFILL_PX, POOLS.decodeY.D + 12]);
+  note(g, POOLS.x0 + DECODE_STEPS.C * POOLS.stepPx + 8, POOLS.decodeY.C + 4, `${ms(TIMES.decodeMs)} steps`, { cls: '' });
   note(g, LEFT, 252, `same time axis; D's bar is ${TIMES.stepsLong.toFixed(1)} of A's steps long`, { cls: '' });
   lines(g, LEFT, 284, [`decode steps ${ms(TIMES.decodeMs)} throughout`, `D's prefill ${ms(TIMES.prefillMs)} on its own GPU`]);
 }
@@ -146,7 +148,7 @@ export function drawFrame3(svg, p) {
   scene(svg, p, (g) => drawFrame2(g, 1), (g) => {
     const t = seg(p, 0.1, 0.9) * TIMES.prefillMs;
     poolRows(g, t);
-    poolExtras(g, seg(p, 0.1, 0.5));
+    poolExtras(g, seg(p, 0.1, 0.5), seg(p, 0.9, 1));
   });
 }
 

@@ -3,7 +3,7 @@ import * as G from '@shared/glyphs.js';
 import { formatCount, formatDuration, formatBytes } from '@math/core.js';
 import { kvCacheBytes, sharePct } from '@math/memory.js';
 import { RUNNING_EXAMPLE, kvTransferTime } from '@math/serving.js';
-import { BRANCH_PROMPT, STAGE_LINKS, VLLM_GB200 } from './numbers.js';
+import { BRANCH_PROMPT, STAGE_LINKS, VLLM_GB200, DATES } from './numbers.js';
 import { LEFT, LINE, seg, lerp, layer, note, lines, linkGroup, scene } from './stage.js';
 import { POOLS, POOL_PX_PER_MS, PREFILL_PX, TIMES, poolRows, drawFrame3 } from './frames-colocated.js';
 
@@ -93,7 +93,7 @@ export function drawFrame5(svg, p) {
       `prefill GPUs: ${formatCount(VLLM_GB200.prefillTokSGpu)} prompt tok/s each`,
       `decode GPUs: ${formatCount(VLLM_GB200.decodeTokSGpu)} output tok/s each`,
       'at 2K tokens in, 2K out',
-      'vLLM, 2026-02-03',
+      `vLLM, ${DATES.vllmGb200}`,
       'measured, dated',
     ]);
   });

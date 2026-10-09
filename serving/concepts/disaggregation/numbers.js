@@ -31,4 +31,6 @@ export const VLLM_GB200 = deepFreeze({ prefillGroups: 4, prefillGpusEach: 2, dec
 export const DEEPSEEK = deepFreeze({ prefillEp: 32, decodeEp: 144, routedExperts: 256, redundant: 32, activePerToken: 8, prefillRoutedPerGpu: 9, prefillSharedPerGpu: 1, gpusPerNode: 8 });
 export const GB300_GAIN = 2.83; // InferenceX: per-GPU throughput over GB200 at 27 tok/s/user
 export const GB300_TOK_S_USER = 27;
+// Measurement dates the stage prints (serving.json `date` keys, printed as the `|date` claim format does): pinned by the page test.
+export const DATES = deepFreeze({ vllmGb200: '2026-02-03', deepseekProduction: 'Feb 2025', inferencexGb300: '2026-05-22' });
 export const PAPERS = deepFreeze({ distserve: { year: '2024', goodputGain: 7.4, sloGain: 12.6 }, splitwise: { year: '2023', throughputGain: 1.4, costCutPct: 20 } });

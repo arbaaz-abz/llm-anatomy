@@ -287,3 +287,24 @@ test('frame 6 routing: 64 users deal six experts each, every one of the 384 expe
   assert.equal(all.filter((e) => e === 0).length, 1);
   assert.ok(EXPERT0_TOKEN >= 0 && EXPERT0_TOKEN < 64);
 });
+
+test('measurement dates: the stage restates each key, the facts print it from the key (XS-4)', () => {
+  const key = (id) => fact('serving', id, 'date').value;
+  assert.equal(N.DATES.vllmGb200, key('vllm-gb200-dsr1'));
+  assert.equal(N.DATES.inferencexGb300, key('inferencex-v4-pro-gb300'));
+  assert.equal(key('deepseek-v3-production'), '2025-02');
+  assert.equal(N.DATES.deepseekProduction, 'Feb 2025', '"2025-02" prints as "Feb 2025", the |date format');
+  assert.match(CAPTIONS[7], new RegExp(`${key('deepseek-v3-production').slice(0, 4)} production`), 'caption 8 keeps its year, equal to the key\'s');
+  const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
+  assert.match(rows[3], /NVFP4, 2026-02-03\)/);
+  assert.match(rows[5], /^DeepSeek V3\/R1 production \(Feb 2025\):/);
+  assert.match(rows[9], /\(V4-Pro, 2026-05-22\)/);
+  assert.match(fillText(BELOW[4][0], data), /Source: vLLM, 2026-02-03\.$/);
+  assert.match(fillText(BELOW[7][0], data), /Inference System Overview \(Feb 2025\)/);
+});
+
+test('fact row 1 is two plain sentences (disaggregation-3), no colon splice', () => {
+  const row = fillText(lessonFor(data).facts.rows[0].claim, data);
+  assert.match(row, /^Prefill\/decode disaggregation runs prefill and decode on different GPU pools and moves the KV cache between them\. It removes prefill-induced decode stalls/);
+  assert.doesNotMatch(row, /disaggregation:/);
+});
