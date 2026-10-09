@@ -118,7 +118,7 @@ test('formatBytes prints decimal kB (lowercase k) with three significant figures
 });
 
 // ---- Shared prep S3 (Plan 3, ruling P3-R15): formatRatio and formatDuration ----
-import { formatRatio, formatDuration } from '../math/core.js';
+import { formatRatio, formatDuration, formatInt } from '../math/core.js';
 
 test('formatRatio: 3 significant figures, trailing zeros dropped (X-3)', () => {
   assert.deepEqual([12, 2, 73.94, 3.556, 56.94, 1180.4, 4.333].map(formatRatio), ['12×', '2×', '73.9×', '3.56×', '56.9×', '1,180×', '4.33×']);
@@ -169,4 +169,19 @@ test('formatDuration: zero is "0 s"; negative, non-finite or non-number throws',
   for (const bad of [-1e-9, -1, Number.NaN, Infinity, '1', undefined, null]) {
     assert.throws(() => formatDuration(bad), /^RangeError: formatDuration: seconds must be a finite number ≥ 0/);
   }
+});
+
+test('formatInt: exact integer with separators and a real minus (P4-R6)', () => {
+  assert.deepEqual([51020.4, 6345, 0, 105, 1e6].map(formatInt), ['51,020', '6,345', '0', '105', '1,000,000']);
+  assert.equal(formatInt(-3), '−3');
+  assert.throws(() => formatInt(Infinity), RangeError);
+  assert.throws(() => formatInt(NaN), RangeError);
+});
+
+test('formatInt: rounds half away from zero in magnitude, never prints "-0", rejects non-numbers', () => {
+  assert.equal(formatInt(2.5), '3');
+  assert.equal(formatInt(-2.5), '−3');
+  assert.equal(formatInt(-0.4), '0');
+  assert.equal(formatInt(-1234567.2), '−1,234,567');
+  for (const bad of ['3', undefined, null, -Infinity]) assert.throws(() => formatInt(bad), /^RangeError: formatInt: n must be a finite number/);
 });

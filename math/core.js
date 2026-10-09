@@ -141,3 +141,15 @@ export function formatDuration(seconds) {
   const mantissa = unit === DURATION_UNITS[firstUnit] ? seconds / unit.seconds : Math.max(1, seconds / unit.seconds);
   return `${THREE_SIG.format(mantissa)} ${unit.name}`;
 }
+
+// ---- Shared prep S6 (Plan 4, ruling P4-R6) ----
+
+const INTEGER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0, useGrouping: true });
+
+// An exact count, rounded to a whole number: users per GPU, tokens, tok/s per GPU ("51,020", "−3").
+// Uses a real minus sign (U+2212), never "-0".
+export function formatInt(n) {
+  if (!isFiniteNumber(n)) throw new RangeError(`formatInt: n must be a finite number, got ${n}`);
+  const text = INTEGER.format(Math.abs(n));
+  return n < 0 && text !== '0' ? `−${text}` : text;
+}
