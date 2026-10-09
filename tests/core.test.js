@@ -195,6 +195,9 @@ test('formatUsd: three significant figures, at least two decimals, separators, r
   assert.equal(formatUsd(87072), '$87,072');
   assert.equal(formatUsd(0), '$0.00');
   assert.equal(formatUsd(-1.5), '−$1.50');
+  assert.equal(formatUsd(123.4), '$123.40');
+  assert.equal(formatUsd(12.345), '$12.35');
+  assert.equal(formatUsd(1.5348), '$1.53');
   assert.throws(() => formatUsd(NaN), RangeError);
   assert.throws(() => formatUsd(Infinity), RangeError);
 });
