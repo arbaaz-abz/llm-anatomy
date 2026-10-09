@@ -44,7 +44,7 @@ test.describe('disaggregation toy: ship the KV, feed the experts', () => {
     await setPrompt(page, 512);
     await expectReadouts(page, { transfer: '3.36 ms', prefill: '36.2 ms', ratio: '9.3%' });
     await setPrompt(page, 131072);
-    await expectReadouts(page, { transfer: '859 ms', prefill: '9.27 s', ratio: '9.3%', 'kv-bytes': '43 GB' });
+    await expectReadouts(page, { transfer: '859 ms', prefill: '9.27 s', ratio: '9.3%', 'kv-bytes': '42.9 GB' });
     await setPrompt(page, 128);
     await expectReadouts(page, { transfer: '839 µs', prefill: '15 ms', ratio: '5.6%' });
     await expect(readout(page, 'short-note')).toHaveText('below 217 tokens prefill is one weight read, so the ratio is smaller here; real transfers add a fixed start-up cost the toy does not model, which is why short prompts gain least');
