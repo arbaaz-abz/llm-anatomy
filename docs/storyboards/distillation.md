@@ -58,14 +58,14 @@ the teacher scores every token the student wrote: the reward is how much likelie
 token than the student did. A good token earns a positive reward, the student's own `54` a strongly
 negative one. That is an RL loop, with two differences that make it efficient: the reward is dense (one
 per token, not one per answer, so the blame lands on `54` rather than on all of `7 × 8 = 54`), and it
-needs no checker, so it works for any task a teacher can do.
+needs no checker, so it works for any task a teacher can do. Why not train the small model with RL directly? A verifier gives one number per answer, while a teacher scores every token, so the student gets far more signal from each sample.
 
 That is why it became the 2026 way to merge specialists. Labs train separate experts with RL (math & code,
 agents, chat, sometimes at several effort levels), then distill all of them into one student: each prompt
 is graded by the teacher for its domain, or by a weighted mix. DeepSeek-V4 uses more than ten teachers,
 Kimi K3 nine, and MiMo-V2-Flash reports that the merged model keeps each teacher's peak. The cost: every
 teacher must be run (or cached) during training, and the distillation reward stops pushing once the student
-matches its teacher; to go past the teacher, MiMo-V2-Flash adds an outcome advantage (§7).
+matches its teacher; to go past the teacher, MiMo-V2-Flash adds an outcome advantage (§7). The teacher also sets the ceiling: the student is pulled toward it, so going past the teacher takes RL against verifiers again.
 
 ## 4. Visual metaphor
 Glyphs used (spec §5.1 and the built library): `vector` (`NUMBER_CELL` rows of 4 printed probabilities,

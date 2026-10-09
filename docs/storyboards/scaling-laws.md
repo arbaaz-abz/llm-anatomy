@@ -54,7 +54,7 @@ optimizer does differently from AdamW.
 more? And why do 2026 labs pick "far more tokens" anyway?
 
 Training compute is easy to estimate: each token passes through every active parameter once forward
-(about 2 FLOPs per parameter) and twice as much backward, so a run costs about **6 × parameters × tokens**.
+(about 2 FLOPs per parameter) and twice as much backward, so a run costs about **6 × parameters × tokens**. Backward costs twice as much because each weight matrix takes part in two products there: one passes the gradient back to the layer below, the other gives the matrix its own gradient. FLOPs here counts operations in total; a GPU's speed is FLOPs per second.
 DeepSeek-V4-Pro's 49B active parameters on 33T tokens come to about 10²⁵ FLOPs. For a fixed budget you can
 spend it on a bigger model that sees fewer tokens or a smaller one that sees more.
 

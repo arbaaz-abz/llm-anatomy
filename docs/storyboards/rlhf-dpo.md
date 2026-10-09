@@ -53,7 +53,7 @@ still appears in 2026 pipelines.
 program can check?
 
 For a question like "why is the sky blue?" asked by a child, there is no unit test. What you can get is
-a judgment: show a person two answers and ask which is better. RLHF (reinforcement learning from human
+a judgment: show a person two answers and ask which is better. People are asked to pick the better of two answers rather than write the ideal one, because comparing is faster and more consistent than writing. RLHF (reinforcement learning from human
 feedback) turns many such judgments into a training signal in two steps. First it trains a **reward
 model**: a copy of the language model with a score head, adjusted until it scores the picked answer of
 each pair above the other. Then it runs reinforcement learning against that score.

@@ -289,7 +289,7 @@ Symbols: N parameters (active parameters for a MoE), D tokens, T checkpoint inte
 the panel: (a) 6ND counts the matmuls of forward (2ND) and backward (4ND); attention's own FLOPs grow
 with context length and are ignored, so long-context stages cost more than 6ND says. (b) The loss
 formula is first-order: one failure per MTBF on average, losing half an interval of work plus a
-restart; T* follows by setting its derivative to zero. It overstates the loss when restart time
+restart; T* (the Young/Daly rule) follows by setting its derivative to zero. It overstates the loss when restart time
 approaches the cluster MTBF, which is why the toy flags interval plus restart above half the MTBF. (c) Recomputation (`training-memory`) adds FLOPs
 that MFU does not count (hardware FLOPs utilization, HFU, does). Color links: `hl-flops` = the equation
 card, `hl-peak` = the "at peak" segment, `hl-mfu` = the "below peak" segment, `hl-loss` = the hatched

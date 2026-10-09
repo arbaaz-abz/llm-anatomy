@@ -57,8 +57,8 @@ the other 2.45 TB are 0.35 TB of gradients and 2.1 TB of optimizer state (moment
 
 Then come activations, the intermediate results the forward pass saves because the backward pass needs
 them. They grow with the tokens in flight, not with the parameters, and at long sequence lengths they
-dominate. The cheapest fix is to save less and recompute: keep only each block's input and run its
-forward again during backward. That costs about a third more compute and saves most of the memory.
+dominate. Training keeps no KV cache: the whole sequence goes through in one pass under the causal mask, and what grows with the tokens is the activations saved for the backward pass. The cheapest fix is to save less and recompute: keep only each block's input and run its
+forward again during backward. Training code usually calls this activation checkpointing (or gradient checkpointing). That costs about a third more compute and saves most of the memory.
 
 Finally, sharding. Many GPUs training on different data each hold a full copy of the state, so adding
 GPUs adds copies, not room. ZeRO (Zero Redundancy Optimizer; PyTorch's FSDP is the same idea) gives each

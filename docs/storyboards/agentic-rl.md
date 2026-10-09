@@ -63,7 +63,7 @@ you train on that, and what breaks when you try?
 An agentic episode is a long conversation between the model and a sandbox. The model thinks, writes a
 tool call, the sandbox runs it (a test suite, a shell command, a web search), and the result comes back as
 an **observation**: new tokens in the context that the model did not write. That repeats until the task
-ends, and then the environment scores the outcome, for example "the failing test now passes". The model's
+ends, and then the environment scores the outcome, for example "the failing test now passes". The reward still arrives once, at the end of the episode, so every token of a long run gets the same advantage; which tool call helped or hurt is learned only statistically, across many episodes, which is why long agent runs are harder to train than one-shot math. The model's
 own tokens are trained; the observations are masked out, because the model should learn what to *do*,
 not to predict what the sandbox will print. When nothing can be tested (a research summary, a slide
 deck), a **generative reward model** steps in: a judge model writes a rubric for the task and scores each

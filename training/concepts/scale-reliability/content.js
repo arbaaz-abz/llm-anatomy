@@ -25,7 +25,7 @@ const MATH_BLOCKS = Object.freeze([
 
 const MATH_NOTES = Object.freeze([
   'Symbols: N parameters (active parameters for a Mixture of Experts), D tokens, T the checkpoint interval. (a) 6ND counts the matmuls of the forward pass (2ND) and the backward pass (4ND); attention\'s own FLOPs grow with context length and are ignored, so long-context stages cost more than 6ND says.',
-  '(b) The loss formula is first-order: one failure per MTBF on average, losing half an interval of work plus a restart; T* follows by setting its derivative to zero. It overstates the loss when the restart time approaches the cluster MTBF, which is why the toy flags an interval plus restart above half the MTBF. (c) Recomputation ([[training-memory]]) adds FLOPs that MFU does not count (hardware FLOPs utilization, HFU, does). Hover a highlighted term to outline its glyph on the stage: the FLOPs card, the "at peak" bar, the "below peak" part and the hatched "lost" parts.',
+  '(b) The loss formula is first-order: one failure per MTBF on average, losing half an interval of work plus a restart; T* (the Young/Daly rule) follows by setting its derivative to zero. It overstates the loss when the restart time approaches the cluster MTBF, which is why the toy flags an interval plus restart above half the MTBF. (c) Recomputation ([[training-memory]]) adds FLOPs that MFU does not count (hardware FLOPs utilization, HFU, does). Hover a highlighted term to outline its glyph on the stage: the FLOPs card, the "at peak" bar, the "below peak" part and the hatched "lost" parts.',
 ]);
 
 const TAKEAWAYS = Object.freeze([
