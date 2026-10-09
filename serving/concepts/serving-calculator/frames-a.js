@@ -52,7 +52,8 @@ function gpuRow(svg, { reveal = () => 1, opacity = 1 } = {}) {
     if (o <= 0) return;
     const slot = layer(g, o);
     const memFill = i < 3 ? 1 : lastFill;
-    G.gpu(slot, { x, y: GPU_ROW.y, w: GPU_ROW.w, h: GPU_ROW.h, memFill, label: `GB300 · ${formatBytes(GB300.hbmBytes)}` });
+    G.gpu(slot, { x, y: GPU_ROW.y, w: GPU_ROW.w, h: GPU_ROW.h, memFill, label: 'GB300' });
+    note(slot, x + GPU_ROW.w / 2, GPU_ROW.y + GPU_ROW.h + 46, `${formatBytes(GB300.hbmBytes)} nominal`, { anchor: 'middle' });
     note(slot, x + GPU_ROW.w / 2, GPU_ROW.y + GPU_ROW.h + 30, i < 3 ? 'full of weights' : `${formatBytes(WEIGHTS - 3 * GB300.hbmBytes)} of weights`, { anchor: 'middle' });
   });
   return g;
@@ -65,7 +66,7 @@ function sumLines(svg, o) {
   lines(g, LEFT, 196, [
     `3 GPUs × ${formatBytes(GB300.hbmBytes)} = ${formatBytes(3 * GB300.hbmBytes)}: ${formatBytes(WEIGHTS - 3 * GB300.hbmBytes)} short of the weights`,
     `${formatBytes(WEIGHTS)} ÷ ${formatBytes(GB300.hbmBytes)}, rounded up = ${MIN_GPUS} GPUs for weights alone`,
-    `GB200 NVL72: ${formatBytes(GB200_HBM_BYTES)} per GPU (the rack total over 72 GPUs) → ${MIN_GPUS_GB200} GPUs`,
+    `GB200 NVL72: ${formatBytes(GB200_HBM_BYTES)} per GPU, nominal (the rack total over 72 GPUs) → ${MIN_GPUS_GB200} GPUs`,
   ], { cls: '' });
 }
 

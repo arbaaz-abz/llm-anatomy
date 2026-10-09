@@ -106,7 +106,7 @@ function perUserPlot(g, users) {
     ...PLOT, label: 'tokens per second per user against users per GPU',
     xAxis: { log: true, domain: [1, 10000], ticks: [1, 10, 100, 1000, 10000], label: 'users per GPU' },
     yAxis: { domain: [0, 160], ticks: [0, 50, 100, 150], label: 'tokens/s per user (floor)' },
-    series: [{ label: 'floor', points: SAMPLES.map((u) => [u, tokSUser(u, SHORT)]), labelAt: 'end' }],
+    series: [{ label: '', points: SAMPLES.map((u) => [u, tokSUser(u, SHORT)]) }],
     markers: [{ x: users, y: tokSUser(users, SHORT), label: `${formatInt(users)} users`, followed: true }],
     refY: { value: TARGET_TOK_S_USER, label: `target ${TARGET_TOK_S_USER} tok/s` },
   });

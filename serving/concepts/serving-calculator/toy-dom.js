@@ -70,13 +70,13 @@ function mtpTable(r) {
   });
 }
 
-function costTable(r) {
+function costTable(r, v) {
   return readoutTable({
     head: ['Cost and input side', ''], name: 'cost',
     rows: [
       { label: 'Floor cost per M output tokens', sub: 'this page\'s definition', cells: [cell(r, 'cost-floor')] },
-      { label: 'Measured, GB300 per M tokens', sub: 'input and output together (InferenceX\'s convention)', cells: [cell(r, 'cost-gb300')] },
-      { label: 'Measured, GB200 per M tokens', sub: 'input and output together (InferenceX\'s convention)', cells: [cell(r, 'cost-gb200')] },
+      { label: 'Measured, GB300 per M tokens', sub: v.sub.gb300, cells: [cell(r, 'cost-gb300')] },
+      { label: 'Measured, GB200 per M tokens', sub: v.sub.gb200, cells: [cell(r, 'cost-gb200')] },
       { label: 'Input tokens/s per GPU', sub: 'prefill ceiling, with cache hits', cells: [cell(r, 'prefill-tps')] },
       { label: 'Input cost per M tokens', cells: [cell(r, 'input-cost')] },
       { label: 'Output cost ÷ input cost', cells: [cell(r, 'cost-ratio')] },
@@ -87,7 +87,7 @@ function costTable(r) {
 // The grouped tables; the MTP table is built only when MTP is on.
 export function readoutTables(v) {
   const r = v.readouts;
-  const tables = [fitTable(r, v), kvTable(r), speedTable(r, v), ...(v.showMtp ? [mtpTable(r)] : []), costTable(r)];
+  const tables = [fitTable(r, v), kvTable(r), speedTable(r, v), ...(v.showMtp ? [mtpTable(r)] : []), costTable(r, v)];
   tables.forEach(colourBound);
   return tables;
 }

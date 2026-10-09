@@ -93,10 +93,10 @@ export function gpuPreset(data, id) {
   });
 }
 
-// "288 GB nominal" · "180 GB usable (192 GB nominal)" · "186 GB nominal (the rack total over 72 GPUs)": never a bare "GB" for chip memory.
+// "288 GB nominal" · "180 GB usable (192 nominal)" · "186 GB nominal (the rack total over 72 GPUs)": never a bare "GB" for chip memory.
 export function hbmText(gpu) {
   const base = `${formatBytes(gpu.hbmBytes)} ${hbmWords[gpu.hbmBasis]}`;
-  if (gpu.hbmBasis === 'usable') return `${base} (${formatBytes(gpu.nominalBytes)} nominal)`;
+  if (gpu.hbmBasis === 'usable') return `${base} (${formatBytes(gpu.nominalBytes).replace(' GB', '')} nominal)`;
   return gpu.id === 'gb200-nvl72' ? `${base} (the rack total over 72 GPUs)` : base;
 }
 
@@ -123,8 +123,8 @@ export function scenarioPresets(data) {
     mtpAlpha: need(Math.min(...[].concat(value(data?.serving, 'deepseek-v3-mtp', 'acceptance_pct') ?? [])), 'deepseek-v3-mtp.acceptance_pct') / 100, // the low end of 85–90%
     mtpRange: Object.freeze([].concat(value(data?.serving, 'deepseek-v3-mtp', 'acceptance_pct') ?? [])),
     measured: Object.freeze({
-      gb300: Object.freeze({ tokSGpu: sv('inferencex-v4-pro-gb300', 'throughput_tok_s_gpu'), usd: sv('inferencex-v4-pro-gb300', 'gpu_hour_usd') }),
-      gb200: Object.freeze({ tokSGpu: sv('inferencex-v4-pro-gb200', 'throughput_tok_s_gpu'), usd: sv('inferencex-v4-pro-gb200', 'gpu_hour_usd') }),
+      gb300: Object.freeze({ tokSGpu: sv('inferencex-v4-pro-gb300', 'throughput_tok_s_gpu'), usd: sv('inferencex-v4-pro-gb300', 'gpu_hour_usd'), publishedPerM: sv('inferencex-v4-pro-gb300', 'cost_per_m') }),
+      gb200: Object.freeze({ tokSGpu: sv('inferencex-v4-pro-gb200', 'throughput_tok_s_gpu'), usd: sv('inferencex-v4-pro-gb200', 'gpu_hour_usd'), publishedPerM: sv('inferencex-v4-pro-gb200', 'cost_per_m') }),
     }),
     lmsysGainPct: sv('lmsys-gb300-longctx', 'mtp_per_user_gain_pct'),
   });

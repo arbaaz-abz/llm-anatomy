@@ -7,6 +7,7 @@ import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice, mountToggle } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { appendRich } from '@shared/lesson-page.js';
+import { fillText } from '@shared/claims.js';
 import { formatInt, formatBytes } from '@math/core.js';
 import {
   GPUS, GPU_COUNTS, WEIGHT_FORMATS, NO_FP4, V4_ID, LLAMA_ID, MODEL_LABELS, gpuPreset, modelPreset, hbmText, supportsWeights, scenarioPresets,
@@ -91,7 +92,7 @@ function mountStatic(refs, data, apply) {
     users: mountSlider(refs.users, { id: 'users', label: 'Users per GPU', values: USER_STOPS.map((_, i) => i), value: USER_STOP_INDEX[INITIAL_STATE.users], format: (i) => userStopLabel(USER_STOPS[i]), onInput: (i) => apply({ users: USER_STOPS[i] }) }),
     target: mountChoice(refs.target, { id: 'target', label: 'Target speed per user', variant: 'chips', value: INITIAL_STATE.target, options: presets.targets.map((t) => ({ value: t, label: `${t} tok/s` })), onChange: pick('target') }),
     price: mountChoice(refs.price, { id: 'price', label: '$ per GPU-hour', variant: 'chips', value: INITIAL_STATE.price, options: presets.prices.map((p) => ({ value: p.usd, label: `${usd(p.usd)} · ${p.name}` })), onChange: pick('price') }),
-    hit: mountChoice(refs.hit, { id: 'hit', label: 'Prompt cache hit rate', variant: 'chips', value: INITIAL_STATE.hit, options: [{ value: 0, label: '0%' }, { value: presets.hitRate, label: `${Number((presets.hitRate * 100).toFixed(1))}% (DeepSeek 2025)` }], onChange: pick('hit') }),
+    hit: mountChoice(refs.hit, { id: 'hit', label: 'Prompt cache hit rate', variant: 'chips', value: INITIAL_STATE.hit, options: [{ value: 0, label: '0%' }, { value: presets.hitRate, label: `${Number((presets.hitRate * 100).toFixed(1))}% (DeepSeek, ${fillText('{sv:deepseek-v3-production.date|date}', data)})` }], onChange: pick('hit') }),
     mtp: mountToggle(refs.mtp, { id: 'mtp', label: `MTP speculation (k = 1, α = ${presets.mtpAlpha})`, value: INITIAL_STATE.mtp, onChange: pick('mtp') }),
   };
 }

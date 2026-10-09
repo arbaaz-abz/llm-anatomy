@@ -38,6 +38,6 @@ export const STAGE_MODEL = deepFreeze({
 });
 
 // Dates the stage prints beside measured and list numbers; the page test checks each against data/serving.json.
-export const MEASURED_DATE = '2026-05-22'; // InferenceX run (in the notes of inferencex-v4-pro-gb300.*)
-export const LIST_PRICES_DATE = '2026-10-07'; // pricing-* last_verified
-export const PRODUCTION_DATE = 'February 2025'; // deepseek-v3-production (the 202502OpenSourceWeek write-up)
+export const MEASURED_DATE = '2026-05-22'; // inferencex-v4-pro-gb300.date
+export const LIST_PRICES_DATE = '2026-10-07'; // pricing-*.date
+export const PRODUCTION_DATE = 'Feb 2025'; // deepseek-v3-production.date ("2025-02") printed as the |date claim format does

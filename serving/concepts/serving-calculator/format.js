@@ -1,7 +1,7 @@
 // serving-calculator pure helpers (no DOM): the toy's initial states, the number formats it prints, and the "Check my work" text.
 // Every number comes from model.js (math/serving.js and friends); one formatter per quantity (README lesson 35, P4-R6):
 // bytes → formatBytes, exact integers → formatInt, per-user rates → formatCount, durations → formatDuration, ratios → formatRatio.
-import { formatBytes, formatCount, formatDuration, formatInt, formatRatio } from '@math/core.js';
+import { formatBytes, formatCount, formatDuration, formatInt, formatRatio, formatUsd } from '@math/core.js';
 import { V4_ID, LLAMA_ID } from './presets.js';
 
 const SCENARIO_DEFAULTS = Object.freeze({ target: 27, price: 2.65, hit: 0, mtp: false });
@@ -24,13 +24,8 @@ export const ratio = formatRatio;
 export const bytes = formatBytes;
 // Bytes with a real minus for a shortfall ("−577 GB").
 export const signedBytes = (n) => (n < 0 ? `−${formatBytes(-n)}` : formatBytes(n));
-// Dollars at 3 significant figures, at least cents: $2.65 · $0.0144 · $0.119 · $0.28 · $0.66 · $4.98 · $2.00.
-export function usd(n) {
-  if (n >= 1000) return `$${formatInt(n)}`;
-  const text = String(Number(n.toPrecision(3)));
-  const decimals = text.includes('.') ? text.split('.')[1].length : 0;
-  return `$${decimals >= 2 ? text : Number(text).toFixed(2)}`;
-}
+// Dollars through the shared formatter: three significant figures, at least cents ("$2.65", "$0.0144", "$0.119", "$87,072").
+export const usd = formatUsd;
 // 49e9 · 70e9 (the parameter count as the storyboard's check lines write it).
 export const sci = (n) => `${Number((n / 1e9).toPrecision(3))}e9`;
 const plain = (n) => String(Number(n.toPrecision(3)));

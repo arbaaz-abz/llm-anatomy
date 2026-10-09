@@ -10,8 +10,8 @@ import { hbmText, WEIGHT_FORMATS } from './presets.js';
 
 export const SPARSE_NOTE = 'Sparse attention reads less than the whole cache; this floor assumes it reads all of it, so per-user speed at this length is a lower bound.';
 export const DENSE_NOTE = 'Llama-3.1-70B is dense: a real replica this size shares each layer between GPUs (tensor parallelism), so this floor, where each GPU runs its own users on its share of the weights, is optimistic beyond one GPU.';
-export const RATIO_NOTE = 'V4-Pro\'s few-kB KV lets the ideal decode batch reach the ridge, so here the floor makes output as cheap as input; real decode never gets there (see step 8 of the animation).';
-export const FLOOR_NOTE = 'Floors from bytes and FLOPs only; real systems are slower (see step 8 of the animation). V4-Pro\'s KV per token is an estimate range; both ends are shown.';
+export const RATIO_NOTE = 'V4-Pro\'s few-kB KV lets the ideal decode batch reach the ridge, so here the floor makes output as cheap as input; real decode never gets there (see frame 8).';
+export const FLOOR_NOTE = 'Floors from bytes and FLOPs only; real systems are slower (see frame 8). V4-Pro\'s KV per token is an estimate range; both ends are shown.';
 const LONG_CONTEXT = 500_000;
 const CONTEXT_LABELS = Object.freeze({ 9216: '8K in / 1K out', 139264: '128K in / 8K out', 131072: 'context 131,072 (128K)', 1000000: 'context 1,000,000 (1M)' });
 const RATIO_ONE = 1 + 1e-6;
@@ -28,7 +28,7 @@ const parallelism = (c, state) => (c.model.dense ? `${state.gpus} GPU${state.gpu
 // The visible footer line above the readouts; it names the HBM basis (nominal / usable) beside the memory number.
 export function conditionsText(c, state) {
   return [`${c.model.label}`, `${c.gpu.label}, ${hbmText(c.gpu)} per GPU`, parallelism(c, state), contextLabel(state.context), kvConditions(c, state),
-    `weights ${WEIGHT_FORMATS[state.weights].label}`, 'floor = bytes and FLOPs only, output tokens'].join(' · ');
+    `weights ${WEIGHT_FORMATS[state.weights].label.replace(/^As shipped/, 'as shipped')}`, 'floor = bytes and FLOPs only, output tokens'].join(' · ');
 }
 
 const both = (c, pick) => (c.model.dense ? pick(c.kv[0]) : c.kv.map((k) => `${pick(k)} (${k.end})`).join(' · '));
@@ -83,7 +83,8 @@ function figureSpec(c) {
 
 function sizeFacts(c, state) {
   const short = c.fits ? '' : ` short by ${signedBytes(-c.free).replace('−', '')}`;
-  return { fits: c.fits, short, clamped: c.clamped ? `capped from ${int(state.users)}: only ${int(c.maxFit)} fit` : '' };
+  const measuredSub = (m) => `${usd(m.usd)} ÷ ${int(m.tokSGpu)} tok/s; InferenceX publishes ${usd(m.publishedPerM)} (input and output together)`;
+  return { fits: c.fits, short, clamped: c.clamped ? `capped from ${int(state.users)}: only ${int(c.maxFit)} fit` : '', gb300: measuredSub(c.scenario.measured.gb300), gb200: measuredSub(c.scenario.measured.gb200) };
 }
 
 // Everything the toy prints for one state; `compute` throws a RangeError for a state the GPU cannot run (the toy never offers one).

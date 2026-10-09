@@ -71,8 +71,10 @@ test('the stage constants equal the data they restate (P3-R13 pattern)', () => {
   assert.equal(N.TARGET_TOK_S_USER, N.MEASURED.gb300.tokSUser);
   assert.deepEqual([N.PRODUCTION.inputNodeTokS, N.PRODUCTION.outputNodeTokS], [ix('deepseek-v3-production', 'prefill_tok_s_node').value, ix('deepseek-v3-production', 'decode_tok_s_node').value]);
   assert.deepEqual([N.LIST_PRICES.inputUsd, N.LIST_PRICES.outputUsd, N.LIST_PRICES.anthropicRatio], [ix('pricing-deepseek-v4-pro', 'input_miss_usd_per_m').value, ix('pricing-deepseek-v4-pro', 'output_usd_per_m').value, ix('pricing-anthropic', 'output_input_ratio').value]);
-  assert.match(ix('inferencex-v4-pro-gb300', 'throughput_tok_s_gpu').note, new RegExp(N.MEASURED_DATE));
+  assert.equal(ix('inferencex-v4-pro-gb300', 'date').value, N.MEASURED_DATE);
+  assert.equal(ix('pricing-deepseek-v4-pro', 'date').value, N.LIST_PRICES_DATE);
   assert.equal(ix('pricing-deepseek-v4-pro', 'output_usd_per_m').last_verified, N.LIST_PRICES_DATE);
+  assert.equal(fillText('{sv:deepseek-v3-production.date|date}', data), N.PRODUCTION_DATE, '"2025-02" prints as "Feb 2025" (XS-4)');
   assert.match(ix('deepseek-v3-production', 'prefill_tok_s_node').source_url, /202502/);
   assert.deepEqual(N.ISL_OSL, { input: 8192, output: 1024 });
 });
@@ -151,9 +153,9 @@ test('V4 → Llama → V4 restores the default state exactly (Review Focus 5); H
 
 test('every hardware readout prints its basis word (Review Focus 3)', () => {
   const words = Object.fromEntries(['h200', 'b200', 'gb200-nvl72', 'gb300-nvl72'].map((id) => [id, hbmText(gpuPreset(data, id))]));
-  assert.deepEqual(words, { h200: '141 GB nominal', b200: '180 GB usable (192 GB nominal)', 'gb200-nvl72': '186 GB nominal (the rack total over 72 GPUs)', 'gb300-nvl72': '288 GB nominal' });
+  assert.deepEqual(words, { h200: '141 GB nominal', b200: '180 GB usable (192 nominal)', 'gb200-nvl72': '186 GB nominal (the rack total over 72 GPUs)', 'gb300-nvl72': '288 GB nominal' });
   assert.equal(hbmFor(data.hardware.entries.find((e) => e.id === 'b200')).basis, 'usable');
-  assert.equal(view({ hw: 'b200', weights: 'fp8' }).readouts.hbm, '180 GB usable (192 GB nominal)');
+  assert.equal(view({ hw: 'b200', weights: 'fp8' }).readouts.hbm, '180 GB usable (192 nominal)');
 });
 
 test('V4 KV ends and the Llama cache format feed the speed rows; inputs are not mutated', () => {
@@ -165,4 +167,28 @@ test('V4 KV ends and the Llama cache format feed the speed rows; inputs are not 
   const s = Object.freeze(st());
   assert.doesNotThrow(() => toyView(s, frozen));
   assert.equal(batchSpeedup({ alpha: 0.85, k: 1, c: 0.05, batch: 419, model: compute(st({ context: 139264 }), data).stepModel }).speedup.toFixed(2), '1.73');
+});
+
+test('the measured-cost rows tie the computed value to the published one (serving-calculator-3, XS-2)', () => {
+  const v = view({});
+  assert.equal(v.readouts['cost-gb300'], '$0.119');
+  assert.equal(v.sub.gb300, '$2.65 ÷ 6,182 tok/s; InferenceX publishes $0.12 (input and output together)');
+  assert.equal(v.sub.gb200, '$2.21 ÷ 2,189 tok/s; InferenceX publishes $0.28 (input and output together)');
+  assert.equal(usd(fact('serving', 'inferencex-v4-pro-gb300', 'cost_per_m').value), '$0.12');
+  assert.equal(usd(fact('serving', 'inferencex-v4-pro-gb200', 'cost_per_m').value), '$0.28');
+  assert.deepEqual([usd(0.11907), usd(0.2804), usd(2.5), usd(0.014421), usd(87072)], ['$0.119', '$0.28', '$2.50', '$0.0144', '$87,072'], 'one money formatter (shared-6)');
+});
+
+test('dates come from keys, references say frame / try-this, the conditions footer reads as a sentence (XS-4, XS-6, XS-7, serving-calculator-4)', () => {
+  const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
+  assert.match(rows[4], /measured 2026-05-22: GB300/);
+  assert.match(rows[5], /^DeepSeek production \(V3\/R1, Feb 2025\)/);
+  assert.match(rows[6], /^List prices \(read 2026-10-07\)/);
+  assert.match(rows[8], /^LMSYS \(2026-02-19; DeepSeek-R1/);
+  const takeaways = lessonFor(data).takeaways.map((t) => fillText(t, data)).join(' ');
+  assert.match(takeaways, /\(frames 2–5, try-this 1\)/);
+  assert.match(takeaways, /\(frames 6–9, try-this 2\)/);
+  assert.match(takeaways, /\(frame 10, try-this 3–4\)/);
+  assert.doesNotMatch(takeaways, /\(steps? \d/);
+  assert.match(view({}).conditions, /weights as shipped \(FP4 experts \+ FP8\)/);
 });
