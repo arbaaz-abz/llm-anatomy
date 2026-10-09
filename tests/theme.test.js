@@ -238,3 +238,18 @@ test('ink stays readable (4.5:1) on the Serving tints: step bar rows, hit and ca
     }
   }
 });
+
+test('S7 shared-3: a toggle label wraps inside the page (max-width 100%, normal white-space)', () => {
+  const toggle = merged('.toggle');
+  assert.equal(toggle['white-space'], 'normal');
+  assert.equal(toggle['max-width'], '100%');
+  assert.equal(toggle['text-align'], 'left');
+});
+
+test('S7 shared-5: Check my work wraps inside its box instead of scrolling sideways', () => {
+  const box = merged('.check-work');
+  assert.equal(box['white-space'], 'pre-wrap');
+  assert.equal(box['overflow-wrap'], 'anywhere');
+  assert.equal(box['max-width'], '100%');
+  assert.equal(box['overflow-x'], undefined);
+});
