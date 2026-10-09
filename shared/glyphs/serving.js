@@ -13,24 +13,25 @@ export function verdict(parent, { x, y, ok, r = 9 }) {
   return g;
 }
 
-export function clipLine(parent, { x, y, w = 220, lo, hi, band, marker, label }) {
+// `format` (S7): prints the tick labels, the marker label and the aria-label (default two decimals).
+export function clipLine(parent, { x, y, w = 220, lo, hi, band, marker, label, format = (v) => v.toFixed(2) }) {
   if (!(hi > lo)) throw new RangeError(`glyphs.clipLine: hi (${hi}) must exceed lo (${lo})`);
   if (marker != null && !Number.isFinite(marker)) throw new RangeError(`glyphs.clipLine: marker must be a finite number, got ${marker}`);
   const scale = (v) => ((Math.min(Math.max(v, lo), hi) - lo) / (hi - lo)) * w;
   const name = label ?? 'ratio';
-  const g = group(parent, 'g-clip', x, y, { role: 'img', 'aria-label': marker == null ? name : `${name} ${marker.toFixed(2)}` });
+  const g = group(parent, 'g-clip', x, y, { role: 'img', 'aria-label': marker == null ? name : `${name} ${format(marker)}` });
   if (label) text(g, 0, -22, label, 'g-label', { 'text-anchor': 'start' });
   if (band) svgEl('rect', { class: 'g-band', x: scale(band[0]), y: -8, width: scale(band[1]) - scale(band[0]), height: 16, rx: 2 }, g);
   svgEl('line', { class: 'g-axis', x1: 0, y1: 0, x2: w, y2: 0 }, g);
   const ticks = [lo, ...(band ?? []), hi];
   ticks.forEach((v) => {
     svgEl('line', { class: 'g-tick', x1: scale(v), y1: -4, x2: scale(v), y2: 4 }, g);
-    text(g, scale(v), 18, v.toFixed(2), 'g-label g-tick-label', { 'text-anchor': 'middle' });
+    text(g, scale(v), 18, format(v), 'g-label g-tick-label', { 'text-anchor': 'middle' });
   });
   if (marker != null) {
     const mx = scale(marker);
     svgEl('polygon', { class: 'g-marker', points: `${mx},-2 ${mx - 5},-11 ${mx + 5},-11` }, g);
-    text(g, mx, -14, marker.toFixed(2), 'g-marker-label', { 'text-anchor': 'middle', 'font-weight': 600 });
+    text(g, mx, -14, format(marker), 'g-marker-label', { 'text-anchor': 'middle', 'font-weight': 600 });
   }
   return g;
 }
