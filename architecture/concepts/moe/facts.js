@@ -102,7 +102,7 @@ export const belowFor = (data) => Object.freeze([
   [`${SHARED_LINE} Shared experts in 2026: {deepseek-v4-pro.experts_shared} in DeepSeek-V4-Pro, {kimi-k3.experts_shared} in Kimi K3, {glm-5.3.experts_shared} in GLM-5.3, {minimax-m3.experts_shared} in MiniMax-M3.`],
   [
     'This is a batch, not one word: 128 tokens each choose 2 of 8 experts, so the fair share is 128 × 2 ÷ 8 = 32 each. The scores are seeded random numbers plus a fixed lean toward E1 and E2, standing in for a router that has drifted.',
-    'In practice the slowest expert sets the pace, on the GPU that holds it: [[parallelism]].',
+    'In practice the busiest expert sets the pace, on the GPU that holds it: [[parallelism]].',
   ],
   ['Here the bias is hand-picked to show its effect on one token; the next step shows it being learned.'],
   [

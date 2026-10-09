@@ -57,8 +57,7 @@ a learned sink logit gives it one. Sparse attention keeps everything but reads o
 entries, picked by a cheap scorer: less reading, the same memory. Compressed attention merges several
 tokens' keys and values into one entry, which cuts both.
 
-The other route replaces most attention layers with linear attention: a fixed-size memory matrix that
-every token writes into and every query reads from, so it never grows. It is cheap and blurry, so
+The other route replaces most attention layers with linear attention: a fixed-size memory matrix that every token writes into and every query reads from, so it never grows. Without softmax, the work grows in proportion to the length instead of with its square, hence the name. It is cheap and blurry, so
 models keep one full-attention layer in four for exact recall. Each trick costs something: windows forget,
 sparse reads can miss, compression blurs neighbors, and retrofitting windows onto a model trained with full
 attention went badly in GLM-5's tests.

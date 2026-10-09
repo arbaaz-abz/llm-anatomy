@@ -25,7 +25,7 @@ const MATH_NOTES = Object.freeze([
 const TAKEAWAYS = Object.freeze([
   'Earlier positions\' keys and values never change, so a model stores them: each decode step computes one new position and reads the stored rest (frames 2–3). The prompt fills the cache in one prefill pass.',
   'The cache removes recomputation, not reading: every step still reads every stored key and value, so a longer conversation means a bigger read per token (frame 5, try-this 1).',
-  'Bytes per token = 2 × layers × KV heads × head size × bytes, times tokens, times conversations. At long context the cache, not the weights, decides how many conversations fit on a GPU; it fell from 4.72 MB per token in GPT-3 to a few kB in 2026 models (frames 6–9).',
+  'Bytes per token = 2 × layers × KV heads × head size × bytes per number; the cache is that times tokens times conversations. At long context the cache, not the weights, decides how many conversations fit on a GPU; it fell from 4.72 MB per token in GPT-3 to a few kB in 2026 models (frames 6–9).',
 ]);
 
 const FURTHER = Object.freeze([

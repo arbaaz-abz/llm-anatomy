@@ -48,7 +48,7 @@ needs its own.
 
 So let several query heads share one stored set. If all of them share one, that is multi-query attention
 (MQA): the smallest cache, with some loss in quality. If they share in groups, it is grouped-query
-attention (GQA), and 8 KV heads became the common middle setting. The heads keep their own queries, so
+attention (GQA), and 8 KV heads became the common middle setting: Llama-3.1-70B runs 64 query heads on 8 KV heads. The heads keep their own queries, so
 they still ask different questions of the same keys and still produce different patterns.
 
 Multi-head latent attention (MLA) goes another way. It stores one short "latent" vector per token and

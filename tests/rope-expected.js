@@ -9,7 +9,7 @@ export const CAPTIONS = [
   "A constant called the base sets how slow the slowest hand turns. A bigger base means a longer reach, so 2026 models raise it into the millions.",
   "Past its training length, a slow hand reaches angles the model never saw. Position interpolation slows every hand by the stretch factor, so all angles look familiar again.",
   "YaRN squeezes only the slow hands, which never finished a turn in training, and leaves the fast ones alone. Nearby words stay as distinct as before.",
-  "Some models turn only part of each vector (partial RoPE), leaving the rest for content matching. Some layers turn none at all (NoPE); the causal mask still leaks order.",
+  "Some models turn only part of each vector (partial RoPE), leaving the rest for content matching. Some layers turn none at all (NoPE); the causal mask still implies order.",
 ];
 // The toy's "Check my work" text for its opening state (sat at 3, cat at 2, base 100): not in the storyboard, hand-checked against §5 frames 3-4.
 export const CHECK_WORK = [

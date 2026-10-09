@@ -51,7 +51,7 @@ whether they are compressed or windowed, and so how big the cache per token is; 
 length, that decides how much memory a long conversation needs. The modalities field says whether there is
 a vision encoder in front at all.
 
-Two habits make a card readable. First, turn each field into its cost: total parameters into weight memory (parameters × bytes per parameter: 70B parameters in 16-bit weights is 140 GB, in 8-bit 70 GB; [[quantization]] covers the formats), active parameters into compute per token, the attention line into bytes per token, the context into gigabytes per conversation. Second, read
+Two habits make a card readable. First, turn each field into its cost: total parameters into weight memory (parameters × bytes per parameter: 70B parameters in 16-bit weights is 140 GB, in 8-bit 70 GB; [[quantization]] covers the formats), active parameters into compute per token (about 2 floating-point operations per active parameter for each token), the attention line into bytes per token, the context into gigabytes per conversation. Second, read
 the source: a field from a config file is checkable, a field from a blog is not, and the same lab can count
 "active" two ways. When sources disagree, keep both numbers and say so. This page does exactly that.
 

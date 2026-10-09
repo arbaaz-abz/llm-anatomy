@@ -50,8 +50,7 @@ its embedding): a **query** (what it is looking for), a **key** (what other quer
 **value** (what it hands over if chosen). The three come from three learned matrices, W_Q, W_K and W_V,
 multiplied with the same input vector. Each has d_head numbers; 4 in this toy.
 
-Attention is one scoring pass and one blend. A token's query is dotted with every key, giving one score
-per token. The scores are divided by √d_head, the future is masked out, and softmax turns the row into
+Attention is one scoring pass and one blend. A token's query is dotted with every key, giving one score per token: large when the query and key point the same way, small or negative when they don't. The scores are divided by √d_head, the future is masked out, and softmax turns the row into
 weights that sum to 1. The token's output is the weighted sum of the values. Five steps, and you can do
 them with a calculator; this page makes you do exactly that for one row.
 

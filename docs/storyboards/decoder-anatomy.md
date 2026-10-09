@@ -72,15 +72,13 @@ each block reads the stream, computes something, and *adds* it back. Nothing is 
 embedding is still in there at the end, with two deltas per block piled on top. A block has two halves.
 First, **attention** lets each position read the other positions and pull in what it needs: this is the
 only place positions talk to each other. Second, an **MLP** (in 2026, usually a **Mixture of Experts**)
-transforms each position on its own: this is where most of the parameters live, because the MLP is
-two or three wide matrices (d_model × hidden, with hidden two to four times d_model) against
-attention's four matrices of about d_model × d_model (smaller when heads share keys and values), and a
+transforms each position on its own: this is where most of the parameters live. The MLP widens each vector to two to four times d_model and back, while attention's matrices stay about d_model square, and a
 Mixture of Experts splits the MLP into dozens or hundreds of smaller MLPs and keeps them all. Each half
 is wrapped in "normalize, compute, add"; the normalize step keeps the numbers in a stable range as the
 stack gets deep.
 
 A model is that block repeated N times (61 in DeepSeek-V4-Pro, 93 in Kimi K3), each with its own
-weights: talk, think, talk, think. After the last block, the last position's vector is normalized and
+weights: talk, think, talk, think. After the last block, the last position's vector (the only one whose next word is not already in the text) is normalized and
 multiplied by one more matrix, the unembedding, giving one score per vocabulary entry. Softmax turns
 the scores into probabilities, a sampler picks a token, the token is appended, and the whole thing runs
 again for the next one. With a causal mask, earlier positions' keys and values do not change, so most

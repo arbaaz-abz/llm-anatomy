@@ -55,8 +55,7 @@ for position 2,049 (`decoder-recap`).
 RoPE puts position into the query and the key instead. Cut each vector into pairs of numbers and draw each
 pair as a clock hand. Before the dot product, turn every hand by the token's position times a fixed speed:
 the first pair turns fast, the last pair very slowly. A dot product of two hands only cares about the angle
-*between* them, so after turning, the score depends on how far apart the two tokens are, not on where they
-sit. That is exactly the information language needs: "the word just before me" means the same thing on
+*between* them, so after turning, the score depends on how far apart the two tokens are, not on where they sit. Values are not turned: position only has to change which tokens a query picks, and that is settled in the score. That is exactly the information language needs: "the word just before me" means the same thing on
 page 1 and page 300.
 
 The slowest hand sets how far the model can tell positions apart, and a constant called the base sets how
@@ -139,7 +138,7 @@ Hero: query "sat" (position 3) against key "cat" (position 2), head A. Angles in
 | 7 | The slow dial alone, with a base readout; a page-text strip under the stage: "slowest turn, a head of 128 numbers (64 pairs): base 10,000 → 54,410 tokens · 150,000 (gpt-oss) → 782,338 · 10,000,000 → 48.8 million". | The base readout steps 100 → 10,000; the slow hand's speed drops to 0.01 per token; the score row barely changes. | A constant called the base sets how slow the slowest hand turns. A bigger base means a longer reach, so 2026 models raise it into the millions. | toy: base 100 → speed 0.1; base 10,000 → 0.01 · offsets 0–7 at base 10,000: [3, 1.618, −1.253, −2.977, −1.971, 0.838, 2.866, 2.244] · real 128-wide head: 54,410 tokens (base 10,000) to 48,843,285 (base 10,000,000) |
 | 8 | Back to base 100. Label "trained on 16 tokens". Each dial shows its pale "seen" sector: full circle for pair 1, 0 to 1.5 rad for pair 2. Text "at 64 tokens": pair 2's hand swings to 6.3 rad, outside the sector, labeled "never seen". Then "position interpolation, ÷ 4": both speeds drop to a quarter; pair 2 stays inside its sector. | The slow hand overshoots, flashes "never seen", then the squeeze pulls it back; the score row redraws. | Past its training length, a slow hand reaches angles the model never saw. Position interpolation slows every hand by the stretch factor, so all angles look familiar again. | trained offsets 0–15: pair 2 up to 1.5 rad · at 64 tokens: up to 6.3 rad · after ÷ 4: up to 1.575 · new row: [3, 2.9, 2.62, 2.176, 1.596, 0.915, 0.175, −0.578] |
 | 9 | Same frame; a branch label "YaRN-style": pair 1 returns to full speed (its sector is a full circle), pair 2 stays at a quarter. The score row redraws close to the original. Text: "cost of squeezing all: 'cat' must now be 4 tokens back to score what 1 back did". | Pair 1's hand speeds back up; the row's first cells snap back. | YaRN squeezes only the slow hands, which never finished a turn in training, and leaves the fast ones alone. Nearby words stay as distinct as before. | YaRN-style row: [3, 1.615, −1.261, −2.989, −1.986, 0.82, 2.843, 2.218] · PI row put 1.596 at offset 4 · gpt-oss (2025): 4,096 → 131,072 tokens, factor 32 |
-| 10 | Two strips: "partial RoPE" with only pair 1 rotating (pair 2's dial grayed, label "position-free"), and "NoPE" with both dials grayed. Page text: "Qwen3.5: 25% of dimensions rotate · MiniMax-M3: 50% · Kimi K3's MLA layers: none". | Pair 2's hand stops and grays; then pair 1's. | Some models turn only part of each vector (partial RoPE), leaving the rest for content matching. Some layers turn none at all (NoPE); the causal mask still leaks order. | partial: pair 1 only · NoPE: score = 3.0 again · Qwen3.5 0.25 · MiniMax-M3 0.5 (64 of 128) · Kimi K3: 24 MLA layers without RoPE |
+| 10 | Two strips: "partial RoPE" with only pair 1 rotating (pair 2's dial grayed, label "position-free"), and "NoPE" with both dials grayed. Page text: "Qwen3.5: 25% of dimensions rotate · MiniMax-M3: 50% · Kimi K3's MLA layers: none". | Pair 2's hand stops and grays; then pair 1's. | Some models turn only part of each vector (partial RoPE), leaving the rest for content matching. Some layers turn none at all (NoPE); the causal mask still implies order. | partial: pair 1 only · NoPE: score = 3.0 again · Qwen3.5 0.25 · MiniMax-M3 0.5 (64 of 128) · Kimi K3: 24 MLA layers without RoPE |
 
 Determinism: every frame is a pure function of (step, progress); dial angles interpolate linearly in
 `progress` from their start to end angle. Reduced motion shows each frame's end state. The token chips and
@@ -151,7 +150,7 @@ Caption word counts (README lesson 2; ≤ 30 words, ≤ 2 sentences, no operator
 
 Absolutes checked (README lesson 7): frame 1's "cannot see order" is about the five steps as built on
 `attention` (no positions anywhere), and the second sentence names the mask. Frame 5's "depends only on the
-offset" is the RoPE identity (§7) and holds for every pair. Frame 10's "still leaks order" cites 01 §3
+offset" is the RoPE identity (§7) and holds for every pair. Frame 10's "still implies order" cites 01 §3
 (Kazemnejad et al. 2023).
 
 Branches (README lesson 13): frame 1's ghost "cat" at position 9 is labeled "what if"; frame 9 is labeled
