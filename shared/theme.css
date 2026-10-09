@@ -519,9 +519,10 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .readout-table td[data-col] { font-size: var(--fs-s); }
 .readout-table td .ro-sub { text-align: right; }
 .toy-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5); align-items: start; }
-.check-work { white-space: pre; overflow-x: auto; max-width: 100%; }
+.check-work { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 .choice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .choice-label { font-weight: 500; font-size: var(--fs-s); margin-right: var(--space-2); }
+.toggle { max-width: 100%; white-space: normal; text-align: left; }
 .choice-option[aria-pressed="true"], .toggle[aria-pressed="true"] { background: color-mix(in oklab, var(--accent) 16%, var(--surface)); border-color: var(--accent); }
 /* Segmented choice: a pill track with one filled neutral pill (never the accent: that means "selection on the stage"). The thumb slides; without it the selected option fills itself. */
 .choice-track { position: relative; display: inline-flex; flex-wrap: nowrap; max-width: 100%; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }

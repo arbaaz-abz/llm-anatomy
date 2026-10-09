@@ -12,6 +12,13 @@
           "source_url": "https://huggingface.co/blog/continuous_batching",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2025-11",
+          "note": "Publication date: the post's datePublished is 2025-11-25 (checked on the page); month precision kept.",
+          "source_url": "https://huggingface.co/blog/continuous_batching",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -136,6 +143,13 @@
           "value": 10100,
           "unit": "tok/s/GPU",
           "note": "Decode TPGS on decode GPUs, so it counts output (generated) tokens. Workload 2K input / 2K output.",
+          "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-02-03",
+          "note": "Publication date, from the post URL slug (2026-02-03-...).",
           "source_url": "https://vllm.ai/blog/2026-02-03-dsr1-gb200-part1",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -307,6 +321,13 @@
           "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
           "confidence": "confirmed",
           "last_verified": "2026-10-09"
+        },
+        "date": {
+          "value": "2025-02",
+          "note": "Measurement run: the overview's 24-hour statistics window is 2025-02-27 12:00 to 2025-02-28 12:00 (UTC+8), in the repo's 202502OpenSourceWeek folder; month precision kept.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -369,6 +390,13 @@
           "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-05-22",
+          "note": "Measurement run date, stated in the notes of this entry's facts (measured 2026-05-22).",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -423,6 +451,13 @@
           "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-05-22",
+          "note": "Measurement run date, stated in the notes of this entry's facts (measured 2026-05-22).",
+          "source_url": "https://inferencex.semianalysis.com/blog/gb300-nvl72-vs-gb200-nvl72-dsv4-pro-vllm-fp4",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -456,6 +491,13 @@
           "source_url": "https://inferencex.semianalysis.com/blog/b200-nvfp4-vs-h200-int4-kimi-k2-vllm-perf-per-dollar",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-05-19",
+          "note": "Measurement run date, stated in the notes of this entry's facts (run 2026-05-19).",
+          "source_url": "https://inferencex.semianalysis.com/blog/b200-nvfp4-vs-h200-int4-kimi-k2-vllm-perf-per-dollar",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -475,6 +517,13 @@
           "value": 87,
           "unit": "%",
           "note": "Per-user output speed (TPS/User) rose from 23 to 43 with MTP; DeepSeek-R1 NVFP4 on GB300 NVL72, 128K input / 8K output, peak system throughput maintained.",
+          "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-02-19",
+          "note": "Publication date, from the post URL slug (2026-02-19-...) and the entry name.",
           "source_url": "https://lmsys.org/blog/2026-02-19-gb300-longctx",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -574,6 +623,13 @@
           "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-09-10",
+          "note": "Publication date, from the post URL slug (2026-09-10-...) and the entry name.",
+          "source_url": "https://vllm.ai/blog/2026-09-10-tiered-kv-offloading",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -630,6 +686,13 @@
           "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
           "confidence": "confirmed",
           "last_verified": "2026-10-09"
+        },
+        "date": {
+          "value": "2026-04-22",
+          "note": "Publication date, from the post URL slug (2026-04-22-...) and the entry name.",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -731,6 +794,13 @@
           "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-10-07",
+          "note": "Read date: the price list was read on 2026-10-07 (this entry's last_verified).",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -748,6 +818,13 @@
         "output_usd_per_m": {
           "value": 10,
           "unit": "USD per M output tokens",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-10-07",
+          "note": "Read date: the price list was read on 2026-10-07 (this entry's last_verified).",
           "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -776,6 +853,13 @@
           "value": 0.05,
           "unit": "x base input",
           "note": "$0.20 per M cached input tokens.",
+          "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-10-07",
+          "note": "Read date: the price list was read on 2026-10-07 (this entry's last_verified).",
           "source_url": "https://platform.claude.com/docs/en/about-claude/pricing",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -814,6 +898,13 @@
           "value": 2,
           "unit": "x",
           "note": "Peak rates are 2x off-peak; peak = 01-04 and 06-10 UTC, Mon-Fri.",
+          "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-10-07",
+          "note": "Read date: the price list was read on 2026-10-07 (this entry's last_verified).",
           "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
@@ -893,6 +984,13 @@
           "source_url": "https://vllm.ai/blog/2026-03-13-p-eagle",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-03-13",
+          "note": "Publication date, from the post URL slug (2026-03-13-...) and the entry name.",
+          "source_url": "https://vllm.ai/blog/2026-03-13-p-eagle",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -918,6 +1016,13 @@
           "note": "Brief 04 §4.3 \"safe claim\"; no share of traffic is published.",
           "source_url": "https://vllm.ai/blog/2026-07-28-speculators-parallel-drafting",
           "confidence": "reported",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2026-07-28",
+          "note": "Publication date of the parallel-drafters post these facts cite, from its URL slug (2026-07-28-...).",
+          "source_url": "https://vllm.ai/blog/2026-07-28-speculators-parallel-drafting",
+          "confidence": "confirmed",
           "last_verified": "2026-10-07"
         }
       }
@@ -1027,6 +1132,13 @@
           "source_url": "https://vllm.ai/blog/large-scale-serving",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2025-12",
+          "note": "Publication date: the post's datePublished is 2025-12-17 (checked on the page); month precision kept.",
+          "source_url": "https://vllm.ai/blog/large-scale-serving",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
         }
       }
     },
@@ -1052,6 +1164,13 @@
         "eplb_decode_gain": {
           "value": 2.54,
           "unit": "x",
+          "source_url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-07"
+        },
+        "date": {
+          "value": "2025-05-05",
+          "note": "Publication date, from the post URL slug (2025-05-05-...).",
           "source_url": "https://lmsys.org/blog/2025-05-05-large-scale-ep/",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"

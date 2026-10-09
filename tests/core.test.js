@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   mulberry32, randomMatrix, dot, transpose, matmul, softmax, causalMask,
-  formatBytes, formatCount, deepFreeze,
+  formatBytes, formatCount, deepFreeze, formatUsd,
 } from '../math/core.js';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
@@ -184,4 +184,20 @@ test('formatInt: rounds half away from zero in magnitude, never prints "-0", rej
   assert.equal(formatInt(-0.4), '0');
   assert.equal(formatInt(-1234567.2), '−1,234,567');
   for (const bad of ['3', undefined, null, -Infinity]) assert.throws(() => formatInt(bad), /^RangeError: formatInt: n must be a finite number/);
+});
+
+test('formatUsd: three significant figures, at least two decimals, separators, real minus (S7 shared-6)', () => {
+  assert.equal(formatUsd(0.11907), '$0.119');
+  assert.equal(formatUsd(0.2804), '$0.28');
+  assert.equal(formatUsd(2.5), '$2.50');
+  assert.equal(formatUsd(0.014421), '$0.0144');
+  assert.equal(formatUsd(0.0222), '$0.0222');
+  assert.equal(formatUsd(87072), '$87,072');
+  assert.equal(formatUsd(0), '$0.00');
+  assert.equal(formatUsd(-1.5), '−$1.50');
+  assert.equal(formatUsd(123.4), '$123.40');
+  assert.equal(formatUsd(12.345), '$12.35');
+  assert.equal(formatUsd(1.5348), '$1.53');
+  assert.throws(() => formatUsd(NaN), RangeError);
+  assert.throws(() => formatUsd(Infinity), RangeError);
 });
