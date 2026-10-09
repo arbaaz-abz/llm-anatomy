@@ -15,9 +15,9 @@ export const FRAMING = 'Measured 2026 servers and the software inside them. Thes
 
 // The 5 rows of storyboard §8, in order. Rows keep their placeholders, so the scaffold adds each source link and "reported" chip.
 export const FACT_ROWS = Object.freeze([
-  { claim: 'A busy 2026 server, measured: DeepSeek-V4-Pro on GB300 NVL72 at {sv:inferencex-v4-pro-gb300.interactivity_tok_s_user} output tokens/s per user (ISL 8K / OSL 1K, FP4, disaggregated Dynamo + vLLM; InferenceX, measured 2026-05-22).' },
-  { claim: 'A 128K-token prompt took {sv:lmsys-gb300-longctx.ttft_128k_s|raw} s to its first token: DeepSeek-R1 on GB300 NVL72 with chunked pipeline-parallel prefill (LMSYS, 2026-02-19).' },
-  { claim: 'Prompts often start the same way, which is why routers try to send a request to the replica already holding its prefix: {sv:deepseek-v3-production.kv_hit_rate_pct|raw}% of DeepSeek\'s input tokens hit its KV cache (V3/R1 production, Feb 2025).' },
+  { claim: 'A busy 2026 server, measured: DeepSeek-V4-Pro on GB300 NVL72 at {sv:inferencex-v4-pro-gb300.interactivity_tok_s_user} output tokens/s per user (ISL 8K / OSL 1K, FP4, disaggregated Dynamo + vLLM; InferenceX, measured {sv:inferencex-v4-pro-gb300.date}).' },
+  { claim: 'A 128K-token prompt took {sv:lmsys-gb300-longctx.ttft_128k_s|raw} s to its first token: DeepSeek-R1 on GB300 NVL72 with chunked pipeline-parallel prefill (LMSYS, {sv:lmsys-gb300-longctx.date}).' },
+  { claim: 'Prompts often start the same way, which is why routers try to send a request to the replica already holding its prefix: {sv:deepseek-v3-production.kv_hit_rate_pct|raw}% of DeepSeek\'s input tokens hit its KV cache (V3/R1 production, {sv:deepseek-v3-production.date|date}).' },
   { claim: 'The engines inside a replica: {sv:engines.names}; orchestration by NVIDIA Dynamo (1.0, GA {sv:dynamo.ga_date}) or llm-d (CNCF Sandbox {sv:llm-d.cncf_sandbox_date}).' },
   { claim: 'Closed providers do not publish their serving stacks; this track uses open engines and published measurements.', derived: true },
 ]);

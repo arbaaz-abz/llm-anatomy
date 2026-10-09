@@ -37,7 +37,7 @@ const STEP_SENTENCE = (() => {
   const names = `${advancing.slice(0, -1).join(', ')} and ${advancing.at(-1)}`;
   return `step ${BATCH_STEP}: ${names} each advance one token together; ${done.join(', ')} ${done.length === 1 ? 'is' : 'are'} done`;
 })();
-export const BATCH_NOTES = Object.freeze([STEP_SENTENCE, `four requests; ${TITLES.batching} follows these same four`]);
+export const BATCH_NOTES = Object.freeze([STEP_SENTENCE, `four requests; ${TITLES.batching} follows these same four`, 'Prefill ends with a request\'s first token; each tick after it is one decode step.']);
 
 // ---- frame 9: the GPU never serves you alone ----
 export function drawFrame9(svg, p) {
@@ -50,7 +50,7 @@ export function drawFrame9(svg, p) {
   region(svg, { x: lerp(stepX(BATCH_STEP - 1), stepX(BATCH_STEP), move), y: COLUMN.top, w: ROWS.stepW, h: COLUMN.bottom - COLUMN.top }, shown);
   batchRows(svg, landed ? BATCH_STEP : BATCH_STEP - 1, shown);
   label(svg, lerp(stepX(BATCH_STEP - 1), stepX(BATCH_STEP), move) + ROWS.stepW / 2, COLUMN.bottom + 10, `step ${landed ? BATCH_STEP : BATCH_STEP - 1}`, { anchor: 'middle', cls: '', opacity: shown });
-  BATCH_NOTES.forEach((text, i) => note(svg, 2 + i, text, seg(p, 0.65, 0.8)));
+  BATCH_NOTES.forEach((text, i) => note(svg, 1 + i, text, seg(p, 0.65, 0.8)));
 }
 
 // ---- frame 10: every stop tagged with the lesson that speeds it up ----
@@ -61,7 +61,7 @@ function batchEnd(svg, opacity) {
   region(svg, { x: stepX(BATCH_STEP), y: COLUMN.top, w: ROWS.stepW, h: COLUMN.bottom - COLUMN.top }, opacity);
   batchRows(svg, BATCH_STEP, opacity);
   label(svg, stepX(BATCH_STEP) + ROWS.stepW / 2, COLUMN.bottom + 10, `step ${BATCH_STEP}`, { anchor: 'middle', cls: '', opacity });
-  BATCH_NOTES.forEach((text, i) => note(svg, 2 + i, text, opacity));
+  BATCH_NOTES.forEach((text, i) => note(svg, 1 + i, text, opacity));
 }
 
 export function drawFrame10(svg, p) {

@@ -13,6 +13,7 @@ import { BELOW, FACT_ROWS } from '../serving/concepts/serving-overview/facts.js'
 import { INITIAL_STATE, PROMPT_STOPS, OUTPUT_STOPS, arrowText, checkWork, prefillRule, timelineGeometry } from '../serving/concepts/serving-overview/format.js';
 import { toyView, speeds, sharedUsers, timelineFor, hardwareEntry, FIGURE_WIDTH } from '../serving/concepts/serving-overview/toy-view.js';
 import { tryThis } from '../serving/concepts/serving-overview/try-this.js';
+import { BATCH_NOTES } from '../serving/concepts/serving-overview/frames-zoom.js';
 import * as N from '../serving/concepts/serving-overview/numbers.js';
 import { CAPTIONS, CHECK_WORK, TRY_THIS } from './serving-overview-expected.js';
 
@@ -49,6 +50,10 @@ test('5 facts rows; every placeholder resolves; the filled rows read as the stor
   assert.match(rows[0], /DeepSeek-V4-Pro on GB300 NVL72 at 27 output tokens\/s per user \(ISL 8K \/ OSL 1K, FP4, disaggregated Dynamo \+ vLLM; InferenceX, measured 2026-05-22\)\.$/);
   assert.match(rows[1], /^A 128K-token prompt took 8\.6 s to its first token: DeepSeek-R1 on GB300 NVL72/);
   assert.match(rows[2], /: 56\.3% of DeepSeek's input tokens hit its KV cache \(V3\/R1 production, Feb 2025\)\.$/);
+  const sv = (id) => data.serving.entries.find((e) => e.id === id).facts.date.value;
+  assert.match(rows[0], new RegExp(`measured ${sv('inferencex-v4-pro-gb300')}\\)`), 'row 1 date comes from its key');
+  assert.match(rows[1], new RegExp(`LMSYS, ${sv('lmsys-gb300-longctx')}\\)`), 'row 2 date comes from its key');
+  assert.equal(sv('deepseek-v3-production'), '2025-02');
   assert.equal(rows[3], 'The engines inside a replica: vLLM, SGLang, TensorRT-LLM; orchestration by NVIDIA Dynamo (1.0, GA 2026-03-16) or llm-d (CNCF Sandbox 2026-03-12).');
   assert.equal(fillClaim(lesson.facts.rows[3].claim, data).reported, true, 'engines and llm-d are reported');
   assert.equal(FACT_ROWS[4].derived, true);
@@ -232,4 +237,9 @@ test('inputs are not mutated', () => {
   timelineFor(state, speeds(data).rates);
   assert.equal(JSON.stringify(data), frozen);
   assert.deepEqual(TOY_REQUESTS.map((r) => r.id), ['A', 'B', 'C', 'D']);
+});
+
+test('frame 9 note states the step rule (XS-1)', () => {
+  assert.equal(BATCH_NOTES[2], "Prefill ends with a request's first token; each tick after it is one decode step.");
+  assert.ok(BATCH_NOTES.length <= 3, 'rows 1-3 of the note band, clear of the step label');
 });

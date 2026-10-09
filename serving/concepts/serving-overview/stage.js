@@ -106,9 +106,9 @@ const BLOCK_ORDER = ['you', 'router', 'r1', 'r2', 'r3', 'scheduler'];
 export const IDLE = Object.freeze(Object.fromEntries(BLOCK_ORDER.map((k) => [k, 'idle'])));
 export const CHOSEN = Object.freeze({ ...IDLE, r1: 'dim', r2: 'active', r3: 'dim' }); // replica 2 picked (frames 2–8)
 
-export function pipeline(svg, states = IDLE) {
+export function pipeline(svg, states = IDLE, regionLabel = 'inside replica 2') {
   region(svg, REGION);
-  label(svg, REGION.x + 8, 14, 'inside replica 2');
+  label(svg, REGION.x + 8, 14, regionLabel);
   G.block(svg, { ...YOU, label: 'you', state: states.you });
   G.block(svg, { ...ROUTER, label: 'router', state: states.router });
   REPLICAS.forEach((box, i) => G.block(svg, { ...box, label: `replica ${i + 1}`, state: states[`r${i + 1}`] }));

@@ -15,7 +15,7 @@ const PREFILL_NOTE = `${PROMPT.length} tokens in, ${PROMPT.length} K/V tiles wri
 // ---- frame 1: you press Enter; three tokens type in and leave as one request ----
 const TYPE_AT = Object.freeze([0.08, 0.2, 0.32]);
 export function drawFrame1(svg, p) {
-  pipeline(svg, { ...IDLE, you: 'active' });
+  pipeline(svg, { ...IDLE, you: 'active' }, 'inside a replica');
   cacheTiles(svg, 0);
   const slide = seg(p, 0.6, 0.95);
   hop(svg, 'toRouter', slide);
