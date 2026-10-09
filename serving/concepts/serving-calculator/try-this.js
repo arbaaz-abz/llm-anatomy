@@ -48,7 +48,7 @@ function third(data) {
       + `Switch to 128K: ${formatRatio(mid.costRatio)}; at 1M: ${formatRatio(long.costRatio)}. Turn Prompt cache hit rate to ${Number((d.scenario.hitRate * 100).toFixed(1))}%: input work per token falls to ${Number(((1 - d.scenario.hitRate) * 100).toFixed(1))}%, `
       + `so input cost per token falls ${formatRatio(d.inputCost / hit.inputCost)}.`,
     insight: 'in the ideal, output costs more only when KV memory caps the decode batch;',
-    rest: ` in practice decode never reaches the ideal, measured nodes read ${formatRatio(PRODUCTION.inputNodeTokS / PRODUCTION.outputNodeTokS)} more input than output tokens (step 10 of the animation), and cache hits help only the input side.`,
+    rest: ` in practice decode never reaches the ideal, measured nodes read ${formatRatio(PRODUCTION.inputNodeTokS / PRODUCTION.outputNodeTokS)} more input than output tokens (frame 10), and cache hits help only the input side.`,
   };
 }
 
