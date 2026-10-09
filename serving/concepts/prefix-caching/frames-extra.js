@@ -52,7 +52,7 @@ export function drawFrame9(svg, p, text, drawPrevious) {
   const counts = layer(svg, seg(p, 0.7, 0.85));
   [['KV-aware sends C to replica 1', 0, 140], ['round-robin sends C to replica 2', 1, 440]].forEach(([label, i, cx]) => {
     note(counts, cx, 232, label, { anchor: 'middle' });
-    G.vector(counts, { x: cx - CELL - 4, y: 242, values: [hits[i]], cell: CELL, orient: 'row', maxAbs: 16, format: String });
+    G.vector(counts, { x: cx - CELL - 4, y: 242, values: [0], cell: CELL, orient: 'row', maxAbs: 1, format: () => String(hits[i]) });
     note(counts, cx + 4, 242 + CELL / 2 + 4, 'hit tokens');
   });
   note(layer(svg, seg(p, 0.85, 1)), 14, 330, 'routers also balance load, so they trade some hits for even queues', { cls: '' });
@@ -60,7 +60,7 @@ export function drawFrame9(svg, p, text, drawPrevious) {
 
 // Frame 10 -----------------------------------------------------------------------------------------------------------------
 
-const TIER = Object.freeze({ xs: [30, 225, 420], y: 62, chipY: 172, pitch: 28 });
+const TIER = Object.freeze({ xs: [30, 225, 420], y: 62, chipY: 188, pitch: 28 });
 // The four blocks frame 7 evicted, in pop order; each one's x over the frame (HBM → CPU memory → storage, one back on a hit).
 const EVICTED = LOG[3].evicted.map(shortLabel);
 const MOVES = Object.freeze([ // per chip: [column at start, then (start, end, to) segments]
@@ -81,14 +81,14 @@ export function drawFrame10(svg, p, text, drawPrevious) {
   G.flow(g, { from: [TIER.xs[1] + 132, TIER.y + 30], to: [TIER.xs[2] - 2, TIER.y + 30], carry: 'kv', progress: seg(p, 0.6, 0.8) });
   const chips = layer(svg, seg(p, 0.1, 0.25));
   EVICTED.forEach((label, i) => G.token(chips, { x: chipX(i, p), y: TIER.chipY + i * TIER.pitch, text: label, state: 'idle' }));
-  note(layer(svg, seg(p, 0.1, 0.25)), TIER.xs[0], TIER.chipY - 10, 'blocks evicted in the last frame');
+  note(layer(svg, seg(p, 0.1, 0.25)), TIER.xs[0], TIER.chipY - 12, 'blocks evicted in the last frame');
   const lines = layer(svg, seg(p, 0.85, 1));
   text.tiers.forEach((line, i) => note(lines, 14, 308 + i * 14, line, { cls: '' }));
 }
 
 // Frame 11 -----------------------------------------------------------------------------------------------------------------
 
-const CHART = Object.freeze({ y: 56, h: 120 });
+const CHART = Object.freeze({ y: 76, h: 120 });
 export function drawFrame11(svg, p, text, drawPrevious) {
   if (leaving(p) > 0) drawPrevious(layer(svg, leaving(p)));
   const providers = text.providers;
@@ -97,13 +97,13 @@ export function drawFrame11(svg, p, text, drawPrevious) {
   const max = sonnet.base * sonnet.write;
   note(layer(svg, arriving(p)), 14, 22, 'price per million input tokens, both charts on one scale', { cls: '' });
   const one = layer(svg, seg(p, 0.15, 0.3));
-  note(one, 30, CHART.y - 8, `${sonnet.label} (5-minute write)`);
+  note(one, 30, CHART.y - 22, `${sonnet.label} (5-minute write)`);
   G.bars(one, { x: 30, y: CHART.y, h: CHART.h, w: 210, values: [sonnet.base, sonnet.base * sonnet.write, sonnet.base * sonnet.read], labels: ['plain', 'write', 'read'], max, format: formatPrice, label: 'Anthropic prices' });
   const two = layer(svg, seg(p, 0.35, 0.5));
-  note(two, 330, CHART.y - 8, deepseek.label);
+  note(two, 330, CHART.y - 22, deepseek.label);
   G.bars(two, { x: 330, y: CHART.y, h: CHART.h, w: 140, values: [deepseek.base, deepseek.hitUsd], labels: ['miss', 'hit'], max, format: formatPrice, label: 'DeepSeek prices' });
   const out = layer(svg, seg(p, 0.6, 0.75));
-  note(out, 14, 236, `what a hit saves: ${formatDuration(SCALE_UP.skippedS)} of GPU math for a ${SCALE_UP.tokens.toLocaleString('en-US')}-token prefix`, { cls: '' });
-  note(out, 14, 252, `what it costs: ${formatBytes(SCALE_UP.heldBytes)} held until reuse (H200 example from ${PREFILL_TITLE})`, { cls: '' });
-  note(layer(svg, seg(p, 0.8, 0.95)), 14, 290, `prices read ${text.readOn}; they change`);
+  note(out, 14, 246, `what a hit saves: ${formatDuration(SCALE_UP.skippedS)} of GPU math for a ${SCALE_UP.tokens.toLocaleString('en-US')}-token prefix`, { cls: '' });
+  note(out, 14, 262, `what it costs: ${formatBytes(SCALE_UP.heldBytes)} held until reuse (H200 example from ${PREFILL_TITLE})`, { cls: '' });
+  note(layer(svg, seg(p, 0.8, 0.95)), 14, 300, `prices read ${text.readOn}; they change`);
 }

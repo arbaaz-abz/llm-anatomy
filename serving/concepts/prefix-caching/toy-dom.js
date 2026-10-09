@@ -41,7 +41,8 @@ export function paintStage(svg, stage) {
 
 const EMPTY_ROW = Object.freeze({ label: 'No request', sub: 'turn a request on', cells: [{ value: '—' }] });
 
-// The toy's readout tables: each request, the totals, the scale-up line and the price. `name` is the data-readout the tests read.
+// The toy's readout tables: { requests } (the wide per-request table) and { others } (totals, the scale-up line, the price).
+// `name` is the data-readout the tests read.
 export function readoutTables(view) {
   const perRequest = view.rows.length === 0 ? [EMPTY_ROW] : view.rows.map((r) => ({
     label: r.label,
@@ -50,8 +51,8 @@ export function readoutTables(view) {
       { value: r.blocks, name: `blocks-${r.key}` }, { value: r.evicted, name: `evicted-${r.key}` },
     ],
   }));
-  return [
-    readoutTable({ head: ['Request', 'Prompt tokens', 'From cache', 'Computed', 'Blocks used', 'Evicted'], name: 'requests', rows: perRequest }),
+  const requests = readoutTable({ head: ['Request', 'Prompt tokens', 'From cache', 'Computed', 'Blocks used', 'Evicted'], name: 'requests', rows: perRequest });
+  const others = [
     readoutTable({
       head: ['All requests', 'Value'], name: 'totals',
       rows: [
@@ -77,4 +78,5 @@ export function readoutTables(view) {
       ],
     })] : []),
   ];
+  return { requests, others };
 }

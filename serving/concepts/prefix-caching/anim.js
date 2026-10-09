@@ -165,7 +165,7 @@ function frame7(p) {
       walk(D, ['You are a dog', '. Reply in prose', 'Where did you sit', ...(answer ? ['On the mat .'] : [])], ['new', 'new', 'new', answer ? 'new' : null]),
       overlay('counters:D', (g) => drawCounters(g, 'request D', [row.promptTokens, 0, row.computed, pctText(0, row.promptTokens)])),
       noteOverlay('note:7', 'evicted: blocks 5, 4, 7, 6 · kept: blocks 0-3 (system prompt, A\'s turn)', 0.2),
-      queueOverlay(LOG[C].freeQueue.slice(pops), { suffix: `(after D finishes: ${row.freeQueue.join(' ')})` }),
+      queueOverlay(LOG[C].freeQueue.slice(pops), { suffix: `(after D: ${row.freeQueue.join(' ')})` }),
     ],
   };
 }
@@ -181,11 +181,10 @@ function frame8(p, text) {
     overlays: [
       overlay('table', (g) => drawTable(g, rows.slice(0, shown)), 0.15),
       overlay('big', (g) => {
-        note(g, 8, BIG_Y - 28, `${formatInt(totalCache)} of ${formatInt(totalPrompt)} prompt tokens came from the cache`);
-        note(g, 8, BIG_Y, pctText(totalCache, totalPrompt), { cls: '', size: 26 });
+        note(g, 8, BIG_Y - 30, `${formatInt(totalCache)} of ${formatInt(totalPrompt)} prompt tokens came from the cache`);
+        note(g, 8, BIG_Y, pctText(totalCache, totalPrompt), { cls: '', scale: 2.4 });
       }, 0.65),
       overlay('deepseek', (g) => note(g, 8, BIG_Y + 20, text.deepseek, { cls: '' }), 0.85),
-      queueOverlay(LOG[D].freeQueue),
     ],
   };
 }

@@ -35,13 +35,13 @@ function buildDom(host, data, ctx) {
     who: el('div', { className: 'choice choice--chips' }, [el('span', { id: WHO_LABEL_ID, className: 'choice-label', textContent: 'Who arrives (in order)' }), ...toggles]),
     toggles,
     size: el('div'), pool: el('div'), provider: el('div'), write: el('div'), hit: el('div'), hitChips: el('div'),
-    stage: G.svgEl('svg', { role: 'img' }), tables: el('div', { className: 'toy-tables' }), pre,
+    stage: G.svgEl('svg', { role: 'img' }), requests: el('div'), tables: el('div', { className: 'toy-tables' }), pre,
   };
   refs.who.setAttribute('role', 'group');
   refs.who.setAttribute('aria-labelledby', WHO_LABEL_ID);
   host.append(
     el('div', { className: 'toy-controls' }, [refs.who, refs.size, refs.pool, el('p', { className: 'toy-note', textContent: 'Pool sizes count blocks of 4 tokens; at another block size the pool keeps the same token slots.' }), refs.provider, refs.write, refs.hit, refs.hitChips]),
-    el('div', { className: 'scroll-x' }, [refs.stage]), el('div', { className: 'scroll-x' }, [refs.tables]),
+    el('div', { className: 'scroll-x' }, [refs.stage]), el('div', { className: 'scroll-x' }, [refs.requests]), refs.tables,
     el('h4', { textContent: 'Check my work' }), pre, ...tryThisList(data, ctx),
   );
   return refs;
@@ -89,7 +89,9 @@ export function mount(host, ctx) {
   toy = createToyState(INITIAL_STATE, (s) => {
     latest = toyView(s, data);
     paintStage(refs.stage, latest.stage);
-    refs.tables.replaceChildren(...readoutTables(latest));
+    const tables = readoutTables(latest);
+    refs.requests.replaceChildren(tables.requests);
+    refs.tables.replaceChildren(...tables.others);
     refs.pre.textContent = latest.checkWork;
     if (toy) controls.sync(s, latest);
   });

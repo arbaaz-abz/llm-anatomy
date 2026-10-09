@@ -9,12 +9,12 @@ export const TREE = Object.freeze({ x: 8, y: 22, labelY: 12 });
 export const WALK = Object.freeze({ chipY: 131, x: 44, y: Object.freeze([147, 161]), max: 74 }); // the followed request's blocks in full, two lines at most
 export const NOTE_Y = 177; // the numbers a frame names
 export const POOL = Object.freeze({ x: 8, y: 198, labelY: 192, perRow: 4, blockSize: 4, blocks: 8 });
-export const STRIP = Object.freeze({ x: 8, y: 292, gap: 8 }); // the active request's block table
+export const STRIP = Object.freeze({ x: 8, y: 300, gap: 8 }); // the active request's block table
 export const QUEUE_Y = 350;
 export const FRAME1_NOTES_Y = Object.freeze([308, 322, 336]);
 export const COUNTERS = Object.freeze({ labelX: 474, cellX: 480, y: 200, pitch: 41, headY: 190 });
 export const TABLE = Object.freeze({ x: 372, step: 48, y: 200, pitch: 41, headY: 190, letterX: 336 });
-export const BIG_Y = 320;
+export const BIG_Y = 330;
 
 export const clamp01 = (t) => Math.min(Math.max(t, 0), 1);
 export const seg = (p, a, b) => clamp01((p - a) / (b - a)); // progress p remapped to the sub-phase [a, b]
@@ -30,9 +30,10 @@ export const at = (p, t) => p >= t; // a discrete change that happens at progres
 export const layer = (parent, opacity = 1) => G.svgEl('g', { opacity: opacity < 1 ? opacity.toFixed(3) : null }, parent);
 
 // A plain labeled text mark (README lesson 15), styled like glyph labels; cls '' prints in ink instead of muted.
-export function note(parent, x, y, str, { cls = 'g-label', anchor = 'start', size = null } = {}) {
-  const g = G.svgEl('g', { class: 'glyph g-note' }, parent);
-  const t = G.svgEl('text', { x, y, class: cls || null, 'text-anchor': anchor, 'font-size': size }, g);
+// `scale` enlarges the text (the theme fixes the diagram text size, so a big number is the same text drawn scaled).
+export function note(parent, x, y, str, { cls = 'g-label', anchor = 'start', scale = 1 } = {}) {
+  const g = G.svgEl('g', { class: 'glyph g-note', transform: scale === 1 ? null : `translate(${x} ${y}) scale(${scale})` }, parent);
+  const t = G.svgEl('text', { x: scale === 1 ? x : 0, y: scale === 1 ? y : 0, class: cls || null, 'text-anchor': anchor }, g);
   t.textContent = str;
   return g;
 }

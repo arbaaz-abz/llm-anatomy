@@ -66,7 +66,7 @@ export function drawStrip(parent, title, chips, { x = STRIP.x, y = STRIP.y, opac
 // One counter cell: a one-cell vector at NUMBER_CELL; `null` leaves the cell empty until the number is shown.
 function counterCell(parent, x, y, text) {
   const blank = text === null;
-  return G.vector(parent, { x, y, values: [blank ? 0 : 1], cell: CELL, orient: ROW, maxAbs: 1, format: () => (blank ? '' : text) });
+  return G.vector(parent, { x, y, values: [0], cell: CELL, orient: ROW, maxAbs: 1, format: () => (blank ? '' : text) }); // a printed number, so the neutral fill: no value scale
 }
 
 export const pctText = (hit, prompt) => G.formatShare(hit / prompt);
