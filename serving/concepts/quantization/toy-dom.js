@@ -22,10 +22,10 @@ function row(svg, y, cells, { maxAbs, label }) {
 // One scale chip per block, centered over its weights.
 function chips(svg, blocks) {
   blocks.forEach((b) => {
-    const label = `scale ${b.scale}`;
-    const w = G.tokenWidth(label);
-    G.token(svg, { x: FIG.x + ((b.from + b.to + 1) / 2) * CELL - w / 2, y: FIG.chips, text: label });
+    const w = G.tokenWidth(b.scale); // the number alone: a chip over two weights is only 80 px wide
+    G.token(svg, { x: FIG.x + ((b.from + b.to + 1) / 2) * CELL - w / 2, y: FIG.chips, text: b.scale });
   });
+  text(svg, FIG.x - FIG.labelGap, FIG.chips + 17, 'scale', { 'text-anchor': 'end' });
 }
 
 // The eight weights, their scale chips, the number line they land on, and the codes, restored and error rows. The viewBox is

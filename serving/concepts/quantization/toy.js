@@ -28,7 +28,6 @@ function buildDom(host, data, ctx) {
   };
   host.append(
     el('h4', { textContent: 'Round a block' }),
-    rich('The eight weights are hand-picked, with one outlier on purpose. Rounding is round-to-nearest; GPTQ and AWQ choose roundings more cleverly.', ctx),
     rich(NOTE_LINE, ctx),
     el('div', { className: 'toy-controls' }, [refs.format, refs.blockSize, refs.outlier]),
     el('div', { className: 'scroll-x' }, [refs.figure]),
