@@ -73,6 +73,7 @@ test('Next lists exactly the lessons that take this one as a prereq (README less
 
 test('the stage constants equal the data they restate (P3-R13 pattern)', () => {
   assert.deepEqual(hbmFor(entry('hardware', 'h200')), { bytes: H200.hbmBytes, basis: H200.basis });
+  assert.equal(hw('h200', 'bf16_dense_tflops'), H200.peakBf16Tflops);
   assert.deepEqual([hw('h100', 'bf16_dense_tflops'), hw('h100', 'hbm_tbps')], [H100.peakTflops, H100.bandwidthTBps]);
   const gb300 = 'inferencex-v4-pro-gb300';
   assert.deepEqual(MEASURED.points.map((p) => [p.perUser, p.perGpu]), [

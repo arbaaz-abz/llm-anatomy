@@ -12,8 +12,9 @@ export const PROMPT_WORDS = Object.freeze(['The', 'cat', 'sat', 'on', 'the', 'ma
 export const ANSWER_WORD = 'down'; // request A's next token (frames 1–2)
 export const BATCH_OWNERS = Object.freeze(['A', 'B', 'C', 'D']); // frames 7–9: four lettered users, the rest "+ N others"
 
-// The H200 the stage draws (hardware.json h200: hbm_gb, nominal; the peak and bandwidth live in RUNNING_EXAMPLE).
-export const H200 = deepFreeze({ label: 'H200', hbmBytes: 141e9, basis: 'nominal' });
+// The H200 the stage draws (hardware.json h200: hbm_gb, nominal, and bf16_dense_tflops for frame 6's BF16 crossover;
+// its FP8 peak and bandwidth live in RUNNING_EXAMPLE).
+export const H200 = deepFreeze({ label: 'H200', hbmBytes: 141e9, basis: 'nominal', peakBf16Tflops: 989 });
 // The H100 that frame 6 compares against (hardware.json h100: bf16_dense_tflops, hbm_tbps): gpu-primer's 318.
 export const H100 = deepFreeze({ label: 'H100', peakTflops: 989, bandwidthTBps: 3.35, bytesPerElem: 2 });
 

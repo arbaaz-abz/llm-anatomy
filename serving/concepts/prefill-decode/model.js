@@ -27,6 +27,7 @@ export function readParts(step, { weightBytes = L.weightBytesPerGpu, bandwidthTB
 export const WEIGHTS_READ_S = L.weightBytesPerGpu / (L.bandwidthTBps * TB);
 export const RIDGE = ridgePoint(ROOF);
 export const CROSSING = tokensToComputeBound({ ...ROOF, bytesPerElem: bytesPerWeight, k: L.dModel, n: L.dModel });
+export const BF16_CROSSING = tokensToComputeBound({ peakTflops: H200.peakBf16Tflops, bandwidthTBps: L.bandwidthTBps, bytesPerElem: 2, k: L.dModel, n: L.dModel });
 export const H100_CROSSING = tokensToComputeBound({ ...H100, k: L.dModel, n: L.dModel });
 export const FREE_BYTES = freeHbmPerGpu({ hbmBytes: H200.hbmBytes, weightBytes: L.weightBytesPerGpu, gpus: 1 });
 export const CACHE_PER_USER = kvCacheBytes({ bytesPerToken: L.kvBytesPerToken, tokens: CONTEXT });
