@@ -270,14 +270,14 @@ const POOL_SLOTS = [
   ...Array.from({ length: 8 }, () => ({ state: 'free' })),
 ];
 const PRE_S6 = {
-  token: [{ x: 4, y: 8, text: 'cat', index: 2, state: 'active' }, 'T_TOKEN'],
-  tokenFill: [{ x: 4, y: 8, text: '56', fill: 'color-mix(in oklab, var(--val-zero), var(--val-pos) 50%)', hatched: true }, 'T_TOKENFILL'],
-  request: [{ x: 30, y: 8, prefill: 8, decode: 4, label: 'A' }, 'T_REQUEST'],
-  requestBare: [{ x: 0, y: 0, prefill: 3, decode: 0 }, 'T_REQUESTBARE'],
-  blockPool: [{ x: 4, y: 4, blocks: 4, blockSize: 4, slots: POOL_SLOTS, cell: 14, perRow: 2 }, 'T_BLOCKPOOL'],
-  memBar: [{ x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 }, 'T_MEMBAR'],
-  memBarTiny: [{ x: 0, y: 0, useful: 99, reserved: 1, free: 0 }, 'T_MEMBARTINY'],
-  rackPlain: [{ x: 10, y: 6, gpus: 8, label: 'node' }, 'T_RACKPLAIN'],
+  token: [{ x: 4, y: 8, text: 'cat', index: 2, state: 'active' }, 'c260d4d97f551c0b'],
+  tokenFill: [{ x: 4, y: 8, text: '56', fill: 'color-mix(in oklab, var(--val-zero), var(--val-pos) 50%)', hatched: true }, '56f424a74b2d4e3c'],
+  request: [{ x: 30, y: 8, prefill: 8, decode: 4, label: 'A' }, 'aaefa353ec630ffd'],
+  requestBare: [{ x: 0, y: 0, prefill: 3, decode: 0 }, '1f16681565f6206f'],
+  blockPool: [{ x: 4, y: 4, blocks: 4, blockSize: 4, slots: POOL_SLOTS, cell: 14, perRow: 2 }, 'bf7884f9cc7035f8'],
+  memBar: [{ x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 }, '7be9f97d231b25cd'],
+  memBarTiny: [{ x: 0, y: 0, useful: 99, reserved: 1, free: 0 }, 'a395682f2f62077c'],
+  rackPlain: [{ x: 10, y: 6, gpus: 8, label: 'node' }, 'aab329a0b26693d5'],
 };
 const GLYPH_OF_S6 = { tokenFill: 'token', requestBare: 'request', memBarTiny: 'memBar', rackPlain: 'rack' };
 
