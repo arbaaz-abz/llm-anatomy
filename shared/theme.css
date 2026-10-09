@@ -276,7 +276,12 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 [data-hl="ridge"] [data-link="ridge"] .g-frame, [data-hl="peak"] [data-link="peak"] .g-frame, [data-hl="bw"] [data-link="bw"] .g-frame,
 [data-hl="w"] [data-link="w"] .g-frame, [data-hl="g"] [data-link="g"] .g-frame, [data-hl="comm"] [data-link="comm"] .g-frame,
 [data-hl="bubble"] [data-link="bubble"] .g-frame, [data-hl="link"] [data-link="link"] .g-frame, [data-hl="flops"] [data-link="flops"] .g-frame,
-[data-hl="mfu"] [data-link="mfu"] .g-frame, [data-hl="loss"] [data-link="loss"] .g-frame { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
+[data-hl="mfu"] [data-link="mfu"] .g-frame, [data-hl="loss"] [data-link="loss"] .g-frame,
+[data-hl="ttft"] [data-link="ttft"] .g-frame, [data-hl="tpot"] [data-link="tpot"] .g-frame, [data-hl="compute"] [data-link="compute"] .g-frame,
+[data-hl="memory"] [data-link="memory"] .g-frame, [data-hl="table"] [data-link="table"] .g-frame, [data-hl="waste"] [data-link="waste"] .g-frame,
+[data-hl="hit"] [data-link="hit"] .g-frame, [data-hl="scale"] [data-link="scale"] .g-frame, [data-hl="code"] [data-link="code"] .g-frame,
+[data-hl="compute"] [data-link="compute"] .g-step--compute, [data-hl="memory"] [data-link="memory"] .g-step--memory,
+[data-hl="waste"] [data-link="waste"] .g-reserved-bg { stroke: var(--accent); stroke-width: 2; } /* a focus mark; 2px = the focus-ring width, the ceiling for any accent stroke */
 
 /* ---------- Facts (Task 6 contract) ---------- */
 .fact { font-variant-numeric: tabular-nums; }
@@ -345,7 +350,9 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-clip .g-marker { fill: var(--ink); }
 .g-clip .g-tick { stroke: var(--ink-muted); }
 .g-pool .g-slot-k, .g-pool .g-slot-v { stroke: var(--line); fill: var(--surface); }
-.g-pool .g-slot--free .g-slot-k, .g-pool .g-slot--free .g-slot-v { stroke-dasharray: 2 2; }
+.g-pool .g-slot--free .g-slot-k, .g-pool .g-slot--free .g-slot-v { fill: var(--surface-2); } /* free = a faint fill: never dashed, never outlined (P4-R11) */
+.g-pool .g-slot--cached .g-slot-k, .g-pool .g-slot--cached .g-slot-v { fill: color-mix(in oklab, var(--ink-muted) 35%, var(--surface)); } /* cached: filled, no request holds it (prefix caching) */
+.g-pool .g-block-refs { fill: var(--ink); font-weight: 600; }
 .g-pool .g-slot .g-text { text-anchor: middle; dominant-baseline: central; font-weight: 600; }
 .g-pool .g-slot--free .g-text { fill: var(--line); }
 .g-pool [data-req="1"] .g-slot-k { fill: color-mix(in oklab, var(--req-1) 40%, var(--surface)); stroke: var(--req-1); }
@@ -444,6 +451,45 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-bits .g-bit--exponent .g-bit { fill: color-mix(in oklab, var(--part-2) 50%, var(--surface)); }
 .g-bits .g-bit--mantissa .g-bit { fill: color-mix(in oklab, var(--part-1) 45%, var(--surface)); }
 .g-bits .g-bit--scale .g-bit { fill: color-mix(in oklab, var(--part-4) 45%, var(--surface)); }
+
+/* ---------- Shared prep S6: Serving glyphs and options ---------- */
+.g-faint { opacity: 0.45; } /* a mark stepped back by opacity alone: the "overlapped" row of a step bar (never dashed) */
+/* stepBar (P4-R8): reading in --sem-memory over arithmetic in --sem-compute, tints so the printed ink reads */
+.g-stepbar .g-step--memory { fill: color-mix(in oklab, var(--sem-memory) 55%, var(--surface)); }
+.g-stepbar .g-step--compute { fill: color-mix(in oklab, var(--sem-compute) 55%, var(--surface)); }
+.g-stepbar .g-step-text { fill: var(--ink); }
+.g-stepbar .g-step-total { fill: var(--ink); font-weight: 600; }
+.g-stepbar .g-bracket, .g-membar .g-bracket, .g-rack .g-bracket { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
+/* request owner (P4-R9): the request's own hue replaces the semantic prefill / decode colors; queue and idle stay neutral */
+.g-request .g-queue { fill: color-mix(in oklab, var(--ink) 12%, var(--surface)); }
+.g-request .g-idle-bg { fill: var(--surface); }
+.g-request .g-step-hit { fill: transparent; }
+.g-request[data-req="1"] .g-prefill { fill: var(--req-1); } .g-request[data-req="1"] .g-decode { stroke: var(--req-1); }
+.g-request[data-req="2"] .g-prefill { fill: var(--req-2); } .g-request[data-req="2"] .g-decode { stroke: var(--req-2); }
+.g-request[data-req="3"] .g-prefill { fill: var(--req-3); } .g-request[data-req="3"] .g-decode { stroke: var(--req-3); }
+.g-request[data-req="4"] .g-prefill { fill: var(--req-4); } .g-request[data-req="4"] .g-decode { stroke: var(--req-4); }
+/* token owner (P4-R10): a letter chip in its request's hue, filled like a pool slot */
+.g-token[data-req="1"] .g-frame { fill: color-mix(in oklab, var(--req-1) 40%, var(--surface)); stroke: var(--req-1); }
+.g-token[data-req="2"] .g-frame { fill: color-mix(in oklab, var(--req-2) 40%, var(--surface)); stroke: var(--req-2); }
+.g-token[data-req="3"] .g-frame { fill: color-mix(in oklab, var(--req-3) 40%, var(--surface)); stroke: var(--req-3); }
+.g-token[data-req="4"] .g-frame { fill: color-mix(in oklab, var(--req-4) 40%, var(--surface)); stroke: var(--req-4); }
+/* prefixTree (P4-R14): hit --sem-ok, new in its request's hue, cached muted, evicted plain under the hatch */
+.g-ptree .g-ptree-edge { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
+.g-ptree .g-text { text-anchor: middle; dominant-baseline: central; }
+.g-ptree--hit .g-frame { fill: color-mix(in oklab, var(--sem-ok) 40%, var(--surface)); }
+.g-ptree--new[data-req="1"] .g-frame { fill: color-mix(in oklab, var(--req-1) 40%, var(--surface)); }
+.g-ptree--new[data-req="2"] .g-frame { fill: color-mix(in oklab, var(--req-2) 40%, var(--surface)); }
+.g-ptree--new[data-req="3"] .g-frame { fill: color-mix(in oklab, var(--req-3) 40%, var(--surface)); }
+.g-ptree--new[data-req="4"] .g-frame { fill: color-mix(in oklab, var(--req-4) 40%, var(--surface)); }
+.g-ptree--cached .g-frame { fill: color-mix(in oklab, var(--ink-muted) 35%, var(--surface)); }
+.g-ptree--evicted .g-frame { fill: var(--surface); }
+.g-ptree--evicted .g-text { fill: var(--ink-muted); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; } /* a surface halo keeps the label clear of the stripes */
+/* numberLine (P4-R14): ticks at the values a format can store; dots in ink (position carries the value, never a color) */
+.g-nl .g-nl-axis { stroke: var(--ink-muted); stroke-width: 1.5; }
+.g-nl .g-nl-tick { stroke: var(--ink-muted); stroke-width: 1; }
+.g-nl .g-nl-tick--hit { stroke: var(--ink); stroke-width: 2; }
+.g-nl .g-nl-drop { stroke: var(--ink-muted); stroke-width: 1; }
+.g-nl .g-nl-dot { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 
 /* ---------- Lesson page scaffold (shared/lesson-page.js) ---------- */
 .lesson-hook { font-family: var(--font-display); font-size: var(--fs-l); line-height: 1.35; }
