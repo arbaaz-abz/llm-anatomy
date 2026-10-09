@@ -286,6 +286,27 @@
           "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "redundant_experts": {
+          "value": 32,
+          "note": "\"32 redundant routed experts\" in each deployment unit, prefill (4 nodes) and decode (18 nodes) alike (overview, read 2026-10-09). 256 routed + 32 = 288; 288 / 144 = 2 per decode GPU, 288 / 32 = 9 per prefill GPU.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
+        },
+        "prefill_routed_experts_per_gpu": {
+          "value": 9,
+          "note": "\"each GPU handles 9 routed experts and 1 shared expert\" in prefill (overview, read 2026-10-09).",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
+        },
+        "prefill_shared_experts_per_gpu": {
+          "value": 1,
+          "note": "See prefill_routed_experts_per_gpu.",
+          "source_url": "https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
         }
       }
     },
@@ -598,6 +619,17 @@
           "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "auc_recovery_128k_pct": {
+          "value": [
+            97,
+            98
+          ],
+          "unit": "%",
+          "note": "\"FP8 KV-cache and attention quantization recovers 97-98% of the baseline AUC@128k score\" for Llama-3.3-70B-Instruct (post, read 2026-10-09). The post does not tie this figure to one fix.",
+          "source_url": "https://vllm.ai/blog/2026-04-22-fp8-kvcache",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
         }
       }
     },
@@ -832,6 +864,21 @@
           "source_url": "https://arxiv.org/abs/2503.01840",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "gain_vs_eagle2": {
+          "value": 1.4,
+          "unit": "x",
+          "note": "\"about 1.4x improvement over EAGLE-2\" (abstract, read 2026-10-09).",
+          "source_url": "https://arxiv.org/abs/2503.01840",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
+        },
+        "release_date": {
+          "value": "2025-03-03",
+          "note": "arXiv v1 submission date, 3 Mar 2025 (read 2026-10-09).",
+          "source_url": "https://arxiv.org/abs/2503.01840",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
         }
       }
     },
@@ -907,6 +954,13 @@
           "source_url": "https://arxiv.org/abs/2401.09670",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2024-01-18",
+          "note": "arXiv v1 submission date, 18 Jan 2024; the arXiv comments field lists OSDI 2024 (read 2026-10-09).",
+          "source_url": "https://arxiv.org/abs/2401.09670",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
         }
       }
     },
@@ -936,6 +990,13 @@
           "source_url": "https://arxiv.org/abs/2311.18677",
           "confidence": "confirmed",
           "last_verified": "2026-10-07"
+        },
+        "release_date": {
+          "value": "2023-11-30",
+          "note": "arXiv v1 submission date, 30 Nov 2023 (read 2026-10-09). arXiv lists no venue.",
+          "source_url": "https://arxiv.org/abs/2311.18677",
+          "confidence": "confirmed",
+          "last_verified": "2026-10-09"
         }
       }
     },

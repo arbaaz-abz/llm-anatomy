@@ -1,4 +1,4 @@
-// Course conventions in the 14 Training storyboards (Plan 3 Review Focus 5; README lessons 23, 28; X-1, X-3).
+// Course conventions in the Training and Serving storyboards (Plan 3 Review Focus 5, Plan 4 Review Focus 3; README lessons 23, 28; X-1, X-3).
 // Each failure reads "<file>:<line>: <rule>".
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,8 @@ const ROOT = new URL('../', import.meta.url);
 const readJson = async (rel) => JSON.parse(await readFile(new URL(rel, ROOT), 'utf8'));
 
 const graph = await readJson('shared/concepts.json');
-const SLUGS = graph.concepts.filter((c) => c.track === 'training').map((c) => c.slug);
+const TRACKS = ['training', 'serving'];
+const SLUGS = graph.concepts.filter((c) => TRACKS.includes(c.track)).map((c) => c.slug);
 const datasets = Object.fromEntries(await Promise.all(DATA_FILES.map(async (f) => [f, await readJson(`data/${f}.json`)])));
 const idsByFile = Object.fromEntries(DATA_FILES.map((f) => [f, new Set(datasets[f].entries.map((e) => e.id))]));
 const STORYBOARDS = await Promise.all(SLUGS.map(async (slug) => {
@@ -23,11 +24,11 @@ const citations = () => STORYBOARDS.flatMap(({ file, lines, refs }) => refs
   .filter((r) => r.key)
   .map((r) => ({ where: `${file}:${r.line}`, id: r.id, key: r.key, line: lines[r.line - 1] })));
 
-/** Every line of every Training storyboard. */
+/** Every line of every Training and Serving storyboard. */
 const allLines = () => STORYBOARDS.flatMap(({ file, lines }) => lines.map((text, i) => ({ where: `${file}:${i + 1}`, text })));
 
-test('the 14 Training storyboards are read', () => {
-  assert.equal(SLUGS.length, 14);
+test('the 23 Training and Serving storyboards are read', () => {
+  assert.equal(SLUGS.length, 23);
 });
 
 // (a) README lesson 23: peaks are dense; a sparse peak is never cited.
