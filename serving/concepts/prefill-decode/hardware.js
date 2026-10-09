@@ -43,5 +43,6 @@ export function gpuPreset(data, id) {
   });
 }
 
-// The GPU chip's visible label: "H200 · 141 GB nominal" (the basis word rides on the chip, Review Focus 3).
-export const gpuLabel = (preset) => `${preset.label} · ${hbmText(preset)}`;
+// The GPU's memory as the line under the GPU chips prints it: "H200: 141 GB nominal" (the basis word always rides with
+// the number, Review Focus 3; the chips keep the bare names so the three fit at 400 px).
+export const gpuMemoryText = (preset) => `${preset.label}: ${hbmText(preset)}`;

@@ -3,7 +3,7 @@
 // durations through formatDuration, exact counts through formatInt, per-user rates through formatCount (README lesson 35).
 import { stepTime } from '@math/serving.js';
 import { formatBytes, formatCount, formatDuration, formatInt } from '@math/core.js';
-import { gpuPreset, hbmText, WEIGHT_FORMATS } from './hardware.js';
+import { GPUS, gpuPreset, gpuMemoryText, hbmText, WEIGHT_FORMATS } from './hardware.js';
 import { analyze, checkWork, boundText, fixed1, formatFlops, tflops, tbps, usersStops, usersLabel, memoryParts, thinText } from './format.js';
 import { readParts } from './model.js';
 
@@ -153,6 +153,9 @@ const figures = (a) => {
     curve: showDecode && a.step ? curveSpec(a) : null,
   };
 };
+
+// The line under the GPU chips: every chip's memory with its basis word.
+export const gpuNote = (data) => `GPU memory: ${GPUS.map((g) => gpuMemoryText(gpuPreset(data, g.id)).replace(/^\S+: /, `${g.label} `)).join(' · ')}.`;
 
 export function toyView(state, data) {
   const preset = gpuPreset(data, state.hw);

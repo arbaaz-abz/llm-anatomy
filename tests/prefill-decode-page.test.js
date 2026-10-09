@@ -9,9 +9,9 @@ import { ridgePoint, tokensToComputeBound, arithmeticIntensity } from '../math/r
 import { kvCacheBytes, kvBytesPerToken } from '../math/memory.js';
 import { formatBytes, formatCount, formatDuration, formatInt, formatRatio } from '../math/core.js';
 import { LESSON, lessonFor } from '../serving/concepts/prefill-decode/content.js';
-import { GPUS, gpuPreset, gpuLabel, hbmText } from '../serving/concepts/prefill-decode/hardware.js';
+import { GPUS, gpuPreset, gpuMemoryText, hbmText } from '../serving/concepts/prefill-decode/hardware.js';
 import { analyze, checkWork, modelFor, usersStops, usersLabel, formatFlops, fixed1, INITIAL_STATE, PROMPT_STOPS, CONTEXT_STOPS } from '../serving/concepts/prefill-decode/format.js';
-import { toyView, TOY_STEP_W } from '../serving/concepts/prefill-decode/toy-view.js';
+import { toyView, gpuNote, TOY_STEP_W } from '../serving/concepts/prefill-decode/toy-view.js';
 import { tryThis } from '../serving/concepts/prefill-decode/try-this.js';
 import { BELOW, factRows, intuition, hook, takeaways } from '../serving/concepts/prefill-decode/facts.js';
 import { STATES, MAX_USERS, CROSSING, H100_CROSSING, RIDGE, STAGE_SCALE_S, decode, prefill, readParts } from '../serving/concepts/prefill-decode/model.js';
@@ -124,7 +124,8 @@ test('the captions\' numbers equal the functions they repeat (README lesson 29)'
 });
 
 test('GPU presets read hbmFor with its basis word, and the dense keys (Review Focus 3)', () => {
-  assert.deepEqual(GPUS.map((g) => gpuLabel(gpuPreset(data, g.id))), ['H100 · 80 GB nominal', 'H200 · 141 GB nominal', 'B200 · 180 GB usable (192 nominal)']);
+  assert.deepEqual(GPUS.map((g) => gpuMemoryText(gpuPreset(data, g.id))), ['H100: 80 GB nominal', 'H200: 141 GB nominal', 'B200: 180 GB usable (192 nominal)']);
+  assert.equal(gpuNote(data), 'GPU memory: H100 80 GB nominal · H200 141 GB nominal · B200 180 GB usable (192 nominal).');
   GPUS.forEach((g) => {
     const p = gpuPreset(data, g.id);
     assert.deepEqual(p.hbm, hbmFor(entry('hardware', g.id)));

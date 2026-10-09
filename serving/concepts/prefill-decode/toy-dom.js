@@ -53,12 +53,13 @@ export function paintCurve(svg, spec) {
   G.fitViewBox(svg, 6);
 }
 
-// The figures block: a caption line and a scrolling box per figure; `hidden` when the state has no such figure.
+// The figures: per figure a caption line and a scrolling box, both direct children of the toy grid (so the box, not the
+// page, scrolls at 400 px); both are hidden when the state has no such figure.
 export function figureBlocks() {
   const make = (label) => {
     const caption = el('p', { className: 'toy-note' });
     const svg = svgFigure(label);
-    return { root: el('div', {}, [caption, el('div', { className: 'scroll-x' }, [svg])]), caption, svg };
+    return { nodes: [caption, el('div', { className: 'scroll-x' }, [svg])], caption, svg };
   };
   return { step: make('this step: reading against arithmetic'), memory: make('GPU memory'), curve: make('tokens per second per user against per GPU') };
 }

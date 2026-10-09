@@ -6,9 +6,9 @@ import { mountChoice } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { appendRich } from '@shared/lesson-page.js';
 import { formatInt } from '@math/core.js';
-import { GPUS, WEIGHT_FORMATS, gpuPreset, gpuLabel } from './hardware.js';
+import { GPUS, WEIGHT_FORMATS } from './hardware.js';
 import { INITIAL_STATE, PROMPT_STOPS, CONTEXT_STOPS, usersLabel } from './format.js';
-import { toyView } from './toy-view.js';
+import { toyView, gpuNote } from './toy-view.js';
 import { tryThis } from './try-this.js';
 import { output, readoutTables, paintStepBar, paintMemoryBar, paintCurve, figureBlocks } from './toy-dom.js';
 
@@ -36,8 +36,8 @@ function buildDom(host, data, ctx) {
     fit: el('p'), tables: el('div', { className: 'toy-readouts' }), figures: figureBlocks(), check: pre,
   };
   host.append(
-    el('div', { className: 'toy-controls' }, [refs.phase, refs.hw, refs.weights, refs.boxes.promptTokens, refs.boxes.users, refs.boxes.context, refs.usersNoteP]),
-    refs.fit, refs.tables, refs.figures.step.root, refs.figures.memory.root, refs.figures.curve.root,
+    el('div', { className: 'toy-controls' }, [refs.phase, refs.hw, el('p', { className: 'toy-note' }, [output('gpu-memory', { textContent: gpuNote(data) })]), refs.weights, refs.boxes.promptTokens, refs.boxes.users, refs.boxes.context, refs.usersNoteP]),
+    refs.fit, refs.tables, ...refs.figures.step.nodes, ...refs.figures.memory.nodes, ...refs.figures.curve.nodes,
     el('h4', { textContent: 'Check my work' }), pre, ...tryThisList(data, ctx),
   );
   return refs;
@@ -51,7 +51,7 @@ function paintFit(p, fit, ctx) {
 }
 
 function paintFigure(block, spec, paint) {
-  block.root.hidden = !spec;
+  block.nodes.forEach((n) => { n.hidden = !spec; });
   block.caption.textContent = spec?.caption ?? '';
   paint(block.svg, spec);
 }
@@ -90,7 +90,7 @@ function mountControls(refs, data, set) {
     mountChoice(refs.phase, { id: 'phase', label: 'Phase', options: PHASES, value: INITIAL_STATE.phase, onChange: (v) => set({ phase: v }) }),
     mountChoice(refs.hw, {
       id: 'hw', label: 'GPU', variant: 'chips', value: INITIAL_STATE.hw,
-      options: GPUS.map((g) => ({ value: g.id, label: gpuLabel(gpuPreset(data, g.id)) })), onChange: (v) => set({ hw: v }),
+      options: GPUS.map((g) => ({ value: g.id, label: g.label })), onChange: (v) => set({ hw: v }),
     }),
     mountChoice(refs.weights, {
       id: 'weights', label: 'Weight format', variant: 'chips', value: INITIAL_STATE.weights,

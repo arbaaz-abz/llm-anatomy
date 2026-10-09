@@ -33,7 +33,7 @@ test.describe('prefill-decode toy: step-time calculator', () => {
     });
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);
     await expect(readout(page, 'bound').locator('.sem-text--memory')).toHaveText('memory-bound');
-    await expect(page.locator('#hw [data-value="b200"]')).toHaveText('B200 · 180 GB usable (192 nominal)');
+    await expect(readout(page, 'gpu-memory')).toHaveText('GPU memory: H100 80 GB nominal · H200 141 GB nominal · B200 180 GB usable (192 nominal).');
     await expect(page.locator('#users + output, #users ~ output').first()).toHaveText('8 users');
     await expect(page.locator('#promptTokens')).toBeHidden();
     await expect(page.locator('[data-section="toy"] .g-stepbar')).toHaveCount(1);
