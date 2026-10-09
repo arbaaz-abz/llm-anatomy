@@ -111,7 +111,7 @@ New glyphs (built in S3; the APIs below are the built ones):
   lanes label-free, each segment still with a `<title>` naming lane and kind. A segment's label prints
   inside it only when it is ≥ 36 px wide and fits, otherwise beside it. Why: `request` draws one request's prefill/decode ticks, not several resources sharing a clock.
   Reused by `parallelism` (pipeline schedule), `scale-reliability` (overlap lanes; checkpoint and
-  failure timeline) and possibly `batching`.
+  failure timeline); no Serving page uses it (`batching` draws `request` bars, P4-R22).
 - `G.bitLayout(parent, { x, y, fields: [{ role: 'sign' | 'exponent' | 'mantissa' | 'scale', bits }] |
   format: <a FORMATS entry>, bitW = 14, label, sharedBy })` (`G.bitFields('1/8/7')` turns a layout string
   into fields): a row of bit cells grouped by role, field text `S`, `E<n>`, `M<n>`, `scale` under the cells;
