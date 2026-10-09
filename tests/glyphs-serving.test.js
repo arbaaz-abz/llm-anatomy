@@ -97,7 +97,7 @@ test('blockPool refs: a count above 1 prints small in its block, nothing at 1; t
     const slots = Array.from({ length: 12 }, (_, i) => ({ owner: 'A', state: i < 8 ? 'filled' : 'free' }));
     const g = blockPool(svg, { x: 0, y: 0, blocks: 3, blockSize: 4, slots, refs: [2, 1, 3] });
     assert.deepEqual(withClass(g, 'g-block-refs').map((t) => t.textContent), ['2', '3']);
-    assert.equal(titleOf(withClass(g, 'g-block-refs')[0]), 'block 0: 2 references');
+    assert.equal(titleOf(withClass(g, 'g-refs')[0]), 'block 0: 2 references');
     assert.equal(withClass(blockPool(svg, { x: 0, y: 0, blocks: 3, blockSize: 4, slots }), 'g-block-refs').length, 0, 'no refs, no marks');
     assert.throws(() => blockPool(svg, { x: 0, y: 0, blocks: 3, blockSize: 4, slots, refs: [2, 1] }), /glyphs.blockPool: refs must be 3 integers ≥ 0, one per block/);
     assert.throws(() => blockPool(svg, { x: 0, y: 0, blocks: 3, blockSize: 4, slots, refs: [2, 1.5, 3] }), /glyphs.blockPool: refs must be 3 integers ≥ 0/);

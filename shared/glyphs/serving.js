@@ -67,8 +67,9 @@ export function blockPool(parent, { x, y, blocks, blockSize, slots, cell = 14, p
     const by = Math.floor(b / perRow) * stepY + 12;
     text(g, bx, by - 4, b, 'g-sub g-block-index');
     if (refs && refs[b] > 1) {
-      const count = text(g, bx + blockW, by - REFS_RISE, refs[b], 'g-sub g-block-refs', { 'text-anchor': 'end' });
-      svgEl('title', {}, count).textContent = `block ${b}: ${refs[b]} references`;
+      const mark = svgEl('g', { class: 'g-refs' }, g); // the title sits beside the number, not inside its <text>
+      svgEl('title', {}, mark).textContent = `block ${b}: ${refs[b]} references`;
+      text(mark, bx + blockW, by - REFS_RISE, refs[b], 'g-sub g-block-refs', { 'text-anchor': 'end' });
     }
     svgEl('rect', { class: 'g-frame', x: bx, y: by, width: blockW, height: blockH, rx: 3 }, g);
     for (let s = 0; s < blockSize; s += 1) {

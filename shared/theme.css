@@ -460,6 +460,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .g-stepbar .g-step-text { fill: var(--ink); }
 .g-stepbar .g-step-total { fill: var(--ink); font-weight: 600; }
 .g-stepbar .g-bracket, .g-membar .g-bracket, .g-rack .g-bracket { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
+.g-rack .g-group-label { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; } /* the link between rows never crosses a letter */
 /* request owner (P4-R9): the request's own hue replaces the semantic prefill / decode colors; queue and idle stay neutral */
 .g-request .g-queue { fill: color-mix(in oklab, var(--ink) 12%, var(--surface)); }
 .g-request .g-idle-bg { fill: var(--surface); }
