@@ -133,6 +133,69 @@ const TRAINING_FIGURES = [
   }],
 ];
 
+// ---- Shared prep S6: the Serving glyphs and options (numbers from the Serving storyboards; layouts illustrative) ----
+const MS = (n) => n / 1000;
+const RECT_SLOTS = (owner, n, state = 'filled') => Array.from({ length: n }, () => ({ owner, state }));
+const FREE_SLOTS = (n) => Array.from({ length: n }, () => ({ state: 'free' }));
+const E2M1_GRID = [-6, -4, -3, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 3, 4, 6];
+const SERVING_FIGURES = [
+  ['stepBar reading', 'a decode step at 64 users (prefill-decode frame 8): the reading parts over a faint "overlapped" arithmetic row, one 30 ms scale; the 0.07 ms math widens to 18 px under a bracket, its value printed true', 380, 90, (s) => {
+    G.stepBar(s, { x: 4, y: 6, w: 300, scaleS: MS(30), reading: [{ label: 'weights read', s: MS(14.58) }, { label: 'KV read', s: MS(8.95) }], mathS: MS(0.07) });
+  }],
+  ['stepBar arithmetic', 'a 1,000-token prefill (frame 3): arithmetic is the longer row and the step; the reading row, with a 3.56 ms part, goes faint', 380, 90, (s) => {
+    G.stepBar(s, { x: 4, y: 6, w: 240, scaleS: MS(80), reading: [{ label: 'weights read', s: MS(14.58) }, { label: 'activations', s: MS(3.56) }], mathS: MS(70.74) });
+  }],
+  ['request owner, idle', 'owner sets the request hue; idle is n hatched units after the last tick (batching: the slot waits for the others)', 300, 90, (s) => {
+    G.request(s, { x: 30, y: 8, prefill: 8, decode: 4, label: 'A', owner: 'A' });
+    G.request(s, { x: 30, y: 28, prefill: 5, decode: 2, label: 'B', owner: 'B', idle: 5 });
+    G.request(s, { x: 30, y: 48, prefill: 10, decode: 6, label: 'C', owner: 'C' });
+    G.request(s, { x: 30, y: 68, prefill: 3, decode: 3, label: 'D', owner: 'D', idle: 2 });
+  }],
+  ['request steps', 'steps in px: queue · prefill · decode steps of different widths, then idle, each titled with its kind (serving-overview toy; widths come from stepTime)', 300, 56, (s) => {
+    G.request(s, { x: 30, y: 8, label: 'A', owner: 'A', steps: [
+      { from: 0, to: 40, kind: 'queue' }, { from: 40, to: 110, kind: 'prefill' }, { from: 110, to: 130, kind: 'decode' }, { from: 130, to: 150, kind: 'decode' }, { from: 150, to: 190, kind: 'decode' }, { from: 190, to: 230, kind: 'idle' }] });
+    G.request(s, { x: 30, y: 30, label: 'B', owner: 'B', steps: [{ from: 0, to: 110, kind: 'queue' }, { from: 110, to: 160, kind: 'prefill' }, { from: 160, to: 180, kind: 'decode' }] });
+  }],
+  ['token owner', 'a letter chip in its request\'s hue (batching, prefix-caching, disaggregation); owner and fill are exclusive', 300, 44, (s) => {
+    ['A', 'B', 'C', 'D'].forEach((o, i) => G.token(s, { x: 4 + i * 44, y: 8, text: o, owner: o }));
+  }],
+  ['blockPool refs, cached', 'refs prints a count above 1 beside the block number (paged-attention forks); cached: filled, no request holds it (prefix caching); free: a faint fill, never dashed', 330, 90, (s) => {
+    G.blockPool(s, { x: 4, y: 4, blocks: 6, blockSize: 4, perRow: 3, refs: [2, 1, 3, 1, 1, 1], slots: [
+      ...RECT_SLOTS('A', 4), ...RECT_SLOTS('A', 3), ...RECT_SLOTS('B', 1, 'reserved'), ...RECT_SLOTS('A', 4),
+      ...RECT_SLOTS('C', 4, 'cached'), ...RECT_SLOTS('B', 2), ...FREE_SLOTS(2), ...FREE_SLOTS(4)] });
+  }],
+  ['memBar minSegment', 'a nonzero segment under minSegment px widens to it under a bracket, the others rescale; the summary line keeps the true numbers (paged-attention)', 300, 100, (s) => {
+    G.memBar(s, { x: 4, y: 6, w: 280, useful: 53.7, reserved: 1, free: 45.3, minSegment: 18 });
+    G.memBar(s, { x: 4, y: 56, w: 280, useful: 23, reserved: 5, free: 20, minSegment: 18 });
+  }],
+  ['rack groups', 'a labeled bracket under each run of cells, never an outline: four 2-GPU prefill groups and one 8-GPU decode group (disaggregation frame 5); the followed GPU wears the selection mark', 330, 110, (s) => {
+    const groups = [0, 2, 4, 6].map((from, i) => ({ from, to: from + 1, label: `P${i + 1}` })).concat([{ from: 8, to: 15, label: 'decode' }]);
+    const L = G.rackLayout({ gpus: 16, cols: 8, groups });
+    G.rack(s, { x: 4, y: 4, gpus: 16, cols: 8, groups, label: 'one node' });
+    const c = L.cells[9];
+    G.selectionMark(s, { x: 4 + c.x, y: 4 + c.y, w: L.tile, h: L.tile });
+  }],
+  ['numberLine INT4', 'the 15 integers INT4 can store; each weight\'s dot at its exact value, a drop line to the tick it snaps to (quantization frame 2)', 320, 70, (s) => {
+    const grid = Array.from({ length: 15 }, (_, i) => i - 7);
+    G.numberLine(s, { x: 12, y: 8, w: 280, lo: -7, hi: 7, grid, label: 'INT4 grid', points: [{ value: 0, snapped: true }, { value: -0.4, snapped: true }, { value: 0.6, snapped: true }, { value: 2.1, snapped: true, followed: true }, { value: 7, snapped: true }] });
+  }],
+  ['numberLine E2M1', 'the 15 signed E2M1 values: uneven spacing, finest near zero; labels that would collide are left to the tick titles (quantization frame 6)', 320, 70, (s) => {
+    G.numberLine(s, { x: 12, y: 8, w: 280, lo: -6, hi: 6, grid: E2M1_GRID, label: 'E2M1 grid', points: [{ value: 0.2, snapped: true }, { value: 1.2, snapped: true }, { value: 5, snapped: true }] });
+  }],
+  ['prefixTree', 'blocks keyed by their tokens: hit (--sem-ok) · new (the request\'s hue) · cached (muted) · evicted (hatched); the followed path wears the selection mark; a path past wrapAfter blocks (here 3; the default is 4) continues on a second row, starting under the first block', 420, 190, (s) => {
+    G.prefixTree(s, { x: 4, y: 6, label: 'prefix tree', wrapAfter: 3, nodes: [
+      { id: 'r', parent: null, label: 'start', state: 'cached' },
+      { id: 'a1', parent: 'r', label: 'You are', state: 'hit' },
+      { id: 'a2', parent: 'a1', label: 'a cat', state: 'hit' },
+      { id: 'a3', parent: 'a2', label: 'Where', state: 'hit' },
+      { id: 'a4', parent: 'a3', label: 'cat sat', state: 'new', owner: 'C', followed: true },
+      { id: 'a5', parent: 'a4', label: 'on mat', state: 'new', owner: 'C', followed: true },
+      { id: 'b3', parent: 'a2', label: 'Say hi', state: 'evicted' },
+      { id: 'd3', parent: 'a2', label: 'Why did', state: 'new', owner: 'D' },
+    ] });
+  }],
+];
+
 const FIGURES = [
   ['token', 'idle · active · dim · value fill · hatched (gradient off)', 300, 44, (s) => {
     G.token(s, { x: 4, y: 8, text: 'The', index: 1 });
@@ -243,6 +306,7 @@ const FIGURES = [
     ] });
   }],
   ...TRAINING_FIGURES,
+  ...SERVING_FIGURES,
 ];
 $('#figures').replaceChildren(...FIGURES.map(([name, note, w, h, draw]) => {
   const fig = document.createElement('figure');

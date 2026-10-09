@@ -1,5 +1,5 @@
 // Systems glyphs: KV cache stacks, GPUs, racks and request timelines.
-import { svgEl, group, text, hatchRect } from './core.js';
+import { svgEl, group, text, hatchRect, requestSlot, REQUEST_OWNER } from './core.js';
 
 const clamp01 = (v) => Math.min(Math.max(Number(v) || 0, 0), 1);
 
@@ -60,49 +60,139 @@ export function gpu(parent, { x, y, w = 96, h = 72, memFill = 0, label, showMem 
   return g;
 }
 
+const RACK = { tile: 16, gap: 10, groupRoom: 16 }; // groupRoom: extra row height for a group's bracket and label (S6)
+const BRACKET_DROP = 3; // a bracket's top sits this far under its cells
+const BRACKET_LABEL = 15; // …and its label's baseline this far under the bracket's top
+const failRack = (msg) => { throw new RangeError(`glyphs.rack: ${msg}`); };
+
+function checkGroups(groups, gpus) {
+  if (groups == null) return;
+  if (!Array.isArray(groups)) failRack('groups must be an array of { from, to, label }');
+  groups.forEach((g) => {
+    if (!(Number.isInteger(g?.from) && Number.isInteger(g?.to) && g.from >= 0 && g.from <= g.to && g.to < gpus)) failRack(`a group needs 0 ≤ from ≤ to < ${gpus}, got ${g?.from} → ${g?.to}`);
+    if (typeof g.label !== 'string' || g.label.trim() === '') failRack(`a group needs a label (group ${g.from} → ${g.to})`);
+  });
+  const sorted = [...groups].sort((a, b) => a.from - b.from);
+  sorted.slice(1).forEach((g, i) => { if (g.from <= sorted[i].to) failRack(`groups must not overlap (${sorted[i].from} → ${sorted[i].to} and ${g.from} → ${g.to})`); });
+}
+
+// Geometry only (pure): the cell grid, and with `groups` a labeled bracket under each run of cells (one per row a
+// group touches; only the first of them prints the label). Groups add row height for the bracket and its label.
+export function rackLayout({ gpus = 8, cols = 4, groups = null }) {
+  checkGroups(groups, gpus);
+  const { tile, gap } = RACK;
+  const pitch = tile + gap + (groups?.length ? RACK.groupRoom : 0);
+  const rows = Math.ceil(gpus / cols);
+  const cells = Array.from({ length: gpus }, (_, i) => ({ i, row: Math.floor(i / cols), col: i % cols, x: gap + (i % cols) * (tile + gap), y: gap + Math.floor(i / cols) * pitch }));
+  const brackets = (groups ?? []).flatMap((group, index) => {
+    const mine = cells.slice(group.from, group.to + 1);
+    const rowsTouched = [...new Set(mine.map((c) => c.row))];
+    return rowsTouched.map((row, k) => {
+      const run = mine.filter((c) => c.row === row);
+      const x0 = run[0].x;
+      const x1 = run.at(-1).x + tile;
+      const y = run[0].y + tile + BRACKET_DROP;
+      return { group: index, label: group.label, row, first: k === 0, x0, x1, y, textX: (x0 + x1) / 2, textY: y + BRACKET_LABEL };
+    });
+  });
+  return { tile, gap, pitch, rows, w: cols * (tile + gap) + gap, h: rows * pitch + gap, cells, brackets };
+}
+
 // `labels` (S3, cluster-topology frame 8): one string per GPU, printed in its tile in place of the SM square
 // ('' keeps the square). Link thickness never encodes an amount (P3-R8): pages keep the default linkWidth.
-export function rack(parent, { x, y, gpus = 8, linkWidth = 2, label, cols = 4, labels = null }) {
+// `groups` (S6, P4-R13): [{ from, to, label }] (0-based, inclusive) draws a labeled bracket under each run of cells,
+// never an outline (outlines are selection). The page marks the followed GPU with G.selectionMark at rackLayout's cell.
+export function rack(parent, { x, y, gpus = 8, linkWidth = 2, label, cols = 4, labels = null, groups = null }) {
   if (labels != null && !(Array.isArray(labels) && labels.length === gpus && labels.every((t) => typeof t === 'string'))) throw new RangeError(`glyphs.rack: labels must be ${gpus} strings, one per GPU`);
-  const tile = 16;
-  const gap = 10;
-  const rows = Math.ceil(gpus / cols);
-  const w = cols * (tile + gap) + gap;
-  const h = rows * (tile + gap) + gap;
+  const L = rackLayout({ gpus, cols, groups });
+  const { tile, gap, pitch, rows, w, h } = L;
   const g = group(parent, 'g-rack', x, y, { role: 'img', 'aria-label': `${label ?? 'node'}: ${gpus} GPUs` });
   svgEl('rect', { class: 'g-frame', width: w, height: h, rx: 6 }, g);
   for (let r = 0; r < rows; r += 1) {
-    const cy = gap + r * (tile + gap) + tile / 2;
+    const cy = gap + r * pitch + tile / 2;
     svgEl('line', { class: 'g-link', x1: gap + tile / 2, y1: cy, x2: gap + (cols - 1) * (tile + gap) + tile / 2, y2: cy, 'stroke-width': linkWidth }, g);
     if (r > 0) {
-      svgEl('line', { class: 'g-link', x1: gap + tile / 2, y1: cy - (tile + gap), x2: gap + tile / 2, y2: cy, 'stroke-width': linkWidth }, g);
+      svgEl('line', { class: 'g-link', x1: gap + tile / 2, y1: cy - pitch, x2: gap + tile / 2, y2: cy, 'stroke-width': linkWidth }, g);
     }
   }
-  for (let i = 0; i < gpus; i += 1) {
-    const r = Math.floor(i / cols);
-    const c = i % cols;
-    const gx = gap + c * (tile + gap);
-    const gy = gap + r * (tile + gap);
+  L.cells.forEach(({ i, x: gx, y: gy }) => {
     svgEl('rect', { class: 'g-frame', x: gx, y: gy, width: tile, height: tile, rx: 2 }, g);
     if (labels?.[i]) text(g, gx + tile / 2, gy + tile / 2, labels[i], 'g-rack-label', { 'text-anchor': 'middle', 'dominant-baseline': 'central' });
     else svgEl('rect', { class: 'g-sm', x: gx + 3, y: gy + 3, width: tile - 6, height: tile - 6, rx: 1 }, g);
-  }
+  });
+  L.brackets.forEach((b) => {
+    svgEl('path', { class: 'g-bracket', d: `M${b.x0} ${b.y}v4H${b.x1}v-4` }, g);
+    if (b.first) text(g, b.textX, b.textY, b.label, 'g-label g-group-label', { 'text-anchor': 'middle' });
+  });
   if (label) text(g, w / 2, h + 12, label, 'g-label', { 'text-anchor': 'middle' });
   return g;
 }
 
-export function request(parent, { x, y, prefill, decode, unit = 6, label }) {
-  const h = 10;
+const REQ_H = 10;
+const STEP_KINDS = ['queue', 'prefill', 'decode', 'idle'];
+const failReq = (msg) => { throw new RangeError(`glyphs.request: ${msg}`); };
+
+function stepsLayout(steps) {
+  if (!Array.isArray(steps) || steps.length === 0) failReq('steps must be a non-empty array of { from, to, kind }');
+  steps.forEach((s) => {
+    if (!STEP_KINDS.includes(s?.kind)) failReq(`step kind must be one of ${STEP_KINDS.join(', ')}, got ${s?.kind}`);
+    if (!(Number.isFinite(s.from) && Number.isFinite(s.to) && s.from >= 0 && s.from < s.to)) failReq(`a step needs 0 ≤ from < to, got ${s.from} → ${s.to}`);
+  });
+  steps.slice(1).forEach((s, i) => { if (s.from < steps[i].to) failReq(`steps must not overlap (${steps[i].from} → ${steps[i].to} and ${s.from} → ${s.to})`); });
+  const placed = steps.map((s) => ({ kind: s.kind, from: s.from, to: s.to, x: s.from, width: s.to - s.from }));
+  return { mode: 'steps', h: REQ_H, steps: placed, ticks: [], idle: null, prefillW: 0, total: placed.at(-1).to, end: placed.at(-1).to };
+}
+
+// Geometry only (pure). Units mode (the default): a prefill block of `prefill × unit` px, then one tick per decode
+// token, then `idle` hatched units. Steps mode (S6, P4-R9): `steps` are given in px and the rest is ignored.
+export function requestLayout({ prefill, decode, unit = 6, idle = 0, steps = null }) {
+  if (steps != null) return stepsLayout(steps);
+  if (!(Number.isInteger(idle) && idle >= 0)) failReq(`idle must be an integer ≥ 0, got ${idle}`);
   const prefillW = Math.max(0, prefill) * unit;
   const total = prefillW + Math.max(0, decode) * unit;
-  const g = group(parent, 'g-request', x, y, { role: 'img', 'aria-label': `${label ?? 'request'}: prefill ${prefill} tokens, decode ${decode} tokens` });
+  const ticks = [];
+  for (let i = 1; i <= decode; i += 1) ticks.push(prefillW + i * unit);
+  return { mode: 'units', h: REQ_H, steps: [], prefillW, total, ticks, idle: idle > 0 ? { x: total, width: idle * unit } : null, end: total + idle * unit };
+}
+
+function drawSteps(g, L) {
+  const h = L.h;
+  L.steps.forEach((s) => {
+    const mark = svgEl('g', { class: `g-step g-step--${s.kind}` }, g);
+    svgEl('title', {}, mark).textContent = s.kind;
+    if (s.kind === 'queue') svgEl('rect', { class: 'g-queue', x: s.x, width: s.width, height: h, rx: 2 }, mark);
+    if (s.kind === 'prefill') svgEl('rect', { class: 'g-prefill', x: s.x, width: s.width, height: h, rx: 2 }, mark);
+    if (s.kind === 'idle') {
+      svgEl('rect', { class: 'g-idle-bg', x: s.x, width: s.width, height: h, rx: 2 }, mark);
+      hatchRect(mark, { x: s.x, width: s.width, height: h, rx: 2 });
+    }
+    if (s.kind === 'decode') {
+      svgEl('rect', { class: 'g-step-hit', x: s.x, width: s.width, height: h }, mark);
+      svgEl('line', { class: 'g-decode', x1: s.to, y1: 1, x2: s.to, y2: h - 1 }, mark);
+    }
+  });
+}
+
+const stepsSpoken = (steps) => STEP_KINDS.map((k) => [k, steps.filter((s) => s.kind === k).length]).filter(([, n]) => n > 0).map(([k, n]) => `${n} ${k}`).join(', ');
+
+// `owner` (S6, P4-R9): a letter A–D sets data-req (the --req hue). `idle`: n hatched units after the last tick (the
+// request waits while others finish). `steps`: [{ from, to, kind: queue | prefill | decode | idle }] in px, each
+// titled with its kind: the page computes the widths (from stepTime), so steps can vary in width and be drawn to scale.
+export function request(parent, { x, y, prefill, decode, unit = 6, label, owner, idle = 0, steps = null }) {
+  if (owner != null && !REQUEST_OWNER.test(owner)) failReq(`owner must be one of A, B, C, D, got ${owner}`);
+  const L = requestLayout({ prefill, decode, unit, idle, steps });
+  const spoken = L.mode === 'steps' ? stepsSpoken(L.steps) : `prefill ${prefill} tokens, decode ${decode} tokens`;
+  const g = group(parent, 'g-request', x, y, { role: 'img', 'aria-label': `${label ?? 'request'}: ${spoken}`, ...(owner == null ? {} : { 'data-req': requestSlot(owner) }) });
+  const h = L.h;
   if (label) text(g, -8, h / 2, label, 'g-label', { 'text-anchor': 'end', 'dominant-baseline': 'central' });
-  svgEl('line', { class: 'g-rail', x1: 0, y1: h / 2, x2: total, y2: h / 2 }, g);
-  if (prefillW > 0) svgEl('rect', { class: 'g-prefill', width: prefillW, height: h, rx: 2 }, g);
-  for (let i = 1; i <= decode; i += 1) {
-    const tx = prefillW + i * unit;
-    svgEl('line', { class: 'g-decode', x1: tx, y1: 1, x2: tx, y2: h - 1 }, g);
+  svgEl('line', { class: 'g-rail', x1: 0, y1: h / 2, x2: L.mode === 'steps' ? L.end : L.total, y2: h / 2 }, g);
+  if (L.mode === 'steps') {
+    drawSteps(g, L);
+    return g;
   }
+  if (L.prefillW > 0) svgEl('rect', { class: 'g-prefill', width: L.prefillW, height: h, rx: 2 }, g);
+  L.ticks.forEach((tx) => svgEl('line', { class: 'g-decode', x1: tx, y1: 1, x2: tx, y2: h - 1 }, g));
+  if (L.idle) hatchRect(g, { x: L.idle.x, width: L.idle.width, height: h, rx: 2 });
   return g;
 }
 

@@ -2,6 +2,7 @@
 // One geometry (barSegments) under both, so the two never drift apart. Plus `bars` (moe §4, S1): side-by-side counts.
 import { svgEl, group, text, hatchRect } from './core.js';
 import { sharePct } from '../../math/memory.js';
+import { formatDuration } from '../../math/core.js';
 
 const PART_HUES = 5;
 const MIN_PCT_WIDTH = 30; // narrower segments print their share in the legend instead
@@ -176,27 +177,189 @@ export function shareBar(parent, { x, y, w = 240, h = 14, parts, format = format
   return g;
 }
 
-// useful · reserved-but-empty (hatched: it holds nothing) · free. API and output unchanged since Plan 1.
-export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free }) {
+const MEM_NAMES = ['useful', 'reserved', 'free'];
+const MEM_BRACKET_DROP = 2; // a widened segment's bracket mark sits this far under the bar
+const MEM_NARROW_PCT_Y = 17; // …and its percentage under the bracket (other percentages sit at h + 13)
+
+// Geometry only (pure). The default (minSegment 0) is the Plan 1 drawing. With minSegment > 0 (S6, P4-R12) a nonzero
+// segment drawn narrower than minSegment px widens to it and the others rescale so the bar keeps its total width;
+// `value` stays the true amount, and `widened` segments get a bracket. Zero parts are not drawn.
+export function memBarLayout({ useful, reserved, free, w = 240, minSegment = 0 }) {
+  if (!(Number.isFinite(minSegment) && minSegment >= 0)) throw new RangeError(`glyphs.memBar: minSegment must be a number ≥ 0, got ${minSegment}`);
+  const values = [useful, reserved, free];
+  const base = barSegments(values, w);
+  const shown = MEM_NAMES.map((name, i) => ({ name, value: values[i], x: base[i].x, width: base[i].width, widened: false })).filter((s) => s.value > 0);
+  if (shown.every((s) => s.width >= minSegment)) return { w, segments: shown, brackets: [] };
+  const gaps = SEGMENT_GAP * (shown.length - 1);
+  const fixed = new Set();
+  for (let again = true; again;) {
+    const free_ = shown.filter((s) => !fixed.has(s.name));
+    const room = w - gaps - fixed.size * minSegment;
+    const sum = free_.reduce((a, s) => a + s.value, 0);
+    const narrow = free_.filter((s) => (s.value / sum) * room < minSegment);
+    narrow.forEach((s) => fixed.add(s.name));
+    again = narrow.length > 0 && narrow.length < free_.length;
+  }
+  const room = w - gaps - fixed.size * minSegment;
+  const sum = shown.filter((s) => !fixed.has(s.name)).reduce((a, s) => a + s.value, 0);
+  let cursor = 0;
+  const segments = shown.map((s) => {
+    const widened = fixed.has(s.name);
+    const width = widened ? minSegment : (s.value / sum) * room;
+    const placed = { ...s, x: cursor, width, widened };
+    cursor += width + SEGMENT_GAP;
+    return placed;
+  });
+  return { w, segments, brackets: segments.filter((s) => s.widened).map((s) => ({ name: s.name, x0: s.x, x1: s.x + s.width })) };
+}
+
+// useful · reserved-but-empty (hatched: it holds nothing) · free. Default output unchanged since Plan 1;
+// `minSegment` (S6): see memBarLayout.
+export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free, minSegment = 0 }) {
   if ([useful, reserved, free].some((n) => !(n >= 0))) throw new RangeError(`glyphs.memBar: parts must be numbers ≥ 0, got ${useful} / ${reserved} / ${free}`);
   const total = useful + reserved + free;
   if (!(total > 0)) throw new RangeError('glyphs.memBar: useful + reserved + free must be > 0');
+  const L = memBarLayout({ useful, reserved, free, w, minSegment });
   const pct = (n) => `${Math.round((n / total) * 100)}%`;
   const g = group(parent, 'g-membar', x, y, { role: 'img', 'aria-label': `memory: useful ${pct(useful)}, reserved but empty ${pct(reserved)}, free ${pct(free)}` });
-  const values = [useful, reserved, free];
-  const segs = barSegments(values, w);
-  ['useful', 'reserved', 'free'].forEach((name, i) => {
-    if (values[i] === 0) return;
-    const { x: sx, width } = segs[i];
+  L.segments.forEach(({ name, value, x: sx, width, widened }) => {
     if (name === 'reserved') {
       svgEl('rect', { class: 'g-reserved-bg', x: sx, width, height: h, rx: 2 }, g);
       hatchRect(g, { x: sx, width, height: h, rx: 2 });
     } else {
       svgEl('rect', { class: `g-${name}`, x: sx, width, height: h, rx: 2 }, g);
     }
-    if (width > 26) text(g, sx + width / 2, h + 13, pct(values[i]), 'g-pct', { 'text-anchor': 'middle' });
+    if (widened) {
+      svgEl('path', { class: 'g-bracket', d: `M${sx} ${h + MEM_BRACKET_DROP}v4H${sx + width}v-4` }, g);
+      text(g, sx + width / 2, h + MEM_NARROW_PCT_Y, pct(value), 'g-pct', { 'text-anchor': 'middle' });
+    } else if (width > 26) text(g, sx + width / 2, h + 13, pct(value), 'g-pct', { 'text-anchor': 'middle' });
   });
   text(g, 0, h + 28, `useful ${useful} · reserved ${reserved} · free ${free}`, 'g-label');
+  return g;
+}
+
+// ---- stepBar (prefill-decode §4, P4-R8): a step's time as reading against arithmetic, on one held seconds scale ----
+const STEP_MIN_SEGMENT = 18; // a part the learner must read is at least this wide (README lesson 19)
+const STEP_GAP = 3; // between the parts of the reading row
+const STEP_CHAR_W = 6.6;
+const STEP_INSIDE_PAD = 8;
+const STEP_TOTAL_GAP = 6; // the step total and "overlapped" print this far right of their row
+const STEP_BELOW = 17; // first below-bar label baseline, under the bar
+const STEP_LINE = 12; // further below-bar lines
+const STEP_ROW_GAP = 8;
+const STEP_EPS = 1e-12;
+const failStep = (msg) => { throw new RangeError(`glyphs.stepBar: ${msg}`); };
+
+function checkStep({ w, h, scaleS, reading, mathS }, format) {
+  if (!(Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0)) failStep(`w and h must be finite numbers > 0, got ${w} × ${h}`);
+  if (!(Number.isFinite(scaleS) && scaleS > 0)) failStep(`scaleS must be a finite number > 0 (the seconds the full width stands for), got ${scaleS}`);
+  if (!Array.isArray(reading) || reading.length === 0) failStep('reading must be a non-empty array of { label, s }');
+  reading.forEach((p, i) => {
+    if (typeof p?.label !== 'string' || p.label.trim() === '') failStep(`reading part ${i} needs a label`);
+    if (!(Number.isFinite(p.s) && p.s >= 0)) failStep(`reading part "${p.label}" s must be a finite number ≥ 0, got ${p.s}`);
+  });
+  if (!(Number.isFinite(mathS) && mathS >= 0)) failStep(`mathS must be a finite number ≥ 0, got ${mathS}`);
+  const readingS = reading.reduce((a, p) => a + p.s, 0);
+  if (readingS > scaleS * (1 + STEP_EPS)) failStep(`reading ${readingS} s runs past scaleS ${scaleS} s; hold one scale across frames`);
+  if (mathS > scaleS * (1 + STEP_EPS)) failStep(`arithmetic ${mathS} s runs past scaleS ${scaleS} s; hold one scale across frames`);
+  if (typeof format !== 'function') failStep('format must be a function');
+}
+
+// One row's segments on the scale. Parts keep a 3 px gap; a nonzero part narrower than 18 px widens to 18 (the rest
+// of the row shifts right) and gets a bracket; its true value stays in `s`, `text` and `title`.
+function placeStepRow(parts, { w, h, scaleS, format, y }) {
+  const nonzero = parts.filter((p) => p.s > 0);
+  let cursor = 0;
+  const segments = parts.map((p) => {
+    const last = nonzero.length > 0 && p === nonzero.at(-1);
+    const pw = (p.s / scaleS) * w;
+    const raw = pw - (last ? 0 : STEP_GAP);
+    const widened = p.s > 0 && raw < STEP_MIN_SEGMENT;
+    const width = p.s === 0 ? 0 : widened ? STEP_MIN_SEGMENT : raw;
+    const seg = { label: p.label, s: p.s, x: cursor, width, widened, y, h, title: `${p.label}: ${format(p.s)}`, text: `${p.label} ${format(p.s)}` };
+    cursor += p.s === 0 ? 0 : widened ? STEP_MIN_SEGMENT + (last ? 0 : STEP_GAP) : pw;
+    return seg;
+  });
+  return { segments, end: cursor };
+}
+
+// Text goes inside a segment that fits it; otherwise below the bar, centered under the segment, on the first line
+// where it clears the labels already there.
+function placeStepText(segments, w) {
+  const lineEnds = [];
+  segments.filter((s) => s.width > 0).forEach((seg) => {
+    const len = seg.text.length * STEP_CHAR_W;
+    if (len + STEP_INSIDE_PAD <= seg.width) {
+      Object.assign(seg, { textInside: true, textX: seg.x + seg.width / 2, line: null });
+      return;
+    }
+    const half = len / 2;
+    const textX = Math.min(Math.max(seg.x + seg.width / 2, half), Math.max(w - half, half));
+    let line = 0;
+    while ((lineEnds[line] ?? -Infinity) + STEP_INSIDE_PAD > textX - half) line += 1;
+    lineEnds[line] = textX + half;
+    Object.assign(seg, { textInside: false, textX, line });
+  });
+  return lineEnds.length;
+}
+
+// Geometry only (pure). `scaleS` is the seconds the full width `w` stands for, held across frames; the longer row is
+// the step, the shorter row is faint and labeled "overlapped" (the roofline's max); a tie fades neither.
+export function stepBarLayout({ w = 300, h = 14, scaleS, reading, mathS, format = formatDuration }) {
+  checkStep({ w, h, scaleS, reading, mathS }, format);
+  const readingS = reading.reduce((a, p) => a + p.s, 0);
+  const stepS = Math.max(readingS, mathS);
+  const tied = Math.abs(readingS - mathS) <= STEP_EPS * stepS;
+  const longer = tied ? 'tie' : readingS > mathS ? 'reading' : 'arithmetic';
+  const first = placeStepRow(reading, { w, h, scaleS, format, y: 0 });
+  const firstLines = placeStepText(first.segments, w);
+  const secondY = h + (STEP_BELOW + STEP_LINE * Math.max(firstLines - 1, 0)) + STEP_ROW_GAP;
+  const second = placeStepRow([{ label: 'arithmetic', s: mathS }], { w, h, scaleS, format, y: secondY });
+  const secondLines = placeStepText(second.segments, w);
+  const rows = [
+    { kind: 'reading', y: 0, faint: longer === 'arithmetic', end: first.end, segments: first.segments },
+    { kind: 'arithmetic', y: secondY, faint: longer === 'reading', end: second.end, segments: second.segments },
+  ];
+  const stepRow = longer === 'arithmetic' ? rows[1] : rows[0];
+  const shortRow = longer === 'reading' ? rows[1] : longer === 'arithmetic' ? rows[0] : null;
+  const total = { text: format(stepS), x: stepRow.end + STEP_TOTAL_GAP, y: stepRow.y + h / 2 };
+  const overlapped = shortRow ? { text: 'overlapped', x: shortRow.end + STEP_TOTAL_GAP, y: shortRow.y + h / 2 } : null;
+  const brackets = rows.flatMap((r) => r.segments.filter((s) => s.widened).map((s) => ({ row: r.kind, x0: s.x, x1: s.x + s.width, y: r.y + h + 2 })));
+  const right = Math.max(w, total.x + total.text.length * STEP_CHAR_W, overlapped ? overlapped.x + overlapped.text.length * STEP_CHAR_W : 0);
+  const height = secondY + h + (secondLines > 0 ? STEP_BELOW + STEP_LINE * (secondLines - 1) : 0);
+  return { w, h, scaleS, stepS, longer, rows, total, overlapped, brackets, extent: right, height };
+}
+
+function drawStepRow(g, row, h) {
+  const rowG = svgEl('g', { class: `g-step-row g-step-row--${row.kind}${row.faint ? ' g-faint' : ''}` }, g);
+  const fill = row.kind === 'reading' ? 'g-step--memory' : 'g-step--compute';
+  row.segments.filter((s) => s.width > 0).forEach((s) => {
+    const rect = svgEl('rect', { class: `g-step-seg ${fill}`, x: num2(s.x), y: s.y, width: num2(s.width), height: h, rx: 2 }, rowG);
+    svgEl('title', {}, rect).textContent = s.title;
+  });
+}
+
+const num2 = (v) => Number(v.toFixed(2));
+
+function drawStepTexts(g, row, h) {
+  row.segments.filter((s) => s.width > 0).forEach((s) => {
+    if (s.textInside) text(g, num2(s.textX), s.y + h / 2, s.text, 'g-step-text', { 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    else text(g, num2(s.textX), s.y + h + STEP_BELOW + STEP_LINE * s.line, s.text, 'g-label g-step-text', { 'text-anchor': 'middle' });
+  });
+}
+
+// Two rows on one seconds scale: the reading parts (--sem-memory, each with its name and time) over the arithmetic
+// (--sem-compute). The step is the longer row and prints its total at the row's right end; the shorter row is faint
+// and says "overlapped". No animation: pages interpolate the seconds they pass in.
+export function stepBar(parent, { x, y, w = 300, h = 14, scaleS, reading, mathS, format = formatDuration, label = 'step time' }) {
+  const L = stepBarLayout({ w, h, scaleS, reading, mathS, format });
+  const parts = reading.map((p) => `${p.label} ${format(p.s)}`).join(', ');
+  const g = group(parent, 'g-stepbar', x, y, { role: 'img', 'aria-label': `${label}: reading ${parts}; arithmetic ${format(mathS)}; step ${L.total.text}` });
+  L.rows.forEach((row) => drawStepRow(g, row, h));
+  L.brackets.forEach((b) => svgEl('path', { class: 'g-bracket', d: `M${num2(b.x0)} ${b.y}v4H${num2(b.x1)}v-4` }, g));
+  L.rows.forEach((row) => drawStepTexts(g, row, h));
+  text(g, num2(L.total.x), L.total.y, L.total.text, 'g-step-total', { 'dominant-baseline': 'central' });
+  if (L.overlapped) text(g, num2(L.overlapped.x), L.overlapped.y, L.overlapped.text, 'g-label g-step-overlapped', { 'dominant-baseline': 'central' });
   return g;
 }
 
