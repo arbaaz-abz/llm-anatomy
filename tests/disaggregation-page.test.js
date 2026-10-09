@@ -277,3 +277,13 @@ test('the try-this list is the storyboard\'s, with every number computed (§6)',
   assert.deepEqual(printed, TRY_THIS);
   tryThis(setup).forEach(({ prompt }) => assert.match(prompt, /[.:]$/, 'each prompt ends in a full stop or colon before " → "'));
 });
+
+test('frame 6 routing: 64 users deal six experts each, every one of the 384 experts exactly once; expert 0 gets one token', async () => {
+  const { ROUTES, EXPERT0_TOKEN } = await import('../serving/concepts/disaggregation/frames-experts.js');
+  const all = ROUTES.flat();
+  assert.equal(ROUTES.length, 64);
+  assert.ok(ROUTES.every((r) => r.length === 6 && new Set(r).size === 6));
+  assert.equal(new Set(all).size, 384);
+  assert.equal(all.filter((e) => e === 0).length, 1);
+  assert.ok(EXPERT0_TOKEN >= 0 && EXPERT0_TOKEN < 64);
+});
