@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateLessonSpec } from '../shared/lesson-spec.js';
-import { fillClaim } from '../shared/claims.js';
+import { fillClaim, fillText } from '../shared/claims.js';
 import { stepTime, RUNNING_EXAMPLE, TOY_REQUESTS } from '../math/serving.js';
 import { simulateStatic, simulateContinuous, scheduleTokens } from '../math/batching.js';
 import { LESSON, lessonFor, BELOW } from '../serving/concepts/batching/content.js';
@@ -110,4 +110,36 @@ test('model: rows, seats, scrubbing purity and errors', () => {
   assert.equal(F.idleLine([{ id: 'X', waited: 1, arrives: 2, admitted: 3 }], 0, () => 0), 'X waiting step 2');
   assert.equal(F.busyLine(stat.sim, 3, false), 'busy 3 of 33 seat-steps');
   assert.equal(M.widenedLane({ requests: LONG, shortRequests: R, blend: 1 }).edges.at(-1), M.msLane({ kind: 'continuous', requests: LONG }).edges.at(-1));
+});
+
+test('with D\'s 4,096-token prompt the lanes are compared in milliseconds, never in step counts (batching-1)', () => {
+  for (const budget of TOY_LIMITS.budgets) {
+    const v = toyView({ ...INITIAL_STATE, dPrompt: 4096, budget });
+    const sc = scenario({ ...INITIAL_STATE, dPrompt: 4096, budget });
+    assert.deepEqual(v.summaryRows.map((r) => r.label), ['Run ends at', 'D done at']);
+    const [ends, dDone] = v.summaryRows.map((r) => r.cells.map((c) => c.value));
+    assert.deepEqual(ends, ['static', 'continuous'].map((k) => F.ms(sc.lanes[k].edges.at(-1))));
+    assert.deepEqual(dDone, ['static', 'continuous'].map((k) => F.ms(M.timing(sc.lanes[k], 'D').doneMs)));
+    assert.match(v.summaryNote, /compared in milliseconds\.$/);
+    assert.equal(v.requestsTitle, 'Per request, in steps (steps differ in length)');
+    // Continuous batching reads as the better lane in time, as the page teaches.
+    assert.ok(M.timing(sc.lanes.continuous, 'D').doneMs < M.timing(sc.lanes.static, 'D').doneMs, `budget ${budget}`);
+    assert.ok(sc.lanes.continuous.edges.at(-1) < sc.lanes.static.edges.at(-1), `budget ${budget}`);
+  }
+  const steps = toyView(INITIAL_STATE);
+  assert.equal(steps.summaryNote, '');
+  assert.equal(steps.requestsTitle, 'Per request, in steps');
+});
+
+test('rows 1 and 6 print their dates from the keys (XS-4)', () => {
+  const rows = factRows(data).map((r) => fillText(r.claim, data));
+  assert.match(rows[0], /worked example, Nov 2025\)\.$/);
+  assert.match(rows[5], /\(vLLM, 2026-02-03\)\.$/);
+});
+test('the table and frame 1 call the output "decode steps" (XS-1)', async () => {
+  const src = await readFile(new URL('../serving/concepts/batching/stage-lanes.js', import.meta.url), 'utf8');
+  assert.match(src, /\['decode steps', 232\]/);
+  assert.match(src, /`\$\{r\.output\} steps`/);
+  const frames = await readFile(new URL('../serving/concepts/batching/frames-lanes.js', import.meta.url), 'utf8');
+  assert.match(frames, /Prefill ends with a request\\'s first token; each tick after it is one decode step\./);
 });

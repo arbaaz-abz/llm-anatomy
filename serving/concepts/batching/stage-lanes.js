@@ -14,7 +14,7 @@ export const pxRows = (lane, scale = STEP_PX) => lane.rows.map((r) => pxRow(r, s
 
 // The request table of frame 1 (plain text numbers; the cast every later frame reuses).
 const TABLE = Object.freeze({ headY: SLOT_TOP[1] + 22, firstY: SLOT_TOP[1] + 30, pitch: 26 });
-const COLUMNS = Object.freeze([['arrives', 76], ['prompt', 150], ['output', 232]]);
+const COLUMNS = Object.freeze([['arrives', 76], ['prompt', 150], ['decode steps', 232]]);
 
 export function requestTable(parent, opacity = 1) {
   if (opacity <= 0) return;
@@ -25,7 +25,7 @@ export function requestTable(parent, opacity = 1) {
     const y = TABLE.firstY + i * TABLE.pitch;
     G.token(g, { x: X0, y, text: r.id, owner: r.id });
     if (r.id === 'D') G.selectionMark(g, { x: X0, y, w: 28, h: CHIP_H });
-    const text = [`step ${r.arrives}`, `${r.prompt} tokens`, `${r.output} tokens`];
+    const text = [`step ${r.arrives}`, `${r.prompt} tokens`, `${r.output} steps`];
     COLUMNS.forEach(([, dx], c) => note(g, X0 + dx, y + CHIP_H / 2 + 4, text[c], { cls: 'g-label' }));
   });
 }

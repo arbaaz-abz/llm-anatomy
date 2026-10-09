@@ -6,7 +6,7 @@ import { mountSlider } from '@shared/ui/slider.js';
 import { mountChoice } from '@shared/ui/choice.js';
 import { createToyState } from '@shared/ui/toy-state.js';
 import { readoutTable } from '@shared/ui/readout-table.js';
-import { INITIAL_STATE, TOY_LIMITS, PROMPT_OPTIONS, BUDGET_OPTIONS, toyView, tryThis } from './toy-view.js';
+import { INITIAL_STATE, REQUESTS_TITLE, TOY_LIMITS, PROMPT_OPTIONS, BUDGET_OPTIONS, toyView, tryThis } from './toy-view.js';
 import { drawToy, TOY_STAGE } from './toy-draw.js';
 
 const STEP_HEADS = ['admitted', 'done', 'waited'];
@@ -36,14 +36,14 @@ function buildDom(host) {
   const refs = {
     sliders: [el('div'), el('div')], prompt: el('div'), budget: el('div'), budgetNote: el('p', { className: 'toy-note', textContent: 'The token budget applies to the continuous lane only.' }),
     svg: G.svgEl('svg', { width: TOY_STAGE.w, height: TOY_STAGE.h, viewBox: `0 0 ${TOY_STAGE.w} ${TOY_STAGE.h}`, role: 'img' }),
-    summary: el('div'), requests: el('div'), timing: el('div'),
+    summary: el('div'), summaryNote: el('p', { className: 'toy-note' }), requestsTitle: el('h4', { textContent: REQUESTS_TITLE }), requests: el('div'), timing: el('div'),
   };
   refs.budgetBox = el('div', {}, [refs.budget, refs.budgetNote]);
   refs.controls = el('div', { className: 'toy-controls' }, [...refs.sliders, refs.prompt, refs.budgetBox]);
   host.append(
     refs.controls, el('div', { className: 'scroll-x' }, [refs.svg]),
-    el('h4', { textContent: 'Both lanes' }), refs.summary,
-    el('h4', { textContent: 'Per request, in steps' }), el('div', { className: 'scroll-x' }, [refs.requests]),
+    el('h4', { textContent: 'Both lanes' }), refs.summary, refs.summaryNote,
+    refs.requestsTitle, el('div', { className: 'scroll-x' }, [refs.requests]),
     el('h4', { textContent: 'In milliseconds' }), refs.timing,
     ...tryThisList(),
   );
@@ -53,6 +53,9 @@ function buildDom(host) {
 function paint(refs, view) {
   drawToy(refs.svg, view);
   refs.summary.replaceChildren(summaryTable(view));
+  refs.summaryNote.textContent = view.summaryNote;
+  refs.summaryNote.hidden = !view.summaryNote;
+  refs.requestsTitle.textContent = view.requestsTitle;
   refs.requests.replaceChildren(requestsTable(view));
   refs.timing.replaceChildren(timingTable(view));
   refs.budgetBox.hidden = !view.showBudget;

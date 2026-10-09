@@ -108,6 +108,15 @@ test.describe('batching toy: the seat timeline', () => {
     await expect(readout(page, 'a-done')).toHaveText('116 ms');
     await expect(readout(page, 'c-done')).toHaveText('189 ms');
     await expect(readout(page, 'd-first-token')).toHaveText('348 ms');
+    // Steps differ in length here, so the lanes are compared in milliseconds, and continuous D finishes first.
+    await expect(page.getByText('Steps differ in length once D\'s long prompt runs, so the lanes are compared in milliseconds.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Per request, in steps (steps differ in length)' })).toBeVisible();
+    await expect(readout(page, 'static-run-ends')).toContainText('ms');
+    await expect(readout(page, 'continuous-d-done')).toContainText('ms');
+    await expect(readout(page, 'static-last-step')).toHaveCount(0);
+    await page.locator('#dPrompt [data-value="6"]').click();
+    await expect(readout(page, 'static-last-step')).toHaveText('10');
+    await expect(page.getByText('compared in milliseconds')).toHaveCount(0);
   });
 
   test('every control combination draws both lanes without errors and the budget hides again with a short prompt', async ({ page }) => {

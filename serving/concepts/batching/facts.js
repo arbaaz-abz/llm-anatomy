@@ -14,7 +14,7 @@ export const FRAMING = 'Every engine named below schedules this way today. The n
 // The six rows of storyboard §8, in order.
 export function factRows(data) {
   return [
-    { claim: 'Padded static batching: adding a 100-token prompt to 8 running requests wastes {sv:hf-continuous-batching.pad_waste_example} pad tokens (Hugging Face\'s worked example).' },
+    { claim: 'Padded static batching: adding a 100-token prompt to 8 running requests wastes {sv:hf-continuous-batching.pad_waste_example} pad tokens (Hugging Face\'s worked example, {sv:hf-continuous-batching.date|date}).' },
     { claim: 'Continuous (iteration-level) batching: Orca, {sv:orca.venue}; finished requests leave and waiting ones join at every step.' },
     { claim: 'vLLM\'s engine loop, every step: {sv:vllm.engine_loop}.' },
     {
@@ -22,7 +22,7 @@ export function factRows(data) {
         + `and up to ${ratio(data, 'gain_falcon180b_8xa100')} for Falcon-180B on 8 A100s, compared with Orca and vLLM.{sv:sarathi-serve.gain_mistral7b_a100|cite}{sv:sarathi-serve.gain_falcon180b_8xa100|cite}`,
     },
     { claim: 'Engine knobs: {sv:vllm.scheduler_knobs}. vLLM V1 preempts by {sv:vllm.v1_preemption}.' },
-    { claim: 'On GB200 with DeepSeek-R1, vLLM reports: {sv:vllm-gb200-dsr1.note_chunking}.' },
+    { claim: 'On GB200 with DeepSeek-R1, vLLM reports: {sv:vllm-gb200-dsr1.note_chunking} (vLLM, {sv:vllm-gb200-dsr1.date}).' },
   ];
 }
 

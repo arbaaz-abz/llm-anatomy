@@ -30,8 +30,8 @@ const MATH_NOTES = Object.freeze([
 ]);
 
 const TAKEAWAYS = Object.freeze([
-  'Static batching holds seats until the longest member is done and makes newcomers wait; continuous batching re-forms the batch every step, so a freed seat is reused at once (frames 2 to 6, try-this 1 and 2).',
-  'Prefill and decode can share a step, so a long prompt can stall everyone\'s stream; chunked prefill caps each step\'s tokens and bounds the stall at a small cost to that prompt\'s TTFT (frames 7 to 9, try-this 4).',
+  'Static batching holds seats until the longest member is done and makes newcomers wait; continuous batching re-forms the batch every step, so a freed seat is reused at once (frames 2–6, try-this 1 and 2).',
+  'Prefill and decode can share a step, so a long prompt can stall everyone\'s stream; chunked prefill caps each step\'s tokens and bounds the stall at a small cost to that prompt\'s TTFT (frames 7–9, try-this 4).',
   'A seat only helps if someone is waiting, and in 2023 engines each seat reserved KV for the longest answer, which kept seats scarce; [[paged-attention]] lifts that limit (frame 10, try-this 3).',
 ]);
 

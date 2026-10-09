@@ -14,6 +14,9 @@ export const PROMPT_OPTIONS = Object.freeze([{ value: SHORT_PROMPT, label: `${SH
 export const BUDGET_OPTIONS = Object.freeze([{ value: 0, label: 'off' }, { value: 2048, label: formatInt(2048) }, { value: 512, label: '512' }]);
 export const TOY_INTRO = `Four hand-picked requests (the same four as in [[paged-attention]]). Steps are timed with Llama-3.1-70B on one H200; memory is not modeled here.`;
 
+export const SUMMARY_NOTE_MS = 'Steps differ in length once D\'s long prompt runs, so the lanes are compared in milliseconds.';
+export const REQUESTS_TITLE = 'Per request, in steps';
+
 function checkState({ seats, cOutput, dPrompt, budget }) {
   if (!TOY_LIMITS.seats.includes(seats)) throw new RangeError(`toyView: seats must be one of ${TOY_LIMITS.seats.join(', ')}, got ${seats}`);
   if (!Number.isInteger(cOutput) || cOutput < TOY_LIMITS.cOutput[0] || cOutput > TOY_LIMITS.cOutput[1]) throw new RangeError(`toyView: cOutput must be an integer ${TOY_LIMITS.cOutput.join('–')}, got ${cOutput}`);
@@ -58,7 +61,19 @@ function requestRows(lanes) {
   }));
 }
 
-function summaryRows(lanes) {
+const KINDS = ['static', 'continuous'];
+
+// With D's long prompt the steps differ in length, so the lanes are compared in time, never in step counts (lesson 25).
+function summaryRowsMs(lanes) {
+  const cells = (name, at) => KINDS.map((kind) => ({ name: `${kind}-${name}`, value: ms(at(lanes[kind])) }));
+  return [
+    { label: 'Run ends at', sub: 'end of the last step, on the running example', cells: cells('run-ends', (lane) => lane.edges.at(-1)) },
+    { label: 'D done at', cells: cells('d-done', (lane) => timing(lane, 'D').doneMs) },
+  ];
+}
+
+function summaryRows(lanes, mode) {
+  if (mode === 'ms') return summaryRowsMs(lanes);
   const sums = { static: laneSummary(lanes.static), continuous: laneSummary(lanes.continuous) };
   const cell = (field, text) => ['static', 'continuous'].map((kind) => ({ name: `${kind}-${field}`, value: text(sums[kind]) }));
   return [
@@ -88,7 +103,9 @@ export function toyView(state) {
     lanes: sc.lanes,
     titles: { static: laneTitle('static', state.seats), continuous: laneTitle('continuous', state.seats) },
     requestRows: requestRows(sc.lanes),
-    summaryRows: summaryRows(sc.lanes),
+    summaryRows: summaryRows(sc.lanes, sc.mode),
+    summaryNote: sc.mode === 'ms' ? SUMMARY_NOTE_MS : '',
+    requestsTitle: sc.mode === 'ms' ? `${REQUESTS_TITLE} (steps differ in length)` : REQUESTS_TITLE,
     timingRows: timingRows(sc.timed),
     axisMs: sc.mode === 'ms' ? Math.ceil(Math.max(sc.lanes.static.edges.at(-1), sc.lanes.continuous.edges.at(-1)) / 50) * 50 : null,
     axisSteps: Math.max(sc.lanes.static.edges.length - 1, sc.lanes.continuous.edges.length - 1),

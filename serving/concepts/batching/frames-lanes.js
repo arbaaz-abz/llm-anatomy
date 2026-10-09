@@ -12,6 +12,7 @@ import { TITLES } from './numbers.js';
 const STATIC_END = STATIC.sim.steps; // 11: the static run ends after step 10
 const CONT_END = CONT.sim.steps; // 7
 const DIM = 0.45;
+const STEP_RULE = 'Prefill ends with a request\'s first token; each tick after it is one decode step.'; // XS-1
 const D_ROW = (lane) => lane.rows.find((r) => r.id === 'D');
 
 // Frame 1: three empty seats, the queue, and the request table.
@@ -24,6 +25,7 @@ export function drawFrame1(svg, p) {
   requestTable(svg, seg(p, 0.2, 0.8));
   noteAt(svg, `1 step ≈ 14.6 ms here (Llama-3.1-70B, FP8, one H200)`, 304, { opacity: fade });
   noteAt(svg, `memory is not modeled on this page, which is why ${TITLES.pagedAttention} comes next`, 322, { opacity: fade });
+  noteAt(svg, STEP_RULE, 340, { opacity: fade });
 }
 
 // Frame 2: static lane. A, B, C slide onto seats at step 0 and run until C is done.
@@ -36,6 +38,7 @@ export function drawFrame2(svg, p) {
   const keep = leaving(p);
   noteAt(svg, `1 step ≈ 14.6 ms here (Llama-3.1-70B, FP8, one H200)`, 304, { opacity: keep });
   noteAt(svg, `memory is not modeled on this page, which is why ${TITLES.pagedAttention} comes next`, 322, { opacity: keep });
+  noteAt(svg, STEP_RULE, 340, { opacity: keep });
 }
 
 // Frame 3: the idle hold fills in; D waits in the queue.
