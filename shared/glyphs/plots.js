@@ -254,3 +254,79 @@ export function roofline(parent, { x, y, w = 360, h = 240, peakTflops, bandwidth
   if (L.ridge.label) text(g, round(L.ridge.x) - 4, round(L.ridge.y) - 8, L.ridge.label, 'g-label g-ridge-label', { 'text-anchor': 'end' });
   return g;
 }
+
+// ---- numberLine (quantization §4, P4-R14): the values a format can store, and where weights land ----
+const NL = { dotY: 4, dotR: 4, axisY: 24, tick: 4, labelY: 42, labelGap: 4, minLabelDx: 20 };
+const NL_TIE_EPS = 1e-12;
+const failLine = (msg) => { throw new RangeError(`glyphs.numberLine: ${msg}`); };
+const nlFormat = (v) => (v < 0 ? `−${Math.abs(v)}` : String(v));
+
+function checkLine({ w, lo, hi, grid, points }) {
+  if (!(isNum(w) && w > 0)) failLine(`w must be a finite number > 0, got ${w}`);
+  if (!(isNum(lo) && isNum(hi) && hi > lo)) failLine(`hi (${hi}) must exceed lo (${lo})`);
+  if (!Array.isArray(grid) || grid.length === 0 || !grid.every(isNum)) failLine('grid must be a non-empty array of finite numbers');
+  grid.forEach((v) => { if (v < lo || v > hi) failLine(`grid value ${v} lies outside [${lo}, ${hi}]`); });
+  if (!Array.isArray(points)) failLine('points must be an array');
+  points.forEach((p) => { if (!isNum(p?.value) || p.value < lo || p.value > hi) failLine(`point value ${p?.value} lies outside [${lo}, ${hi}]`); });
+}
+
+// The grid value nearest to v; a tie goes to the smaller magnitude (then the smaller value): round toward zero.
+function nearestGrid(sorted, v) {
+  return sorted.reduce((best, g) => {
+    const d = Math.abs(g - v);
+    const bd = Math.abs(best - v);
+    if (d < bd - NL_TIE_EPS) return g;
+    if (d > bd + NL_TIE_EPS) return best;
+    return Math.abs(g) < Math.abs(best) || (Math.abs(g) === Math.abs(best) && g < best) ? g : best;
+  });
+}
+
+// A tick prints its number when it clears the labels already printed: the two ends and zero first, then the rest in order.
+function labelTicks(ticks) {
+  const width = (t) => t.title.length * CHAR_W;
+  const clears = (a, b) => Math.abs(a.x - b.x) >= Math.max(NL.minLabelDx, (width(a) + width(b)) / 2 + NL.labelGap);
+  const priority = new Set([ticks[0], ticks.at(-1), ...ticks.filter((t) => t.value === 0)]);
+  const printed = [];
+  [...priority, ...ticks.filter((t) => !priority.has(t))].forEach((t) => {
+    if (printed.every((p) => clears(p, t))) printed.push(t);
+  });
+  return ticks.map((t) => ({ ...t, label: printed.includes(t) ? t.title : null }));
+}
+
+// Geometry only (pure): lo and hi at the two ends of [0, w]; a tick per grid value at its true place (so uneven grids
+// look uneven); each point's dot at its exact value, with the grid value it snaps to. A `snapped` point also draws
+// its drop line to that tick.
+export function numberLineLayout({ w = 280, lo, hi, grid, points = [] }) {
+  checkLine({ w, lo, hi, grid, points });
+  const toX = (v) => ((v - lo) / (hi - lo)) * w;
+  const sorted = [...new Set(grid)].sort((a, b) => a - b);
+  const ticks = labelTicks(sorted.map((value) => ({ value, x: toX(value), title: nlFormat(value) })));
+  const placed = points.map((p) => {
+    const snappedValue = nearestGrid(sorted, p.value);
+    return { value: p.value, x: toX(p.value), y: NL.dotY, snapped: Boolean(p.snapped), snappedValue, snappedX: toX(snappedValue), followed: Boolean(p.followed) };
+  });
+  return { w, lo, hi, toX, axisY: NL.axisY, ticks, points: placed, height: NL.labelY + 4 };
+}
+
+// A horizontal axis with a tick at every value the format can store and a dot per weight. Dots are never colored by
+// value; position and the printed tick numbers carry it. `followed` gets the selection mark.
+export function numberLine(parent, { x, y, w = 280, lo, hi, grid, points = [], label = 'number line' }) {
+  const L = numberLineLayout({ w, lo, hi, grid, points });
+  const g = group(parent, 'g-nl', x, y, { role: 'img', 'aria-label': `${label}: ${L.ticks.length} grid values from ${nlFormat(lo)} to ${nlFormat(hi)}; ${points.length} point${points.length === 1 ? '' : 's'}` });
+  svgEl('line', { class: 'g-nl-axis', x1: 0, y1: L.axisY, x2: w, y2: L.axisY }, g);
+  const hit = new Set(L.points.filter((p) => p.snapped).map((p) => p.snappedValue));
+  L.ticks.forEach((t) => {
+    const tick = svgEl('line', { class: `g-nl-tick${hit.has(t.value) ? ' g-nl-tick--hit' : ''}`, x1: t.x, y1: L.axisY - NL.tick, x2: t.x, y2: L.axisY + NL.tick }, g);
+    svgEl('title', {}, tick).textContent = t.title;
+    if (t.label !== null) text(g, t.x, NL.labelY, t.label, 'g-label g-nl-label', { 'text-anchor': 'middle' });
+  });
+  L.points.forEach((p) => {
+    if (p.snapped) svgEl('line', { class: 'g-nl-drop', x1: p.x, y1: p.y + NL.dotR, x2: p.snappedX, y2: L.axisY }, g);
+  });
+  L.points.forEach((p) => {
+    const dot = svgEl('circle', { class: 'g-nl-dot', cx: p.x, cy: p.y, r: NL.dotR }, g);
+    svgEl('title', {}, dot).textContent = p.snapped ? `${nlFormat(p.value)} snaps to ${nlFormat(p.snappedValue)}` : nlFormat(p.value);
+    if (p.followed) selectionMark(g, { x: p.x - NL.dotR, y: p.y - NL.dotR, w: 2 * NL.dotR, h: 2 * NL.dotR, pad: 3, rx: NL.dotR + 3 });
+  });
+  return g;
+}

@@ -10,6 +10,16 @@ export const NUMBER_CELL = 40; // the cell size lessons use when numbers must be
 const LABEL_FONT = 11; // the one diagram label size (spec §5.4); subscripts use .g-sub
 const TOKEN_HEIGHT = 24;
 
+const REQUEST_HUES = 4;
+export const REQUEST_OWNER = /^[A-Da-d]$/;
+
+// The --req hue (1–4) of a request letter; letters wrap around the four hues.
+export function requestSlot(owner) {
+  const code = String(owner ?? '').toUpperCase().charCodeAt(0);
+  if (Number.isNaN(code)) return 1;
+  return ((((code - 65) % REQUEST_HUES) + REQUEST_HUES) % REQUEST_HUES) + 1;
+}
+
 export function svgEl(tag, attrs = {}, parent = null) {
   const el = document.createElementNS(SVG_NS, tag);
   for (const [key, value] of Object.entries(attrs)) {
@@ -152,9 +162,12 @@ export function cell(parent, { x, y, size, v, maxAbs, masked = false, hatched = 
   return g;
 }
 
-export function token(parent, { x, y, text: label, index, state = 'idle', fill, hatched = false }) {
+// `owner` (S6, P4-R10): a letter A–D; the chip takes that request's --req hue (data-req). Exclusive with `fill`.
+export function token(parent, { x, y, text: label, index, state = 'idle', fill, hatched = false, owner }) {
+  if (owner != null && fill) throw new RangeError('token: owner and fill are exclusive');
+  if (owner != null && !REQUEST_OWNER.test(owner)) throw new RangeError(`token: owner must be one of A, B, C, D, got ${owner}`);
   const w = tokenWidth(label);
-  const g = group(parent, `g-token g-token--${state}`, x, y, { role: 'img', 'aria-label': index == null ? String(label) : `${label}, token ${index}`, 'data-level': fill ? levelFromFill(fill) : null });
+  const g = group(parent, `g-token g-token--${state}`, x, y, { role: 'img', 'aria-label': index == null ? String(label) : `${label}, token ${index}`, 'data-level': fill ? levelFromFill(fill) : null, 'data-req': owner == null ? null : requestSlot(owner) });
   const rect = svgEl('rect', { class: 'g-frame', width: w, height: TOKEN_HEIGHT, rx: 7 }, g);
   if (fill) rect.style.fill = fill;
   if (hatched) hatchRect(g, { width: w, height: TOKEN_HEIGHT, rx: 7 });
