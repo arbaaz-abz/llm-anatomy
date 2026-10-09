@@ -113,3 +113,21 @@ export function checkWork(a) {
   if (!a.step) return noRoomLines(a).join('\n');
   return stepLines(a).join('\n');
 }
+
+const MIN_PART_PX = 4; // a memory-bar part thinner than this is named under the bar instead of drawn
+
+// The memory bar's parts (weights, KV cache, free) on a bar `w` px wide: parts thinner than 4 px are left out of the bar
+// and returned in `thin`, so the drawn bar never needs a zoomed tail and every byte is still printed.
+export function memoryParts({ weights, kv, total, w }) {
+  const all = [
+    { name: 'weights', value: weights, hue: 1 },
+    { name: 'KV cache', value: kv, hue: 2 },
+    { name: 'free', value: Math.max(0, total - weights - kv), hue: 3 },
+  ].filter((p) => p.value > 0);
+  const isThin = (p) => (p.value / total) * w < MIN_PART_PX;
+  const parts = all.filter((p) => !isThin(p));
+  return { parts, thin: all.filter(isThin), drawnTotal: parts.reduce((a, p) => a + p.value, 0) };
+}
+
+// "not drawn, too thin: free 536 MB" (or '' when every part is drawn).
+export const thinText = (thin) => (thin.length ? `too thin to draw: ${thin.map((p) => `${p.name} ${formatBytes(p.value)}`).join(', ')}` : '');

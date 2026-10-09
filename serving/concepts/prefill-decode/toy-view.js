@@ -4,7 +4,7 @@
 import { stepTime } from '@math/serving.js';
 import { formatBytes, formatCount, formatDuration, formatInt } from '@math/core.js';
 import { gpuPreset, hbmText, WEIGHT_FORMATS } from './hardware.js';
-import { analyze, checkWork, boundText, fixed1, formatFlops, tflops, tbps, usersStops, usersLabel } from './format.js';
+import { analyze, checkWork, boundText, fixed1, formatFlops, tflops, tbps, usersStops, usersLabel, memoryParts, thinText } from './format.js';
 import { readParts } from './model.js';
 
 export const TOY_STEP_W = 420; // the toy step bar's width; its scale is this state's step (the longer row spans it)
@@ -94,44 +94,53 @@ function usersNote(a) {
 }
 
 const stepBarSpec = (a) => ({
+  caption: `Full width = this step, ${formatDuration(a.step.timeS)}: a floor, since real engines reach less than this bandwidth and real steps take longer.`,
   scaleS: a.step.timeS,
   reading: readParts(a.step, { weightBytes: a.model.weightBytesPerGpu, bandwidthTBps: a.model.bandwidthTBps }),
   mathS: a.step.computeS,
 });
 
+export const TOY_MEMORY_W = 420;
+
 function memoryBarSpec(a) {
-  const kv = a.users * a.cachePerUser;
-  const parts = [
-    { name: 'weights', value: a.model.weightBytesPerGpu, hue: 1 },
-    { name: 'KV cache', value: kv, hue: 2 },
-    { name: 'free', value: Math.max(0, a.preset.hbm.bytes - a.model.weightBytesPerGpu - kv), hue: 3 },
-  ].filter((p) => p.value > 0);
-  return { parts, total: a.preset.hbm.bytes, label: `${a.preset.label} memory, ${hbmText(a.preset)}` };
+  const m = memoryParts({ weights: a.model.weightBytesPerGpu, kv: a.users * a.cachePerUser, total: a.preset.hbm.bytes, w: TOY_MEMORY_W });
+  const label = `${a.preset.label} memory, ${hbmText(a.preset)}`;
+  const thin = thinText(m.thin);
+  return { parts: m.parts, drawnTotal: m.drawnTotal, label, thin, caption: thin ? `${label}; ${thin}.` : `${label}.` };
 }
 
-// Ticks 0 … ≥ max on a 1 / 2 / 2.5 / 5 × 10^k step, about four of them.
-export function niceTicks(max, count = 4) {
-  const raw = max / count;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw);
-  return Array.from({ length: Math.ceil(max / step) + 1 }, (_, i) => Number((i * step).toPrecision(12)));
+const decadeBelow = (v) => 10 ** Math.floor(Math.log10(v));
+const decadeAbove = (v) => 10 ** Math.ceil(Math.log10(v));
+// A linear per-user axis in steps of 10 (20 past a 60-wide span) around the points; a log per-GPU axis in decades.
+function xAxisFor(xs) {
+  const lo = Math.floor(Math.min(...xs) / 10) * 10;
+  const hi = Math.max(Math.ceil(Math.max(...xs) / 10) * 10, lo + 10);
+  const step = hi - lo > 60 ? 20 : 10;
+  return { label: 'tokens/s per user', domain: [lo, hi], ticks: Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, i) => lo + i * step) };
+}
+function yAxisFor(ys) {
+  const lo = decadeBelow(Math.min(...ys));
+  const hi = Math.max(decadeAbove(Math.max(...ys)), lo * 10);
+  return { label: 'tokens/s per GPU', log: true, domain: [lo, hi], ticks: Array.from({ length: Math.round(Math.log10(hi / lo)) + 1 }, (_, i) => lo * 10 ** i) };
 }
 
+// The per-user vs per-GPU curve over the users stops; the current point is followed. Labels: "1 user", the current
+// point and the max that fits (the rest are unlabeled dots, so neighbours' labels never collide).
 function curveSpec(a) {
   const points = usersStops(a.maxUsers).map((u) => {
     const s = stepTime({ ...a.model, tokens: u, seqs: u, context: a.context });
     return { users: u, x: 1 / s.timeS, y: u / s.timeS };
   });
-  const xTicks = niceTicks(Math.max(...points.map((p) => p.x)));
-  const yTicks = niceTicks(Math.max(...points.map((p) => p.y)));
   const label = (p) => {
-    if (p.users === a.users) return usersLabel(p.users, a.maxUsers);
+    if (p.users === 1) return usersLabel(1, 0);
+    if (p.users === a.users) return formatInt(p.users);
     return p.users === a.maxUsers ? `${formatInt(p.users)}, max` : null;
   };
   return {
-    xAxis: { label: 'tokens/s per user', ticks: xTicks },
-    yAxis: { label: 'tokens/s per GPU', ticks: yTicks },
-    series: [{ points: points.map((p) => [p.x, p.y]), style: 'muted' }],
+    caption: `One dot per stop of Users in the batch at ${formatInt(a.context)} tokens of context; the framed dot is this batch. Tokens per GPU count output tokens only.`,
+    xAxis: xAxisFor(points.map((p) => p.x)),
+    yAxis: yAxisFor(points.map((p) => p.y)),
+    series: points.length > 1 ? [{ points: points.map((p) => [p.x, p.y]), style: 'muted' }] : [],
     markers: points.map((p) => ({ x: p.x, y: p.y, label: label(p), followed: p.users === a.users })),
   };
 }

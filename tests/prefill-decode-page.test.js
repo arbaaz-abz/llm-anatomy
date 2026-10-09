@@ -231,7 +231,11 @@ test('toy figures: the step bar\'s total is stepTime\'s; the memory bar adds up 
   assert.equal(TOY_STEP_W > 0, true);
   assert.deepEqual(v.memoryBar.parts.map((p) => p.name), ['weights', 'KV cache', 'free']);
   assert.ok(Math.abs(v.memoryBar.parts.reduce((a, p) => a + p.value, 0) - 141e9) < 1);
-  assert.deepEqual(view({ weights: 'bf16', context: 8192 }).memoryBar.parts.map((p) => p.name), ['weights', 'free'], 'a zero KV part is not drawn');
+  assert.equal(v.memoryBar.thin, '');
+  assert.equal(view({ users: 105 }).memoryBar.thin, 'too thin to draw: free 536 MB');
+  assert.deepEqual(view({ users: 105 }).memoryBar.parts.map((p) => p.name), ['weights', 'KV cache']);
+  const noRoom = view({ weights: 'bf16', context: 8192 }).memoryBar;
+  assert.deepEqual([noRoom.parts.map((p) => p.name), noRoom.thin], [['weights'], 'too thin to draw: free 1 GB'], 'a zero KV part is not drawn; 1 GB of 141 is under 4 px');
   assert.equal(v.curve.markers.filter((m) => m.followed).length, 1);
   assert.equal(v.curve.markers.length, usersStops(105).length);
   assert.equal(view({ phase: 'prefill' }).curve, null);

@@ -4,7 +4,7 @@ import * as G from '@shared/glyphs.js';
 import { formatBytes, formatCount, formatDuration, formatInt, formatRatio } from '@math/core.js';
 import { STATES, MAX_USERS, CACHE_PER_USER, RIDGE, MODEL, decode, intensityOf, perGpu, perUser } from './model.js';
 import { H200, CONTEXT, MEASURED } from './numbers.js';
-import { fixed1 } from './format.js';
+import { fixed1, memoryParts } from './format.js';
 import { LEFT, CELL, BATCH, seg, lerp, arriving, leaving, layer, note, lines, batchChips, stepBarAt, readCell } from './stage.js';
 import { frame6End } from './frames-steps.js';
 
@@ -13,7 +13,7 @@ const RIGHT = Object.freeze({ cellX: 330, textX: 330 + CELL + 10 });
 const CURVE = Object.freeze({ x: 300, y: 20, w: 276, h: 180, xTicks: Object.freeze([30, 40, 50, 60, 70]), yTicks: Object.freeze([50, 100, 500, 1000, 5000]) });
 // Three decades from 10, so the flat roof is long enough for its label beside the ridge's and the ticks stay apart.
 const INSET = Object.freeze({ x: 300, y: 214, w: 262, h: 148, xDomain: Object.freeze([10, 1e4]), yDomain: Object.freeze([10, 1e4]) });
-const MEMBAR = Object.freeze({ labelY: 188, y: 196, w: 260, minPart: 4 }); // a part thinner than minPart px is printed, not drawn
+const MEMBAR = Object.freeze({ labelY: 188, y: 196, w: 260 });
 const LOW_Y = 300; // frames 8–9: the numbers under the left column
 const usersText = (u) => `${formatInt(u)} user${u === 1 ? '' : 's'}`;
 const B1 = STATES.batch[1];
@@ -90,14 +90,12 @@ export function drawFrame8(svg, p) {
 }
 
 // The H200's memory: weights, the users' KV cache, what is left (shareBar, printed in bytes). A part too thin to draw
-// (the last 537 MB at 105 users) is printed in the label instead, so the bar reads "full" and every byte is still named.
+// (the last 536 MB at 105 users) is named in the label instead, so the bar reads "full" and every byte is still printed.
 function memoryBar(parent, users) {
-  const kv = users * CACHE_PER_USER;
-  const free = H200.hbmBytes - MODEL.weightBytesPerGpu - kv;
-  const thin = (free / H200.hbmBytes) * MEMBAR.w < MEMBAR.minPart;
-  note(parent, LEFT, MEMBAR.labelY, `${H200.label} memory, ${formatBytes(H200.hbmBytes)} ${H200.basis}${thin ? `: full, ${formatBytes(free)} free` : ''}`);
-  const parts = [{ name: 'weights', value: MODEL.weightBytesPerGpu, hue: 1 }, { name: 'KV cache', value: kv, hue: 2 }, ...(thin ? [] : [{ name: 'free', value: free, hue: 3 }])];
-  G.shareBar(parent, { x: LEFT, y: MEMBAR.y, w: MEMBAR.w, tail: 'none', minSegment: 0, label: `${H200.label} memory`, format: (share) => formatBytes(share * (thin ? H200.hbmBytes - free : H200.hbmBytes)), parts });
+  const m = memoryParts({ weights: MODEL.weightBytesPerGpu, kv: users * CACHE_PER_USER, total: H200.hbmBytes, w: MEMBAR.w });
+  const thin = m.thin.length ? `: full, ${m.thin.map((q) => `${q.name} ${formatBytes(q.value)}`).join(', ')}` : '';
+  note(parent, LEFT, MEMBAR.labelY, `${H200.label} memory, ${formatBytes(H200.hbmBytes)} ${H200.basis}${thin}`);
+  G.shareBar(parent, { x: LEFT, y: MEMBAR.y, w: MEMBAR.w, tail: 'none', minSegment: 0, label: `${H200.label} memory`, format: (share) => formatBytes(share * m.drawnTotal), parts: m.parts });
 }
 
 function inset(parent, opacity) {
