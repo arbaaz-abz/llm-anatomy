@@ -51,7 +51,7 @@ test('hook, intuition, takeaways and the note under frame 9 fill from data with 
   assert.match(lesson.intuition[2], /\(16 in vLLM, 4 in this page's toy\)/);
   assert.match(lesson.intuition[3], /vLLM V1 preempts by recompute/);
   assert.match(lesson.animation.belowFor(8)[0], /caches and shares only full blocks, keyed by content/);
-  [0, 1, 2].forEach((i) => assert.match(lesson.animation.belowFor(i)[0], /^The prefill step ends with a request's first token; each tick after it is one decode step, one more token\.$/));
+  [0, 1, 2].forEach((i) => assert.match(lesson.animation.belowFor(i)[0], /^Prefill ends with a request's first token; each tick after it is one decode step\.$/));
   assert.equal(lesson.animation.belowFor(3).length, 0);
 });
 

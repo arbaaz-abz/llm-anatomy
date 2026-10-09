@@ -76,7 +76,7 @@ export function factRows(data) {
 }
 
 // Page text under the stage, one list per frame (0-based).
-export const STEP_RULE = 'The prefill step ends with a request\'s first token; each tick after it is one decode step, one more token.';
+export const STEP_RULE = 'Prefill ends with a request\'s first token; each tick after it is one decode step.';
 export const BELOW = Object.freeze([
   [STEP_RULE],
   [STEP_RULE],
