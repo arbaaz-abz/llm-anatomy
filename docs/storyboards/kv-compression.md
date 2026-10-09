@@ -53,9 +53,7 @@ they still ask different questions of the same keys and still produce different 
 
 Multi-head latent attention (MLA) goes another way. It stores one short "latent" vector per token and
 learns how to rebuild every head's own key and value from it, so each head keeps its own keys and values
-while the cache stays close to a two-head GQA. The rebuild can be folded into the query and output
-matrices, so it costs compute rather than memory, and the folding is also why MLA needs a separate small
-key for position. Every 2026 design on this page trades a little quality or a little compute for a much
+while the cache stays close to a two-head GQA. The rebuild costs compute instead of memory, and most of it can be folded into the query and output matrices. Position is the exception: RoPE rotates each key by its token's position, which cannot be folded in that way, so MLA stores one small extra key per token that carries position ([[rope]]). Every 2026 design on this page trades a little quality or a little compute for a much
 smaller cache.
 
 ## 4. Visual metaphor

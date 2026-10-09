@@ -47,7 +47,7 @@ which one becomes the next word, and why does asking twice give two different an
 The last step of `decoder-anatomy` gave one score per vocabulary word, the logits, and softmax turned them
 into probabilities. That is where the model's job ends. Choosing a token is a separate step with no learned
 parameters. The simplest choice is to always take the most likely token, greedy decoding. It is
-predictable, and it tends to fall into loops.
+predictable, and it tends to fall into loops. Either way, the chosen token is appended to the input and the model runs again for the next one. Generation stops when the model picks a special end-of-sequence token, which it learned to emit where a reply ends, or when the reply reaches a length limit set by whoever runs the model.
 
 Most chat systems draw instead: they pick a token at random in proportion to its probability, so "on" comes
 out 39% of the time and "." 24% (over many draws). That is why the same prompt gives different replies. Three knobs shape the

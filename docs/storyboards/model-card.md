@@ -51,8 +51,7 @@ whether they are compressed or windowed, and so how big the cache per token is; 
 length, that decides how much memory a long conversation needs. The modalities field says whether there is
 a vision encoder in front at all.
 
-Two habits make a card readable. First, turn each field into its cost: active parameters into compute per
-token, the attention line into bytes per token, the context into gigabytes per conversation. Second, read
+Two habits make a card readable. First, turn each field into its cost: total parameters into weight memory (parameters × bytes per parameter: 70B parameters in 16-bit weights is 140 GB, in 8-bit 70 GB; [[quantization]] covers the formats), active parameters into compute per token, the attention line into bytes per token, the context into gigabytes per conversation. Second, read
 the source: a field from a config file is checkable, a field from a blog is not, and the same lab can count
 "active" two ways. When sources disagree, keep both numbers and say so. This page does exactly that.
 
@@ -260,7 +259,7 @@ Not shown: Nemotron 3 (both Super and Ultra were pretrained in NVFP4; §12 item 
 1. A model card is the decoder in numbers: total vs active is experts stored vs used, layers count blocks, the
    experts line is the router's menu, the attention line sets the cache per token, and modalities says what
    can enter (frames 1–8).
-2. Turn fields into costs: active parameters into compute per token, the attention line times the context
+2. Turn fields into costs: total parameters into weight memory, active parameters into compute per token, the attention line times the context
    into memory per conversation (frame 6, try-this 1–2).
 3. Read the source: config files beat blogs, labs count "active" differently, and where sources disagree
    keep both numbers (frame 10, try-this 3).

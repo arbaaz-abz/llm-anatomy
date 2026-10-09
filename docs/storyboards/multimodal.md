@@ -43,7 +43,7 @@ and why can one picture cost as many tokens as a short story?
 An image is cut into a grid of small squares, patches, 14 pixels on a side in Kimi K3 and MiniMax-M3. Each
 patch's pixels are flattened and multiplied by a matrix into one vector, and a vision encoder (a
 transformer of its own, in which all patches of an image can see each other) turns those vectors into
-descriptions of what each patch shows in context. Neighboring patches are then merged, four into one in
+descriptions of what each patch shows in context. Position works differently than for text: an image has rows and columns, so instead of one running count, models typically give each patch its row and column (and its frame, for video) through a 2D or 3D version of RoPE. Neighboring patches are then merged, four into one in
 Kimi K3, and a small projector maps each merged vector to the language model's width. Those vectors join
 the residual stream exactly where words do.
 

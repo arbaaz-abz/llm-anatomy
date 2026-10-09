@@ -55,7 +55,7 @@ computed on the previous pass, and they come out the same every time: the causal
 only ever looks backwards, so nothing that comes later can change them.
 
 So the model keeps them. Each attention layer stores a K row and a V row per position, and every decode
-step adds one more of each and reads all of them. That stored table is the **KV cache**. It turns "rerun
+step adds one more of each and reads all of them. That stored table is the **KV cache**. Queries are not kept: each one is used once, by its own token at its own step, and no later token reads an earlier token's query. That is why it is a KV cache and not a QKV cache. It turns "rerun
 the whole conversation for every word" into "run one token, then read the past", which is why chat
 replies stream at all.
 
