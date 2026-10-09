@@ -60,7 +60,8 @@ export function drawFrame1(svg, p) {
     `chunks of ${CHUNK_BUDGET}: D's prompt takes ${WORDS[FULL_SLICES.length]} steps of ${ms(FULL_SLICES[0].ms)};`,
     `A sits through ${WORDS[seated('A')]} of them, C through ${WORDS[seated('C')]}`,
   ]);
-  note(svg, LEFT, 352, 'block: prefill, ends with the first token · tick: one decode step · grey: waiting · time →');
+  note(svg, LEFT, 338, 'block: prefill, ends with the first token · tick: one decode step');
+  note(svg, LEFT, 352, 'grey: waiting · time →');
 }
 
 // Frame 2's gauges: time to first token and time per token against illustrative targets, one verdict per request.
