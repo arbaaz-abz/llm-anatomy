@@ -140,7 +140,7 @@ test.describe('prefix-caching stage', () => {
     await goTo(page, 6);
     const text = await stageText(page);
     expect(text).toContain('free queue (evict from the left): 3 2 1 0');
-    expect(text).toContain('after D finishes: 3 2 1 0 6 7 4 5');
+    expect(text).toContain('after D: 3 2 1 0 6 7 4 5');
     expect(text).toContain('evicted: blocks 5, 4, 7, 6');
   });
 
