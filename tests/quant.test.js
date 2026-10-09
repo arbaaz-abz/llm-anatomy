@@ -100,9 +100,9 @@ test('blocks of 2 and the outlier switched off', () => {
   near(q('nvfp4', 8, calm).meanAbsErr, 0.0171, 5e-5);
 });
 
-test('the err row is restored minus original, and its mean absolute value is meanAbsErr', () => {
+test('the err row is restored minus original (unrounded restored), and its mean absolute value is meanAbsErr', () => {
   const r = q('int4', 4);
-  nearList(r.err, r.restored.map((x, i) => x - W[i]), 1e-12);
+  nearList(r.err, r.restored.map((x, i) => x - W[i]), 1e-4); // restored is shown at 4 decimals
   near(r.meanAbsErr, r.err.reduce((s, e) => s + Math.abs(e), 0) / W.length, 1e-12);
 });
 

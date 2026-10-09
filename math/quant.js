@@ -67,13 +67,14 @@ const FORMAT_RULES = Object.freeze({
 
 function quantizeBlock(block, rules) {
   const max = Math.max(...block.map(Math.abs));
-  if (max === 0) return { scale: 0, codes: block.map(() => 0), restored: block.map(() => 0), clipped: 0 };
+  if (max === 0) return { scale: 0, codes: block.map(() => 0), exact: block.map(() => 0), restored: block.map(() => 0), clipped: 0 };
   const scale = rules.scale(max);
   const ratios = block.map((v) => v / scale);
   const codes = ratios.map(rules.code);
   return {
     scale,
     codes,
+    exact: codes.map((c) => noNegativeZero(c * scale)),
     restored: codes.map((c) => roundTo(c * scale, RESTORED_DECIMALS)),
     clipped: ratios.filter((r) => Math.abs(r) > rules.clipLimit).length,
   };
@@ -87,7 +88,7 @@ function validate(values, format, blockSize) {
 }
 
 // Cut `values` into blocks of `blockSize` (the last may be shorter), give each block its own scale and round.
-// zeroed: weights that were not 0 and came back as 0. clipped: weights past the grid's last rounding boundary.
+// err[i] = restored − original on the unrounded restored value. zeroed: weights that were not 0 and came back as 0. clipped: weights past the grid's last rounding boundary.
 export function quantizeBlocks(values, { format, blockSize }) {
   validate(values, format, blockSize);
   const rules = FORMAT_RULES[format];
@@ -95,7 +96,8 @@ export function quantizeBlocks(values, { format, blockSize }) {
   const blocks = [];
   for (let i = 0; i < row.length; i += blockSize) blocks.push(quantizeBlock(row.slice(i, i + blockSize), rules));
   const restored = blocks.flatMap((b) => b.restored);
-  const err = restored.map((r, i) => noNegativeZero(r - row[i]));
+  // The error is measured on the unrounded restored value; `restored` is that value shown at 4 decimals.
+  const err = blocks.flatMap((b) => b.exact).map((r, i) => noNegativeZero(r - row[i]));
   return {
     blocks: blocks.map(({ scale, codes, restored: r }) => ({ scale, codes, restored: r })),
     restored,
