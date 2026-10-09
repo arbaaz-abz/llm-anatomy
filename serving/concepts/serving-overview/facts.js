@@ -32,7 +32,7 @@ export const BELOW = Object.freeze([
   [],
   [],
   ['Keeping a finished request\'s cache for the next prompt that starts the same way: see [[prefix-caching]].'],
-  ['Requests A–D are the course\'s toy batch: [[batching]] follows these same four step by step, and [[paged-attention]] stores their caches.'],
+  ['Requests A–D are the course\'s toy batch: [[batching]] follows these same four step by step, and [[paged-attention]] stores their caches. Steps count from 0; token positions count from 1.'],
   [],
 ]);
 
