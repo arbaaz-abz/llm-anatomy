@@ -9,6 +9,7 @@ import { formatCount, formatBytes } from '../math/core.js';
 const REF = /\{(?:(hw|sv|paper):)?([a-z0-9][a-z0-9.-]*)\.([A-Za-z0-9_]+)(?:\|([a-z0-9]+))?\}/g;
 // Placeholder prefix → the ctx.data dataset it reads; no prefix reads models.json.
 const DATASETS = Object.freeze({ hw: 'hardware', sv: 'serving', paper: 'papers' });
+const MONTHS = Object.freeze(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
 const realMinus = (s) => s.replace(/^-/, '−');
 
 export const CLAIM_FORMATS = Object.freeze({
@@ -20,6 +21,8 @@ export const CLAIM_FORMATS = Object.freeze({
   bytes: (v) => formatBytes(v),
   year: (v) => String(v).slice(0, 4),
   cite: () => '',
+  // A month ("2025-02") prints "Feb 2025"; a full ISO day stays as stored (S7, XS-4).
+  date: (v) => (/^\d{4}-\d{2}$/.test(v) ? `${MONTHS[+v.slice(5) - 1]} ${v.slice(0, 4)}` : String(v)),
   pct: (v) => String(Number((v * 100).toFixed(1))),
 });
 

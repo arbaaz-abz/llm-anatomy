@@ -80,7 +80,7 @@ export function shareBarLayout(parts, { w = 240, minSegment = 18, tailBasis = 'w
   if (known.length === 0) throw new RangeError('glyphs.shareBar: at least one known part must be more than 0');
   const knownTotal = sumOf(known);
   // Judged on the drawn width (after the gap), so a kept segment is never drawn under minSegment.
-  const isNarrow = (p) => (p.value / knownTotal) * w - SEGMENT_GAP < minSegment;
+  const isNarrow = (p) => minSegment > 0 && (p.value / knownTotal) * w - SEGMENT_GAP < minSegment;
   const folded = known.filter(isNarrow);
   const kept = known.filter((p) => !isNarrow(p));
   const mainParts = folded.length ? [...kept, { name: 'others', value: sumOf(folded), others: true }] : kept;
@@ -104,7 +104,8 @@ const partAttrs = (part, cls) => ({
 // `basisNote` (tail basis only) follows each share in the segment's tooltip, e.g. "64.5% of last 5%".
 function drawBar(g, segs, { y, h, format, basisNote = '', pctOthers = true }) {
   segs.forEach((seg) => {
-    const rect = svgEl('rect', { ...partAttrs(seg, 'g-seg'), x: seg.x, y, width: seg.width, height: h, rx: 2 }, g);
+    // A nonzero part is never drawn narrower than 1 px (tail 'none'): its value stays in the title and the legend.
+    const rect = svgEl('rect', { ...partAttrs(seg, 'g-seg'), x: seg.x, y, width: seg.share > 0 ? Math.max(seg.width, 1) : seg.width, height: h, rx: 2 }, g);
     svgEl('title', {}, rect).textContent = `${seg.name}: ${seg.share === null ? NOT_PUBLISHED : format(seg.share) + basisNote}`;
     if (seg.hatched) hatchRect(g, { x: seg.x, y, width: seg.width, height: h, rx: 2 });
     if (seg.share !== null && seg.width >= MIN_PCT_WIDTH && (pctOthers || !seg.others)) text(g, seg.x + seg.width / 2, y + h + 13, format(seg.share), 'g-pct', { 'text-anchor': 'middle' });
@@ -214,13 +215,13 @@ export function memBarLayout({ useful, reserved, free, w = 240, minSegment = 0 }
 }
 
 // useful · reserved-but-empty (hatched: it holds nothing) · free. Default output unchanged since Plan 1;
-// `minSegment` (S6): see memBarLayout.
-export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free, minSegment = 0 }) {
+// `minSegment` (S6): see memBarLayout. `format` (S7): the share printer, default whole percentages.
+export function memBar(parent, { x, y, w = 240, h = 14, useful, reserved, free, minSegment = 0, format = (share) => `${Math.round(share * 100)}%` }) {
   if ([useful, reserved, free].some((n) => !(n >= 0))) throw new RangeError(`glyphs.memBar: parts must be numbers ≥ 0, got ${useful} / ${reserved} / ${free}`);
   const total = useful + reserved + free;
   if (!(total > 0)) throw new RangeError('glyphs.memBar: useful + reserved + free must be > 0');
   const L = memBarLayout({ useful, reserved, free, w, minSegment });
-  const pct = (n) => `${Math.round((n / total) * 100)}%`;
+  const pct = (n) => format(n / total);
   const g = group(parent, 'g-membar', x, y, { role: 'img', 'aria-label': `memory: useful ${pct(useful)}, reserved but empty ${pct(reserved)}, free ${pct(free)}` });
   L.segments.forEach(({ name, value, x: sx, width, widened }) => {
     if (name === 'reserved') {

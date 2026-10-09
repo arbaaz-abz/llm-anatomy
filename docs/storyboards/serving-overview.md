@@ -27,7 +27,7 @@ The GPU is not working for you alone. Every decode step re-reads all of the mode
 ## 4. Visual metaphor
 A left-to-right pipeline across the top half of the stage: `block` "you" → `block` "router" → three `block`s "replica 1–3" (the chosen one `active`, the others `dim`) → inside the chosen replica, `block` "scheduler" and a `gpu` with a `kvStack` beside it. The bottom half is a time axis with your request's `request` bar: a prefill segment, then decode ticks. The request's tokens are `token` chips that travel along `flow` arrows (carry `token`); new K/V tiles appear in the `kvStack`. Your request wears the serving accent frame (`G.selectionMark`) in every frame (chip group, bar, and its cache tiles).
 
-Layout for the 580 × 366 stage: pipeline row y ≈ 20–150 (five blocks of 80 × 36 with 20 px gaps fit in 500 px); `kvStack` (tile 14) to the right of the GPU, at most 6 tiles (≈ 96 px); timeline row y ≈ 220–330. At 400 px the pipeline wraps to two rows and the timeline stays full width.
+Layout for the 580 × 366 stage: pipeline row y ≈ 20–150 (five blocks of 80 × 36 with 20 px gaps fit in 500 px); `kvStack` (tile 14) to the right of the GPU, at most 6 tiles (≈ 96 px); timeline row y ≈ 220–330. At 400 px the stage scrolls inside its container (README); the pipeline does not wrap.
 
 Terms introduced (one per frame, defined on screen): request (1), replica (2), scheduler / queue (3), prefill (4), TTFT (5), decode step (6), TPOT (7), end token (8), batch (9). Terms assumed from `kv-cache`: token, key and value, KV cache, "decoding re-reads the past".
 
@@ -57,7 +57,7 @@ Frame 9 imports `simulateContinuous` from `math/batching.js` and `TOY_REQUESTS` 
 Determinism: every frame is a pure function of (step, progress). Reduced motion shows each frame's end state. Caption check (rlvr-grpo's counter run on this file): all captions ≤ 30 words and ≤ 2 sentences.
 
 ## 6. Toy
-"Where does the time go?" One request on a time axis: queue, prefill, then decode ticks. A visible line above the controls: "Every time here is one model on one GPU (Llama-3.1-70B in FP8 on an H200), from `prefill-decode`'s floor; real servers are slower and vary with load." A line under the toy: "TTFT and TPOT are the two numbers every later page optimizes."
+"Where does the time go?" One request on a time axis: queue, prefill, then decode ticks. A visible line above the controls: "Every time here is a floor, not a measurement: one model on one GPU (Llama-3.1-70B in FP8 on an H200), from the step-time model in `prefill-decode`. Real servers are slower and vary with load." A line under the toy: "TTFT and TPOT are the two numbers every later page optimizes."
 
 **Controls**
 | id | Label | Type | Range / values | Default | Presets |
@@ -86,8 +86,8 @@ total = TTFT + (n − 1) · TPOT = 141 ms + 499 · 14.7 ms (7.35 s) = 7.49 s   (
 ```
 
 **Try this** (each leads to a named insight)
-1. Predict first: which costs more time, a 10× longer prompt or a 10× longer answer? Set the prompt from 2,000 to 20,000: TTFT 141 ms → 1.41 s, total 7.49 → 8.76 s. Reset, then set the answer from 500 to 50: total 7.49 s → 863 ms. → **Insight: the prompt sets the wait for the first token; the answer's length sets the total.** Decode is 98.1% of the default request's time.
-2. Switch decode speed from "alone" (67.9) to "sharing with 104 others" (33.7): TTFT does not move (141 ms), total goes 7.49 → 14.9 s. → **Insight: TTFT and TPOT are separate dials.** Sharing the GPU with more users slows each user's stream, not the first token, which is why servers track both and why `batching` and `disaggregation` treat them as two targets.
+1. Predict first: which costs more time, a 10× longer prompt or a 10× longer answer? Set the prompt from 2,000 to 20,000: TTFT 141 ms → 1.41 s, total 7.49 → 8.76 s. Set Prompt length back to 2,000, then Answer length from 500 to 50: total 7.49 s → 863 ms. → **Insight: the prompt sets the wait for the first token; the answer's length sets the total.** Decode is 98.1% of the default request's time.
+2. Switch decode speed from "alone" (67.9) to "sharing with 104 others" (33.7): TTFT does not move (141 ms), total goes 7.49 → 14.9 s. → **Insight: TTFT and TPOT are separate dials.** Sharing the GPU with more users slows each user's stream, not the first token, which is why servers track both and why [[batching]] and [[disaggregation]] treat them as two targets.
 3. On the sharing chip, set the queue to 2 s: TTFT 141 ms → 2.14 s, total 14.9 → 16.9 s, while TPOT stays 29.6 ms. → **Insight: a queue only delays the start.** Once your request is in the batch, its pace depends on the step time, not on how long it waited.
 4. Slide the prompt down to 3 tokens: TTFT is still 14.6 ms, not near zero. → **Insight: even a tiny prompt costs one full read of the weights,** the same floor a decode step pays (`prefill-decode`).
 
@@ -129,9 +129,9 @@ Shapes: none (scalars). Definitions used across the serving track (one definitio
 ## 8. In today's models (Oct 2026)
 | Claim shown on page | data/*.json entry.key | Brief source |
 |---|---|---|
-| (A dated fact, not a toy chip.) A busy 2026 server, measured: DeepSeek-V4-Pro on GB300 NVL72 at 27 tokens/s per user (ISL 8K / OSL 1K, FP4, disaggregated Dynamo + vLLM, InferenceX, measured 2026-05-22) | `serving.json/inferencex-v4-pro-gb300.interactivity_tok_s_user = 27` *(proposed)* | 04 §1.3 CONFIRMED |
+| A busy 2026 server, measured: DeepSeek-V4-Pro on GB300 NVL72 at 27 output tokens/s per user (ISL 8K / OSL 1K, FP4, disaggregated Dynamo + vLLM, InferenceX, measured 2026-05-22) | `serving.json/inferencex-v4-pro-gb300.interactivity_tok_s_user = 27` *(proposed)* | 04 §1.3 CONFIRMED |
 | A 128K-token prompt took 8.6 s to its first token: DeepSeek-R1 on GB300 NVL72 with chunked pipeline-parallel prefill (LMSYS, 2026-02-19) | `serving.json/lmsys-gb300-longctx.ttft_128k_s = 8.6` *(proposed; note names model, hardware, method)* | 04 §1.2, §7.5 CONFIRMED |
-| Routers send a request to the replica already holding its prefix: 56.3% of DeepSeek's input tokens hit the KV cache (V3/R1 production, Feb 2025) | `serving.json/deepseek-v3-production.kv_hit_rate_pct = 56.3` *(proposed by `paged-attention`; same key)* | 04 §2.4, §6.3 CONFIRMED |
+| Prompts often start the same way, which is why routers try to send a request to the replica already holding its prefix: 56.3% of DeepSeek's input tokens hit its KV cache (V3/R1 production, Feb 2025) | `serving.json/deepseek-v3-production.kv_hit_rate_pct = 56.3` *(proposed by `paged-attention`; same key)* | 04 §2.4, §6.3 CONFIRMED |
 | The engines inside a replica: vLLM, SGLang and TensorRT-LLM; orchestration by NVIDIA Dynamo (1.0, GA 2026-03-16) or llm-d (CNCF Sandbox 2026-03-12) | `serving.json/engines.names` *(proposed, `reported`)*, `serving.json/dynamo.ga_date = "2026-03-16"` *(proposed, confirmed)*, `serving.json/llm-d.cncf_sandbox_date = "2026-03-12"` *(proposed, reported)* | 04 §7.1, §7.2 |
 | Closed providers do not publish their serving stacks; this track uses open engines and published measurements | plain sentence, no key | 04 §10 item 5 |
 
