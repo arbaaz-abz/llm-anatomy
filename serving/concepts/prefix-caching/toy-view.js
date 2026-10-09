@@ -6,7 +6,7 @@ import { fillText } from '@shared/claims.js';
 import { INITIAL_STATE, checkWork, formatPrice, hitFraction, priceFor, simulateFor } from './format.js';
 import { providersFor, deepseekHitRate } from './facts.js';
 import { SCALE_UP } from './numbers.js';
-import { nodeState, poolAfter, requestPaths, treeModel, treeNodes } from './scenes.js';
+import { nodeState, poolAfter, requestPaths, shortLabel, treeModel, treeNodes } from './scenes.js';
 
 export const TREE_MIN_BLOCK_SIZE = 4; // below this the tree has too many blocks to draw at 580 px (the counters stay exact)
 const PER_ROW = Object.freeze({ 1: 16, 2: 12, 4: 4, 8: 4, 16: 2 });
@@ -24,7 +24,9 @@ function treeFor(state, sim) {
 }
 
 const MAX_LISTED = 4; // more evicted labels than this print as a count
-const evictedText = (list) => (list.length === 0 ? 'none' : list.length <= MAX_LISTED ? list.join(' · ') : `${list.length} blocks`);
+// Evicted blocks print with the tree's short labels ("Do…fish, It…."); the full words ride in the cell's title.
+const evictedText = (list) => (list.length === 0 ? 'none' : list.length <= MAX_LISTED ? list.map(shortLabel).join(', ') : `${list.length} blocks`);
+const evictedTitle = (list) => (list.length === 0 || list.length > MAX_LISTED ? '' : list.join(' · '));
 
 function rowsFor(sim) {
   return sim.log.map((r, i) => ({
@@ -35,6 +37,7 @@ function rowsFor(sim) {
     computed: formatInt(r.computed),
     blocks: r.blocks.join(', '),
     evicted: evictedText(r.evicted),
+    evictedTitle: evictedTitle(r.evicted),
   }));
 }
 

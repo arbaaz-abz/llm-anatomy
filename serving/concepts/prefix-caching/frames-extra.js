@@ -2,6 +2,7 @@
 // fading the previous scene out during [0, HANDOFF] and is a pure function of (p, text).
 import * as G from '@shared/glyphs.js';
 import { formatBytes, formatDuration } from '@math/core.js';
+import { formatShare } from '@shared/glyphs.js';
 import { PREFIX_REQUESTS, routeHits } from '@math/prefix.js';
 import { DEFAULT_MODEL, DEFAULT_PATHS, LOG, SIZE, shortLabel } from './scenes.js';
 import { PREFILL_TITLE } from './facts.js';
@@ -82,6 +83,7 @@ export function drawFrame10(svg, p, text, drawPrevious) {
   const chips = layer(svg, seg(p, 0.1, 0.25));
   EVICTED.forEach((label, i) => G.token(chips, { x: chipX(i, p), y: TIER.chipY + i * TIER.pitch, text: label, state: 'idle' }));
   note(layer(svg, seg(p, 0.1, 0.25)), TIER.xs[0], TIER.chipY - 12, 'blocks evicted in the last frame');
+  note(layer(svg, seg(p, 0.8, 0.95)), TIER.xs[0], TIER.chipY + TIER.pitch + 38, 'back to HBM on a hit');
   const lines = layer(svg, seg(p, 0.85, 1));
   text.tiers.forEach((line, i) => note(lines, 14, 308 + i * 14, line, { cls: '' }));
 }
@@ -89,11 +91,15 @@ export function drawFrame10(svg, p, text, drawPrevious) {
 // Frame 11 -----------------------------------------------------------------------------------------------------------------
 
 const CHART = Object.freeze({ y: 76, h: 120 });
+const plainNumber = (x) => String(Number(x.toPrecision(4)));
+// "Opus 5.5 reads at 0.05× · DeepSeek's hit is 3.3% of its miss": the two figures behind the caption's "a tenth or less".
+export const readsLine = (opus, deepseek) => `${opus.name} reads at ${plainNumber(opus.read)}× · DeepSeek's hit is ${formatShare(deepseek.hitUsd / deepseek.base)} of its miss`;
+
 export function drawFrame11(svg, p, text, drawPrevious) {
   if (leaving(p) > 0) drawPrevious(layer(svg, leaving(p)));
   const providers = text.providers;
   if (!providers) { note(svg, 14, 100, 'prices unavailable: the data did not load'); return; }
-  const [sonnet, , deepseek] = providers;
+  const [sonnet, opus, deepseek] = providers;
   const max = sonnet.base * sonnet.write;
   note(layer(svg, arriving(p)), 14, 22, 'price per million input tokens, both charts on one scale', { cls: '' });
   const one = layer(svg, seg(p, 0.15, 0.3));
@@ -105,5 +111,6 @@ export function drawFrame11(svg, p, text, drawPrevious) {
   const out = layer(svg, seg(p, 0.6, 0.75));
   note(out, 14, 246, `what a hit saves: ${formatDuration(SCALE_UP.skippedS)} of GPU math for a ${SCALE_UP.tokens.toLocaleString('en-US')}-token prefix`, { cls: '' });
   note(out, 14, 262, `what it costs: ${formatBytes(SCALE_UP.heldBytes)} held until reuse (H200 example from ${PREFILL_TITLE})`, { cls: '' });
+  note(out, 14, 278, readsLine(opus, deepseek), { cls: '' });
   note(layer(svg, seg(p, 0.8, 0.95)), 14, 300, `prices read ${text.readOn}; they change`);
 }

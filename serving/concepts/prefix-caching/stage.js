@@ -13,7 +13,7 @@ export const STRIP = Object.freeze({ x: 8, y: 300, gap: 8 }); // the active requ
 export const QUEUE_Y = 350;
 export const FRAME1_NOTES_Y = Object.freeze([308, 322, 336]);
 export const COUNTERS = Object.freeze({ labelX: 474, cellX: 480, y: 200, pitch: 41, headY: 190 });
-export const TABLE = Object.freeze({ x: 372, step: 48, y: 200, pitch: 41, headY: 190, letterX: 336 });
+export const TABLE = Object.freeze({ x: 372, step: 72, y: 200, pitch: 41, headY: 190, letterX: 336 });
 export const BIG_Y = 330;
 
 export const clamp01 = (t) => Math.min(Math.max(t, 0), 1);

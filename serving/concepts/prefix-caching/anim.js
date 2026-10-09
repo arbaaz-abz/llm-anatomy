@@ -27,7 +27,7 @@ function tree({ visibleUpTo, freshCount = Infinity, active = null, hitCount = In
 
 // "B: You are a cat (hit) · . Reply in rhyme (hit) · Do you like fish (new)": the followed request's blocks in full.
 const walk = (i, words, status, at = 0.1) => overlay(`walk:${ID[i]}`, (g) => drawWalk(g, ID[i], words.map((w, k) => (status[k] ? `${w} (${status[k]})` : w))), at);
-const queueOverlay = (queue, { suffix = '', at = 0 } = {}) => overlay('queue', (g) => drawQueue(g, queue, { suffix }), at);
+const queueOverlay = (queue, { suffix = '', label, at = 0 } = {}) => overlay('queue', (g) => drawQueue(g, queue, { suffix, label }), at);
 const noteOverlay = (key, str, at = 0.1) => overlay(key, (g) => note(g, 8, NOTE_Y, str, { cls: '' }), at);
 const counters = (title, row, p, times) => overlay(`counters:${title}`, (g) => drawCounters(g, `request ${title}`, [
   row.promptTokens, p >= times[0] ? row.hitTokens : null, p >= times[1] ? row.computed : null, p >= times[2] ? pctText(row.hitTokens, row.promptTokens) : null,
@@ -165,7 +165,7 @@ function frame7(p) {
       walk(D, ['You are a dog', '. Reply in prose', 'Where did you sit', ...(answer ? ['On the mat .'] : [])], ['new', 'new', 'new', answer ? 'new' : null]),
       overlay('counters:D', (g) => drawCounters(g, 'request D', [row.promptTokens, 0, row.computed, pctText(0, row.promptTokens)])),
       noteOverlay('note:7', 'evicted: blocks 5, 4, 7, 6 · kept: blocks 0-3 (system prompt, A\'s turn)', 0.2),
-      queueOverlay(LOG[C].freeQueue.slice(pops), { suffix: `(after D: ${row.freeQueue.join(' ')})` }),
+      queueOverlay(LOG[C].freeQueue.slice(pops), { label: 'free queue:', suffix: `· after D: ${row.freeQueue.join(' ')}` }),
     ],
   };
 }

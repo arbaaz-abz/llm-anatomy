@@ -64,11 +64,11 @@ test.describe('prefix-caching toy', () => {
   test('try this 2: B again evicts A\'s turn; pool 6 makes C lose B\'s blocks and D evict A\'s turn', async ({ page }) => {
     await page.locator('#req-B-again').click();
     await expect(readout(page, 'hit-B-again')).toHaveText('8');
-    await expect(readout(page, 'evicted-B-again')).toHaveText('The cat sat down · Where did you sit');
+    await expect(readout(page, 'evicted-B-again')).toHaveText('The…down, Where…sit');
     await expect(readout(page, 'blocks-B-again')).toHaveText('0, 1, 3, 2');
     await pick(page, 'pool', 6);
-    await expect(readout(page, 'evicted-C')).toHaveText('? Yes , fish · Do you like fish');
-    await expect(readout(page, 'evicted-D')).toHaveText('It was warm . · Why down there ? · The cat sat down · Where did you sit');
+    await expect(readout(page, 'evicted-C')).toHaveText('?…fish, Do…fish');
+    await expect(readout(page, 'evicted-D')).toHaveText('It…., Why…?, The…down, Where…sit');
     await page.locator('#req-B-again').click();
     await pick(page, 'pool', 8);
     await expect(readout(page, 'hit-rate')).toHaveText('42.1%');
@@ -81,12 +81,12 @@ test.describe('prefix-caching toy', () => {
     await expect(readout(page, 'rate-used')).toHaveText('0.00%');
     await page.locator(`${toy} #hit-presets button`, { hasText: 'this toy' }).click();
     await expect(readout(page, 'price')).toHaveText('$1.53');
-    await page.locator(`${toy} #hit-presets button`, { hasText: 'DeepSeek 2025' }).click();
+    await page.locator(`${toy} #hit-presets button`, { hasText: 'DeepSeek Feb 2025' }).click();
     await expect(readout(page, 'price')).toHaveText('$1.21');
     await expect(page.locator('#hitRate + output')).toHaveText('56.3%');
     await expect(readout(page, 'check-work')).toContainText('h = 56.3% (set by hand)');
     await pick(page, 'provider', 'deepseek');
-    await expect(readout(page, 'price')).toHaveText('$0.30');
+    await expect(readout(page, 'price')).toHaveText('$0.301');
     await expect(readout(page, 'price-plain')).toHaveText('$0.66');
     await expect(page.locator('#writePremium button[data-value="on"]')).toBeDisabled();
     await expect(page.locator(`${toy} [data-choice-note]`)).toContainText('DeepSeek charges no cache write');
@@ -139,8 +139,7 @@ test.describe('prefix-caching stage', () => {
     await page.goto(URL);
     await goTo(page, 6);
     const text = await stageText(page);
-    expect(text).toContain('free queue (evict from the left): 3 2 1 0');
-    expect(text).toContain('after D: 3 2 1 0 6 7 4 5');
+    expect(text).toContain('free queue: 3 2 1 0 · after D: 3 2 1 0 6 7 4 5');
     expect(text).toContain('evicted: blocks 5, 4, 7, 6');
   });
 
@@ -166,6 +165,6 @@ test.describe('prefix-caching stage', () => {
     await page.goto(URL);
     await goTo(page, 10);
     const text = await stageText(page);
-    for (const s of ['$2.00', '$2.50', '$0.20', '$0.66', '$0.022', '707 ms', '3.28 GB', 'prices read 2026-10-07; they change']) expect(text).toContain(s);
+    for (const s of ['$2.00', '$2.50', '$0.20', '$0.66', '$0.022', '707 ms', '3.28 GB', 'prices read 2026-10-07; they change', 'Opus 5.5 reads at 0.05×', "DeepSeek's hit is 3.3% of its miss"]) expect(text).toContain(s);
   });
 });

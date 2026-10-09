@@ -1,12 +1,11 @@
 // prefix-caching pure helpers (no DOM): the toy's state and its transitions, the one price format, the simulation the toy runs and
 // "Check my work". Every number comes from math/prefix.js; this file only arranges and formats them.
-import { deepFreeze } from '@math/core.js';
+import { deepFreeze, formatUsd } from '@math/core.js';
 import { PREFIX_REQUESTS, blendedInputPrice, poolBlocksFor, simulatePrefixCache } from '@math/prefix.js';
 import { formatShare } from '@shared/glyphs.js';
 
 export const BLOCK_SIZES = Object.freeze([1, 2, 4, 8, 16]);
 export const POOLS = Object.freeze([6, 8, 12]);
-export const DEEPSEEK_CHIP = 'DeepSeek 2025'; // the hit-rate chip that sets the production figure from data
 // The five requests the toy can run, in arrival order. "B again" repeats B after D.
 export const REQUEST_KEYS = Object.freeze([
   { key: 'A', label: 'A', source: 0 }, { key: 'B', label: 'B', source: 1 }, { key: 'C', label: 'C', source: 2 },
@@ -17,8 +16,6 @@ export const REQUEST_KEYS = Object.freeze([
 export const INITIAL_STATE = deepFreeze({ on: ['A', 'B', 'C', 'D'], blockSize: 4, pool: 8, provider: 'sonnet', writePremium: true, hitMode: 'toy' });
 
 const MAX_PERCENT = 100;
-const PRICE_SIG_FIGS = 2; // below $0.10 a price prints two significant figures ($0.084, $0.022)
-const PRICE_FLOOR = 0.1;
 
 function checkOne(fn, list, value, what) {
   if (!list.includes(value)) throw new RangeError(`${fn}: ${what} must be one of ${list.join(', ')}, got ${value}`);
@@ -54,10 +51,10 @@ export function setHitMode(state, hitMode) {
   return Object.freeze({ ...state, hitMode });
 }
 
-// ---- price format (one per quantity): $ per million tokens, two decimals, two significant figures below $0.10 ----
+// ---- price format (one per quantity): $ per million tokens through the course's formatUsd (three significant figures, two decimals at least) ----
 export function formatPrice(usd) {
-  if (!Number.isFinite(usd) || usd < 0) throw new RangeError(`formatPrice: usd must be a finite number ≥ 0, got ${usd}`);
-  return usd >= PRICE_FLOOR || usd === 0 ? `$${usd.toFixed(2)}` : `$${usd.toPrecision(PRICE_SIG_FIGS)}`;
+  if (usd < 0) throw new RangeError(`formatPrice: usd must be ≥ 0, got ${usd}`);
+  return formatUsd(usd);
 }
 
 const plain = (x) => String(Number(x.toPrecision(4))); // 1.25, 0.1, 0.05

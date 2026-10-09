@@ -27,10 +27,10 @@ export function drawPool(parent, blocks, { x = POOL.x, y = POOL.y, blockSize = P
   return G.blockPool(parent, { x, y, blocks: blocks.length, blockSize, slots, perRow });
 }
 
-export function drawQueue(parent, queue, { x = POOL.x, y = QUEUE_Y, opacity = 1, suffix = '' } = {}) {
+export function drawQueue(parent, queue, { x = POOL.x, y = QUEUE_Y, opacity = 1, suffix = '', label = 'free queue (evict from the left):' } = {}) {
   if (opacity <= 0) return;
-  const line = `free queue (evict from the left): ${queue.length ? queueText(queue) : 'empty'}`;
-  note(layer(parent, opacity), x, y, suffix ? `${line}  ${suffix}` : line);
+  const line = `${label} ${queue.length ? queueText(queue) : 'empty'}`;
+  note(layer(parent, opacity), x, y, suffix ? `${line} ${suffix}` : line);
 }
 
 // Frame 6: a bracket joining two nodes that print the same words (A's and D's "Where did you sit"), labeled; plain 1 px lines.
@@ -87,7 +87,7 @@ export function drawCounters(parent, title, values, opacity = 1) {
 // Frame 8's table: one row per request, three numbers each, the letter chip at the left.
 export function drawTable(parent, rows, opacity = 1) {
   const g = layer(parent, opacity);
-  ['prompt', 'cache', 'computed'].forEach((h, i) => note(g, TABLE.x + i * TABLE.step + CELL / 2, TABLE.headY, h, { anchor: 'middle' }));
+  ['prompt', 'from cache', 'computed'].forEach((h, i) => note(g, TABLE.x + i * TABLE.step + CELL / 2, TABLE.headY, h, { anchor: 'middle' }));
   rows.forEach((r, ri) => {
     const y = TABLE.y + ri * TABLE.pitch;
     G.token(g, { x: TABLE.letterX - 14, y: y + (CELL - 24) / 2, text: r.id, owner: r.id });

@@ -52,6 +52,10 @@ export function readoutTables(view) {
     ],
   }));
   const requests = readoutTable({ head: ['Request', 'Prompt tokens', 'From cache', 'Computed', 'Blocks used', 'Evicted'], name: 'requests', rows: perRequest });
+  view.rows.forEach((r) => { // the full words of the short eviction labels
+    const cell = requests.querySelector(`[data-readout="evicted-${r.key}"]`);
+    if (cell && r.evictedTitle) cell.title = r.evictedTitle;
+  });
   const others = [
     readoutTable({
       head: ['All requests', 'Value'], name: 'totals',

@@ -11,7 +11,7 @@ import { appendRich } from '@shared/lesson-page.js';
 import {
   BLOCK_SIZES, POOLS, INITIAL_STATE, REQUEST_KEYS, setBlockSize, setHitMode, setPool, setProvider, setWritePremium, toggleRequest,
 } from './format.js';
-import { deepseekHitRate, providersFor } from './facts.js';
+import { deepseekChip, deepseekHitRate, providersFor } from './facts.js';
 import { toyView, tryThis } from './toy-view.js';
 import { paintStage, readoutTables } from './toy-dom.js';
 
@@ -62,7 +62,7 @@ function mountControls(refs, data, { get, set }) {
   const shown = { grid: null, text: null }; // the slider is on a whole percent; its label may carry the exact live or production rate
   const hit = mountSlider(refs.hit, { id: 'hitRate', label: 'Hit rate for pricing', min: 0, max: 100, step: 1, value: 42, format: (v) => (shown.grid === v ? shown.text : formatShare(v / 100)), onInput: guard((v) => set((s) => setHitMode(s, v))) });
   const chips = mountPresetButtons(refs.hitChips, {
-    id: 'hit-presets', label: 'Set it to', options: [{ value: 'toy', label: 'this toy' }, { value: 'deepseek', label: 'DeepSeek 2025' }],
+    id: 'hit-presets', label: 'Set it to', options: [{ value: 'toy', label: 'this toy' }, { value: 'deepseek', label: deepseekChip(data) }],
     onPick: (v) => set((s) => setHitMode(s, v === 'toy' ? 'toy' : deepseekHitRate(data))),
   });
   const sync = (state, view) => {

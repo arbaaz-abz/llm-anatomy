@@ -9,7 +9,7 @@ import { RUNNING_EXAMPLE, stepTime } from '../math/serving.js';
 import { kvCacheBytes } from '../math/memory.js';
 import { LESSON, lessonFor, INTUITION, MATH_NOTES } from '../serving/concepts/prefix-caching/content.js';
 import { CAPTIONS as PAGE_CAPTIONS } from '../serving/concepts/prefix-caching/captions.js';
-import { factRows, stageText, providersFor, readOn, PREFILL_TITLE, PAGED_TITLE, FRAMING } from '../serving/concepts/prefix-caching/facts.js';
+import { factRows, stageText, providersFor, readOn, deepseekChip, PREFILL_TITLE, PAGED_TITLE, FRAMING } from '../serving/concepts/prefix-caching/facts.js';
 import {
   INITIAL_STATE, BLOCK_SIZES, POOLS, formatPrice, toggleRequest, setBlockSize, setPool, setProvider, setWritePremium, setHitMode, simulateFor, hitFraction, requestsFor,
 } from '../serving/concepts/prefix-caching/format.js';
@@ -17,7 +17,7 @@ import { toyView, tryThis, TREE_MIN_BLOCK_SIZE } from '../serving/concepts/prefi
 import { SCALE_UP } from '../serving/concepts/prefix-caching/numbers.js';
 import { LOG, DEFAULT_MODEL, DEFAULT_PATHS, shortLabel, poolAfter, poolDuring, liveQueue, evictedIds, treeNodes, nodeState } from '../serving/concepts/prefix-caching/scenes.js';
 import { sceneAt, ARRIVE } from '../serving/concepts/prefix-caching/anim.js';
-import { replicaHits } from '../serving/concepts/prefix-caching/frames-extra.js';
+import { replicaHits, readsLine } from '../serving/concepts/prefix-caching/frames-extra.js';
 import { CAPTIONS, CHECK_WORK, DEFAULT_ROWS, TRY_THIS } from './prefix-caching-expected.js';
 
 const read = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -67,13 +67,16 @@ test('10 facts rows, every placeholder resolves against data/*.json, nothing unf
   const line = (i) => fillClaim(rows[i].claim, data).segments.map((s) => s.text).join('');
   assert.match(line(0), /It caches full blocks only, and evicts unused blocks through an LRU free queue\./);
   assert.equal(line(1), 'vLLM\'s default block size is 16 tokens.');
-  assert.match(line(3), /^DeepSeek's production inference system \(V3\/R1\): 56\.3% of its 608B input tokens per day hit the KV cache\.$/);
+  assert.match(line(3), /^DeepSeek's production inference system \(V3\/R1, Feb 2025\): 56\.3% of its 608B input tokens per day hit the KV cache\.$/);
   assert.match(line(5), /59–498% more effective request capacity/);
   assert.match(line(6), /up to 64 conversations fit in HBM, 64–128 need CPU offload, and throughput with storage offload was more than 2x beyond 128 conversations\./);
   assert.equal(line(7), 'Anthropic: a cache read costs 0.1× the input price for most models, a cache write 1.25× (5-minute entry) or 2× (1-hour entry). Sonnet 5.5 input is $2 per million tokens; Opus 5.5 is $4, with reads at 0.05×.');
   assert.equal(line(8), 'DeepSeek V4-Pro, off-peak: $0.66 per million input tokens on a miss and $0.022 on a hit, with no cache-write fee; peak rates are 2×.');
   [2, 4, 5].forEach((i) => assert.equal(fillClaim(rows[i].claim, data).reported, true, `row ${i + 1} is reported`));
-  [2, 4, 5].forEach((i) => assert.match(rows[i].claim, /reported\)/, `row ${i + 1} says which part is reported`));
+  rows.forEach((r, i) => assert.doesNotMatch(r.claim, /\(reported\)/, `row ${i + 1}: the scaffold's chip says reported`));
+  assert.match(line(2), /^SGLang's RadixAttention keeps cached KV in a radix tree keyed by token sequences, with LRU leaf eviction\.$/);
+  assert.match(line(4), /^KV-aware routing: NVIDIA Dynamo's router sends requests "to GPUs that already have the most relevant short-term memory from earlier steps"; llm-d's scheduler routes by prefix; vLLM engines emit KV events so routers know what each replica holds\.$/);
+  assert.match(line(6), /^vLLM tiered KV offloading \(2026-09-10\): /);
   assert.equal(fillClaim(rows[0].claim, data).reported, false);
   assert.equal(rows[9].derived, true);
   assert.match(FRAMING, /list prices on one day/);
@@ -96,7 +99,7 @@ test('stage text is computed from the data (frames 1, 8, 10, 11)', () => {
   ]);
   assert.equal(text.deepseek, 'DeepSeek production (Feb 2025): 56.3%');
   assert.deepEqual([...text.tiers], [
-    'vLLM tiered offload, Qwen-35B on 2 × H100:',
+    'vLLM tiered offload (2026-09-10), Qwen-35B on 2 × H100:',
     'up to 64 conversations fit in HBM; 64–128 need CPU offload;',
     'with storage offload, throughput was more than 2x beyond 128 conversations.',
   ]);
@@ -138,7 +141,7 @@ test('providers: Sonnet, Opus and DeepSeek restate the data (price, read, write)
 
 test('price format: two decimals, two significant figures below $0.10 (one format per quantity)', () => {
   assert.deepEqual([2, 2.5, 0.2, 0.66, 1.4474, 0.1].map(formatPrice), ['$2.00', '$2.50', '$0.20', '$0.66', '$1.45', '$0.10']);
-  assert.deepEqual([0.022, 0.084, 0.0120, 0.0033, 0.05].map(formatPrice), ['$0.022', '$0.084', '$0.012', '$0.0033', '$0.050']);
+  assert.deepEqual([0.022, 0.084, 0.0120, 0.0033, 0.05].map(formatPrice), ['$0.022', '$0.084', '$0.012', '$0.0033', '$0.05']);
   assert.equal(formatPrice(0), '$0.00');
   assert.throws(() => formatPrice(-1), RangeError);
   assert.throws(() => formatPrice(NaN), RangeError);
@@ -170,12 +173,12 @@ test('"Check my work" for the default state is the storyboard text; other states
   assert.equal(toyView(INITIAL_STATE, data).checkWork, CHECK_WORK);
   const lines = (state) => toyView(state, data).checkWork.split('\n');
   assert.equal(lines(setHitMode(INITIAL_STATE, 56.3))[0], 'h = 56.3% (set by hand)');
-  assert.equal(lines(setHitMode(INITIAL_STATE, 56.3))[2], '            = 0.437 · $2.00 · 1.25 + 0.563 · $2.00 · 0.1 = $1.09 + $0.11 = $1.21');
-  assert.equal(lines(setWritePremium(INITIAL_STATE, false))[2], '            = 0.579 · $2.00 · 1 + 0.421 · $2.00 · 0.1 = $1.16 + $0.084 = $1.24');
-  assert.equal(lines(setProvider(INITIAL_STATE, 'opus'))[2], '            = 0.579 · $4.00 · 1.25 + 0.421 · $4.00 · 0.05 = $2.89 + $0.084 = $2.98');
+  assert.equal(lines(setHitMode(INITIAL_STATE, 56.3))[2], '            = 0.437 · $2.00 · 1.25 + 0.563 · $2.00 · 0.1 = $1.09 + $0.113 = $1.21');
+  assert.equal(lines(setWritePremium(INITIAL_STATE, false))[2], '            = 0.579 · $2.00 · 1 + 0.421 · $2.00 · 0.1 = $1.16 + $0.0842 = $1.24');
+  assert.equal(lines(setProvider(INITIAL_STATE, 'opus'))[2], '            = 0.579 · $4.00 · 1.25 + 0.421 · $4.00 · 0.05 = $2.89 + $0.0842 = $2.98');
   const ds = lines(setHitMode(setProvider(INITIAL_STATE, 'deepseek'), 56.3));
   assert.equal(ds[1], 'price per M = (1 − h) · miss + h · hit');
-  assert.equal(ds[2], '            = 0.437 · $0.66 + 0.563 · $0.022 = $0.29 + $0.012 = $0.30');
+  assert.equal(ds[2], '            = 0.437 · $0.66 + 0.563 · $0.022 = $0.288 + $0.0124 = $0.301');
   assert.equal(lines(setHitMode(INITIAL_STATE, 0))[2], '            = 1.000 · $2.00 · 1.25 + 0.000 · $2.00 · 0.1 = $2.50 + $0.00 = $2.50');
   const none = toyView({ ...INITIAL_STATE, on: [] }, data);
   assert.equal(none.checkWork.split('\n')[0], 'h = 0 (no request has arrived)');
@@ -230,10 +233,10 @@ test('toy view: every block size and pool runs; hit rates by block size at pool 
 
 test('toy view: B again and a pool of 6 (try this 2)', () => {
   const again = toyView(toggleRequest(INITIAL_STATE, 'B-again'), data);
-  assert.deepEqual([again.rows[4].label, again.rows[4].hit, again.rows[4].blocks, again.rows[4].evicted], ['B again', '8', '0, 1, 3, 2', 'The cat sat down · Where did you sit']);
+  assert.deepEqual([again.rows[4].label, again.rows[4].hit, again.rows[4].blocks, again.rows[4].evicted], ['B again', '8', '0, 1, 3, 2', 'The…down, Where…sit']);
   const small = toyView(setPool(toggleRequest(INITIAL_STATE, 'B-again'), 6), data);
-  assert.equal(small.rows[2].evicted, '? Yes , fish · Do you like fish');
-  assert.equal(small.rows[3].evicted, 'It was warm . · Why down there ? · The cat sat down · Where did you sit');
+  assert.equal(small.rows[2].evicted, '?…fish, Do…fish');
+  assert.equal(small.rows[3].evicted, 'It…., Why…?, The…down, Where…sit');
 });
 
 test('toy view: no request at all is an empty cache, and a missing provider hides the price', () => {
@@ -305,4 +308,13 @@ test('the frames\' notes name what the frame shows (storyboard §5 "Numbers show
   assert.ok(noteKeys(0).includes('note:1') && noteKeys(1).includes('note:2') && noteKeys(2).includes('note:3') && noteKeys(3).includes('note:4'));
   assert.ok(noteKeys(4).includes('note:5') && noteKeys(5).includes('note:6') && noteKeys(6).includes('note:7'));
   assert.ok(noteKeys(7).includes('table') && noteKeys(7).includes('big') && noteKeys(7).includes('deepseek'));
+});
+
+test('dated labels come from the date keys: the chip, frame 11\'s reads line, the caption\'s year (XS-4, prefix-caching-4)', () => {
+  assert.equal(deepseekChip(data), 'DeepSeek Feb 2025');
+  assert.equal(deepseekChip(null), 'DeepSeek —');
+  assert.equal(fact('deepseek-v3-production', 'date').slice(0, 4), CAPTIONS[7].match(/in (\d{4})\./)[1]);
+  const [, opus, deepseek] = providersFor(data);
+  assert.equal(readsLine(opus, deepseek), "Opus 5.5 reads at 0.05× · DeepSeek's hit is 3.3% of its miss");
+  assert.equal(formatPrice(0.0222), '$0.0222');
 });

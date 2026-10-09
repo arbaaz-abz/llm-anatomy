@@ -17,7 +17,7 @@ export const CAPTIONS = [
 export const CHECK_WORK = [
   'h = 24 hit tokens ÷ 57 prompt tokens = 42.1%',
   'price per M = (1 − h) · base · write + h · base · read',
-  '            = 0.579 · $2.00 · 1.25 + 0.421 · $2.00 · 0.1 = $1.45 + $0.084 = $1.53',
+  '            = 0.579 · $2.00 · 1.25 + 0.421 · $2.00 · 0.1 = $1.45 + $0.0842 = $1.53',
 ].join('\n');
 
 // The toy's default readouts (storyboard §5 frame 8, §6): per request [prompt, from cache, computed, blocks, evicted].
@@ -25,7 +25,7 @@ export const DEFAULT_ROWS = [
   ['A', '12', '0', '12', '0, 1, 2, 3', 'none'],
   ['B', '13', '8', '5', '0, 1, 4, 5', 'none'],
   ['C', '20', '16', '4', '0, 1, 2, 3, 6, 7', 'none'],
-  ['D', '12', '0', '12', '5, 4, 7, 6', '? Yes , fish · Do you like fish · It was warm . · Why down there ?'],
+  ['D', '12', '0', '12', '5, 4, 7, 6', '?…fish, Do…fish, It…., Why…?'],
 ];
 
 // Storyboard §6 "Try this": { prompt, insight, rest }; `x` marks code text; vLLM's block size is filled from the data.
@@ -41,7 +41,7 @@ export const TRY_THIS = [
     rest: ' which is usually the shared beginning.',
   },
   {
-    prompt: 'Pick Anthropic Sonnet 5.5 with Charge the cache write on. Hit rate for pricing at 0%: $2.50 per M, more than not caching at all ($2.00). This toy\'s 42.1%: $1.53. DeepSeek\'s 56.3%: $1.21. Switch Price to DeepSeek V4-Pro: $0.66 at 0%, $0.30 at 56.3%.',
+    prompt: 'Pick Anthropic Sonnet 5.5 with Charge the cache write on. Hit rate for pricing at 0%: $2.50 per M, more than not caching at all ($2.00). This toy\'s 42.1%: $1.53. DeepSeek\'s 56.3%: $1.21. Switch Price to DeepSeek V4-Pro: $0.66 at 0%, $0.301 at 56.3%.',
     insight: 'caching pays only when hits come back.',
     rest: ' A write costs extra because the provider must hold your KV for minutes; a hit is cheap because it skips prefill math.',
   },

@@ -7,8 +7,6 @@ export const PREFILL_TITLE = 'Prefill vs decode'; // shared/concepts.json title 
 export const PAGED_TITLE = 'PagedAttention';
 
 const sv = (data, id, key) => lookupFact(data?.serving, id, key)?.value ?? null;
-const entryName = (data, id) => data?.serving?.entries?.find((e) => e.id === id)?.name ?? '';
-const parenthetical = (name) => name.match(/\(([^)]+)\)/)?.[1] ?? '—';
 
 export const FRAMING = 'Every mechanism below is a 2026 serving feature or a published price. The prices are list prices on one day and they change; '
   + 'the sizes (a block of 16, a cache hit rate) are engine defaults and one production system, not constants.';
@@ -18,11 +16,11 @@ export function factRows() {
   return [
     { claim: 'vLLM automatic prefix caching hashes each block by its parent block\'s hash, its token ids and any extra keys. It caches {sv:vllm-prefix-cache.granularity} only, and evicts unused blocks through an {sv:vllm-prefix-cache.eviction}.' },
     { claim: 'vLLM\'s default block size is {sv:vllm.default_block_size} tokens.' },
-    { claim: 'SGLang\'s RadixAttention: {sv:sglang.radix_attention} (reported).' },
-    { claim: 'DeepSeek\'s production inference system (V3/R1): {sv:deepseek-v3-production.kv_hit_rate_pct|raw}% of its {sv:deepseek-v3-production.input_tokens_per_day|count} input tokens per day hit the KV cache.' },
-    { claim: 'NVIDIA Dynamo\'s KV-aware router: {sv:dynamo.kv_aware_router}. llm-d routes prefix-aware (reported): {sv:llm-d.prefix_aware_routing}. vLLM engines publish KV events: {sv:vllm-tiered-kv.kv_events}.' },
-    { claim: 'Mooncake (Kimi): a global KV pool with a cache-aware scheduler; {sv:mooncake.capacity_gain_pct}% more effective request capacity under its latency targets (reported).' },
-    { claim: 'vLLM tiered KV offloading: {sv:vllm-tiered-kv.tiers}. With Qwen-35B on 2 × H100, up to {sv:vllm-tiered-kv.hbm_conversations} conversations fit in HBM, {sv:vllm-tiered-kv.cpu_offload_range} need CPU offload, and throughput with storage offload was {sv:vllm-tiered-kv.storage_gain|raw} conversations.' },
+    { claim: 'SGLang\'s RadixAttention keeps cached KV in a radix tree keyed by token sequences, with LRU leaf eviction.{sv:sglang.radix_attention|cite}' },
+    { claim: 'DeepSeek\'s production inference system (V3/R1, {sv:deepseek-v3-production.date|date}): {sv:deepseek-v3-production.kv_hit_rate_pct|raw}% of its {sv:deepseek-v3-production.input_tokens_per_day|count} input tokens per day hit the KV cache.' },
+    { claim: 'KV-aware routing: NVIDIA Dynamo\'s router sends requests "to GPUs that already have the most relevant short-term memory from earlier steps"{sv:dynamo.kv_aware_router|cite}; llm-d\'s scheduler routes by prefix{sv:llm-d.prefix_aware_routing|cite}; vLLM engines emit KV events so routers know what each replica holds{sv:vllm-tiered-kv.kv_events|cite}.' },
+    { claim: 'Mooncake (Kimi): a global KV pool with a cache-aware scheduler; {sv:mooncake.capacity_gain_pct}% more effective request capacity under its latency targets.' },
+    { claim: 'vLLM tiered KV offloading ({sv:vllm-tiered-kv.date|date}): {sv:vllm-tiered-kv.tiers}. With Qwen-35B on 2 × H100, up to {sv:vllm-tiered-kv.hbm_conversations} conversations fit in HBM, {sv:vllm-tiered-kv.cpu_offload_range} need CPU offload, and throughput with storage offload was {sv:vllm-tiered-kv.storage_gain|raw} conversations.' },
     { claim: 'Anthropic: a cache read costs {sv:pricing-anthropic.cache_read_mult|raw}× the input price for most models, a cache write {sv:pricing-anthropic.cache_write_5m_mult|raw}× (5-minute entry) or {sv:pricing-anthropic.cache_write_1h_mult|raw}× (1-hour entry). Sonnet 5.5 input is ${sv:pricing-anthropic-sonnet-5.5.input_usd_per_m|raw} per million tokens; Opus 5.5 is ${sv:pricing-anthropic-opus-5.5.input_usd_per_m|raw}, with reads at {sv:pricing-anthropic-opus-5.5.cache_read_mult|raw}×.' },
     { claim: 'DeepSeek V4-Pro, off-peak: ${sv:pricing-deepseek-v4-pro.input_miss_usd_per_m|raw} per million input tokens on a miss and ${sv:pricing-deepseek-v4-pro.input_hit_usd_per_m|raw} on a hit, with no cache-write fee; peak rates are {sv:pricing-deepseek-v4-pro.peak_mult|raw}×.' },
     { claim: 'Why a write costs more and a read less is not published. This page\'s reasoning (a hit skips prefill math, and the KV must be held until reuse) is an explanation, not a vendor statement.', derived: true },
@@ -44,22 +42,24 @@ export function providersFor(data) {
 
 export const deepseekHitRate = (data) => sv(data, 'deepseek-v3-production', 'kv_hit_rate_pct');
 
-// The date the prices were read, from the data's own last_verified (printed as "prices read 2026-10-07; they change").
-export const readOn = (data) => lookupFact(data?.serving, 'pricing-anthropic', 'cache_read_mult')?.last_verified ?? '—';
+// The date the prices were read, from the pricing entry's own date key (printed as "prices read 2026-10-07; they change").
+export const readOn = (data) => fillText('{sv:pricing-anthropic.date|date}', data);
+
+// The hit-rate chip that sets DeepSeek's production figure: "DeepSeek Feb 2025", the month from the data's date key.
+export const deepseekChip = (data) => `DeepSeek ${fillText('{sv:deepseek-v3-production.date|date}', data)}`;
 
 // Dated text drawn on the stage (frames 1, 8, 10, 11), filled from the data; "—" where the data is missing.
 export function stageText(data) {
   const fill = (text) => fillText(text, data);
-  const when = parenthetical(entryName(data, 'deepseek-v3-production'));
   return Object.freeze({
     frame1: Object.freeze([
       `1 slot = one token's K and V, for every layer (from ${PAGED_TITLE})`,
       fill('hand-picked prompts; blocks of 4 (vLLM uses {sv:vllm.default_block_size})'),
       'tokens count from 1; blocks from 0',
     ]),
-    deepseek: fill(`DeepSeek production (${when}): {sv:deepseek-v3-production.kv_hit_rate_pct|raw}%`),
+    deepseek: fill('DeepSeek production ({sv:deepseek-v3-production.date|date}): {sv:deepseek-v3-production.kv_hit_rate_pct|raw}%'),
     tiers: Object.freeze([
-      'vLLM tiered offload, Qwen-35B on 2 × H100:',
+      fill('vLLM tiered offload ({sv:vllm-tiered-kv.date|date}), Qwen-35B on 2 × H100:'),
       fill('up to {sv:vllm-tiered-kv.hbm_conversations} conversations fit in HBM; {sv:vllm-tiered-kv.cpu_offload_range} need CPU offload;'),
       fill('with storage offload, throughput was {sv:vllm-tiered-kv.storage_gain|raw} conversations.'),
     ]),
