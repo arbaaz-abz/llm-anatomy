@@ -80,6 +80,8 @@ test('the stage constants equal the data they restate (P3-R13 pattern)', () => {
     [sv(gb300, 'max_throughput_tok_s_user').value, sv(gb300, 'max_throughput_tok_s_gpu').value],
     [sv(gb300, 'interactivity_tok_s_user').value, sv(gb300, 'throughput_tok_s_gpu').value],
   ]);
+  assert.equal(MEASURED.date, sv(gb300, 'date').value, 'the stage restates the key\'s date');
+  assert.ok(MEASURED.conditions.endsWith(`measured ${MEASURED.date}`));
   ['max_throughput_tok_s_gpu', 'throughput_tok_s_gpu'].forEach((k) => assert.match(sv(gb300, k).note, /ISL 8192 \/ OSL 1024, FP4, .*measured 2026-05-22/));
   assert.equal(RUNNING_EXAMPLE.kvBytesPerToken, kvBytesPerToken({ layers: 80, kvHeads: 8, headDim: 128, bytesPerElem: 2 }));
   assert.equal(CROSS_TOKENS, Math.round(CROSSING));

@@ -135,15 +135,24 @@ export function drawFrame9(svg, p) {
 const MEAS = Object.freeze({ x: 24, y: 30, w: 530, h: 250, xTicks: Object.freeze([0, 10, 20, 30]), yTicks: Object.freeze([0, 4000, 8000, 12000]) });
 const LIKE_WITH_LIKE = Object.freeze(['a different model and GPU; compare the shape (asking each user to go faster', 'costs tokens per GPU), not the numbers']);
 
+const pointText = (q) => `${q.perUser} tok/s/user · ${formatInt(q.perGpu)} tok/s/GPU`;
+// The first point's label sits above it, start-anchored (end-anchored it would run into the 12,000 tick): the plot
+// prints marker labels to the right, where the connector to the second point would strike through them.
+const FIRST_LABEL_RISE = 10;
+const FIRST_LABEL_BACK = 6;
+
 function measured(parent, connector) {
   const [a, b] = MEASURED.points;
   note(parent, LEFT, 16, 'measured, not this toy\'s model', { cls: '' });
-  G.curvePlot(parent, {
+  const plot = {
     x: MEAS.x, y: MEAS.y, w: MEAS.w, h: MEAS.h, label: `${MEASURED.model} on ${MEASURED.hardware}, measured`,
     xAxis: { label: 'tokens/s per user', ticks: MEAS.xTicks }, yAxis: { label: 'tokens/s per GPU', ticks: MEAS.yTicks },
     series: connector ? [{ points: [[a.perUser, a.perGpu], [b.perUser, b.perGpu]], style: 'muted' }] : [],
-    markers: MEASURED.points.map((q) => ({ x: q.perUser, y: q.perGpu, label: `${q.perUser} tok/s/user · ${formatInt(q.perGpu)} tok/s/GPU` })),
-  });
+    markers: MEASURED.points.map((q, i) => ({ x: q.perUser, y: q.perGpu, label: i === 0 ? '' : pointText(q) })),
+  };
+  G.curvePlot(parent, plot);
+  const first = G.curvePlotLayout(plot).markers[0];
+  note(parent, MEAS.x + first.x - FIRST_LABEL_BACK, MEAS.y + first.y - FIRST_LABEL_RISE, pointText(a));
   lines(parent, LEFT, 300, [`${MEASURED.model} on ${MEASURED.hardware}`, MEASURED.conditions]);
   lines(parent, LEFT, 336, LIKE_WITH_LIKE, { cls: 'g-label' });
 }

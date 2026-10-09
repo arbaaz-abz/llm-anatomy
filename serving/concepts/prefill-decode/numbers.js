@@ -20,11 +20,12 @@ export const H100 = deepFreeze({ label: 'H100', peakTflops: 989, bandwidthTBps: 
 
 // Frame 10: two InferenceX points for DeepSeek-V4-Pro on GB300 NVL72 (serving.json inferencex-v4-pro-gb300), with
 // the conditions their notes state (ISL 8192 / OSL 1024, FP4, measured 2026-05-22).
+const MEASURED_DATE = '2026-05-22'; // serving.json inferencex-v4-pro-gb300.date; the page test pins it equal
 export const MEASURED = deepFreeze({
-  model: 'DeepSeek-V4-Pro', hardware: 'GB300 NVL72',
+  model: 'DeepSeek-V4-Pro', hardware: 'GB300 NVL72', date: MEASURED_DATE,
   points: [
     { perUser: 13.1, perGpu: 11056, label: 'max throughput' }, // max_throughput_tok_s_user, max_throughput_tok_s_gpu
     { perUser: 27, perGpu: 6182, label: 'interactive' }, // interactivity_tok_s_user, throughput_tok_s_gpu
   ],
-  conditions: 'ISL 8K / OSL 1K · FP4 · InferenceX, measured 2026-05-22',
+  conditions: `ISL 8K / OSL 1K · FP4 · InferenceX, measured ${MEASURED_DATE}`,
 });
