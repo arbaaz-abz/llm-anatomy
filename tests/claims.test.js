@@ -128,3 +128,19 @@ test('S7 shared-7: |date prints a month as "Feb 2025" and a full day as stored',
   assert.equal(fillText('{sv:vllm-gb200-dsr1.date|date}', data), '2026-02-03');
   assert.equal(CLAIM_FORMATS.date('2025-12'), 'Dec 2025');
 });
+
+test('S7 shared-7: every dated Serving measurement has a confirmed date fact that |date can print', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const serving = JSON.parse(await readFile(new URL('../data/serving.json', import.meta.url), 'utf8'));
+  const expected = {
+    'hf-continuous-batching': 'Nov 2025', 'vllm-gb200-dsr1': '2026-02-03', 'deepseek-v3-production': 'Feb 2025', 'lmsys-gb300-longctx': '2026-02-19',
+    'vllm-tiered-kv': '2026-09-10', 'vllm-fp8-kv': '2026-04-22', 'p-eagle': '2026-03-13', 'vllm-specdec': '2026-07-28', 'vllm-large-scale': 'Dec 2025',
+    'sglang-large-ep': '2025-05-05', 'inferencex-v4-pro-gb300': '2026-05-22', 'inferencex-v4-pro-gb200': '2026-05-22', 'inferencex-kimi-k2.5-b200': '2026-05-19',
+    'pricing-anthropic': '2026-10-07', 'pricing-anthropic-opus-5.5': '2026-10-07', 'pricing-anthropic-sonnet-5.5': '2026-10-07', 'pricing-deepseek-v4-pro': '2026-10-07',
+  };
+  const data = { serving };
+  for (const [id, printed] of Object.entries(expected)) {
+    assert.equal(fillText(`{sv:${id}.date|date}`, data), printed, id);
+    assert.equal(lookupFact(serving, id, 'date').confidence, 'confirmed', id);
+  }
+});
