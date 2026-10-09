@@ -40,7 +40,7 @@ Bottom half: `paged-attention`'s `blockPool` with 8 physical blocks of 4 slots (
 
 Counters at the right (printed numbers): "prompt tokens", "from cache", "computed", "hit rate".
 
-Layout for 580 × 366: tree in the top 190 px. The longest path has 6 blocks (A's turn plus C's), so nodes are 64 × 26 and print their first word + "…"; the followed request's nodes print all four words, and a path longer than 6 nodes wraps to a second row after the 4th node (`The cat sat down`). At 64 px plus 14 px edges, 7 nodes including the root take 532 px; pool 2 rows × 4 blocks at the bottom (cell 14, as in `paged-attention`). At 400 px the counters move under the pool.
+Layout for 580 × 366: tree in the top 190 px. The longest path has 6 blocks (A's turn plus C's), so nodes are 64 × 26 and print their first word + "…"; the followed request's nodes print all four words, and the page passes `prefixTree`'s `wrapAfter: 6`: at 64 px plus 14 px edges, the longest path (6 blocks plus the root, 7 nodes) takes 532 px in one row, and a deeper path wraps to a second row after its 6th block; pool 2 rows × 4 blocks at the bottom (cell 14, as in `paged-attention`). At 400 px the counters move under the pool.
 
 Terms introduced (one per frame): cached block (1), block key (2), cache hit (3), full blocks only (4), multi-turn reuse (5), prefix match from the start (6), LRU eviction (7), hit rate (8), KV-aware routing (9), offload tier (10), cache read / write price (11). Terms assumed from `paged-attention`: block, slot, block size, pool, reference count, free block; from `prefill-decode`: prefill, step time.
 
