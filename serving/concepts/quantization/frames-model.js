@@ -35,19 +35,27 @@ function memoryParts(plan, hbmBytes) {
 
 // One memory bar with its header; parts under 2 px fold into the zoomed bar below it (the glyph's rule), and the KV note
 // ("KV 671 MB (1 user)") prints beside that zoomed bar, so a sliver is never the only place its size is written.
-function memoryBar(parent, { x, y, w, header, plan, preset, kvNote, noteY }) {
+function memoryBar(parent, { x, y, w, header, plan, preset, kvNote, noteY, freeNote = null }) {
   note(parent, x, y - 8, header, { cls: '' });
   G.shareBar(parent, { x, y, w, parts: memoryParts(plan, preset.hbmBytes), label: `${header}: memory` });
   if (kvNote) note(parent, noteY.x, noteY.y, kvNote);
+  if (freeNote) note(parent, freeNote.x, freeNote.y, freeNote.text);
 }
 
 function drawBar8(parent, f) {
   const plan = planFor(f);
+  const kv = plan.users * plan.kvPerUser;
+  // Only when the KV part folds into the zoomed bar does the note belong beside that bar; otherwise the zoom holds the free
+  // sliver, so the KV size sits on the legend's "KV cache" row and the zoom says what it holds.
+  const kvFolded = (kv / H200.hbmBytes) * BAR8.w < 2;
+  const free = Math.max(H200.hbmBytes - plan.weights - kv, 0);
+  const zoomY = BAR8.y + 14 + 40 + 11;
   memoryBar(parent, {
     x: BAR8.x, y: BAR8.y, w: BAR8.w, plan, preset: H200,
     header: `${f.label} · ${bitsText(bitsPerElement(f.key))} bits per weight · weights ${formatBytes(plan.weights)}`,
-    kvNote: `KV ${formatBytes(plan.users * plan.kvPerUser)} (${usersText(plan.users)})`,
-    noteY: { x: BAR8.x + BAR8.w + 12, y: BAR8.y + 14 + 40 + 11 },
+    kvNote: `KV ${formatBytes(kv)} (${usersText(plan.users)})`,
+    noteY: kvFolded ? { x: BAR8.x + BAR8.w + 12, y: zoomY } : { x: BAR8.x + 130, y: BAR8.y + 14 + 40 + 14 + 32 + 15 },
+    freeNote: kvFolded ? null : { text: `free ${formatBytes(free)}`, x: BAR8.x + BAR8.w + 12, y: zoomY },
   });
 }
 
@@ -84,8 +92,8 @@ const GROUPS = Object.freeze([
 function stepParts(step, preset) {
   const perByte = 1 / (preset.bandwidthTBps * 1e12);
   const reading = [
-    { label: 'weights', s: (step.bytes - step.kvBytes - step.actBytes) * perByte },
-    { label: 'KV and activations', s: (step.kvBytes + step.actBytes) * perByte },
+    { label: 'weights read', s: (step.bytes - step.kvBytes - step.actBytes) * perByte },
+    { label: 'KV read and activations', s: (step.kvBytes + step.actBytes) * perByte },
   ].filter((q) => q.s > 0);
   return { reading, mathS: step.computeS };
 }

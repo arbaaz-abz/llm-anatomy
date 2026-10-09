@@ -148,6 +148,9 @@ function drawCompareScene(parent, p) {
   const slide = ease(seg(p, 0.2, 0.7)); // the MX dot slides from where the NVFP4 scale put it to where the power-of-two scale puts it
   const points = [{ value: lerp(s.nvRatio, s.mxRatio, slide), snapped: true, followed: true }, { value: s.nvRatio, snapped: true, followed: true }];
   G.numberLine(parent, { x: ROW_X, y: CMP.line, w: ROW_W, lo: s.lo, hi: s.hi, grid: s.grid, points, label: 'the followed weight, ÷ scale' });
+  const lineX = (v) => ROW_X + ((v - s.lo) / (s.hi - s.lo)) * ROW_W;
+  note(parent, lineX(s.nvRatio) - 13, CMP.line + 8, 'NV', { anchor: 'end' });
+  note(parent, lineX(points[0].value) + 13, CMP.line + 8, 'MX');
   note(parent, ROW_X - 8, CMP.line + 28, 'weight ÷ scale', { anchor: 'end' });
   s.notes.forEach((t, i) => note(parent, LEFT, CMP.notes + i * 16, t, { cls: '' }));
 }

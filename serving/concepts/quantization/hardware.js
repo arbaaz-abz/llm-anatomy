@@ -51,10 +51,9 @@ export function usableModelFormat(preset, wanted) {
   return MODEL_FORMATS[wanted].math === 'fp4' && preset.peak.fp4 == null ? FP4_FALLBACK : wanted;
 }
 
-// The chip chip's label: "H200 (141 GB nominal)", "B200 (180 GB usable of 192 nominal)".
+// The chip chip's label: "H200 · 141 GB nominal", "B200 · 180 GB usable (192 nominal)".
 export function chipLabel(preset) {
-  const gb = `${preset.hbmGb} GB ${preset.basis}`;
-  return preset.basis === 'usable' ? `${preset.label} (${gb} of ${preset.nominalGb} nominal)` : `${preset.label} (${gb})`;
+  return `${preset.label} · ${preset.hbmGb} GB ${preset.basis}${preset.basis === 'usable' ? ` (${preset.nominalGb} nominal)` : ''}`;
 }
 
 // A chip preset for the stage in chipPreset's shape, built from the stage constants (numbers.js).

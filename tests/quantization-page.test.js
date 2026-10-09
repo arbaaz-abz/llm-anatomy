@@ -70,7 +70,7 @@ test('facts rows print the data, with the formats the conventions name', () => {
   const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
   assert.match(rows[1], /^DeepSeek-V4-Pro ships FP4 experts \+ FP8 rest \(FP8 block 128×128, UE8M0 scales\): FP8 is half/);
   assert.match(rows[2], /32 per block, one 8-bit power-of-two \(E8M0\) scale\. NVFP4: 16 per block, an E4M3 scale plus a per-tensor FP32 scale, 4\.5 bits per value/);
-  assert.match(rows[3], /^gpt-oss-120b shipped post-trained with MXFP4 MoE weights \(\): 116\.83B total and 5\.13B active parameters, and it fits one 80 GB GPU\.$/);
+  assert.match(rows[3], /^gpt-oss-120b shipped post-trained with MXFP4 MoE weights: 116\.83B total and 5\.13B active parameters, and it fits one 80 GB GPU\.$/);
   assert.match(rows[4], /the checkpoint is about 865 GB \(size reported\)/);
   assert.match(rows[6], /gave 2\.71–2\.95× lower dollars per million tokens, between 30 and 90 tokens per second per user/);
   assert.match(rows[7], /cost 1% or less accuracy/);
@@ -127,8 +127,8 @@ test('chip presets read hbmFor with its basis word, dense peak keys and the band
   assert.deepEqual([h200.hbmBytes, h200.basis], [hbmFor(data.hardware.entries.find((e) => e.id === 'h200')).bytes, 'nominal']);
   assert.equal(h200.peak.fp4, null);
   assert.equal(h200.bandwidthTBps, 4.8);
-  assert.equal(chipLabel(h200), 'H200 (141 GB nominal)');
-  assert.equal(chipLabel(b200), 'B200 (180 GB usable of 192 nominal)');
+  assert.equal(chipLabel(h200), 'H200 · 141 GB nominal');
+  assert.equal(chipLabel(b200), 'B200 · 180 GB usable (192 nominal)');
   assert.deepEqual(CHIPS.map((c) => c.id), ['h200', 'b200']);
   assert.throws(() => chipPreset(data, 'h100'), RangeError);
   assert.throws(() => chipPreset({ hardware: { entries: [] } }, 'h200'), RangeError);
@@ -270,4 +270,20 @@ test('no "—" and no bare slug in anything the toy prints', () => {
       assert.doesNotMatch(JSON.stringify(v), /—|NaN|undefined|Infinity/);
     }
   }
+});
+
+test('the vLLM FP8 KV post prints its date from the key; the frame 10 note and row 9 word the recovery once (quantization-4, XS-4)', () => {
+  const rows = lessonFor(data).facts.rows.map((r) => fillText(r.claim, data));
+  assert.match(rows[8], /^vLLM's FP8 KV cache \(2026-04-22\) halves KV bytes/);
+  const below = fillText(BELOW[9][0], data);
+  assert.match(below, /FP8 KV-cache post \(2026-04-22\)/);
+  assert.match(below, /the final configuration recovers 97–98% of the baseline AUC at 128K/);
+  assert.doesNotMatch(below, /the fix recovers/);
+});
+
+test('the B200 basis words read one way (XS-6) and references say frame / try-this (XS-7)', () => {
+  assert.equal(fillText(BELOW[7][0], data).includes('B200: 180 GB usable (192 nominal)'), true);
+  const takeaways = LESSON.takeaways.join(' ');
+  assert.match(takeaways, /\(frames 2–5, try-this 1\)/);
+  assert.doesNotMatch([takeaways, ...tryThis(data).map((t) => t.rest ?? '')].join(' '), /\(steps? \d/);
 });

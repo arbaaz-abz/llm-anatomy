@@ -6,7 +6,7 @@ import { blockView, lineSpec, checkWork, shrink, cellText, codeText, scaleText, 
 import { formatBytes, formatInt } from '@math/core.js';
 import { FOLLOWED } from './numbers.js';
 
-export const NOTE_LINE = 'On a hand-sized block INT4 can match FP4\'s error; FP4\'s advantage is that Blackwell tensor cores run it natively (step 9).';
+export const NOTE_LINE = 'On a hand-sized block INT4 can match FP4\'s error; FP4\'s advantage is that Blackwell tensor cores run it natively (frame 9).';
 
 // The "Round a block" figure and readouts. One entry per weight; a block's scale chip spans its weights.
 export function blockFigure(state) {

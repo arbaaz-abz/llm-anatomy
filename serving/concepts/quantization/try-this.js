@@ -51,7 +51,7 @@ function fourth(data) {
   return {
     prompt: `On the H200 with Model weights FP8, set KV cache to FP8: users ${usersText(plain)} → ${usersText(fp8Kv)}.`,
     insight: 'at long context the KV cache is the bigger target,',
-    rest: ' and its quantization needs its own care (step 10).',
+    rest: ' and its quantization needs its own care (frame 10).',
   };
 }
 
