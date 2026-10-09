@@ -9,7 +9,7 @@ const stage = (page) => page.locator('#stepper-root .stepper-stage');
 // Everything that can change the page's width: fonts, the real fact, the open math panel.
 async function settle(page) {
   await page.goto('/gallery/');
-  await expect(page.locator('#figures figure')).toHaveCount(37);
+  await expect(page.locator('#figures figure')).toHaveCount(48);
   await expect(page.locator('#fact-root .fact-source')).toBeVisible();
   await page.locator('.math-panel summary').click();
   await expect(page.locator('.math-panel .katex').first()).toBeVisible();
@@ -21,7 +21,7 @@ test('gallery loads with no console errors and renders every glyph figure', asyn
   await settle(page);
   await expect(page.locator('#figures svg .glyph').first()).toBeVisible();
   await expect(page.locator('#fact-root .fact-reported')).toHaveText('reported');
-  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(37);
+  await expect(page.locator('#figures svg[role="group"][aria-labelledby]')).toHaveCount(48);
   expect(errors).toEqual([]);
 });
 
@@ -270,7 +270,7 @@ test('a draft token is dashed and muted, never hatched; dim patches, dim blocks 
 
 test('memBar keeps its exact output (labels, percentages, geometry) through the shareBar refactor', async ({ page }) => {
   await page.goto('/gallery/');
-  const bar = page.locator('#figures .g-membar');
+  const bar = page.locator('#figures .g-membar').first();
   await expect(bar).toHaveAttribute('aria-label', 'memory: useful 48%, reserved but empty 10%, free 42%');
   await expect(bar.locator('.g-pct')).toHaveText(['48%', '10%', '42%']);
   await expect(bar.locator('.g-label')).toHaveText('useful 23 · reserved 5 · free 20');
@@ -430,3 +430,37 @@ test('choice: set() of a disabled value throws; with no disabled option there is
   expect(out.reorder).toMatch(/^RangeError: choice: update\(\) takes the same option values and labels/);
   expect(out.cleared).toEqual({ note: 0, disabled: 0, value: 'b' });
 });
+
+// ---- Shared prep S6: the Serving glyph figures ----
+for (const scheme of ['light', 'dark']) {
+  test(`S6 figures (${scheme}): nothing clipped, no accent stroke over 2 px, printed numbers in place, no dashed free slot`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await settle(page);
+    expect(await glyphOverflows(page, '#figures svg')).toEqual([]);
+    expect(await accentStrokeOffenders(page, '#figures')).toEqual([]);
+    const bars = page.locator('#figures .g-stepbar');
+    await expect(bars).toHaveCount(2);
+    await expect(bars.nth(0).locator('.g-step-total')).toHaveText('23.5 ms');
+    await expect(bars.nth(1).locator('.g-step-total')).toHaveText('70.7 ms');
+    await expect(bars.nth(0).locator('.g-step-overlapped')).toHaveText('overlapped');
+    await expect(bars.nth(0).locator('.g-step-row.g-faint')).toHaveCount(1);
+    await expect(bars.nth(1).locator('.g-step-row.g-faint .g-step--memory')).toHaveCount(2);
+    await expect(page.locator('#figures .g-step-hit').first()).toHaveCSS('fill', 'rgba(0, 0, 0, 0)');
+    await expect(page.locator('#figures .g-block-refs')).toHaveText(['2', '3']);
+    const free = page.locator('#figures .g-slot--free .g-slot-k').first();
+    expect(await free.evaluate((r) => getComputedStyle(r).strokeDasharray)).toBe('none');
+    const fills = await page.locator('#figures .g-pool').nth(1).evaluate((g) => ['filled', 'cached', 'free'].map((st) => getComputedStyle(g.querySelector(`.g-slot--${st} .g-slot-k`)).fill));
+    expect(new Set(fills).size).toBe(3);
+    await expect(page.locator('#figures .g-membar .g-bracket')).toHaveCount(1);
+    await expect(page.locator('#figures .g-group-label')).toHaveText(['P1', 'P2', 'P3', 'P4', 'decode']);
+    await expect(page.locator('#figures .g-nl')).toHaveCount(2);
+    await expect(page.locator('#figures .g-nl').nth(0).locator('.g-nl-tick')).toHaveCount(15);
+    await expect(page.locator('#figures .g-ptree-node')).toHaveCount(8);
+    const states = await page.locator('#figures .g-ptree-node').evaluateAll((ns) => ns.map((n) => getComputedStyle(n.querySelector('.g-frame')).fill));
+    expect(new Set(states).size).toBeGreaterThanOrEqual(5);
+    await expect(page.locator('#figures .g-ptree .g-select')).toHaveCount(2);
+    await expect(page.locator('#figures .g-ptree .g-hatch')).toHaveCount(1);
+    await expect(page.locator('#figures .g-token[data-req]')).toHaveCount(4);
+    await expect(page.locator('#figures .g-request[data-req]')).toHaveCount(6);
+  });
+}
