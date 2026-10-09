@@ -30,7 +30,8 @@ const trimmed = (v) => (Object.is(v, -0) || v === 0 ? 0 : v);
 // A weight, code-times-scale or error cell: whole numbers as they are, otherwise two decimals ("−0.31", "2.10", "0").
 export const cellText = (v) => {
   const x = trimmed(v);
-  return realMinus(Number.isInteger(x) ? String(x) : x.toFixed(2));
+  const text = Number.isInteger(x) ? String(x) : x.toFixed(2);
+  return realMinus(text === '-0.00' ? '0.00' : text); // a tiny negative error prints as 0.00, never "−0.00"
 };
 // An integer or E2M1 code: "−5", "1.5", "0.5".
 export const codeText = (v) => realMinus(String(trimmed(v)));
@@ -119,7 +120,8 @@ export function shrink({ modelFormat, kv }, preset) {
   };
 }
 
-export const bitsText = (bits) => bits.toFixed(2);
+// Bits per weight with scales, as the formats count them: 16, 8, 4.5, 4.25 (stage and toy print the same).
+export const bitsText = (bits) => String(bits);
 export const freeText = (m) => (m.fits ? formatBytes(m.freeBytes) : DOES_NOT_FIT);
 export const usersText = (m) => formatInt(m.users);
 export const timeText = (step) => formatDuration(step.timeS);

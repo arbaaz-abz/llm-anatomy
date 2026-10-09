@@ -22,7 +22,7 @@ test.describe('quantization toy: round a block, then shrink a model', () => {
     const errors = collectConsoleErrors(page);
     await expectReadouts(page, {
       'mean-error': '0.064', zeroed: '3', clipped: '0',
-      bits: '8.00', weights: '70 GB', memory: '141 GB nominal', free: '71 GB', 'kv-user': '671 MB', users: '105', decode: '14.7 ms', prefill: '290 ms',
+      bits: '8', weights: '70 GB', memory: '141 GB nominal', free: '71 GB', 'kv-user': '671 MB', users: '105', decode: '14.7 ms', prefill: '290 ms',
     });
     await expect(readout(page, 'check-work')).toHaveText(CHECK_WORK);
     await expect(page.locator('[data-section="toy"] .g-nl-dot')).toHaveCount(8);
@@ -65,7 +65,7 @@ test.describe('quantization toy: round a block, then shrink a model', () => {
     await pick(page, 'modelFormat', 'fp8');
     await expectReadouts(page, { weights: '70 GB', users: '105', decode: '14.7 ms', prefill: '290 ms' });
     await pick(page, 'modelFormat', 'w4a16');
-    await expectReadouts(page, { bits: '4.50', weights: '39.4 GB', users: '151', decode: '8.35 ms', prefill: '580 ms' });
+    await expectReadouts(page, { bits: '4.5', weights: '39.4 GB', users: '151', decode: '8.35 ms', prefill: '580 ms' });
     await pick(page, 'hw', 'b200');
     await pick(page, 'modelFormat', 'nvfp4');
     await expectReadouts(page, { memory: '180 GB usable', users: '209', decode: '5.01 ms', prefill: '63.7 ms' });
@@ -88,7 +88,7 @@ test.describe('quantization toy: round a block, then shrink a model', () => {
     await pick(page, 'modelFormat', 'nvfp4');
     await pick(page, 'hw', 'h200');
     await expect(choice(page, 'modelFormat', 'w4a16')).toHaveAttribute('aria-pressed', 'true');
-    await expectReadouts(page, { bits: '4.50', users: '151', decode: '8.35 ms', prefill: '580 ms' });
+    await expectReadouts(page, { bits: '4.5', users: '151', decode: '8.35 ms', prefill: '580 ms' });
     await pick(page, 'modelFormat', 'fp8');
     await expectReadouts(page, { users: '105', decode: '14.7 ms', prefill: '290 ms' });
   });

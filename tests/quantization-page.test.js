@@ -209,7 +209,7 @@ test('Shrink-a-model readouts equal the shared functions for the same inputs (Re
   const decode = stepTime({ ...RUNNING_EXAMPLE, tokens: 1, seqs: 1, context: 2048 });
   const prefill = stepTime({ ...RUNNING_EXAMPLE, tokens: 4096, seqs: 0, context: 0 });
   assert.deepEqual(m, {
-    bits: '8.00', weights: formatBytes(70e9), memory: { value: '141 GB nominal', sub: '' }, free: formatBytes(free), kvPerUser: formatBytes(kv),
+    bits: '8', weights: formatBytes(70e9), memory: { value: '141 GB nominal', sub: '' }, free: formatBytes(free), kvPerUser: formatBytes(kv),
     users: formatInt(maxUsersPerGpu(free, kv)), decode: { value: formatDuration(decode.timeS), sub: 'memory-bound' }, prefill: { value: formatDuration(prefill.timeS), sub: 'compute-bound' },
   });
   assert.deepEqual([m.weights, m.free, m.kvPerUser, m.users, m.decode.value, m.prefill.value], ['70 GB', '71 GB', '671 MB', '105', '14.7 ms', '290 ms']);
@@ -223,7 +223,7 @@ test('Shrink-a-model: the try-this and storyboard rows on the H200 and the B200'
   assert.deepEqual(['bf16', 'fp8', 'nvfp4', 'mxfp4'].map((f) => view({ hw: 'b200', modelFormat: f, kv: 'fp8' }).model.users), ['119', '327', '419', '425']);
   assert.deepEqual(['bf16', 'fp8', 'w4a16'].map((f) => view({ modelFormat: f, kv: 'fp8' }).model.users), ['2', '211', '302']);
   assert.deepEqual(view({ hw: 'b200' }).model.memory, { value: '180 GB usable', sub: 'of 192 GB nominal' });
-  assert.deepEqual(['bf16', 'fp8', 'nvfp4', 'mxfp4'].map((f) => view({ modelFormat: f, hw: 'b200' }).model.bits), ['16.00', '8.00', '4.50', '4.25']);
+  assert.deepEqual(['bf16', 'fp8', 'nvfp4', 'mxfp4'].map((f) => view({ modelFormat: f, hw: 'b200' }).model.bits), ['16', '8', '4.5', '4.25']);
   assert.equal(view({ hw: 'b200', modelFormat: 'nvfp4' }).model.prefill.sub, 'compute-bound');
   assert.equal(view({ modelFormat: 'w4a16' }).model.decode.sub, 'memory-bound');
 });
