@@ -83,7 +83,7 @@ NVFP4 and MXFP4 model chips are disabled on the H200 with a visible note ("no FP
 | Mean error, weights rounded to zero, clipped weights | `.meanAbsErr`, `.zeroed`, `.clipped` | 3 decimals; counts |
 | Bits per weight including scales, for the real formats | `bitsPerElement('bf16' | 'fp8_e4m3' | 'mxfp4' | 'nvfp4')` (exact `FORMATS` keys; a bare `fp8` throws) from `math/roofline.js` (gpu-primer) | 2 decimals |
 | Model bytes, free memory, users at 2,048 tokens | `weightBytes({ params: 70e9, bitsPerParam: bitsPerElement(format) })`, `freeHbmPerGpu`, `maxUsersPerGpu(free, kvCacheBytes({ bytesPerToken: kvBytes, tokens: 2048 }))` (`kv-cache`) with kvBytes 327,680 (BF16) or 163,840 (FP8) | `formatBytes`; `formatInt` |
-| Decode step (1 user, 2,048 context) and prefill (4,096 tokens) | `stepTime({ …, dModel: 8192, actBytesPerElem, peakTflops })` with `peakTflops` from the math precision's column of `hardware.json` (`bf16_dense_tflops`, `fp8_e4m3_dense_tflops`, `nvfp4_dense_tflops` or, on mi355x, `mxfp4_dense_tflops`) and `actBytesPerElem` = `bytesPerElement` of that precision (keys `bf16`, `fp8_e4m3`, `nvfp4`, `mxfp4`) | `formatDuration` (3 s.f.) |
+| Decode step (1 user, 2,048 context) and prefill (4,096 tokens) | `stepTime({ …, dModel: 8192, actBytesPerElem, peakTflops })` with `peakTflops` from the math precision's column of `hardware.json` (`bf16_dense_tflops`, `fp8_e4m3_dense_tflops`, `nvfp4_dense_tflops` or, on mi355x, `mxfp4_dense_tflops`) and `actBytesPerElem` = 2 for BF16 math, 1 for FP8 and FP4 math (activations stay at least one byte; `bytesPerElement('nvfp4')` = 0.5625 is a weight width, not an activation width) | `formatDuration` (3 s.f.) |
 
 **Check my work** (default state: INT4, block 8, last weight 2.10; the followed weight 0.47):
 ```

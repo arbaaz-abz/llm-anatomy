@@ -82,7 +82,7 @@ Rates behind the chips: `1 / stepTime(llama-3.1-70b FP8, H200, batch 1, context 
 **Check my work** (default state: 2,000-token prompt, 500-token answer, no queue, alone on the GPU):
 ```
 TTFT = queue + prefill = 0 s + 141 ms = 141 ms
-total = TTFT + (n − 1) · TPOT = 141 ms + 499 · 14.7 ms = 7.49 s   (each value rounded once, from the unrounded function output)
+total = TTFT + (n − 1) · TPOT = 141 ms + 499 · 14.7 ms (7.35 s) = 7.49 s   (each value rounded once, from the unrounded function output)
 ```
 
 **Try this** (each leads to a named insight)
