@@ -153,3 +153,24 @@ export function formatInt(n) {
   const text = INTEGER.format(Math.abs(n));
   return n < 0 && text !== '0' ? `−${text}` : text;
 }
+
+// ---- Shared patch S7 (Serving review, shared-6) ----
+
+const USD_MIN_DECIMALS = 2;
+const USD_WHOLE_FROM = 1000; // from here every whole dollar prints ("$87,072"), cents dropped
+
+// Dollars, the course's one money formatter: under $1 three significant figures with at least two decimals, cents
+// from $1, whole dollars from $1,000; separators, real minus: "$0.119", "$0.28", "$2.50", "$0.0144", "$87,072", "−$1.50".
+export function formatUsd(x) {
+  if (!isFiniteNumber(x)) throw new RangeError(`formatUsd: x must be a finite number, got ${x}`);
+  const rounded = Number(Math.abs(x).toPrecision(3));
+  const whole = Math.abs(x) >= USD_WHOLE_FROM;
+  const decimals = rounded === 0 ? USD_MIN_DECIMALS : Math.max(USD_MIN_DECIMALS, 2 - Math.floor(Math.log10(rounded)));
+  // From $1 up the cents are real (12.34 → "$12.34", 123.4 → "$123.40"), never zero padding after a 3 s.f. cut.
+  const cents = !whole && Math.abs(x) >= 1;
+  const digits = new Intl.NumberFormat('en-US', whole
+    ? { maximumFractionDigits: 0 }
+    : cents ? { minimumFractionDigits: USD_MIN_DECIMALS, maximumFractionDigits: USD_MIN_DECIMALS }
+    : { minimumFractionDigits: USD_MIN_DECIMALS, maximumFractionDigits: decimals }).format(whole || cents ? Math.abs(x) : rounded);
+  return `${x < 0 && rounded !== 0 ? '−' : ''}$${digits}`;
+}

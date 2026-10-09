@@ -13,7 +13,7 @@ After this page you can explain how a cheap drafter's guesses let the big model 
 - **Misconception:** "Speculative decoding trades quality for speed: you get the small model's answers." → **Reality:** every token is checked by the target and kept with a probability set by both models; a rejected position is resampled from the leftover probability. Tokens come out with exactly the target's distribution, because the leftover repays exactly the probability that rejection removed. Corrected by frame 6 and try-this 4. (04 §4.1, CONFIRMED via vLLM: "preserves the verifier model's output distribution exactly")
 - **Misconception:** "Checking k guesses costs k target steps." → **Reality:** the target scores all k + 1 positions in one pass, and while decode is memory-bound that pass costs about one step: 14.7 ms for 4 positions and 14.7 ms for 1 at batch 1. Corrected by frame 3. (04 §4.1; `prefill-decode`)
 - **Misconception:** "More guesses per round is always faster." → **Reality:** each extra guess is accepted only if all earlier ones were, so returns shrink: at acceptance 0.7, going from 3 to 5 guesses adds 0.41 tokens per round and the speedup peaks around 5 guesses (2.35×), then falls (8 guesses: 2.28×). Corrected by frame 7 and try-this 1. (04 §4.1)
-- **Misconception:** "A 2–3× speedup means a server can handle 2–3× more traffic." → **Reality:** it is a per-user latency gain. At large batch the verify pass becomes compute-bound and the gain falls: 2.2× at one user, 2.14× at 64, 1.53× at 128, and with 5 guesses at 211 users it is 0.91×, slower than not speculating. EAGLE-3's own measurement fell from up to 6.5× to 1.38× at batch 64. Corrected by frame 9 and try-this 2. (04 §4.1, §10 item 8)
+- **Misconception:** "A 2–3× speedup means a server can handle 2–3× more traffic." → **Reality:** it is a per-user latency gain. At large batch the verify pass becomes compute-bound and the gain falls: 2.2× at one user, 2.14× at 64, 1.53× at 128, and with 5 guesses at 211 users it is 0.91 of the plain speed, slower than not speculating. EAGLE-3's own measurement fell from up to 6.5× to 1.38× at batch 64. Corrected by frame 9 and try-this 2. (04 §4.1, §10 item 8)
 
 ## 3. Hook and intuition (final wording)
 **Hook:** How can a small model's guesses make a big model faster without changing a single word the big model would have written?
@@ -63,9 +63,9 @@ Determinism: every frame is a pure function of (step, progress). Reduced motion 
 **Controls**
 | id | Label | Type | Range / values | Default | Presets |
 |---|---|---|---|---|---|
-| `alpha` | Acceptance rate α | Slider | 0.50–0.95, step 0.05 | 0.70 | chips "MTP 0.85", "MTP 0.90" (with k = 1) from `serving.json/deepseek-v3-mtp.acceptance_pct` |
+| `alpha` | Acceptance rate α | Slider | 0.50–0.95, step 0.05 | 0.70 | chips "MTP 0.85", "MTP 0.9" (with k = 1) from `serving.json/deepseek-v3-mtp.acceptance_pct` |
 | `k` | Guesses per round | Slider | 1–8 | 3 | — |
-| `c` | Drafter cost per guess (fraction of a target step) | Preset chips | 0 · 0.05 · 0.10 · 0.20 | 0.05 | — |
+| `c` | Drafter cost per guess (fraction of a target step) | Preset chips | 0 · 0.05 · 0.1 · 0.2 | 0.05 | — |
 | `batch` | Users in the batch | Slider (snapped) | 1, 4, 16, 64, 128, 211 (max that fits at 1,024 tokens of context) | 1 | — |
 | `guess` | Drafter's guess at the zoomed position | Chips | down · on · up · big | down | — |
 
@@ -87,7 +87,7 @@ speedup = E / (1 + k·c) = 2.53 / (1 + 3 · 0.05) = 2.53 / 1.15 = 2.2× (rounded
 
 **Try this** (each leads to a named insight)
 1. α 0.7, c 0.05, batch 1. Slide k 1 → 3 → 5 → 8: tokens per round 1.70 → 2.53 → 2.94 → 3.20; speedup 1.62 → 2.20 → 2.35 → 2.28. → **Insight: guesses have diminishing returns.** A guess counts only if every earlier one survived, while each one costs drafting time, so the best k is small and depends on α and c.
-2. k 3, batch 1 → 64 → 128 → 211: speedup 2.20 → 2.14 → 1.53 → 1.19. Now set k = 5 at 211 users: 0.91×. → **Insight: speculative decoding spends idle arithmetic, so it fades when the batch has none left.** It is a latency tool for small batches, not a free throughput multiplier.
+2. k 3, batch 1 → 64 → 128 → 211: speedup 2.20 → 2.14 → 1.53 → 1.19. Now set k = 5 at 211 users: 0.91 of the plain speed. → **Insight: speculative decoding spends idle arithmetic, so it fades when the batch has none left.** It is a latency tool for small batches, not a free throughput multiplier.
 3. Press "MTP 0.85" (k = 1): 1.85 tokens per round, 1.76× at batch 1 and still 1.73× at 128 users. → **Insight: one well-trained extra guess survives large batches,** because the verify pass only doubles the tokens. That is close to DeepSeek-V3's reported ~1.8× and why MTP heads are popular for serving.
 4. In the position panel, switch the guess from `down` to `on`, then `up`: keep chance 0.857 → 1.000 → 1.000; the result vector stays [0.60, 0.25, 0.10, 0.05] every time. → **Insight: only guesses the drafter overrates are ever rejected, and the leftover repays exactly what rejection removed,** so the target's distribution is preserved whatever the drafter does.
 

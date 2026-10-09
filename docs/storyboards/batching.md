@@ -6,12 +6,14 @@ Sources: 04 §1.2, §1.3, §2.1, §2.2, §2.3, §9.1 (slot-timeline and chunked-
 
 Running example: the four requests A–D of `paged-attention` (`TOY_REQUESTS` in `math/serving.js`), unchanged, so the two lessons line up step for step. Step times come from `prefill-decode`'s running example (Llama-3.1-70B, FP8 weights, one H200), where a step with up to ~200 tokens takes 14.6 ms.
 
-| Request | Arrives | Prompt | Output |
+| Request | Arrives | Prompt | Decode steps |
 |---|---|---|---|
 | A | step 0 | 8 | 4 |
 | B | step 0 | 5 | 2 |
 | C | step 0 | 10 | 6 |
 | D | step 1 | 6 | 3 |
+
+The prefill step ends with a request's first token; each tick after it is one decode step, one more token.
 
 Step rule (the same as `paged-attention`'s): the step a request is admitted runs its prefill; each later step is one decode step that adds one token; a request with `output` o admitted at step a is done at the end of step a + o, and its seat is free from the next step. Steps count from 0; this page has no memory addresses.
 
@@ -29,7 +31,7 @@ After this page you can explain why static batching leaves seats idle and makes 
 
 In `prefill-decode` you saw that a decode step costs about the same whether it serves one user or dozens: the GPU reads the weights once and every user in the batch gets a token. So the server's job is to keep that batch full. The simplest way, static batching, gathers a group of requests, runs them together, and starts the next group only when the whole group is done. Answers have different lengths, though. When the short ones finish, their seats stay held and empty until the longest one is done, and requests that arrived in the meantime wait outside. Static batches also pad: each prompt is stretched to the longest one's length (adding a 100-token prompt to 8 running requests wastes 693 pad tokens in Hugging Face's worked example).
 
-Continuous batching, introduced by Orca in 2022, fixes this by deciding the batch one step at a time. Before every step the scheduler drops finished requests and seats waiting ones, so a seat is reused the step after it frees, and sequences of different lengths sit side by side without padding (ragged batching). The major engines (vLLM, SGLang, TensorRT-LLM) all schedule this way; vLLM's core loop is literally schedule, run the model, sample, update, repeat.
+Continuous batching, introduced by Orca at OSDI 2022, fixes this by deciding the batch one step at a time. Before every step the scheduler drops finished requests and seats waiting ones, so a seat is reused the step after it frees, and sequences of different lengths sit side by side without padding (ragged batching). The major engines (vLLM, SGLang, TensorRT-LLM) all schedule this way; vLLM's core loop is schedule, run the model, postprocess, repeated every step.
 
 Mixing requests in one step has a catch. A new request's whole prompt is prefilled in the step it joins, and a long prompt makes that step long. Everyone else's next token waits for it. Chunked prefill gives each step a token budget: running decodes go first, and the prompt fills the rest of the budget a slice at a time, so no step gets much longer than the budget allows. The price is that the long prompt's own first token comes a little later.
 
@@ -54,7 +56,7 @@ Numbers: `simulateStatic` / `simulateContinuous` (seats 3), and `scheduleTokens`
 
 | # | On screen | What moves | Caption (final wording) | Numbers shown |
 |---|---|---|---|---|
-| 1 | Three empty seat rows; queue box at the left with chips A, B, C, and D in its hue with the plain label "arrives at step 1". The request table above. Labels: "seat = a place in the running batch"; "1 step ≈ 14.6 ms here"; "memory is not modeled on this page, which is why PagedAttention comes next". | The table rows fade in; seat rows draw. | Four requests and a GPU that runs at most three at a time. Each running request holds a seat, and every step each seated request gets one more token. | A 8/4 · B 5/2 · C 10/6 · D 6/3 (prompt/output) · D arrives at step 1 · 3 seats |
+| 1 | Three empty seat rows; queue box at the left with chips A, B, C, and D in its hue with the plain label "arrives at step 1". The request table above. Labels: "seat = a place in the running batch"; "1 step ≈ 14.6 ms here"; "memory is not modeled on this page, which is why PagedAttention comes next". | The table rows fade in; seat rows draw. | Four requests and a GPU that runs at most three at a time. Each running request holds a seat, and every step each seated request gets one more token. | A 8/4 · B 5/2 · C 10/6 · D 6/3 (prompt/decode steps) · D arrives at step 1 · 3 seats |
 | 2 | **Static lane.** A, B, C move from the queue onto seats 1–3 at step 0 (prefill segments), then decode ticks grow step by step. | Chips slide to seats; bars extend one tick per step. | Static batching: A, B and C start together, and this batch runs until its longest member, C, is done. | A done step 4 · B done step 2 · C done step 6 |
 | 3 | B's row hatches from step 3 to 6, A's from 5 to 6. D's chip (framed) sits in the queue with a `waiting` badge from step 1 on. | Hatch fills in step by step; the badge pulses once per step. | B is done after step 2 and A after step 4, but their seats stay held until C finishes. D arrived at step 1 and waits outside. | idle seat-steps: B 4, A 2 · D waiting steps 1–6 |
 | 4 | D takes seat 1 at step 7, runs alone to step 10; seats 2–3 blank from step 7. A readout under the lane: busy seat-steps / all seat-steps. | D's bar draws steps 7–10; the readout counts up. | D finally starts at step 7, alone, and is done at step 10. Over the whole run, seats were busy only 57.6% of the time. | D 7 → 10 · busy 19 of 33 seat-steps = 57.6% · 15 tokens in 11 steps |
@@ -158,9 +160,9 @@ Shapes: none. `a_r` = admission step, `o_r` = output tokens (decode steps). Colo
 | Padded static batching: adding a 100-token prompt to 8 running requests wastes 693 pad tokens (Hugging Face, Nov 2025) | `serving.json/hf-continuous-batching.pad_waste_example = 693` *(proposed; note "B = 8, n = 100")* | 04 §2.1 CONFIRMED |
 | Continuous (iteration-level) batching: Orca, OSDI 2022; finished requests leave, waiting ones join every step | `serving.json/orca.venue = "OSDI 2022"` *(proposed)*; Orca's throughput gain is not shown (the brief marks it "prior, check number") | 04 §2.1 |
 | vLLM's engine loop: schedule → forward pass (run model, sample) → postprocess (append tokens, detokenize, check stops), every step | `serving.json/vllm.engine_loop` (confirmed; the source has three stages, with sampling inside the forward pass) | 04 §2.1 CONFIRMED |
-| Chunked prefill (Sarathi-Serve, OSDI 2024; the year is printed on the page): up to 2.6× serving throughput within SLO for Mistral-7B on one A100, up to 6.9× for Falcon-180B on 8 A100s, vs Orca and vLLM | `serving.json/sarathi-serve.gain_mistral7b_a100 = 2.6`, `.gain_falcon180b_8xa100 = 6.9` *(proposed)* | 04 §2.2 CONFIRMED (abstract) |
+| Chunked prefill (Sarathi-Serve, OSDI 2024; the year is printed on the page): up to 2.6× serving capacity within its latency targets for Mistral-7B on one A100, up to 6.9× for Falcon-180B on 8 A100s, vs Orca and vLLM | `serving.json/sarathi-serve.gain_mistral7b_a100 = 2.6`, `.gain_falcon180b_8xa100 = 6.9` *(proposed)* | 04 §2.2 CONFIRMED (abstract) |
 | Engine knobs: per-step token budget (`max_num_batched_tokens`), seat cap (`max_num_seqs`), FCFS by default, priorities, preemption; vLLM V1 preempts by recompute | `serving.json/vllm.scheduler_knobs` *(proposed, `reported`: brief marks it general knowledge)*; `serving.json/vllm.v1_preemption = "recompute"` *(proposed; source Gordić post, read 2026-10-07)* | 04 §2.3 *(prior)*; beyond the brief (header) |
-| Chunks re-read the KV of earlier chunks; minimizing chunk overhead mattered for 64K-token prefill batches on GB200 (vLLM, 2026-02-03) | `serving.json/vllm-gb200-dsr1.note_chunking` *(proposed)* | 04 §2.2 CONFIRMED |
+| On GB200 with DeepSeek-R1, vLLM reports: smaller prefill chunks add overhead from repeated kernel launches and synchronization (GPU bubbles); MLA throughput plateaus as the prefill batch grows from 16K to 64K tokens (vLLM, 2026-02-03) | `serving.json/vllm-gb200-dsr1.note_chunking` *(proposed)* | 04 §2.2 CONFIRMED |
 
 ## 9. Takeaways
 1. Static batching holds seats until the longest member is done and makes newcomers wait; continuous batching re-forms the batch every step, so a freed seat is reused at once (frames 2–6, try-this 1–2).
