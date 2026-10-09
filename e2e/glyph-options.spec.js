@@ -261,3 +261,28 @@ test('S3 shareBar: hatched parts draw the hatch, value-null parts print "not pub
   expect(tail.pcts).toEqual(['94.6%', '64.5%', '32.3%']);
   expect(tail.legend).toEqual(['200K · 3.2% of last 5%', 'others: zoomed below, shares of last 5%']);
 });
+
+// ---- Shared prep S6 (Plan 4, Task 2): Serving options on existing glyphs ----
+// Leaving every S6 option out must reproduce the pre-S6 output byte for byte (Architecture and Training pages on
+// main draw these glyphs). Pinned as SHA-256 of outerHTML, captured at eee5d11 before any S6 change.
+const POOL_SLOTS = [
+  ...Array.from({ length: 6 }, () => ({ owner: 'A', state: 'filled' })), { owner: 'B', state: 'filled' }, { owner: 'B', state: 'reserved' },
+  ...Array.from({ length: 8 }, () => ({ state: 'free' })),
+];
+const PRE_S6 = {
+  token: [{ x: 4, y: 8, text: 'cat', index: 2, state: 'active' }, 'T_TOKEN'],
+  tokenFill: [{ x: 4, y: 8, text: '56', fill: 'color-mix(in oklab, var(--val-zero), var(--val-pos) 50%)', hatched: true }, 'T_TOKENFILL'],
+  request: [{ x: 30, y: 8, prefill: 8, decode: 4, label: 'A' }, 'T_REQUEST'],
+  requestBare: [{ x: 0, y: 0, prefill: 3, decode: 0 }, 'T_REQUESTBARE'],
+  blockPool: [{ x: 4, y: 4, blocks: 4, blockSize: 4, slots: POOL_SLOTS, cell: 14, perRow: 2 }, 'T_BLOCKPOOL'],
+  memBar: [{ x: 4, y: 6, w: 280, useful: 23, reserved: 5, free: 20 }, 'T_MEMBAR'],
+  memBarTiny: [{ x: 0, y: 0, useful: 99, reserved: 1, free: 0 }, 'T_MEMBARTINY'],
+  rackPlain: [{ x: 10, y: 6, gpus: 8, label: 'node' }, 'T_RACKPLAIN'],
+};
+const GLYPH_OF_S6 = { tokenFill: 'token', requestBare: 'request', memBarTiny: 'memBar', rackPlain: 'rack' };
+
+test('S6: defaults of token, request, blockPool, memBar and rack reproduce the pre-S6 output byte for byte', async ({ page }) => {
+  const got = {};
+  for (const [key, [opts]] of Object.entries(PRE_S6)) got[key] = sha(await draw(page, GLYPH_OF_S6[key] ?? key, opts));
+  expect(got).toEqual(Object.fromEntries(Object.entries(PRE_S6).map(([k, [, h]]) => [k, h])));
+});
