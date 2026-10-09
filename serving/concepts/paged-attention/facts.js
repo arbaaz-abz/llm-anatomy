@@ -11,19 +11,19 @@ import { contiguousAt, pagedAt, POOL_SLOTS, LAST_STEP } from './numbers.js';
 
 const MISSING = '—';
 const STEPS = Array.from({ length: LAST_STEP + 1 }, (_, i) => i);
-const mean = (sims) => sims.reduce((a, s) => a + s.waste, 0) / (POOL_SLOTS * sims.length);
+const sumWaste = (sims) => sims.reduce((a, s) => a + s.waste, 0);
 
 export const HOOK = 'Why did early LLM servers run out of KV memory while {sv:pagedattention.waste_before_pct|raw}% of it held nothing?';
 
 // The toy's worst case before paging (step 0) and its paged waste over the six steps, from the simulators.
 export const WORST_BEFORE = shareText(Math.max(...STEPS.map((s) => contiguousAt(s).waste)), POOL_SLOTS);
-const pagedMean = Math.round(mean(STEPS.map((s) => pagedAt(s))) * 100);
-const pagedPeak = Math.round((Math.max(...STEPS.map((s) => pagedAt(s).waste)) / POOL_SLOTS) * 100);
+const pagedMean = shareText(sumWaste(STEPS.map((s) => pagedAt(s))), POOL_SLOTS * STEPS.length);
+const pagedPeak = shareText(Math.max(...STEPS.map((s) => pagedAt(s).waste)), POOL_SLOTS);
 
 export function intuition() {
   return [
     'In its attention layers, a request keeps a K and a V tile for each token it has seen, and it gets one more pair per decode step. (Hybrid models\' linear layers keep a fixed-size state instead; see [[long-context-attention]].) Nobody knows in advance how many: a reply can be 3 tokens or 3,000. Early servers solved this the blunt way: the moment a request arrived they reserved one contiguous strip big enough for the longest reply the model could give.',
-    `Most of that strip stays empty for most of the request's life, and it cannot be lent to anyone else. Strips of different sizes also leave gaps between them that are too small for the next request. The toy below shows only the first kind of waste, so its worst case (${WORST_BEFORE}) is lower than the measured {sv:pagedattention.waste_before_pct|raw}%. The vLLM team measured that only {sv:pagedattention.kv_useful_before_pct|int}% of KV memory in such systems held real tokens. The number of requests you can run at once is set by how many fit in memory, so that waste caps the batch, and in decode a bigger batch means more tokens per second, up to a point ([[batching]]). These are the same four requests as [[batching]]: its 3-seat lane is this page's before-lane and its 4-seat lane the after-lane, so here the seats become memory.`,
+    `Most of that strip stays empty for most of the request's life, and it cannot be lent to anyone else. Strips of different sizes also leave gaps between them that are too small for the next request. The toy below shows only the first kind of waste, so its worst case (${WORST_BEFORE}) is lower than the measured {sv:pagedattention.waste_before_pct|raw}%. The vLLM team measured that only {sv:pagedattention.kv_useful_before_pct|raw}% of KV memory in such systems held real tokens. The number of requests you can run at once is set by how many fit in memory, so that waste caps the batch, and in decode a bigger batch means more tokens per second, up to a point (see [[batching]]). These are the same four requests as [[batching]]: its 3-seat lane is this page's before-lane and its 4-seat lane the after-lane, so here the seats become memory.`,
     'PagedAttention borrows the operating system\'s answer to the same problem. RAM is handed out in fixed-size pages, and each program has a page table that maps its own numbering to wherever its pages actually landed. Here the "page" is a block of KV for a fixed number of tokens ({sv:vllm.default_block_size} in vLLM, 4 in this page\'s toy), handed out only when a request fills its current block, and each request\'s block table tells the attention kernel where every block is.',
     'Two things fall out. Waste shrinks to at most one partly filled block per request, and finished blocks go straight back to the pool for anyone. And a block becomes something several sequences can point at: two continuations of one prompt share its blocks, with a reference count and copy-on-write. That sharing is the bridge to [[prefix-caching]]. The price is that paging over-commits: reserving the maximum guaranteed every admitted request could finish, blocks on demand do not, so if the pool runs dry mid-reply the scheduler preempts a request, freeing its blocks and recomputing them later (vLLM V1 preempts by {sv:vllm.v1_preemption|raw}; [[batching]] names the knob).',
   ];
@@ -62,24 +62,25 @@ export function factRows(data) {
     { claim: 'vLLM\'s default block size is {sv:vllm.default_block_size} tokens; too small starves GPU parallelism, too large fragments memory and shares less.' },
     { claim: 'Paged KV is the default memory model in {sv:pagedattention.engines|raw}.' },
     { claim: `What one block weighs, per token, per ${block}-token block and for one request at its whole context (decimal units): ${[
-      { id: 'llama-3.1-70b', name: 'Llama-3.1-70B', kind: 'GQA, 80 layers × 8 KV heads × 128 × 2 B' },
+      { id: 'llama-3.1-70b', name: 'Llama-3.1-70B', kind: 'GQA, 2 (K and V) × 80 layers × 8 KV heads × 128 × 2 B' },
       { id: 'deepseek-v3', name: 'DeepSeek-V3', kind: 'MLA, 61 layers × 576 × 2 B' },
       { id: 'gpt-3', name: 'GPT-3', kind: 'MHA' },
     ].map((m) => modelClause(data, { ...m, blockSize: block })).join('; ')}. The Llama figure is ${llamaShare}.{hw:h100.hbm_gb|cite}` },
     { claim: 'Hybrid models page only their attention layers: Kimi K3 has {kimi-k3.full_attention_layers} gated-MLA layers among {kimi-k3.linear_attention_layers} KDA layers, Qwen3.8 alternates layers in a {qwen3.8.layer_pattern} pattern; the linear layers keep a fixed-size state instead of per-token KV.' },
-    { claim: `At DeepSeek's production average of {sv:deepseek-v3-production.avg_kv_length_tokens|int} KV tokens per request (V3/R1), a ${block}-token block wastes at most ${block - 1} slots, ${avgWaste}; the toy's ${pagedMean}–${pagedPeak}% comes from 5–16-token sequences.` },
+    { claim: `At DeepSeek's production average of {sv:deepseek-v3-production.avg_kv_length_tokens|int} KV tokens per request (V3/R1, {sv:deepseek-v3-production.date|date}), a ${block}-token block wastes at most ${block - 1} slots, ${avgWaste}; the toy's ${pagedMean}–${pagedPeak} comes from 5–16-token sequences.` },
     { claim: 'Bridge: {sv:deepseek-v3-production.kv_hit_rate_pct|raw}% of DeepSeek\'s input tokens hit the KV cache (prefix reuse), on the same production day.' },
-    { claim: 'vLLM can spill blocks down the tiers {sv:vllm-tiered-kv.tiers}: the numbers are in [[prefix-caching]].' },
-    { claim: 'FP8 KV halves the bytes per block ({sv:vllm-fp8-kv.bytes_factor|raw} of BF16\'s), but a naive version dropped 128K needle-in-a-haystack accuracy to {sv:vllm-fp8-kv.naive_niah_128k_pct}%: details in [[quantization]].' },
-    { claim: 'Concurrency is free HBM divided by KV per sequence. DeepSeek-R1 (NVFP4) at 128K input and 8K output has a theoretical cap of {hw:gb300-nvl72.concurrent_128k_per_gpu} requests per GPU on GB300 NVL72 ({hw:gb300-nvl72.hbm_gb} GB per GPU, nominal) against {hw:gb200-nvl72.concurrent_128k_per_gpu} on GB200 NVL72 ({hw:gb200-nvl72.hbm_gb} GB per GPU, the rack total over 72, nominal); LMSYS\'s practical target is {hw:gb300-nvl72.concurrent_128k_per_gpu_target} and {hw:gb200-nvl72.concurrent_128k_per_gpu_target}, about 85% of the cap.' },
+    { claim: 'As of {sv:vllm-tiered-kv.date|date}, vLLM can spill blocks down the tiers {sv:vllm-tiered-kv.tiers}: the numbers are in [[prefix-caching]].' },
+    { claim: 'FP8 KV halves the bytes per block ({sv:vllm-fp8-kv.bytes_factor|raw} of BF16\'s, vLLM, {sv:vllm-fp8-kv.date|date}), but a naive version dropped 128K needle-in-a-haystack accuracy to {sv:vllm-fp8-kv.naive_niah_128k_pct}%: details in [[quantization]].' },
+    { claim: 'Concurrency is free HBM divided by KV per sequence. DeepSeek-R1 (NVFP4) at 128K input and 8K output has a theoretical cap of {hw:gb300-nvl72.concurrent_128k_per_gpu} requests per GPU on GB300 NVL72 ({hw:gb300-nvl72.hbm_gb} GB per GPU, nominal) against {hw:gb200-nvl72.concurrent_128k_per_gpu} on GB200 NVL72 ({hw:gb200-nvl72.hbm_gb} GB per GPU, the rack total over 72, nominal); LMSYS\'s practical target is {hw:gb300-nvl72.concurrent_128k_per_gpu_target} and {hw:gb200-nvl72.concurrent_128k_per_gpu_target}, about 85% of the cap (LMSYS, {sv:lmsys-gb300-longctx.date|date}).' },
   ];
 }
 
 // Page text under the stage, one list per frame (0-based).
+export const STEP_RULE = 'The prefill step ends with a request\'s first token; each tick after it is one decode step, one more token.';
 export const BELOW = Object.freeze([
-  [],
-  [],
-  [],
+  [STEP_RULE],
+  [STEP_RULE],
+  [STEP_RULE],
   [],
   [],
   [],

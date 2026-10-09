@@ -118,8 +118,6 @@ function mountControls(refs, set) {
     mountChoice(refs.follow, { id: 'follow', label: 'Request to follow', variant: 'chips', value: INITIAL_STATE.follow, options: FOLLOW_CHIPS, onChange: (follow) => set({ follow }) }),
     mountChoice(refs.model, { id: 'model', label: 'Scale it up', variant: 'chips', value: INITIAL_STATE.model, options: MODEL_CHIPS, onChange: (model) => set({ model }) }),
   ];
-  Object.assign(refs.toggle.querySelector('button').style, { whiteSpace: 'normal', textAlign: 'left', maxWidth: '100%', height: 'auto' }); // a long label wraps instead of widening the page
-  [refs.follow, refs.model].forEach((box) => { box.style.flexWrap = 'wrap'; }); // long chip rows wrap at 400 px
   return controls;
 }
 

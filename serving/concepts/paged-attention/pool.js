@@ -61,13 +61,10 @@ export function markBlocks(parent, geo, ox, oy, tableBlocks, opacity = 1) {
   });
 }
 
-// The usage bar, with every percentage printed at one decimal through sharePct (the glyph rounds to whole numbers).
+// The usage bar, with every percentage printed at one decimal through the glyph's own share formatter.
 export function usageBar(parent, { x, y, w, useful, reserved, free, minSegment = 18 }) {
-  const g = G.memBar(parent, { x, y, w, useful, reserved, free, minSegment });
+  const g = G.memBar(parent, { x, y, w, useful, reserved, free, minSegment, format: G.formatShare });
   const total = useful + reserved + free;
-  const layout = G.memBarLayout({ useful, reserved, free, w, minSegment });
-  const printed = layout.segments.filter((s) => s.widened || s.width > 26);
-  [...g.querySelectorAll('.g-pct')].forEach((node, i) => { node.textContent = shareText(printed[i].value, total); });
   g.setAttribute('aria-label', `memory: useful ${shareText(useful, total)}, reserved but empty ${shareText(reserved, total)}, free ${shareText(free, total)}`);
   return g;
 }

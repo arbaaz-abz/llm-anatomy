@@ -46,10 +46,12 @@ test('hook, intuition, takeaways and the note under frame 9 fill from data with 
   texts.forEach((t) => assert.doesNotMatch(t, /[{}—]/, t.slice(0, 60)));
   [HOOK, ...intuition(), ...BELOW.flat()].forEach((t) => assert.deepEqual(fillClaim(t, data).missing, [], t.slice(0, 60)));
   assert.equal(lesson.hook, 'Why did early LLM servers run out of KV memory while 60–80% of it held nothing?');
-  assert.match(lesson.intuition[1], /worst case \(52\.1%\) is lower than the measured 60–80%\. The vLLM team measured that only 20–38% of KV memory/);
+  assert.match(lesson.intuition[1], /worst case \(52\.1%\) is lower than the measured 60–80%\. The vLLM team measured that only 20\.4–38\.2% of KV memory/);
+  assert.match(lesson.intuition[1], /up to a point \(see \[\[batching\]\]\)/);
   assert.match(lesson.intuition[2], /\(16 in vLLM, 4 in this page's toy\)/);
   assert.match(lesson.intuition[3], /vLLM V1 preempts by recompute/);
   assert.match(lesson.animation.belowFor(8)[0], /caches and shares only full blocks, keyed by content/);
+  [0, 1, 2].forEach((i) => assert.match(lesson.animation.belowFor(i)[0], /^The prefill step ends with a request's first token; each tick after it is one decode step, one more token\.$/));
   assert.equal(lesson.animation.belowFor(3).length, 0);
 });
 
@@ -59,11 +61,15 @@ test('facts rows print the storyboard\'s derived figures with their basis words'
   assert.match(claims[1], /by a factor of 2–4 over FasterTransformer/);
   assert.match(claims[2], /20–26% slower/);
   assert.match(claims[3], /default block size is 16 tokens/);
-  assert.match(claims[5], /Llama-3\.1-70B 327,680 B \(≈ 328 kB\) per token \(GQA.*: 5\.24 MB per 16-token block, 42\.9 GB reserved for one request at its 131,072-token context; DeepSeek-V3 70,272 B \(≈ 70\.3 kB\).*1\.12 MB per 16-token block, 9\.21 GB .*; GPT-3 4,718,592 B \(≈ 4\.72 MB\).*75\.5 MB per 16-token block, 9\.66 GB reserved for one request at its 2,048-token context\. The Llama figure is 53\.7% of an H100 \(80 GB nominal\)\./);
+  assert.match(claims[5], /Llama-3\.1-70B 327,680 B \(≈ 328 kB\) per token \(GQA, 2 \(K and V\) × 80 layers × 8 KV heads × 128 × 2 B\): 5\.24 MB per 16-token block, 42\.9 GB reserved for one request at its 131,072-token context; DeepSeek-V3 70,272 B \(≈ 70\.3 kB\).*1\.12 MB per 16-token block, 9\.21 GB .*; GPT-3 4,718,592 B \(≈ 4\.72 MB\).*75\.5 MB per 16-token block, 9\.66 GB reserved for one request at its 2,048-token context\. The Llama figure is 53\.7% of an H100 \(80 GB nominal\)\./);
   assert.match(claims[6], /Kimi K3 has 24 gated-MLA layers among 69 KDA layers, Qwen3\.8 alternates layers in a 3 linear : 1 full pattern/);
-  assert.match(claims[7], /4,989 KV tokens per request \(V3\/R1\), a 16-token block wastes at most 15 slots, 0\.3%; the toy's 8–17% comes from/);
+  assert.match(claims[7], /4,989 KV tokens per request \(V3\/R1, Feb 2025\), a 16-token block wastes at most 15 slots, 0\.3%; the toy's 8\.0%–16\.7% comes from/);
+  assert.match(claims[9], /^As of 2026-09-10, vLLM can spill blocks down the tiers HBM → host DRAM → storage/);
+  assert.match(claims[10], /BF16's, vLLM, 2026-04-22\)/);
+  assert.match(claims[11], /about 85% of the cap \(LMSYS, 2026-02-19\)/);
+  assert.equal(2 * 80 * 8 * 128 * 2, 327_680, 'the printed Llama recipe multiplies to the per-token bytes it explains');
   assert.match(claims[8], /56\.3% of DeepSeek's input tokens/);
-  assert.match(claims[10], /halves the bytes per block \(0\.5 of BF16's\).*to 13%/);
+  assert.match(claims[10], /halves the bytes per block \(0\.5 of BF16's, vLLM, 2026-04-22\).*to 13%/);
   assert.match(claims[11], /cap of 40 requests per GPU on GB300 NVL72 \(288 GB per GPU, nominal\) against 24 on GB200 NVL72 \(186 GB per GPU, the rack total over 72, nominal\); LMSYS's practical target is 36 and 20/);
   assert.doesNotMatch(claims.join(' '), /\(20\d\d\)/);
 });
