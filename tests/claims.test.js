@@ -118,3 +118,13 @@ test('the shared-11 and shared-2 data keys exist and read through fillText', asy
   assert.equal(fillText('{paper:flashattention-2022.release_date|year}', data), '2022');
   assert.equal(fillText('{paper:flashattention-2022.mechanism}', data), 'tiles attention so the score matrix stays in on-chip SRAM instead of HBM');
 });
+
+test('S7 shared-7: |date prints a month as "Feb 2025" and a full day as stored', () => {
+  const data = { serving: { entries: [
+    { id: 'deepseek-v3-production', facts: { date: fact('2025-02') } },
+    { id: 'vllm-gb200-dsr1', facts: { date: fact('2026-02-03') } },
+  ] } };
+  assert.equal(fillText('{sv:deepseek-v3-production.date|date}', data), 'Feb 2025');
+  assert.equal(fillText('{sv:vllm-gb200-dsr1.date|date}', data), '2026-02-03');
+  assert.equal(CLAIM_FORMATS.date('2025-12'), 'Dec 2025');
+});

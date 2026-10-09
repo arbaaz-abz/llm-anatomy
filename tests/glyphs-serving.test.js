@@ -5,8 +5,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   barSegments, requestSlot, token, request, requestLayout, rack, rackLayout, blockPool, memBar, memBarLayout, stepBar, stepBarLayout,
-  numberLine, numberLineLayout, prefixTree, prefixTreeLayout,
+  numberLine, numberLineLayout, prefixTree, prefixTreeLayout, shareBar, shareBarLayout, clipLine, formatShare,
 } from '../shared/glyphs.js';
+import { formatDuration } from '../math/core.js';
 
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
 
@@ -392,5 +393,48 @@ test('prefixTree: draws edges first, one titled node per state, the hatch only o
     assert.equal(withClass(g, 'g-select').length, 1);
     assert.equal(titleOf(withClass(g, 'g-ptree--evicted')[0]), 'a dog: evicted');
     assert.match(g.attrs['aria-label'], /^prefix tree: 4 blocks/);
+  });
+});
+
+// ---------------- S7 shared-1: shareBar tail 'none' folds nothing ----------------
+test("shareBarLayout: minSegment 0 never folds a part into 'others', however thin", () => {
+  const parts = [{ name: 'w', value: 140, hue: 1 }, { name: 'kv', value: 0.6, hue: 2 }, { name: 'free', value: 0.4, hue: 3 }];
+  assert.equal(shareBarLayout(parts, { w: 300, minSegment: 0 }).tail.length, 0);
+  assert.ok(shareBarLayout(parts, { w: 300 }).tail.length > 0, 'the default still zooms');
+});
+
+test("shareBar tail 'none': no bracket and no zoomed bar; a thin nonzero part is drawn at least 1 px wide, its value in the title", () => {
+  withSvg((svg) => {
+    const parts = [{ name: 'w', value: 140, hue: 1 }, { name: 'kv', value: 0.6, hue: 2 }, { name: 'free', value: 0.4, hue: 3 }];
+    const g = shareBar(svg, { x: 0, y: 0, w: 300, parts, tail: 'none' });
+    assert.equal(withClass(g, 'g-bracket').length, 0);
+    const segs = withClass(g, 'g-seg');
+    assert.equal(segs.length, 3);
+    assert.ok(segs.every((r) => Number(r.attrs.width) >= 1));
+    assert.match(titleOf(segs[2]), /^free: /);
+  });
+});
+
+// ---------------- S7 shared-2: memBar format ----------------
+test('memBar format: the printed shares and the aria-label use it; the default stays whole percentages', () => {
+  withSvg((svg) => {
+    const g = memBar(svg, { x: 0, y: 0, w: 240, useful: 537, reserved: 463, free: 0, format: formatShare });
+    assert.ok(textsIn(g).includes('53.7%'));
+    assert.match(g.attrs['aria-label'], /useful 53\.7%/);
+    const plain = memBar(svg, { x: 0, y: 0, w: 240, useful: 537, reserved: 463, free: 0 });
+    assert.ok(textsIn(plain).includes('54%'));
+    assert.match(plain.attrs['aria-label'], /useful 54%/);
+  });
+});
+
+// ---------------- S7 shared-4: clipLine format ----------------
+test('clipLine format: tick labels, the marker label and the aria-label use it; the default stays two decimals', () => {
+  withSvg((svg) => {
+    const g = clipLine(svg, { x: 0, y: 0, lo: 0, hi: 600, band: [0, 400], marker: 525.06, format: (ms) => formatDuration(ms / 1000) });
+    const texts = textsIn(g);
+    assert.ok(texts.includes('525 ms') && texts.includes('400 ms'), texts.join(' | '));
+    assert.match(g.attrs['aria-label'], /525 ms/);
+    const plain = textsIn(clipLine(svg, { x: 0, y: 0, lo: 0.8, hi: 1.2, band: [0.8, 1.2], marker: 1.0 }));
+    assert.ok(plain.includes('0.80') && plain.includes('1.00'));
   });
 });
