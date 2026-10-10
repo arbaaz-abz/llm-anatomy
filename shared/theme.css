@@ -194,21 +194,44 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .concept-card:hover { border-color: var(--accent); }
 .concept-card h3 { margin-bottom: var(--space-2); }
 .concept-card p { margin: 0; font-size: var(--fs-s); color: var(--ink-muted); }
-/* ---------- home page: a centered hero over the three tracks, each card in its track's accent ---------- */
+/* ---------- home page: a centered hero on drafting paper, three track cards whose covers play the course's story
+   (built, trained, served) in turn, then the map of how the lessons build on each other ---------- */
 .hub { max-width: 1120px; margin-inline: auto; padding: var(--space-6) var(--space-5); }
-.hub-hero { text-align: center; margin: var(--space-6) auto; }
-.hub-hero h1 { font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -0.03em; margin-bottom: var(--space-4); }
-.hub-hero p { margin-inline: auto; font-size: var(--fs-l); color: var(--ink-muted); }
+.hub-hero { position: relative; isolation: isolate; text-align: center; margin: var(--space-5) auto var(--space-6); padding-block: var(--space-4); }
+/* The drafting-paper dots the lessons' figures sit on, fading out toward the edges. */
+.hub-hero::before {
+  content: ""; position: absolute; inset: calc(-1 * var(--space-6)) 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(var(--line) 1.2px, transparent 1.3px); background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 55% 75% at 50% 50%, #000 20%, transparent 100%);
+  mask-image: radial-gradient(ellipse 55% 75% at 50% 50%, #000 20%, transparent 100%);
+}
+.hub-hero .eyebrow { margin-bottom: var(--space-3); }
+.hub-hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -0.03em; margin-bottom: var(--space-4); }
+.hub-word { color: var(--accent); }
+.hub-intro { margin-inline: auto; font-size: var(--fs-l); color: var(--ink-muted); }
+.hub-actions { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
 .hub-start {
   display: inline-block; margin-top: var(--space-2); padding: var(--space-2) var(--space-5); border-radius: 999px;
   background: var(--accent-arch); color: var(--ink-on-accent); font-weight: 600; text-decoration: none;
 }
 .hub-start:hover { background: color-mix(in oklab, var(--accent-arch) 85%, var(--ink)); }
+.hub-progress { margin: 0; font-size: var(--fs-s); color: var(--ink-muted); }
+.hub-progress a { color: var(--ink); font-weight: 500; }
 .hub-tracks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+/* The card's top edge is its act's progress bar: a hairline that fills with the accent as its act plays. */
 .hub-track {
-  background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: var(--radius-m);
-  padding: var(--space-5); box-shadow: var(--shadow);
+  position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m);
+  padding: 0 var(--space-5) var(--space-5); box-shadow: var(--shadow);
 }
+.hub-track::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--line); }
+.hub-track::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--accent);
+  transform-origin: left; transform: scaleX(var(--act-p, 1));
+}
+.hub-cover { margin: 4px calc(-1 * var(--space-5)) var(--space-4); padding: var(--space-3) var(--space-4) var(--space-2); background: color-mix(in oklab, var(--accent) 7%, var(--surface)); border-bottom: 1px solid var(--line); }
+.hub-cover-svg { display: block; width: 100%; height: auto; overflow: hidden; }
+.hub-cover figcaption { margin-top: var(--space-2); font-size: var(--fs-s); color: var(--ink-muted); text-align: center; }
+.hub-bracket { fill: none; stroke: var(--ink-muted); stroke-width: 1; }
 .hub-track .eyebrow { margin-bottom: var(--space-2); }
 .hub-track h2 { margin-bottom: var(--space-2); }
 .hub-track h2 a { color: var(--ink); text-decoration: none; }
@@ -217,14 +240,51 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .hub-blurb { font-size: var(--fs-s); color: var(--ink-muted); }
 .hub-section h3 { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); margin: var(--space-4) 0 var(--space-1); }
 .hub-section ol { margin: 0; padding-left: 1.6em; font-size: var(--fs-s); }
-.hub-section li { padding: 2px 0; }
+.hub-section li { padding: 2px var(--space-1); margin-inline: calc(-1 * var(--space-1)); border-radius: var(--radius-s); }
 .hub-section li::marker { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-muted); }
+.hub-section li.is-learned::after { content: " ✓"; color: var(--sem-ok); font-weight: 600; }
 .hub-section a { color: var(--ink); text-decoration: none; }
 .hub-section a:hover { color: var(--accent); text-decoration: underline; }
+/* While a map station is hovered or focused, the cards show its chain and quiet the rest. */
+.hub-tracks.has-focus .hub-section li { opacity: 0.45; }
+.hub-tracks.has-focus .hub-section li.is-path { opacity: 1; background: color-mix(in oklab, var(--accent) 14%, var(--surface)); }
+.hub-replay-row { display: flex; justify-content: center; margin-top: var(--space-4); }
+.hub-replay { font-size: var(--fs-s); min-height: 36px; padding-block: 0; }
+.hub-replay[hidden] { display: none; }
+.hub-replay::before { content: "↻ "; }
+/* The map: lanes in each track's tint, stations as numbered dots, "read this first" curves in the source track's accent. */
+.hub-map { margin-top: var(--space-6); }
+.hub-map h2 { text-align: center; }
+.hub-map-intro { margin-inline: auto; text-align: center; font-size: var(--fs-s); color: var(--ink-muted); }
+.hub-map-scroll { margin-top: var(--space-4); padding-bottom: var(--space-2); }
+.hub-map-svg { display: block; width: 100%; height: auto; font-family: var(--font-mono); font-size: 11px; }
+.map-lane-bg { fill: color-mix(in oklab, var(--accent) 5%, transparent); }
+.map-lane-swatch { fill: var(--accent); }
+.map-lane-title text { fill: var(--ink); font-weight: 600; letter-spacing: 0.06em; font-size: 11px; }
+.map-lane-title:hover text { fill: var(--accent); }
+.map-edge { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: 0.4; }
+.map-edge--cross { stroke-width: 1.6; opacity: 0.7; }
+.map-station { cursor: pointer; }
+.map-ring { fill: none; stroke: var(--focus); stroke-width: 2; opacity: 0; }
+.map-dot { fill: var(--surface); stroke: var(--accent); stroke-width: 1.6; }
+.map-num { fill: var(--ink); font-size: 10px; font-weight: 600; pointer-events: none; }
+.map-station.is-learned .map-dot { fill: var(--accent); }
+.map-station.is-learned .map-num { fill: var(--ink-on-accent); }
+.map-station:hover .map-ring, .map-station:focus-visible .map-ring { opacity: 1; }
+.map-station:focus { outline: none; }
+.hub-map-svg.has-focus .map-station:not(.is-path) { opacity: 0.3; }
+.hub-map-svg.has-focus .map-edge:not(.is-path) { opacity: 0.1; }
+.hub-map-svg.has-focus .map-edge.is-path { opacity: 1; stroke-width: 2.2; }
+.hub-map-caption { margin: var(--space-3) auto 0; max-width: var(--wide); text-align: center; font-size: var(--fs-s); color: var(--ink-muted); min-height: 2.6em; }
 .hub-foot { margin-top: var(--space-6); border-top: 1px solid var(--line); padding-top: var(--space-4); }
 .hub-foot p { max-width: none; text-align: center; font-size: var(--fs-s); color: var(--ink-muted); }
+.hub-track::after { transition: transform 120ms linear; }
 @media (max-width: 900px) { .hub-tracks { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 640px) { .hub { padding: var(--space-5) var(--space-4); } .hub-hero { margin-block: var(--space-4) var(--space-5); } }
+@media (max-width: 640px) {
+  .hub { padding: var(--space-5) var(--space-4); }
+  .hub-hero { margin-block: var(--space-3) var(--space-5); }
+  .hub-hero::before { inset: calc(-1 * var(--space-4)) 0; }
+}
 
 /* A lesson is one column: prose at --measure, anything marked .wide (figures, toys, tables) at --wide, both centered. */
 .concept { max-width: var(--wide); margin-inline: auto; }
