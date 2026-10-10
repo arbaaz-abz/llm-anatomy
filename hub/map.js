@@ -60,6 +60,7 @@ export function mountMap({ layout, onFocus = () => {} }) {
   const section = el('section', { className: 'hub-map' }, [
     el('h2', { id: SVG_TEXT_ID, textContent: 'How the lessons build on each other' }),
     el('p', { className: 'hub-map-intro', textContent: `Each dot is a lesson, numbered as in the lists above, placed by how many lessons come before it. A line means "read this first"; ${cross} of them cross tracks.` }),
+    el('p', { className: 'hub-map-hint', textContent: 'The map is wider than your screen: scroll it sideways →' }),
     el('div', { className: 'scroll-x hub-map-scroll' }, [svg]),
     caption,
   ]);

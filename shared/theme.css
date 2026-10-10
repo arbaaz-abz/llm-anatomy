@@ -205,7 +205,7 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
   -webkit-mask-image: radial-gradient(ellipse 55% 75% at 50% 50%, #000 20%, transparent 100%);
   mask-image: radial-gradient(ellipse 55% 75% at 50% 50%, #000 20%, transparent 100%);
 }
-.hub-hero .eyebrow { margin-bottom: var(--space-3); }
+.hub-hero .eyebrow { margin: 0 auto var(--space-3); }
 .hub-hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -0.03em; margin-bottom: var(--space-4); }
 .hub-word { color: var(--accent); }
 .hub-intro { margin-inline: auto; font-size: var(--fs-l); color: var(--ink-muted); }
@@ -257,6 +257,8 @@ th { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; l
 .hub-map h2 { text-align: center; }
 .hub-map-intro { margin-inline: auto; text-align: center; font-size: var(--fs-s); color: var(--ink-muted); }
 .hub-map-scroll { margin-top: var(--space-4); padding-bottom: var(--space-2); }
+.hub-map-hint { display: none; margin: var(--space-2) auto 0; text-align: center; font-size: var(--fs-xs); color: var(--ink-muted); }
+@media (max-width: 900px) { .hub-map-hint { display: block; } }
 .hub-map-svg { display: block; width: 100%; height: auto; font-family: var(--font-mono); font-size: 11px; }
 .map-lane-bg { fill: color-mix(in oklab, var(--accent) 5%, transparent); }
 .map-lane-swatch { fill: var(--accent); }
