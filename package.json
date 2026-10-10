@@ -1,6 +1,6 @@
 {
   "name": "llm-anatomy",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Interactive, animated lessons on how modern LLMs are built, trained and served.",
   "type": "module",

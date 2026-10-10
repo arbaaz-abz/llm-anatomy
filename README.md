@@ -1,5 +1,26 @@
-# LLM Anatomy
+# llm-anatomy
 
-Interactive, animated lessons on how modern (2026) LLMs are built, trained and served: every concept pairs a step-through animation with a small in-browser toy whose numbers you can check by hand. Plain ES modules and SVG, no framework, no build step.
+How a 2026 LLM is built, trained and served, as 34 small interactive lessons. Each one is an animation you step through plus a toy whose numbers you can check by hand. No framework, no build step, just ES modules and SVG.
 
-**Work in progress.** The Architecture track is being built now; the Training and Serving tracks are designed (`docs/storyboards/`) and come next. Run it locally with `npm run serve` and open `http://127.0.0.1:8080/architecture/`. Tests: `npm test` (unit) and `npx playwright test` (browser).
+- **Architecture** (11): attention, RoPE, the KV cache, MLA, MoE, long context, sampling, reading a model card.
+- **Training** (14): pretraining through RL and distillation, then GPUs, memory, parallelism and running 10,000 of them.
+- **Serving** (9): prefill vs decode, batching, paging, prefix caching, speculative decoding, quantization, and finally sizing a 1.6T model and what a million tokens costs.
+
+## quick start
+
+```sh
+npm install
+npm run serve
+```
+
+Open http://127.0.0.1:8080/architecture/ (or `/training/`, `/serving/`).
+
+Tests: `npm test` for the math and text, `npm run e2e` for the browser.
+
+## notes
+
+Every real-world number (model sizes, GPU specs, prices) lives in `data/` with its source and the date it was read. Each lesson's full design is in `docs/storyboards/`.
+
+## license
+
+MIT for code, CC BY 4.0 for the lessons.
