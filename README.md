@@ -13,7 +13,7 @@ npm install
 npm run serve
 ```
 
-Open http://127.0.0.1:8080/architecture/ (or `/training/`, `/serving/`).
+Open http://127.0.0.1:8080/.
 
 Tests: `npm test` for the math and text, `npm run e2e` for the browser.
 

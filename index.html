@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LLM Anatomy</title>
+<meta name="description" content="Interactive, animated lessons on how modern LLMs are built, trained and served.">
+<link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body>
+<div id="app"><p class="boot">Loading…</p></div>
+<noscript>These lessons are interactive and need JavaScript.</noscript>
+<script type="module">
+const root = document.getElementById('app');
+import('./hub/hub.js').then(({ mountHub }) => mountHub({ root })).catch((error) => {
+  console.error('Home page failed to start', error);
+  root.innerHTML = '<div class="load-error" role="alert"><h2>The page could not load</h2><p>Check your connection and reload. If you opened the file directly, run <code>npm run serve</code> instead: browsers block modules on file:// URLs.</p></div>';
+});
+</script>
+</body>
+</html>
